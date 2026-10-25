@@ -29,10 +29,16 @@ Kirigami.ApplicationWindow {
         latitude: settings.latitude
         longitude: settings.longitude
         model: settings.model
-        autoRefresh: !window.smokeTest
+        autoRefresh: !window.smokeTest && settings.locationName.length > 0
         windUnit: UserPreferences.windUnit
         utc: UserPreferences.utc
     }
+    function selectLocation(name, latitude, longitude) {
+        settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
+        if (name.length && !(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) settings.model = "gfs";
+        if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
+    }
+    SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude) }
     pageStack.initialPage: Kirigami.Page {
         padding: 0
         title: "Meteogram"
@@ -46,11 +52,7 @@ Kirigami.ApplicationWindow {
             anchors.fill: parent
             weather: forecastModel
             onConfigureRequested: locationDialog.open()
-            onLocationSelected: (name, latitude, longitude) => {
-                settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
-                if (!((latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176))) settings.model = "gfs";
-                UserPreferences.rememberPlace(name, latitude, longitude);
-            }
+            onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude)
         }
     }
 
@@ -65,15 +67,14 @@ Kirigami.ApplicationWindow {
         standardButtons: Dialog.Save | Dialog.Cancel
         onOpened: {
             locationEditor.resetDraft(settings.locationName, settings.latitude, settings.longitude, settings.model);
+            standardButton(Dialog.Save).text = "Pokaż prognozę";
             standardButton(Dialog.Save).enabled = Qt.binding(() => locationEditor.valid);
         }
         onAccepted: {
-            settings.locationName = locationEditor.locationName.trim();
-            settings.latitude = locationEditor.latitude;
-            settings.longitude = locationEditor.longitude;
             settings.model = locationEditor.model;
-            UserPreferences.rememberPlace(settings.locationName, settings.latitude, settings.longitude);
+            window.selectLocation(locationEditor.locationName.trim(), locationEditor.latitude, locationEditor.longitude);
         }
+
         contentItem: ScrollView {
             id: locationScroll
             implicitHeight: Math.min(locationEditor.implicitHeight, window.height - 220)

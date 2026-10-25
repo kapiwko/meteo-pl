@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QFile>
+#include <QFileInfo>
 #include <QSaveFile>
 #include <QSet>
 #include <cmath>
@@ -19,6 +20,42 @@ UserPreferences::UserPreferences(QObject *parent)
         m_settings.setValue("display/layoutVersion", 2);
         m_settings.sync();
     }
+    if (m_settings.value("places/listVersion", 0).toInt() < 1) {
+        auto places = favorites();
+        for (const auto &value : recentPlaces()) {
+            const auto recent = value.toMap();
+            bool found = false;
+            for (const auto &entry : places) {
+                const auto saved = entry.toMap();
+                if (std::abs(saved["latitude"].toDouble()-recent["latitude"].toDouble()) < 0.000001 && std::abs(saved["longitude"].toDouble()-recent["longitude"].toDouble()) < 0.000001) { found = true; break; }
+            }
+            if (!found && !recent["name"].toString().isEmpty()) places.append(recent);
+        }
+        m_settings.setValue("places/favorites", QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
+        m_settings.setValue("places/listVersion", 1); m_settings.sync();
+    }
+    m_lastPlaces = placesSnapshot();
+    m_settingsWatcher.addPath(QFileInfo(m_settings.fileName()).absolutePath());
+    m_settingsWatcher.addPath(m_settings.fileName());
+    m_placesReload.setSingleShot(true);
+    m_placesReload.setInterval(40);
+    connect(&m_settingsWatcher, &QFileSystemWatcher::fileChanged, this, [this] { m_placesReload.start(); });
+    connect(&m_settingsWatcher, &QFileSystemWatcher::directoryChanged, this, [this] { m_placesReload.start(); });
+    connect(&m_placesReload, &QTimer::timeout, this, [this] {
+        // QSettings replaces the file atomically; restore the watch after each replacement.
+        if (!m_settingsWatcher.files().contains(m_settings.fileName()) && QFile::exists(m_settings.fileName()))
+            m_settingsWatcher.addPath(m_settings.fileName());
+        m_settings.sync();
+        const auto current = placesSnapshot();
+        if (current == m_lastPlaces) return;
+        m_lastPlaces = current;
+        emit placesChanged();
+    });
+}
+
+QByteArray UserPreferences::placesSnapshot() const
+{
+    return m_settings.value("places/favorites").toByteArray() + '\n' + m_settings.value("places/recent").toByteArray();
 }
 
 QVariantList UserPreferences::readPlaces(const QString &key) const
@@ -30,6 +67,7 @@ void UserPreferences::writePlaces(const QString &key, const QVariantList &places
 {
     m_settings.setValue(key, QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
     m_settings.sync();
+    m_lastPlaces = placesSnapshot();
     emit placesChanged();
 }
 QVariantList UserPreferences::favorites() const { return readPlaces(QStringLiteral("places/favorites")); }
@@ -365,9 +403,34 @@ bool UserPreferences::isFavorite(double latitude, double longitude) const
     }
     return false;
 }
+void UserPreferences::savePlace(const QString &name, double latitude, double longitude)
+{
+    if (name.trimmed().isEmpty() || !std::isfinite(latitude) || !std::isfinite(longitude) || std::abs(latitude) > 90 || std::abs(longitude) > 180) return;
+    auto places = favorites();
+    for (auto &entry : places) {
+        auto place = entry.toMap();
+        if (std::abs(place["latitude"].toDouble()-latitude) >= 0.000001 || std::abs(place["longitude"].toDouble()-longitude) >= 0.000001) continue;
+        if (place["name"].toString() == name.trimmed()) return;
+        place["name"] = name.trimmed(); entry = place;
+        writePlaces("places/favorites", places); return;
+    }
+    places.append(QVariantMap{{"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
+    writePlaces("places/favorites", places);
+}
+void UserPreferences::removePlace(double latitude, double longitude)
+{
+    auto places = favorites();
+    const auto count = places.size();
+    places.removeIf([&](const QVariant &entry) {
+        const auto place = entry.toMap();
+        return std::abs(place["latitude"].toDouble()-latitude) < 0.000001 && std::abs(place["longitude"].toDouble()-longitude) < 0.000001;
+    });
+    if (places.size() != count) writePlaces("places/favorites", places);
+}
 void UserPreferences::rememberPlace(const QString &name, double latitude, double longitude)
 {
     if (name.trimmed().isEmpty() || !std::isfinite(latitude) || !std::isfinite(longitude) || std::abs(latitude) > 90 || std::abs(longitude) > 180) return;
+    savePlace(name, latitude, longitude);
     auto places = recentPlaces();
     places.removeIf([latitude, longitude](const QVariant &v) {
         const auto p = v.toMap();

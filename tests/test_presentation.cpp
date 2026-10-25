@@ -616,6 +616,65 @@ private slots:
             QTRY_VERIFY(qAbs(item->implicitHeight() - closedTotal) < 2);
         }
     }
+    void savedPlaceSelectionSharesTheListAndKeepsIndependentViews()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QTemporaryDir settings;
+        QVERIFY(settings.isValid());
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
+        const auto restore = qScopeGuard([&] { QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_cache.path()+"/config"); });
+        WeatherModel model, other;
+        model.setAutoRefresh(false); other.setAutoRefresh(false);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "SavedPlaceSelection");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> selection(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)}}));
+        QScopedPointer<QObject> otherSelection(component.createWithInitialProperties({{"weather", QVariant::fromValue(&other)}}));
+        QVERIFY(selection); QVERIFY(otherSelection);
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QVERIFY(preferences);
+        QCOMPARE(preferences->favorites().size(), 1);
+        const auto change = [](WeatherModel &weather, const QList<QVariant> &values) {
+            weather.setLocationName(values[0].toString()); weather.setLatitude(values[1].toDouble()); weather.setLongitude(values[2].toDouble());
+        };
+        QSignalSpy changed(selection.data(), SIGNAL(locationSelected(QString,double,double)));
+        QSignalSpy otherChanged(otherSelection.data(), SIGNAL(locationSelected(QString,double,double)));
+        // Apply emitted selections as the application and each widget do in their own configuration.
+        const auto apply = [&] {
+            while (!changed.isEmpty()) change(model, changed.takeFirst());
+            while (!otherChanged.isEmpty()) change(other, otherChanged.takeFirst());
+        };
+        preferences->savePlace("Kielce", 50.8661, 20.6286);
+        QCOMPARE(preferences->favorites().size(), 2);
+        QQmlComponent pickerComponent(&engine);
+        pickerComponent.loadFromModule("pl.meteo.desktop", "PlacePicker");
+        QVERIFY2(pickerComponent.isReady(), qPrintable(pickerComponent.errorString()));
+        QScopedPointer<QObject> picker(pickerComponent.createWithInitialProperties({{"weather", QVariant::fromValue(&model)}}));
+        QVERIFY(picker);
+        QSignalSpy picked(picker.data(), SIGNAL(locationSelected(QString,double,double)));
+        auto *combo = picker->findChild<QObject *>("headerLocationSelector");
+        QVERIFY(combo);
+        QCOMPARE(combo->property("currentIndex").toInt(), 0);
+        QVERIFY(QMetaObject::invokeMethod(combo, "activated", Q_ARG(int, 1)));
+        QCOMPARE(picked.count(), 1);
+        change(model, picked.takeFirst());
+        QTRY_COMPARE(combo->property("currentIndex").toInt(), 1);
+        QCOMPARE(other.locationName(), "Warszawa");
+        preferences->removePlace(50.8661, 20.6286);
+        QTRY_VERIFY(!changed.isEmpty()); apply();
+        QTRY_COMPARE(model.locationName(), "Warszawa");
+        preferences->removePlace(52.2297, 21.0122);
+        QTRY_VERIFY(!changed.isEmpty() && !otherChanged.isEmpty()); apply();
+        QTRY_VERIFY(model.locationName().isEmpty() && other.locationName().isEmpty());
+        QCOMPARE(preferences->favorites().size(), 0);
+        preferences->savePlace("Gdańsk", 54.352, 18.6466);
+        QTRY_VERIFY(!changed.isEmpty() && !otherChanged.isEmpty()); apply();
+        QTRY_COMPARE(model.locationName(), "Gdańsk");
+        QTRY_COMPARE(other.locationName(), "Gdańsk");
+        preferences->rememberPlace("Gdańsk", 54.352, 18.6466);
+        QCOMPARE(preferences->favorites().size(), 1);
+    }
     void profileButtonsDuplicateRenameAndDeleteWithoutPreparingAName()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));

@@ -20,6 +20,7 @@ PlasmoidItem {
 
     WeatherModel {
         id: forecastModel
+        autoRefresh: locationName.length > 0
         latitude: root.weatherConfiguration.latitude
         longitude: root.weatherConfiguration.longitude
         locationName: root.weatherConfiguration.locationName
@@ -27,6 +28,14 @@ PlasmoidItem {
         windUnit: UserPreferences.windUnit
         utc: UserPreferences.utc
     }
+    function selectLocation(name, latitude, longitude) {
+        Plasmoid.configuration.locationName = name;
+        Plasmoid.configuration.latitude = latitude;
+        Plasmoid.configuration.longitude = longitude;
+        if (name.length && !(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) Plasmoid.configuration.model = "gfs";
+        if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
+    }
+    SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude) }
     compactRepresentation: MouseArea {
         implicitWidth: compactRow.implicitWidth
         implicitHeight: Kirigami.Units.iconSizes.smallMedium
@@ -64,19 +73,13 @@ PlasmoidItem {
             Layout.fillHeight: true
             sourceComponent: root.showMeteogram ? details : overview
         }
-        Component { id: overview; CompactForecast { weather: forecastModel } }
+        Component { id: overview; CompactForecast { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude) } }
         Component {
             id: details
             ForecastPanel {
                 weather: forecastModel
                 onConfigureRequested: Plasmoid.internalAction("configure").trigger()
-                onLocationSelected: (name, latitude, longitude) => {
-                    Plasmoid.configuration.locationName = name;
-                    Plasmoid.configuration.latitude = latitude;
-                    Plasmoid.configuration.longitude = longitude;
-                    if (!(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) Plasmoid.configuration.model = "gfs";
-                    UserPreferences.rememberPlace(name, latitude, longitude);
-                }
+                onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
             }
         }
         Button { Layout.alignment: Qt.AlignHCenter; visible: !root.showMeteogram; text: "Pokaż meteogram"; icon.name: "view-statistics"; onClicked: root.showMeteogram = true }

@@ -7,9 +7,10 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     required property WeatherModel weather
+    signal locationSelected(string name, real latitude, real longitude)
     readonly property var days: weather.dailyForecast.slice(0, 7)
     spacing: 10
-    Kirigami.Heading { Layout.fillWidth: true; text: root.weather.locationName; level: 2; horizontalAlignment: Text.AlignHCenter }
+    PlacePicker { Layout.fillWidth: true; weather: root.weather; centered: true; onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude) }
     RowLayout {
         Layout.alignment: Qt.AlignHCenter
         spacing: 24
