@@ -72,6 +72,12 @@ obsługuje zakres i powiększenie z minimalnym przedziałem 24 godzin.
 Wspólne okno `MeteoSettings` dla aplikacji i plasmoidu zawiera selektory
 profilu, okresu i uruchomienia modelu oraz edytor wyglądu i preferencje globalne.
 Otwiera je jeden przycisk „Ustawienia” w górnym pasku.
+`ChartExporter` przechwytuje wybrane wykresy osobno przez `QQuickItem::grabToImage`,
+niezależnie od pozycji przewijania, i składa PNG z podpisami i źródłem.
+Przejściowy tryb eksportu ukrywa przyciski i odczyt kursora bez zmiany układu.
+Zapis jest atomowy przez `QSaveFile`; błąd lub zmiana widoku przywraca stan
+wykresów. Limit 64 megapikseli ogranicza zużycie pamięci. Wybór pliku korzysta
+z dialogu platformy Qt, z natywną integracją KDE wymagającą `QApplication`.
 Import i eksport korzystają z lokalnych plików JSON w formacie
 `pl.meteo.chart-profiles`, wersja 1. Zapis jest atomowy (`QSaveFile`). Import
 sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe

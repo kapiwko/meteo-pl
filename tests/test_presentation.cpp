@@ -1,6 +1,8 @@
 #include "WeatherModel.hpp"
 #include "ChartConfiguration.hpp"
+#include "ChartExporter.hpp"
 #include "GpuPlot.hpp"
+#include "UserPreferences.hpp"
 #include "Fixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
@@ -18,6 +20,8 @@
 #include <QTimeZone>
 #include <QTemporaryDir>
 #include <QTest>
+#include <QSignalSpy>
+#include <QScopeGuard>
 
 class PresentationTest : public QObject {
     Q_OBJECT
@@ -218,6 +222,120 @@ private slots:
         collect(collect,item);
         QVERIFY(cards.size()>1);
         for (auto *card:cards) QVERIFY(qAbs(card->width()-cards.first()->width())<1);
+    }
+    void exportsCompleteChartsAndHonorsVisibleSeries_data()
+    {
+        QTest::addColumn<QString>("renderer");
+        QTest::newRow("cpu") << QStringLiteral("cpu");
+        QTest::newRow("gpu") << QStringLiteral("gpu");
+    }
+    void exportsCompleteChartsAndHonorsVisibleSeries()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QFETCH(QString,renderer);
+        UserPreferences preferences;
+        const auto previous=preferences.renderer();
+        preferences.setRenderer(renderer);
+        const auto restore=qScopeGuard([&]{ preferences.setRenderer(previous); });
+        WeatherModel model; model.setAutoRefresh(false); model.refresh(false);
+        QVERIFY(model.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop","ForecastPanel");
+        QVERIFY2(component.isReady(),qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather",QVariant::fromValue(&model)}}));
+        QVERIFY(object);
+        auto *item=qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window;window.resize(720,450);
+        item->setParentItem(window.contentItem());item->setSize({720,450});window.show();
+        QTest::qWait(100);
+        QVariantList charts;
+        const auto collect=[&](auto &&self,QQuickItem *parent)->void {
+            if(parent->objectName().startsWith("chart-") && parent->property("exportMode").isValid()) charts.append(QVariant::fromValue(parent));
+            for(auto *child:parent->childItems()) self(self,child);
+        };
+        collect(collect,item);
+        QCOMPARE(charts.size(),8);
+        QVERIFY(QMetaObject::invokeMethod(object.data(),"chooseExport"));
+        auto *selection=object->findChild<QObject *>("chartExportSelection");
+        QVERIFY(selection);
+        QTRY_VERIFY(selection->property("opened").toBool());
+        QCOMPARE(object->property("exportSelectedKeys").value<QJSValue>().toVariant().toList().size(),8);
+        object->setProperty("exportSelectedKeys",QVariantList{QStringLiteral("temperature")});
+        QVERIFY(QMetaObject::invokeMethod(selection,"close"));
+        auto *exporter=object->findChild<ChartExporter *>("chartExporter");
+        QVERIFY(exporter);
+        QSignalSpy saved(exporter,&ChartExporter::saved),failed(exporter,&ChartExporter::failed);
+        QTemporaryDir files;QVERIFY(files.isValid());
+        const auto exportImage=[&](const QString &name,const QVariantList &items,const QString &title) {
+            QVariant result;
+            const auto file=QUrl::fromLocalFile(files.filePath(name));
+            const auto invoked=QMetaObject::invokeMethod(object.data(),"exportToFile",Q_RETURN_ARG(QVariant,result),
+                Q_ARG(QVariant,file),Q_ARG(QVariant,QVariant(items)),Q_ARG(QVariant,title));
+            return invoked && result.toBool();
+        };
+        QVERIFY(exportImage("all.png",charts,"Meteogram"));
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count()+failed.count(),1,5000);
+        QCOMPARE(failed.count(),0);
+        const QImage image(files.filePath("all.png"));
+        QVERIFY(!image.isNull());
+        QCOMPARE(image.width(),qCeil(charts.first().value<QQuickItem *>()->width())+32);
+        QVERIFY(image.height()>window.height()*3);
+        QCOMPARE(image.text("Title"),QStringLiteral("Warszawa · Meteogram"));
+        QVERIFY(image.text("Source").contains("meteo.pl"));
+        int colored=0;
+        for(int y=image.height()-200;y<image.height()-70;++y) for(int x=70;x<image.width()-70;++x) {
+            const auto pixel=image.pixelColor(x,y);
+            if(qAbs(pixel.red()-pixel.blue())>40) ++colored;
+        }
+        QVERIFY2(colored>100,"The final chart below the scroll viewport must be rendered");
+        if(const auto path=qEnvironmentVariable("METEO_EXPORT_DIR");!path.isEmpty()) QVERIFY(image.save(QDir(path).filePath(renderer+".png")));
+        auto *first=charts.first().value<QQuickItem *>();
+        QVERIFY(exportImage("single.png",{charts.first()},"Temperatura"));
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count()+failed.count(),2,5000);
+        QCOMPARE(failed.count(),0);
+        const QImage single(files.filePath("single.png"));
+        QVERIFY(!single.isNull());
+        first->setProperty("legendOverride",0);
+        QVERIFY(QMetaObject::invokeMethod(first,"toggle",Q_ARG(QVariant,"airtmp_point")));
+        QTest::qWait(50);
+        QVERIFY(exportImage("filtered.png",{charts.first()},"Temperatura"));
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count()+failed.count(),3,5000);
+        QCOMPARE(failed.count(),0);
+        const QImage filtered(files.filePath("filtered.png"));
+        QVERIFY(!filtered.isNull());
+        QVERIFY(filtered.height()<single.height());
+        const auto reds=[](const QImage &picture) {
+            int count=0;
+            for(int y=0;y<picture.height();++y) for(int x=0;x<picture.width();++x) {
+                const auto pixel=picture.pixelColor(x,y);
+                if(pixel.red()>220 && pixel.green()<130 && pixel.blue()<150) ++count;
+            }
+            return count;
+        };
+        QVERIFY(reds(single)>100);
+        QVERIFY(reds(filtered)<reds(single)/4);
+        for(const auto &chart:charts) QVERIFY(!chart.value<QQuickItem *>()->property("exportMode").toBool());
+    }
+    void exportFailurePreservesFileAndCanBeRetried()
+    {
+        QQuickWindow window;window.resize(200,200);window.show();
+        QQuickItem chart(window.contentItem());chart.setSize({200,100});chart.setProperty("exportMode",false);
+        QTemporaryDir directory;QVERIFY(directory.isValid());
+        const auto path=directory.filePath("existing.png");
+        QFile existing(path);QVERIFY(existing.open(QIODevice::WriteOnly));existing.write("original");existing.close();
+        ChartExporter exporter;
+        QSignalSpy failed(&exporter,&ChartExporter::failed),saved(&exporter,&ChartExporter::saved);
+        const QVariantList items{QVariant::fromValue(&chart)};
+        QVERIFY(exporter.savePng(QUrl::fromLocalFile(path),items,{{"title","Meteogram"}}));
+        chart.setWidth(190);
+        QCOMPARE(failed.count(),1);QVERIFY(!exporter.busy());QVERIFY(!chart.property("exportMode").toBool());
+        QVERIFY(existing.open(QIODevice::ReadOnly));QCOMPARE(existing.readAll(),QByteArray("original"));existing.close();
+        QVERIFY(exporter.savePng(QUrl::fromLocalFile(path),items,{{"title","Meteogram"}}));
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count(),1,5000);
+        QCOMPARE(failed.count(),1);QVERIFY(!QImage(path).isNull());QVERIFY(!chart.property("exportMode").toBool());
+        QVERIFY(!exporter.savePng(QUrl("https://example.org/output.png"),items,{}));
+        QVERIFY(!exporter.busy());
     }
     void configuredChartsMixDifferentUnitsAndRespectProfileAxes()
     {
