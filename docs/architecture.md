@@ -125,6 +125,9 @@ silniku QML. `ImageCache` współdzieli trwające pobrania i cache LRU obrazów
 dla aplikacji oraz Plasma. Odpowiedzi mają deadline 25 s, limit 8 MiB i limit
 16 megapikseli; dekodowanie odbywa się w puli dwóch wątków. Prefetch kolejnej
 klatki używa tego samego magazynu i nie zmienia kroku aktualnie wyświetlanego.
+Gdy serwer nie podaje czasu ważności, poprawnie zdekodowany obraz otrzymuje
+30 minut także na dysku. Dzięki temu opuszczenie RAM LRU nie wymusza pobrania
+całej animacji ponownie. Jawne ograniczenia cache z odpowiedzi są respektowane.
 `ImagePreloader` przed animacją przygotowuje całą pętlę, z limitem czterech
 równoległych żądań. Licznik generacji odrzuca zakończenia anulowanego zadania;
 zmiana warstwy, startu lub obszaru wymaga przygotowania nowej pętli.
@@ -135,8 +138,21 @@ dopasowaną do obu wymiarów widoku, niezależnie od proporcji obrazu.
 artykuły. Daty przyszłe nie powodują żądania; HTTP 404 dla komentarza jest
 prezentowane jako brak publikacji. Adaptery są oddzielone od QML, a ich adresy
 można wstrzyknąć w testach.
+Treści są zapisywane atomowo w `editorial`, pod kluczem pełnego URL (data/strona).
+Przez 30 minut otwarcie widoku używa zapisu; ręczne odświeżenie wymusza sieć.
+Nieudane odświeżenie zachowuje treść, a strony artykułów są zastępowane bez
+duplikowania wpisów. Ilustracje i miniatury używają wspólnego `ImageCache`.
 Grafiki artykułów są skalowane przez `ResponsiveImages` do szerokości dokumentu,
 z zachowaniem proporcji także po zmianie rozmiaru okna.
+
+`JsonRequest` opcjonalnie zapisuje odpowiedzi pod pełnym URL w `metadata`:
+wyszukiwanie miejsc na 24 godziny, katalogi uruchomień modeli na 5 minut.
+Magazyn ma limit 512 wpisów i 32 MiB. Generacja żądania chroni również
+asynchroniczne zakończenia odczytu z cache przed anulowaniem lub zmianą query.
+`CacheStorage` w tle liczy rozmiar plików i czyści wyłącznie katalog cache.
+Nie podąża za dowiązaniami. Czyszczenie resetuje także RAM obrazów i generację
+ich zapisów, aby starsze pobranie nie odtworzyło usuniętej zawartości.
+Ustawienia i zapisane profile pozostają w osobnym katalogu konfiguracji.
 
 Plasmoid po rozwinięciu ładuje `CompactForecast` z podsumowaniem i równymi
 kolumnami dni. Pełny `ForecastPanel` jest tworzony po przejściu do meteogramu.
