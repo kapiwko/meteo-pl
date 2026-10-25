@@ -61,14 +61,21 @@ Kirigami.ApplicationWindow {
         objectName: "locationDialog"
         title: "Lokalizacja i model"
         anchors.centerIn: parent
-        width: Math.min(window.width - 40, 620)
-        padding: 20
+        width: Math.min(window.width - 24, 660)
+        padding: 0
         modal: true
-        standardButtons: Dialog.Save | Dialog.Cancel
-        onOpened: {
-            locationEditor.resetDraft(settings.locationName, settings.latitude, settings.longitude, settings.model);
-            standardButton(Dialog.Save).text = "Pokaż prognozę";
-            standardButton(Dialog.Save).enabled = Qt.binding(() => locationEditor.valid);
+        standardButtons: Dialog.Cancel
+        onAboutToShow: locationEditor.resetDraft(settings.locationName, settings.latitude, settings.longitude, settings.model)
+        footer: DialogButtonBox {
+            standardButtons: DialogButtonBox.Cancel
+            onAccepted: locationDialog.accept()
+            onRejected: locationDialog.reject()
+            Button {
+                text: "Pokaż prognozę"
+                icon.name: "weather-few-clouds"
+                enabled: locationEditor.valid
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+            }
         }
         onAccepted: {
             settings.model = locationEditor.model;
@@ -77,10 +84,17 @@ Kirigami.ApplicationWindow {
 
         contentItem: ScrollView {
             id: locationScroll
-            implicitHeight: Math.min(locationEditor.implicitHeight, window.height - 220)
+            implicitHeight: Math.min(locationContent.implicitHeight, window.height - 160)
             contentWidth: availableWidth
             clip: true
-            LocationEditor { id: locationEditor; width: locationScroll.availableWidth }
+            Pane {
+                id: locationContent
+                objectName: "locationDialogContent"
+                width: locationScroll.availableWidth
+                padding: Kirigami.Units.largeSpacing
+                background: null
+                contentItem: LocationEditor { id: locationEditor }
+            }
         }
     }
 }
