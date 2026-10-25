@@ -7,6 +7,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(GNUInstallDirs)
 include(CTest)
+install(FILES integrations/plasma/package/contents/images/meteo.svg
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps" RENAME pl.meteo.desktop.svg)
 
 option(METEO_BUILD_APP "Build the desktop application" ON)
 option(METEO_BUILD_PLASMOID "Install the Plasma 6 widget" ON)

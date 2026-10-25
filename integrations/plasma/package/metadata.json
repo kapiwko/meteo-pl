@@ -3,7 +3,7 @@
     "Id": "pl.meteo.desktop",
     "Name": "Meteo · meteogram ICM",
     "Description": "Meteogramy meteo.pl: temperatura, opady, wiatr i ciśnienie",
-    "Icon": "weather-few-clouds",
+    "Icon": "pl.meteo.desktop",
     "Version": "0.1.0",
     "Category": "Environment",
     "Authors": [{ "Name": "Meteo Desktop contributors" }],

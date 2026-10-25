@@ -1,4 +1,7 @@
 qt_add_executable(meteo-pl main.cpp)
+qt_add_resources(meteo-pl "application_icon" PREFIX "/icons"
+    BASE "${PROJECT_SOURCE_DIR}/integrations/plasma/package/contents/images"
+    FILES "${PROJECT_SOURCE_DIR}/integrations/plasma/package/contents/images/meteo.svg")
 qt_add_qml_module(meteo-pl
     URI pl.meteo.app
     VERSION 1.0
