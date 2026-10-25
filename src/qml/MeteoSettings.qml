@@ -16,7 +16,7 @@ Dialog {
     parent: Overlay.overlay
     anchors.centerIn: parent
     width: Math.min(650, parent ? parent.width - 32 : 650)
-    height: Math.min(section === 0 ? 480 : 740, parent ? parent.height - 32 : 740)
+    height: Math.min(section === 1 ? 740 : section === 3 ? 620 : 480, parent ? parent.height - 32 : 740)
     padding: 16
     modal: true
     standardButtons: Dialog.Close
@@ -35,9 +35,12 @@ Dialog {
         spacing: 12
         TabBar {
             id: sections
+            objectName: "settingsSections"
             Layout.fillWidth: true
             TabButton { text: "Prognoza"; icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
-            TabButton { text: "Wykresy i aplikacja"; icon.name: "configure"; icon.width: 16; icon.height: 16 }
+            TabButton { text: "Profile"; icon.name: "view-statistics"; icon.width: 16; icon.height: 16 }
+            TabButton { text: "Odczyt"; icon.name: "color-picker"; icon.width: 16; icon.height: 16 }
+            TabButton { text: "Aplikacja"; icon.name: "configure"; icon.width: 16; icon.height: 16 }
         }
         StackLayout {
             Layout.fillWidth: true
@@ -92,7 +95,7 @@ Dialog {
                     }
                     Label {
                         Layout.fillWidth: true
-                        text: "Zakres czasu i start modelu dotyczą bieżącej prognozy. Wybrany profil jest zapamiętywany. Profile i ustawienia aplikacji edytujesz w zakładce „Wykresy i aplikacja”."
+                        text: "Zakres czasu i start modelu dotyczą bieżącej prognozy. Wybrany profil jest zapamiętywany. Profile i ustawienia aplikacji edytujesz w zakładkach „Profile”, „Odczyt” i „Aplikacja”."
                         opacity: 0.7
                         wrapMode: Text.WordWrap
                     }
@@ -103,6 +106,22 @@ Dialog {
                 contentWidth: availableWidth
                 clip: true
                 DisplaySettings { width: displayScroll.availableWidth; weather: root.weather }
+            }
+            ScrollView {
+                id: readingScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
+                ReadingSettings { width: readingScroll.availableWidth }
+            }
+            ScrollView {
+                id: applicationScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
+                ApplicationSettings { width: applicationScroll.availableWidth }
             }
         }
     }

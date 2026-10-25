@@ -196,42 +196,4 @@ ColumnLayout {
         }
     }
     Button { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
-    CheckBox { text: "Domyślnie pokazuj legendę"; checked: UserPreferences.showLegend; onToggled: UserPreferences.showLegend = checked }
-    Label { text: "Parametry w trybie identyfikacji"; font.bold: true }
-    ComboBox {
-        objectName: "probeModeSetting"
-        Layout.fillWidth: true
-        model: [{id: "chart", name: "Parametry wskazanego wykresu"}, {id: "all", name: "Wszystkie parametry"}]
-        textRole: "name"
-        currentIndex: model.findIndex(entry => entry.id === UserPreferences.probeMode)
-        onActivated: index => UserPreferences.probeMode = model[index].id
-    }
-    Label { Layout.fillWidth: true; text: "Włącz próbnik na pasku pod wykresami, aby odczytywać parametry pod kursorem. Kliknięcie w tym trybie przypina odczyt. Wszystkie parametry mają karty kategorii i dwie kolumny przy szerokim oknie."; wrapMode: Text.WordWrap; opacity: 0.7 }
-    Label { text: "Ogólna wysokość wykresów"; font.bold: true }
-    SpinBox { from: 64; to: 800; stepSize: 10; value: UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.chartHeight = value }
-    Label { Layout.fillWidth: true; text: "Własna wysokość wykresu ma pierwszeństwo przed wysokością profilu, a profil przed ogólną. Pasek kierunku wiatru zachowuje proporcjonalnie mniejszą wysokość, jeśli nie ma własnej wartości."; wrapMode: Text.WordWrap; opacity: 0.7 }
-    Label { text: "Rysowanie wykresów"; font.bold: true }
-    ComboBox {
-        Layout.fillWidth: true
-        model: [{id:"gpu",name:"GPU · scena Qt Quick (domyślnie)"}, {id:"cpu",name:"CPU · Canvas"}]
-        textRole: "name"
-        currentIndex: model.findIndex(item => item.id === UserPreferences.renderer)
-        onActivated: index => UserPreferences.renderer = model[index].id
-    }
-    Label { Layout.fillWidth: true; text: "Zmiana działa od razu dla wszystkich profili. Gdy Qt Quick działa bez akceleracji, aplikacja użyje CPU."; wrapMode: Text.WordWrap; opacity: 0.7 }
-    Label { text: "Jednostka wiatru"; font.bold: true }
-    ComboBox { Layout.fillWidth: true; model: ["m/s", "km/h", "kt"]; currentIndex: model.indexOf(UserPreferences.windUnit); onActivated: UserPreferences.windUnit = currentText }
-    CheckBox { text: "Czas UTC"; checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
-    CheckBox { text: "Cieniuj noc dla wybranej lokalizacji"; checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
-    TextEdit {
-        Layout.fillWidth: true
-        text: "Plik konfiguracji: " + UserPreferences.settingsFile
-        readOnly: true
-        selectByMouse: true
-        wrapMode: TextEdit.WrapAnywhere
-        font.pixelSize: 11
-        color: Kirigami.Theme.textColor
-        opacity: 0.7
-    }
-    Label { Layout.fillWidth: true; text: "Legenda ukrywa serie bez zmiany skali. Ctrl + kółko myszy przybliża czas. Włączony próbnik pozwala przypiąć odczyt kliknięciem."; wrapMode: Text.WordWrap; opacity: 0.7 }
 }

@@ -198,6 +198,23 @@ private slots:
         }
         QVERIFY(QMetaObject::invokeMethod(about, "close"));
         QTRY_VERIFY(!about->property("visible").toBool());
+        auto *settingsSections = settings->findChild<QObject *>("settingsSections");
+        QVERIFY(settingsSections);
+        QCOMPARE(settingsSections->property("count").toInt(), 4);
+        auto *profileSettings = settings->findChild<QQuickItem *>("meteogramDisplaySettings");
+        auto *readingSettings = settings->findChild<QQuickItem *>("readingSettings");
+        auto *applicationSettings = settings->findChild<QQuickItem *>("applicationSettings");
+        QVERIFY(profileSettings); QVERIFY(readingSettings); QVERIFY(applicationSettings);
+        settings->setProperty("section", 1);
+        QTRY_VERIFY(profileSettings->isVisible());
+        QVERIFY(!readingSettings->isVisible()); QVERIFY(!applicationSettings->isVisible());
+        settings->setProperty("section", 2);
+        QTRY_VERIFY(readingSettings->isVisible());
+        QVERIFY(!profileSettings->isVisible()); QVERIFY(!applicationSettings->isVisible());
+        QVERIFY(readingSettings->findChild<QObject *>("probeModeSetting"));
+        settings->setProperty("section", 3);
+        QTRY_VERIFY(applicationSettings->isVisible());
+        QVERIFY(!profileSettings->isVisible()); QVERIFY(!readingSettings->isVisible());
         QVERIFY(QMetaObject::invokeMethod(settings,"close"));
         QTRY_VERIFY(!settings->property("visible").toBool());
         auto *chart = plot->parentItem();
