@@ -10,7 +10,8 @@ Karty nawigacji mają ikony; w wąskim widoku pozostają same ikony z podpowiedz
 Wymagania: CMake ≥ 3.25, kompilator C++23, Ninja, Qt ≥ 6.5
 (Core, Network, Qml, Quick, QuickControls2, Positioning, Test), Kirigami 6 i moduł
 QQC2 Desktop Style (`org.kde.desktop`).
-Powiadomienia po eksporcie korzystają z KDE Frameworks 6 Notifications.
+Powiadomienia po eksporcie korzystają z KDE Frameworks 6 Notifications;
+informacje o aplikacji korzystają z gotowych komponentów Kirigami.
 Aplikacja okienkowa wymaga również Qt Widgets do natywnych dialogów KDE.
 Plasmoid wymaga środowiska Plasma 6 i modułów QML Plasma.
 
@@ -29,6 +30,8 @@ lub mapy. Wyszukiwanie domyślnie obejmuje Polskę, opcjonalnie cały świat.
 Dostępne modele: UM4 60 h, UM4 120 h i GFS 240 h.
 UM4 obejmuje obszar 44,5–66,482°N i 8,21–30,176°E; GFS jest globalny.
 Współrzędne przyjmują kropkę lub przecinek dziesiętny.
+**Ustawienia → O aplikacji** pokazuje autorstwo Kamila Piwowarskiego,
+źródła danych i informacje o aktualnie pobranej prognozie.
 
 Podsumowanie pokazuje prognozę na oznaczoną godzinę, a nie pomiar stacji.
 Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przerywany.

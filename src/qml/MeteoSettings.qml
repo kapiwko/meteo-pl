@@ -20,6 +20,17 @@ Dialog {
     padding: 16
     modal: true
     standardButtons: Dialog.Close
+    footer: DialogButtonBox {
+        standardButtons: DialogButtonBox.Close
+        onRejected: root.reject()
+        Button {
+            text: "O aplikacji"
+            icon.name: "help-about"
+            DialogButtonBox.buttonRole: DialogButtonBox.HelpRole
+            onClicked: aboutDialog.open()
+        }
+    }
+    MeteoAbout { id: aboutDialog; weather: root.weather }
     contentItem: ColumnLayout {
         spacing: 12
         TabBar {

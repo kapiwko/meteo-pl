@@ -396,15 +396,7 @@ Item {
                     Kirigami.Action { text: "Otwórz folder"; icon.name: "folder-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFolder(root.exportedFile) }
                 ]
             }
-            Label {
-                Layout.fillWidth: true
-                text: "<a href='https://www.meteo.pl/'>ICM UW / meteo.pl</a> · UM: Met Office · " + (root.weather.usingCache ? "Z pamięci " : "Pobrano ") + root.weather.updatedText
-                textFormat: Text.RichText
-                font.pixelSize: 10
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-                onLinkActivated: link => Qt.openUrlExternally(link)
-            }
+
         }
         }
     }
