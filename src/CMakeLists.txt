@@ -1,5 +1,6 @@
 add_library(meteo_core STATIC
     core/Forecast.cpp core/Forecast.hpp
+    core/ForecastAggregation.cpp core/ForecastAggregation.hpp
     core/Localization.cpp core/Localization.hpp
     core/Locations.cpp core/Locations.hpp
     network/MeteoClient.cpp network/MeteoClient.hpp

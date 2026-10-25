@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "WeatherModel.hpp"
+#include "core/ForecastAggregation.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 
@@ -479,30 +480,18 @@ QVariantList WeatherModel::hourlyForecast() const
 QVariantList WeatherModel::dailyForecast() const
 {
     QVariantList result;
-    const auto hours = hourlyForecast();
-    QMap<QDate, QVariantMap> days;
-    for (const auto &entry : hours) {
-        const auto row = entry.toMap();
-        const auto timestamp = row["time"].toLongLong();
-        auto time = QDateTime::fromSecsSinceEpoch(timestamp);
-        if (m_utc) time = time.toUTC();
-        const auto date = time.date();
-        if (!days.contains(date)) days.insert(date, {{"time", timestamp}, {"day", QLocale().toString(date, QStringLiteral("ddd d MMM"))},
-                                                    {"minimum", QVariant()}, {"maximum", QVariant()}, {"rain", QVariant()}, {"wind", QVariant()},
-                                                    {"cloudSum", 0.0}, {"cloudCount", 0}, {"storm", false}, {"snow", false}, {"mixed", false}});
-        auto &day = days[date];
-        const auto low = row.value("airtmp_min").isNull() ? row.value("airtmp_point") : row.value("airtmp_min");
-        const auto high = row.value("airtmp_max").isNull() ? row.value("airtmp_point") : row.value("airtmp_max");
-        if (!low.isNull()) day["minimum"] = day["minimum"].isNull() ? low.toDouble() : std::min(day["minimum"].toDouble(), low.toDouble());
-        if (!high.isNull()) day["maximum"] = day["maximum"].isNull() ? high.toDouble() : std::max(day["maximum"].toDouble(), high.toDouble());
-        if (!row.value("pcpttl_aver").isNull()) day["rain"] = day["rain"].toDouble() + row["pcpttl_aver"].toDouble();
-        if (!row.value("wind_gust_max").isNull()) day["wind"] = day["wind"].isNull() ? row["wind_gust_max"].toDouble() : std::max(day["wind"].toDouble(), row["wind_gust_max"].toDouble());
-        if (!row.value("cldtot_aver").isNull()) { day["cloudSum"] = day["cloudSum"].toDouble() + row["cldtot_aver"].toDouble(); day["cloudCount"] = day["cloudCount"].toInt() + 1; }
-        if (row["storm_max"].toDouble() > 0 || row["flash_max"].toDouble() > 0) day["storm"] = true;
-        if (row["pcpttl_aver"].toDouble() > 0 && row["pcpttl_type_max"].toInt() == 2) day["snow"] = true;
-        if (row["pcpttl_aver"].toDouble() > 0 && row["pcpttl_type_max"].toInt() == 3) day["mixed"] = true;
-    }
-    for (auto day : days) {
+    if (!m_forecast) return result;
+    const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
+    const auto optional = [](const std::optional<double> &value) { return value ? QVariant(*value) : QVariant(); };
+    for (const auto &aggregate : Meteo::aggregateDays(*m_forecast, zone)) {
+        QVariantMap day{{"time", aggregate.date.startOfDay(zone).toSecsSinceEpoch()},
+            {"day", QLocale().toString(aggregate.date, QStringLiteral("ddd d MMM"))},
+            {"minimum", optional(aggregate.minimum)}, {"maximum", optional(aggregate.maximum)},
+            {"rain", optional(aggregate.rain)}, {"wind", aggregate.gust ? QVariant(*aggregate.gust * displayScale("wind_gust_max",1)) : QVariant()},
+            {"rainComplete", aggregate.rainComplete}, {"rainEstimated", aggregate.rainEstimatedAtBoundary},
+            {"rainCoverageSeconds", aggregate.rainCoverageSeconds}, {"storm", aggregate.storm},
+            {"snow", aggregate.snow}, {"mixed", aggregate.mixed},
+            {"cloudCount", aggregate.cloudCover ? 1 : 0}, {"cloudSum", aggregate.cloudCover.value_or(0)*100}};
         QString icon, description;
         if (day["storm"].toBool()) { icon = "weather-storm"; description = Meteo::i18n("Possible thunderstorms"); }
         else if (day["snow"].toBool()) { icon = "weather-snow"; description = Meteo::i18n("Snowfall"); }

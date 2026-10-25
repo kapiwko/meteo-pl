@@ -1,10 +1,63 @@
 #include "core/Forecast.hpp"
+#include "core/ForecastAggregation.hpp"
 #include "Fixture.hpp"
 #include <QTest>
 
 class ForecastTest : public QObject {
     Q_OBJECT
 private slots:
+    void sumsPrecipitationOnItsNativeTimeline()
+    {
+        const auto first = QDateTime(QDate(2026,10,25),QTime(0,0),QTimeZone::utc()).toSecsSinceEpoch();
+        Meteo::Forecast forecast;
+        forecast.series["airtmp_point"] = {"Celsius",first,3600,{10,10,10,10,10,10,10}};
+        forecast.series["pcpttl_aver"] = {"kg/m2",first,10800,{1,2,0}};
+        const auto days = Meteo::aggregateDays(forecast,QTimeZone::utc());
+        QCOMPARE(days.size(),1);
+        QCOMPARE(days.first().rain.value(),3.0); // The hourly display used to sum 1+1+1+2+2+2+0 = 9.
+        QCOMPARE(days.first().rainCoverageSeconds,9*3600);
+        QVERIFY(!days.first().rainComplete);
+        forecast.series["pcpttl_aver"].firstTimestamp += 1800;
+        QCOMPARE(Meteo::aggregateDays(forecast,QTimeZone::utc()).first().rain.value(),3.0);
+    }
+    void partitionsNativeIntervalsAtCalendarMidnight()
+    {
+        const auto first = QDateTime(QDate(2026,10,25),QTime(23,0),QTimeZone::utc()).toSecsSinceEpoch();
+        Meteo::Forecast forecast;
+        forecast.series["pcpttl_aver"] = {"kg/m2",first,10800,{3}};
+        const auto days = Meteo::aggregateDays(forecast,QTimeZone::utc());
+        QCOMPARE(days.size(),2);
+        QCOMPARE(days[0].rain.value(),1.0); QCOMPARE(days[1].rain.value(),2.0);
+        QVERIFY(days[0].rainEstimatedAtBoundary); QVERIFY(days[1].rainEstimatedAtBoundary);
+        QCOMPARE(days[0].rainCoverageSeconds,3600); QCOMPARE(days[1].rainCoverageSeconds,7200);
+    }
+    void preservesMissingPrecipitation()
+    {
+        const auto first = QDateTime(QDate(2026,10,25),QTime(0,0),QTimeZone::utc()).toSecsSinceEpoch();
+        Meteo::Forecast forecast;
+        forecast.series["pcpttl_aver"] = {"kg/m2",first,10800,{std::nullopt,2}};
+        auto day = Meteo::aggregateDays(forecast,QTimeZone::utc()).first();
+        QCOMPARE(day.rain.value(),2.0); QVERIFY(!day.rainComplete);
+        forecast.series["pcpttl_aver"].values = {std::nullopt,std::nullopt};
+        day = Meteo::aggregateDays(forecast,QTimeZone::utc()).first();
+        QVERIFY(!day.rain); QCOMPARE(day.rainCoverageSeconds,0);
+    }
+    void usesElapsedTimeAcrossDaylightSavingChanges()
+    {
+        const QTimeZone zone("Europe/Warsaw");
+        QVERIFY(zone.isValid());
+        Meteo::Forecast forecast;
+        const auto spring = QDateTime(QDate(2026,3,29),QTime(0,0),zone).toSecsSinceEpoch();
+        forecast.series["pcpttl_aver"] = {"kg/m2",spring,86400,{24}};
+        auto days = Meteo::aggregateDays(forecast,zone);
+        QCOMPARE(days.size(),2); QCOMPARE(days[0].rain.value(),23.0); QCOMPARE(days[1].rain.value(),1.0);
+        QVERIFY(days[0].rainComplete); QVERIFY(!days[1].rainComplete);
+        const auto autumn = QDateTime(QDate(2026,10,25),QTime(0,0),zone).toSecsSinceEpoch();
+        forecast.series["pcpttl_aver"] = {"kg/m2",autumn,86400,{24,24}};
+        days = Meteo::aggregateDays(forecast,zone);
+        QCOMPARE(days.size(),2); QCOMPARE(days[0].rain.value(),25.0); QCOMPARE(days[1].rain.value(),23.0);
+        QVERIFY(days[0].rainComplete);
+    }
     void parsesSeriesWithoutChangingUnits()
     {
         const auto result = Meteo::parseForecast(forecastFixture(1700000000));

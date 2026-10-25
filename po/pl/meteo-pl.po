@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-25 23:05+0100\n"
+"POT-Creation-Date: 2026-10-25 23:27+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -54,25 +54,25 @@ msgstr[0] "Wybrano %1 wykres"
 msgstr[1] "Wybrano %1 wykresy"
 msgstr[2] "Wybrano %1 wykresów"
 
-#: src/presentation/WeatherModel.cpp:582
+#: src/presentation/WeatherModel.cpp:571
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:73
+#: integrations/plasma/package/contents/ui/configAppearance.qml:74
 msgid "12 hours"
 msgstr "12 godzin"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:73
+#: integrations/plasma/package/contents/ui/configAppearance.qml:74
 #: src/qml/ForecastSettings.qml:39
 msgid "24 hours"
 msgstr "24 godziny"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:74
+#: integrations/plasma/package/contents/ui/configAppearance.qml:75
 #: src/qml/ForecastSettings.qml:39
 msgid "48 hours"
 msgstr "48 godzin"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:74
+#: integrations/plasma/package/contents/ui/configAppearance.qml:75
 #: src/qml/ForecastSettings.qml:39
 msgid "72 hours"
 msgstr "72 godziny"
@@ -97,7 +97,7 @@ msgstr "Dodaj serię"
 msgid "Air temperature"
 msgstr "Temperatura powietrza"
 
-#: src/presentation/ChartConfiguration.cpp:50
+#: src/presentation/ChartConfiguration.cpp:51
 msgid "Air temperature min–max"
 msgstr "Temperatura powietrza min–max"
 
@@ -117,6 +117,14 @@ msgstr "Wszystkie parametry"
 #: src/qml/DisplaySettings.qml:130
 msgid "All saved profiles…"
 msgstr "Wszystkie zapisane profile…"
+
+#: src/qml/ForecastPanel.qml:625
+msgid ""
+"An interval crosses midnight. Its precipitation is shared between days in "
+"proportion to duration."
+msgstr ""
+"Przedział obejmuje północ. Opad jest dzielony między dni proporcjonalnie do "
+"czasu trwania."
 
 #: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
 msgid "Animate"
@@ -229,7 +237,7 @@ msgstr "Nazwa wykresu"
 msgid "Chart profile"
 msgstr "Profil wykresów"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:35
+#: integrations/plasma/package/contents/ui/configAppearance.qml:36
 #: src/qml/ForecastSettings.qml:21
 msgid "Chart profile:"
 msgstr "Profil wykresów:"
@@ -254,7 +262,7 @@ msgstr "Wyeksportowano wykresy"
 msgid "Charts in profile"
 msgstr "Wykresy w profilu"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:47
+#: integrations/plasma/package/contents/ui/configAppearance.qml:48
 msgid "Charts:"
 msgstr "Wykresy:"
 
@@ -303,7 +311,7 @@ msgstr "Wybierz lokalizację"
 msgid "Choose on map"
 msgstr "Wybierz na mapie"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:64
+#: integrations/plasma/package/contents/ui/configAppearance.qml:65
 msgid ""
 "Choose one or two charts. Their appearance comes from the selected profile."
 msgstr ""
@@ -313,7 +321,7 @@ msgstr ""
 msgid "Classic ICM"
 msgstr "Klasyczny ICM"
 
-#: src/presentation/WeatherModel.cpp:515
+#: src/presentation/WeatherModel.cpp:504
 msgid "Clear"
 msgstr "Słonecznie"
 
@@ -382,7 +390,7 @@ msgstr "Chmury %"
 msgid "Clouds and precipitation"
 msgstr "Chmury i opady"
 
-#: src/presentation/WeatherModel.cpp:383
+#: src/presentation/WeatherModel.cpp:384
 msgid "Code %1"
 msgstr "Kod %1"
 
@@ -520,7 +528,7 @@ msgstr "Własny układ"
 msgid "Custom name and coordinates"
 msgstr "Własna nazwa i współrzędne"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:30
+#: integrations/plasma/package/contents/ui/configAppearance.qml:31
 msgid "Daily forecast"
 msgstr "Prognoza dzienna"
 
@@ -620,12 +628,12 @@ msgstr ""
 msgid "Enter a valid date in yyyy-mm-dd format."
 msgstr "Podaj poprawną datę w formacie rrrr-mm-dd."
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:74
+#: integrations/plasma/package/contents/ui/configAppearance.qml:75
 #: src/qml/ForecastPanel.qml:451 src/qml/ForecastSettings.qml:39
 msgid "Entire forecast"
 msgstr "Cała prognoza"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:28
+#: integrations/plasma/package/contents/ui/configAppearance.qml:29
 msgid "Expanded view:"
 msgstr "Widok po rozwinięciu:"
 
@@ -669,7 +677,7 @@ msgstr "Eksportuj…"
 msgid "Feels like"
 msgstr "Odczuw."
 
-#: src/presentation/ChartConfiguration.cpp:50
+#: src/presentation/ChartConfiguration.cpp:51
 msgid "Feels like min–max"
 msgstr "Odczuwalna min–max"
 
@@ -715,7 +723,7 @@ msgstr "Pokrycie mgłą"
 msgid "Forecast"
 msgstr "Prognoza"
 
-#: src/presentation/WeatherModel.cpp:292
+#: src/presentation/WeatherModel.cpp:293
 msgid "Forecast for "
 msgstr "Prognoza na "
 
@@ -752,7 +760,7 @@ msgstr "Grunt min–max"
 msgid "Ground temperature"
 msgstr "Temperatura gruntu"
 
-#: src/presentation/ChartConfiguration.cpp:50
+#: src/presentation/ChartConfiguration.cpp:51
 msgid "Ground temperature min–max"
 msgstr "Temperatura gruntu min–max"
 
@@ -764,7 +772,7 @@ msgstr "Poryw powyżej skali"
 msgid "Gusts"
 msgstr "Porywy"
 
-#: src/qml/ForecastPanel.qml:619
+#: src/qml/ForecastPanel.qml:629
 msgid "Gusts: "
 msgstr "Porywy: "
 
@@ -874,7 +882,7 @@ msgstr "Najnowszy"
 msgid "Latest available"
 msgstr "Najnowszy dostępny"
 
-#: src/presentation/WeatherModel.cpp:51 src/presentation/WeatherModel.cpp:64
+#: src/presentation/WeatherModel.cpp:52 src/presentation/WeatherModel.cpp:65
 msgid "Latest forecast"
 msgstr "Najnowsza prognoza"
 
@@ -1112,12 +1120,12 @@ msgstr "Przy gruncie · minimum"
 msgid "Near-ground temperature"
 msgstr "Temperatura przy gruncie"
 
-#: src/presentation/ChartConfiguration.cpp:157
+#: src/presentation/ChartConfiguration.cpp:158
 #: src/presentation/UserPreferences.cpp:320
 msgid "New chart"
 msgstr "Nowy wykres"
 
-#: src/presentation/WeatherModel.cpp:511
+#: src/presentation/WeatherModel.cpp:500
 msgid "No cloud cover data"
 msgstr "Brak danych o zachmurzeniu"
 
@@ -1129,7 +1137,7 @@ msgstr "Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."
 msgid "No forecast"
 msgstr "Brak prognozy"
 
-#: src/presentation/WeatherModel.cpp:288
+#: src/presentation/WeatherModel.cpp:289
 msgid "No forecast for the current hour"
 msgstr "Brak prognozy na bieżącą godzinę"
 
@@ -1168,7 +1176,7 @@ msgstr ""
 msgid "No valid reading time."
 msgstr "Brak prawidłowego czasu odczytu."
 
-#: src/presentation/WeatherModel.cpp:381
+#: src/presentation/WeatherModel.cpp:382
 msgid "None"
 msgstr "Brak"
 
@@ -1201,7 +1209,7 @@ msgstr "Oryginalny meteogram ICM"
 msgid "Outdoors"
 msgstr "Na zewnątrz"
 
-#: src/presentation/WeatherModel.cpp:515
+#: src/presentation/WeatherModel.cpp:504
 msgid "Overcast"
 msgstr "Pochmurno"
 
@@ -1233,7 +1241,7 @@ msgstr "Parametry"
 msgid "Parameters of the indicated chart"
 msgstr "Parametry wskazanego wykresu"
 
-#: src/presentation/WeatherModel.cpp:515
+#: src/presentation/WeatherModel.cpp:504
 msgid "Partly cloudy"
 msgstr "Częściowe zachmurzenie"
 
@@ -1262,15 +1270,15 @@ msgstr "Promień punktu:"
 msgid "Points"
 msgstr "Punkty"
 
-#: src/presentation/WeatherModel.cpp:574
+#: src/presentation/WeatherModel.cpp:563
 msgid "Polar day"
 msgstr "Dzień polarny"
 
-#: src/presentation/WeatherModel.cpp:574
+#: src/presentation/WeatherModel.cpp:563
 msgid "Polar night"
 msgstr "Noc polarna"
 
-#: src/presentation/WeatherModel.cpp:507
+#: src/presentation/WeatherModel.cpp:496
 msgid "Possible thunderstorms"
 msgstr "Możliwe burze"
 
@@ -1294,7 +1302,7 @@ msgstr "Szansa opadu i burze"
 msgid "Precipitation type"
 msgstr "Rodzaj opadu"
 
-#: src/qml/ForecastPanel.qml:618
+#: src/qml/ForecastPanel.qml:620
 msgid "Precipitation: "
 msgstr "Opad: "
 
@@ -1331,11 +1339,11 @@ msgstr "Wyeksportowano profili: "
 msgid "Profiles imported: "
 msgstr "Zaimportowano profili: "
 
-#: src/presentation/WeatherModel.cpp:381
+#: src/presentation/WeatherModel.cpp:382
 msgid "Rain"
 msgstr "Deszcz"
 
-#: src/presentation/WeatherModel.cpp:510
+#: src/presentation/WeatherModel.cpp:499
 msgid "Rainfall"
 msgstr "Opady deszczu"
 
@@ -1445,7 +1453,7 @@ msgstr "Szukaj także poza Polską"
 msgid "Select between 1 and 50 charts to export."
 msgstr "Wybierz od 1 do 50 wykresów do eksportu."
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:30
+#: integrations/plasma/package/contents/ui/configAppearance.qml:31
 msgid "Selected charts"
 msgstr "Wybrane wykresy"
 
@@ -1518,15 +1526,15 @@ msgstr "Pokaż meteogram"
 msgid "Show:"
 msgstr "Pokazuj:"
 
-#: src/presentation/WeatherModel.cpp:382 src/presentation/WeatherModel.cpp:509
+#: src/presentation/WeatherModel.cpp:383 src/presentation/WeatherModel.cpp:498
 msgid "Sleet"
 msgstr "Deszcz ze śniegiem"
 
-#: src/presentation/WeatherModel.cpp:382
+#: src/presentation/WeatherModel.cpp:383
 msgid "Snow"
 msgstr "Śnieg"
 
-#: src/presentation/WeatherModel.cpp:508
+#: src/presentation/WeatherModel.cpp:497
 msgid "Snowfall"
 msgstr "Opady śniegu"
 
@@ -1632,6 +1640,10 @@ msgstr "Plik nie zawiera poprawnego dokumentu JSON."
 msgid "The file must contain between 1 and 100 profiles."
 msgstr "Plik musi zawierać od 1 do 100 profili."
 
+#: src/qml/ForecastPanel.qml:626
+msgid "The forecast covers part of this day. Missing intervals are excluded."
+msgstr "Prognoza obejmuje część dnia. Brakujące przedziały nie są wliczane."
+
 #: src/qml/ForecastPanel.qml:344
 msgid "The forecast may be outdated. Last downloaded: "
 msgstr "Prognoza może być nieaktualna. Ostatnie pobranie: "
@@ -1717,7 +1729,7 @@ msgstr "Ten punkt leży poza obszarem UM4. Wybierz model GFS."
 msgid "Time"
 msgstr "Czas"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:71
+#: integrations/plasma/package/contents/ui/configAppearance.qml:72
 #: src/qml/ForecastSettings.qml:33
 msgid "Time interval:"
 msgstr "Zakres czasu:"
@@ -1737,6 +1749,10 @@ msgstr "Zachmurzenie całkowite"
 #: src/qml/ApplicationSettings.qml:73
 msgid "Total on disk:"
 msgstr "Razem na dysku:"
+
+#: src/qml/ForecastPanel.qml:626
+msgid "Total precipitation for this day."
+msgstr "Suma opadu dla całego dnia."
 
 #: src/qml/LocationEditor.qml:65
 msgid "Town or village name…"
@@ -1898,7 +1914,7 @@ msgstr "Ustawienia widgetu"
 msgid "Widget view"
 msgstr "Widok widgetu"
 
-#: src/presentation/ChartConfiguration.cpp:192
+#: src/presentation/ChartConfiguration.cpp:193
 #: src/presentation/ForecastFields.cpp:67
 msgid "Wind"
 msgstr "Wiatr"
@@ -1928,7 +1944,7 @@ msgstr "Kierunek wiatru · skąd wieje"
 msgid "Wind gusts"
 msgstr "Porywy wiatru"
 
-#: src/presentation/ChartConfiguration.cpp:192
+#: src/presentation/ChartConfiguration.cpp:193
 msgid "Wind speed and gusts"
 msgstr "Prędkość i porywy wiatru"
 

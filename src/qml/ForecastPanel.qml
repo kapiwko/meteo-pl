@@ -615,7 +615,17 @@ Item {
                                 Label { text: root.number(dayCard.modelData.maximum, 0) + "°"; font.pixelSize: 20; font.bold: true }
                                 Label { text: root.number(dayCard.modelData.minimum, 0) + "°"; font.pixelSize: 16; opacity: 0.65 }
                             }
-                            Label { Layout.fillWidth: true; text: I18n.i18n("Precipitation: ") + root.number(dayCard.modelData.rain, 1) + " mm"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                            Label {
+                                Layout.fillWidth: true
+                                text: I18n.i18n("Precipitation: ") + (dayCard.modelData.rainEstimated ? "≈ " : "") + root.number(dayCard.modelData.rain, 1) + " mm"
+                                horizontalAlignment: Text.AlignHCenter
+                                font.pixelSize: 11
+                                ToolTip.visible: rainHover.hovered
+                                ToolTip.text: dayCard.modelData.rainEstimated
+                                    ? I18n.i18n("An interval crosses midnight. Its precipitation is shared between days in proportion to duration.")
+                                    : dayCard.modelData.rainComplete ? I18n.i18n("Total precipitation for this day.") : I18n.i18n("The forecast covers part of this day. Missing intervals are excluded.")
+                                HoverHandler { id: rainHover }
+                            }
                             Label { Layout.fillWidth: true; text: I18n.i18n("Gusts: ") + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
                         }
                     }

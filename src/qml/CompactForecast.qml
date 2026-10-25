@@ -75,7 +75,7 @@ ColumnLayout {
                 }
                 Label { Layout.fillWidth: true; text: day.modelData.maximum === null ? "—" : Math.round(day.modelData.maximum) + "°"; font.bold: true; horizontalAlignment: Text.AlignHCenter }
                 Label { Layout.fillWidth: true; text: day.modelData.minimum === null ? "—" : Math.round(day.modelData.minimum) + "°"; color: Kirigami.Theme.disabledTextColor; horizontalAlignment: Text.AlignHCenter }
-                Label { Layout.fillWidth: true; text: day.modelData.rain > 0 ? Number(day.modelData.rain).toLocaleString(Qt.locale(), 'f', 1) + " mm" : "—"; horizontalAlignment: Text.AlignHCenter; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
+                Label { Layout.fillWidth: true; text: day.modelData.rain === null ? "—" : (day.modelData.rainEstimated ? "≈ " : "") + Number(day.modelData.rain).toLocaleString(Qt.locale(), 'f', 1) + " mm"; elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
             }
         }
     }
