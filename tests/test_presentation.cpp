@@ -41,7 +41,7 @@ private slots:
             auto field = it.value().toObject();
             const auto original = field["data"].toArray();
             QJsonArray values;
-            for (int repeat = 0; repeat < 6; ++repeat) for (const auto &value : original) values.append(value);
+            for (int repeat = 0; repeat < 12; ++repeat) for (const auto &value : original) values.append(value);
             field["data"] = values;
             it.value() = field;
         }
@@ -148,6 +148,23 @@ private slots:
         };
         auto *plot = findItem(findItem, item, "plot-temperature");
         QVERIFY(plot);
+        auto *header=findItem(findItem,item,"forecastHeader");
+        QVERIFY(header);
+        QVERIFY(header->height()<100);
+        auto *status=findItem(findItem,item,"chartStatusBar");
+        QVERIFY(status);
+        QVERIFY(status->mapToScene({0,0}).y()>plot->mapToScene({0,0}).y()+plot->height());
+        auto *zoomSlider=findItem(findItem,item,"chartZoomSlider");
+        QVERIFY(zoomSlider);
+        QCOMPARE(zoomSlider->property("value").toDouble(),1.0);
+        auto *options=object->findChild<QObject *>("viewOptionsDialog");
+        QVERIFY(options);
+        QVERIFY(!options->property("visible").toBool());
+        auto *optionsButton=findItem(findItem,item,"viewOptionsButton");
+        QVERIFY(optionsButton);
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,optionsButton->mapToScene({optionsButton->width()/2,optionsButton->height()/2}).toPoint());
+        QTRY_VERIFY(options->property("visible").toBool());
+        QVERIFY(QMetaObject::invokeMethod(options,"close"));
         auto *chart = plot->parentItem();
         const auto originalBounds = chart->property("bounds").value<QJSValue>().toVariant().toMap();
         QVERIFY(originalBounds.contains("high"));
@@ -177,6 +194,25 @@ private slots:
         const auto fullSpan = object->property("viewportEnd").toDouble() - object->property("viewportStart").toDouble();
         QVERIFY(QMetaObject::invokeMethod(object.data(), "zoom", Q_ARG(QVariant, 0.5), Q_ARG(QVariant, model.firstTimestamp() + fullSpan / 2)));
         QVERIFY(object->property("viewportEnd").toDouble() - object->property("viewportStart").toDouble() < fullSpan);
+        for (int i=0;i<5;++i) QVERIFY(QMetaObject::invokeMethod(object.data(), "zoom", Q_ARG(QVariant,0.1), Q_ARG(QVariant,model.firstTimestamp()+fullSpan/2)));
+        QCOMPARE(object->property("viewportEnd").toDouble()-object->property("viewportStart").toDouble(),24*3600.0);
+        QTRY_COMPARE(zoomSlider->property("value").toDouble(),fullSpan/(24*3600));
+        item->setWidth(450);
+        window.resize(450,1000);
+        QTest::qWait(50);
+        QVERIFY(optionsButton->mapToScene({optionsButton->width(),0}).x()<=450);
+        item->setWidth(780);
+        window.resize(780,1000);
+        object->setProperty("viewMode",2);
+        QTest::qWait(100);
+        QList<QQuickItem *> cards;
+        const auto collect=[&](auto &&self,QQuickItem *parent)->void {
+            if (parent->objectName()=="forecastDayCard") cards.append(parent);
+            for (auto *child:parent->childItems()) self(self,child);
+        };
+        collect(collect,item);
+        QVERIFY(cards.size()>1);
+        for (auto *card:cards) QVERIFY(qAbs(card->width()-cards.first()->width())<1);
     }
     void configuredChartsMixDifferentUnitsAndRespectProfileAxes()
     {
@@ -192,7 +228,7 @@ private slots:
         rain["axis"] = "right";
         const QVariantList layout{QVariantMap{{"key", "chart:mixed"}, {"title", "Temperatura i deszcz"}, {"enabled", true},
             {"leftScale", "auto"}, {"rightScale", "auto"}, {"leftMin", -20}, {"leftMax", 40}, {"rightMax", 10},
-            {"series", QVariantList{temperature, rain}}}};
+            {"series", QVariantList{temperature, rain}}, {"height",220}}};
         const auto charts = model.configuredCharts(layout);
         QCOMPARE(charts.size(), 1);
         const auto definition = charts.first().toMap();
@@ -211,6 +247,9 @@ private slots:
         QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)},
             {"title", definition["title"]}, {"groupKey", definition["key"]}, {"fields", fields}, {"chartConfiguration", definition}}));
         QVERIFY2(chart, qPrintable(component.errorString()));
+        QCOMPARE(chart->property("chartHeight").toInt(),220);
+        chart->setProperty("legendOverride",0);
+        QVERIFY(!chart->property("legendVisible").toBool());
         auto bounds = chart->property("bounds").value<QJSValue>().toVariant().toMap();
         auto right = chart->property("rightBounds").value<QJSValue>().toVariant().toMap();
         QCOMPARE(bounds["low"].toDouble(), -20);
