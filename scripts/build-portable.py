@@ -97,28 +97,57 @@ def check_packaged_desktop(target, packages, craft_root, environment):
         clean.pop(key, None)
     clean["PATH"] = os.pathsep.join(p for p in clean.get("PATH", "").split(os.pathsep)
                                    if not p.lower().startswith(str(craft_root).lower()))
-    clean.update(QT_QPA_PLATFORM="offscreen", QT_QUICK_BACKEND="software")
+    clean.update(QT_QPA_PLATFORM="offscreen", QT_QUICK_BACKEND="software", QT_FORCE_STDERR_LOGGING="1")
     with tempfile.TemporaryDirectory(prefix="meteo-bundle-test-") as temporary:
         directory = Path(temporary)
         clean.update(XDG_CONFIG_HOME=str(directory / "config"), XDG_CACHE_HOME=str(directory / "cache"))
         mounted = False
         try:
             if target == "windows":
-                archives = sorted(packages[0].parent.glob("*.zip"))
-                if not archives: raise RuntimeError("The Windows portable ZIP is missing")
+                archives = [path for path in packages if path.suffix == ".zip"]
+                if len(archives) != 1: raise RuntimeError(f"Expected one current Windows ZIP, found {archives}")
                 with zipfile.ZipFile(archives[0]) as archive: archive.extractall(directory / "app")
                 executables = list((directory / "app").rglob("meteo-pl.exe"))
             else:
                 mount = directory / "dmg"; mount.mkdir()
-                run(["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, packages[0]])
+                images = [path for path in packages if path.suffix == ".dmg"]
+                if len(images) != 1: raise RuntimeError(f"Expected one current macOS DMG, found {images}")
+                run(["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, images[0]])
                 mounted = True
                 executables = list(mount.rglob("meteo-pl.app/Contents/MacOS/meteo-pl"))
             if len(executables) != 1: raise RuntimeError(f"Expected one bundled executable, found {executables}")
+            version = run([executables[0], "--version"], env=clean, capture_output=True, text=True, timeout=30)
+            expected_version = (ROOT / "VERSION").read_text().strip()
+            if version.stdout.strip() != f"meteo-pl {expected_version}":
+                raise RuntimeError(f"Unexpected bundled version: {version.stdout!r}; expected {expected_version}")
             result = run([executables[0], "--smoke-test"], env=clean, capture_output=True, text=True, timeout=60)
             print(result.stdout + result.stderr)
             if QML_ERRORS.search(result.stdout + result.stderr): raise RuntimeError("Bundled QML smoke test failed")
         finally:
             if mounted: run(["hdiutil", "detach", mount])
+
+
+def package_current_build(command, target, work, dist, craft_root, environment):
+    # Keep previous releases outside the artifact selection and smoke test.
+    # Publish only after the package from this invocation has passed verification.
+    with tempfile.TemporaryDirectory(prefix="packages-", dir=work) as temporary:
+        staging = Path(temporary)
+        run([*command, "--options", f"[Packager]Destination={staging}", "--package", "meteo-pl"], env=environment)
+        artifacts = sorted(p for p in staging.iterdir() if p.suffix in (".exe", ".zip", ".dmg", ".apk"))
+        suffix = {"windows": ".zip", "macos": ".dmg", "android": ".apk"}[target]
+        packages = [p for p in artifacts if p.suffix == suffix]
+        if len(packages) != 1:
+            raise RuntimeError(f"Expected one current {suffix} package, found {packages}")
+        if target == "android":
+            artifacts.append(sign_android(packages[0], staging))
+        else:
+            check_packaged_desktop(target, artifacts, craft_root, environment)
+        published = []
+        for artifact in artifacts:
+            destination = dist / artifact.name
+            shutil.copy2(artifact, destination)
+            published.append(destination)
+        return published
 
 
 def build(args):
@@ -165,28 +194,19 @@ def build(args):
         run(["git", "-C", blueprints, "checkout", "--detach", BLUEPRINTS_REVISION])
     else:
         checkout("https://github.com/KDE/craft-blueprints-kde.git", BLUEPRINTS_REVISION, blueprints)
-    command = [sys.executable, craft, "--options", f"meteo-pl.srcDir={ROOT}", "--options", f"[Packager]Destination={dist}"]
+    command = [sys.executable, craft, "--options", f"meteo-pl.srcDir={ROOT}"]
     run([*command, "--ignoreInstalled", "meteo-pl"], env=environment)
     smoke = "not-run"
     if args.target != "android":
         executable = craft_root / ("bin/meteo-pl.exe" if args.target == "windows" else "bin/meteo-pl.app/Contents/MacOS/meteo-pl")
-        smoke_env = environment | {"QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"}
+        smoke_env = environment | {"QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software", "QT_FORCE_STDERR_LOGGING": "1"}
         with tempfile.TemporaryDirectory(prefix="meteo-smoke-") as temporary:
             smoke_env.update(XDG_CONFIG_HOME=temporary+"/config", XDG_CACHE_HOME=temporary+"/cache")
             result = run([*command, "--run", executable, "--smoke-test"], env=smoke_env, capture_output=True, text=True, timeout=60)
             print(result.stdout + result.stderr)
             if QML_ERRORS.search(result.stdout + result.stderr): raise RuntimeError("QML smoke test failed")
         smoke = "passed"
-    run([*command, "--package", "meteo-pl"], env=environment)
-    suffix = {"windows": ".exe", "macos": ".dmg", "android": ".apk"}[args.target]
-    packages = sorted(dist.glob("*" + suffix))
-    if not packages: raise RuntimeError(f"Craft did not create a {suffix} package in {dist}")
-    if args.target == "android":
-        for apk in packages:
-            if not apk.stem.endswith("-development"): sign_android(apk, dist)
-    else:
-        check_packaged_desktop(args.target, packages, craft_root, environment)
-    artifacts = sorted(p for p in dist.iterdir() if p.suffix in (".exe", ".zip", ".dmg", ".apk"))
+    artifacts = package_current_build(command, args.target, work, dist, craft_root, environment)
     report = {"version": (ROOT / "VERSION").read_text().strip(), "target": args.target,
               "architecture": "arm64-v8a" if args.target == "android" else platform.machine(),
               "smokeTest": smoke, "releaseSigned": False, "bootstrapRevision": CRAFT_REVISION,
