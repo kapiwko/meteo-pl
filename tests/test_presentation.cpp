@@ -1006,7 +1006,7 @@ private slots:
         QVERIFY(!model.dailyForecast().isEmpty());
         QVERIFY(model.chartGroups().size() >= 9);
     }
-    void applicationConfigurationHasPaddingAndFitsWindow()
+    void locationDialogUsesInsetContentAndFitsNarrowWindows()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
         QQmlEngine engine;
@@ -1025,10 +1025,27 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(dialog, "open"));
         QTest::qWait(150);
         QVERIFY(dialog->property("visible").toBool());
-        QVERIFY(dialog->property("padding").toDouble() >= 16);
+        QCOMPARE(dialog->property("padding").toDouble(), 0);
+        auto *content = object->findChild<QQuickItem *>("locationDialogContent");
+        auto *search = object->findChild<QQuickItem *>("placeSearchField");
+        auto *manual = object->findChild<QQuickItem *>("manualLocationToggle");
+        QVERIFY(content); QVERIFY(search); QVERIFY(manual);
+        QVERIFY(content->property("padding").toDouble() > 0);
         QVERIFY(dialog->property("height").toDouble() < window->height());
         const auto screenshotPath = qEnvironmentVariable("METEO_DIALOG_SCREENSHOT");
         if (!screenshotPath.isEmpty()) QVERIFY(window->grabWindow().save(screenshotPath));
+        window->resize(420, 600);
+        QTRY_VERIFY(dialog->property("width").toDouble() < window->width());
+        QTRY_VERIFY(dialog->property("height").toDouble() < window->height());
+        QTRY_VERIFY(search->width() > 100);
+        QVERIFY(search->mapToItem(content, {0,0}).x() >= content->property("padding").toDouble());
+        QVERIFY(search->mapToItem(content, {search->width(),0}).x() < content->width());
+        QTest::qWait(100); // Allow the responsive form to finish layout after resizing.
+        const auto collapsed = content->implicitHeight();
+        manual->setProperty("checked", true);
+        QTRY_VERIFY(content->implicitHeight() > collapsed + 90);
+        manual->setProperty("checked", false);
+        QTRY_VERIFY(qAbs(content->implicitHeight() - collapsed) < 2);
         QMetaObject::invokeMethod(dialog, "close");
     }
     void plasmaConfigurationUpdatesInBothDirections()
