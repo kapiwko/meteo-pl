@@ -52,3 +52,6 @@ set_tests_properties(renderer_parity PROPERTIES
     LABELS "gpu;visual"
 )
 
+find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
+add_test(NAME release_archives COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_release.py")
+set_tests_properties(release_archives PROPERTIES TIMEOUT 15)

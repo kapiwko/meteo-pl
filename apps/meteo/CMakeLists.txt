@@ -1,5 +1,6 @@
 find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
 qt_add_executable(meteo-pl main.cpp)
+target_compile_definitions(meteo-pl PRIVATE METEO_VERSION="${PROJECT_VERSION}")
 qt_add_resources(meteo-pl "application_icon" PREFIX "/icons"
     BASE "${PROJECT_SOURCE_DIR}/integrations/plasma/package/contents/images"
     FILES "${PROJECT_SOURCE_DIR}/integrations/plasma/package/contents/images/meteo.svg")

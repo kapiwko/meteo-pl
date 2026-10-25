@@ -208,6 +208,14 @@ używających `lib64` zamiast `lib`.
 Opcje `METEO_BUILD_APP` i `METEO_BUILD_PLASMOID` wyłączają odpowiednie frontendy.
 `BUILD_TESTING=OFF` usuwa zależność od Qt Test.
 
+## Paczki i CI
+
+Paczki dla Arch Linux, Debiana 13, Ubuntu 26.04 i Fedory 44 można budować
+w kontenerach: `python3 scripts/build-package.py --distro debian --test`.
+Wyniki zawierają źródła, sumy SHA-256 i raport budowy.
+GitHub Actions uruchamia testy, porównuje wygląd CPU/GPU i sprawdza instalację
+paczek. Szczegóły: [budowanie paczek i CI](docs/packaging.md).
+
 ## Architektura i źródła
 
 Podział na wspólny backend i opcjonalną integrację KDE nawiązuje do lokalnego

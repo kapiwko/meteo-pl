@@ -1,0 +1,7 @@
+.git
+.idea
+build*
+cmake-build-*
+dist
+local
+__pycache__
