@@ -1170,6 +1170,44 @@ private slots:
         QTRY_VERIFY(qAbs(content->implicitHeight() - collapsed) < 2);
         QMetaObject::invokeMethod(dialog, "close");
     }
+    void plasmaConfigurationDoesNotLayOutKirigamiSeparators()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*Detected anchors on an item.*")));
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import org.kde.kirigami as Kirigami
+            Item {
+                id: host
+                property url configUrl
+                property Item editor
+                width: 1100; height: 800
+                Kirigami.ColumnView {
+                    id: columns
+                    anchors.fill: parent
+                    columnResizeMode: Kirigami.ColumnView.FixedColumns
+                    columnWidth: 500
+                    Component.onCompleted: {
+                        host.editor = Qt.createComponent(host.configUrl).createObject(columns);
+                        addItem(host.editor);
+                    }
+                }
+            }
+        )", QUrl());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        const auto url = QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configGeneral.qml"));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"configUrl", url}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *editor = qvariant_cast<QQuickItem *>(object->property("editor"));
+        QVERIFY(editor);
+        QQuickWindow window;
+        window.resize(1100, 800);
+        qobject_cast<QQuickItem *>(object.data())->setParentItem(window.contentItem());
+        window.show();
+        QTest::qWait(100);
+        QVERIFY(editor->width() > 300);
+    }
     void plasmaConfigurationUpdatesInBothDirections()
     {
         QQmlEngine engine;
