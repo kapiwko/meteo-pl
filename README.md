@@ -96,7 +96,10 @@ pełnym zakresie. Ctrl + kółko myszy również zmienia powiększenie. Podczas
 oglądania fragmentu pojawia się drugi suwak do przesuwania czasu.
 Przycisk **Ustawienia** w górnym pasku otwiera wspólne okno. Zakładka
 **Prognoza** zawiera **Profil wykresów**, **Zakres czasu** i **Start modelu**,
-**Profile** zawiera edytor wykresów i serii oraz import i eksport profili,
+**Profile** zawiera edytor wykresów i serii oraz import i eksport profili.
+**Duplikuj profil** tworzy niezależną kopię z gotową nazwą, którą można od razu zmienić.
+Zapisane własne profile można usuwać, a roboczy „Własny układ” wyczyścić.
+Gotowe profile pozostają dostępne jako szablony.
 **Odczyt** — zakres parametrów próbnika i domyślną widoczność legendy,
 a **Aplikacja** — renderer, jednostki, strefę czasu i ogólną wysokość wykresów.
 Formularze korzystają z `Kirigami.FormLayout`, standardowych grup opcji i kontrolek Qt Quick.

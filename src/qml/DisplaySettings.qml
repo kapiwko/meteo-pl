@@ -15,6 +15,8 @@ ColumnLayout {
     property WeatherModel weather: null
     property string transferMessage: ""
     property bool transferFailed: false
+    readonly property var currentProfile: UserPreferences.profiles.find(profile => profile.id === UserPreferences.profile) || {name: ""}
+    readonly property bool savedProfile: UserPreferences.profile.startsWith("user:")
     function transferResult(result, importing) {
         transferFailed = !result.ok;
         transferMessage = result.ok ? (importing ? "Zaimportowano profili: " : "Wyeksportowano profili: ") + result.count : result.error;
@@ -63,12 +65,18 @@ ColumnLayout {
                 }
                 TextField {
                     id: profileName
+                    objectName: "profileNameField"
                     Kirigami.FormData.label: "Nazwa:"
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-                    placeholderText: "Nazwa nowego profilu lub kopii…"
+                    text: root.currentProfile.name
+                    readOnly: !root.savedProfile
                     maximumLength: 80
+                    onEditingFinished: {
+                        if (!readOnly && text.trim().length && text.trim() !== root.currentProfile.name) UserPreferences.renameProfile(text);
+                        text = Qt.binding(() => root.currentProfile.name);
+                    }
                 }
                 RowLayout {
                     Kirigami.FormData.label: "Wysokość wykresów:"
@@ -87,12 +95,33 @@ ColumnLayout {
                     }
                 }
             }
+            Flow {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+                Button {
+                    objectName: "profileDuplicateButton"
+                    text: "Duplikuj profil"
+                    icon.name: "edit-duplicate"
+                    onClicked: {
+                        if (UserPreferences.duplicateProfile().length) {
+                            profileName.forceActiveFocus();
+                            profileName.selectAll();
+                        }
+                    }
+                }
+                Button {
+                    objectName: "profileDeleteButton"
+                    text: UserPreferences.profile === "custom" ? "Wyczyść układ" : "Usuń profil"
+                    icon.name: "edit-delete"
+                    enabled: root.savedProfile || UserPreferences.profile === "custom"
+                    onClicked: UserPreferences.deleteProfile()
+                    ToolTip.text: enabled ? text : "Gotowy profil możesz zduplikować i edytować jako własny."
+                    ToolTip.visible: hovered
+                }
+            }
             Kirigami.ActionToolBar {
                 Layout.fillWidth: true
                 actions: [
-                    Kirigami.Action { text: "Zapisz kopię"; icon.name: "document-save-as"; enabled: profileName.text.trim().length > 0; onTriggered: { UserPreferences.createProfile(profileName.text); profileName.clear(); } },
-                    Kirigami.Action { text: "Zmień nazwę"; icon.name: "edit-rename"; visible: UserPreferences.profile.startsWith("user:"); enabled: profileName.text.trim().length > 0; onTriggered: { UserPreferences.renameProfile(profileName.text); profileName.clear(); } },
-                    Kirigami.Action { text: "Usuń profil"; icon.name: "edit-delete"; visible: UserPreferences.profile.startsWith("user:"); onTriggered: UserPreferences.deleteProfile() },
                     Kirigami.Action { text: "Importuj…"; icon.name: "document-import"; onTriggered: importDialog.open() },
                     Kirigami.Action {
                         text: "Eksportuj"; icon.name: "document-export"
@@ -115,7 +144,10 @@ ColumnLayout {
     }
     Label {
         Layout.fillWidth: true
-        text: "Zmiany zapisują się automatycznie. Edycja gotowego profilu tworzy „Własny układ”."
+        text: UserPreferences.profile === "custom"
+            ? "To roboczy układ. Duplikuj profil, aby zapisać go pod własną nazwą."
+            : root.savedProfile ? "Nazwa i zmiany wykresów zapisują się automatycznie."
+            : "Gotowy profil możesz zduplikować. Edycja jego wykresów tworzy roboczy „Własny układ”."
         wrapMode: Text.WordWrap
         color: Kirigami.Theme.disabledTextColor
     }

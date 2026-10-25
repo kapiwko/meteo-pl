@@ -616,6 +616,44 @@ private slots:
             QTRY_VERIFY(qAbs(item->implicitHeight() - closedTotal) < 2);
         }
     }
+    void profileButtonsDuplicateRenameAndDeleteWithoutPreparingAName()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "DisplaySettings");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto original = preferences->profile();
+        const auto restore = qScopeGuard([&] { preferences->setProfile(original); });
+        preferences->setProfile("classic");
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(700, 800);
+        item->setParentItem(window.contentItem()); item->setWidth(680); window.show();
+        auto *duplicate = object->findChild<QQuickItem *>("profileDuplicateButton");
+        auto *remove = object->findChild<QQuickItem *>("profileDeleteButton");
+        auto *name = object->findChild<QQuickItem *>("profileNameField");
+        QVERIFY(duplicate); QVERIFY(remove); QVERIFY(name);
+        QTRY_VERIFY(duplicate->width() > 0);
+        QVERIFY(duplicate->isEnabled()); QVERIFY(!remove->isEnabled());
+        const auto click = [&](QQuickItem *control) {
+            QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier,
+                control->mapToScene({control->width()/2, control->height()/2}).toPoint());
+        };
+        const auto count = preferences->profiles().size();
+        click(duplicate);
+        QTRY_VERIFY(preferences->profile().startsWith("user:"));
+        QCOMPARE(preferences->profiles().size(), count + 1);
+        QVERIFY(remove->isEnabled()); QVERIFY(!name->property("readOnly").toBool());
+        name->setProperty("text", "Profil testowy");
+        QVERIFY(QMetaObject::invokeMethod(name, "editingFinished"));
+        QCOMPARE(preferences->profiles().last().toMap()["name"].toString(), "Profil testowy");
+        click(remove);
+        QTRY_COMPARE(preferences->profile(), "classic");
+        QCOMPARE(preferences->profiles().size(), count);
+    }
     void timeLabelsFitNarrowChartsWithoutOverlapping()
     {
         WeatherModel model;
