@@ -5,17 +5,20 @@
 namespace Meteo {
 QuantityTiming quantityTiming(const QString &key)
 {
+    // _min/_max/_aver usually describe spatial statistics across model cells,
+    // not a temporal aggregation. See meteo.pl/faq-category/opis-systemu and
+    // meteo.pl/jak-czytac-prognoze-pogody-czesc-i-meteogramy.
     if (key == "pcpttl_type_max") return QuantityTiming::Category;
-    if (key == "pcpttl_aver") return QuantityTiming::IntervalTotal;
-    if (key.endsWith("_min") || key.endsWith("_max")) return QuantityTiming::IntervalExtremum;
-    if (key.endsWith("_aver")) return QuantityTiming::IntervalMean;
+    if (key == "pcpttl_aver" || key == "pcpttl_max") return QuantityTiming::IntervalTotal;
+    if (key == "wind_gust_max") return QuantityTiming::IntervalExtremum;
+    if (key == "pcpttlprob_point" || key == "storm_max" || key == "flash_max") return QuantityTiming::IntervalStatistic;
     return QuantityTiming::Instant;
 }
 QString timingName(QuantityTiming timing)
 {
     switch (timing) {
     case QuantityTiming::Instant: return QStringLiteral("instant");
-    case QuantityTiming::IntervalMean: return QStringLiteral("intervalMean");
+    case QuantityTiming::IntervalStatistic: return QStringLiteral("intervalStatistic");
     case QuantityTiming::IntervalTotal: return QStringLiteral("intervalTotal");
     case QuantityTiming::IntervalExtremum: return QStringLiteral("intervalExtremum");
     case QuantityTiming::Category: return QStringLiteral("category");

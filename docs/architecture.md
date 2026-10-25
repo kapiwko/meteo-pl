@@ -46,6 +46,17 @@ Zmiana lokalizacji anuluje poprzednie żądanie i usuwa poprzednie podsumowanie,
 zanim rozpocznie się nowe pobranie. Licznik generacji odrzuca spóźnione odpowiedzi.
 Jedna instancja `WeatherModel` obsługuje wszystkie wykresy danego widoku.
 
+`ForecastSampling` definiuje osobno próbkowanie wartości chwilowych i wielkości
+odnoszących się do przedziału prognozy. Wartości chwilowe korzystają z najbliższej
+próbki źródłowej, a sumy opadu z przedziału `[czas, czas + interwał)`. Braki
+pozostają brakami. Sufiksy `_min`, `_max` i `_aver` często opisują statystyki
+przestrzenne sąsiednich węzłów, więc same nie określają semantyki czasowej
+([opis systemu ICM](https://www.meteo.pl/faq-category/opis-systemu),
+[objaśnienia meteogramów](https://www.meteo.pl/jak-czytac-prognoze-pogody-czesc-i-meteogramy)).
+Reguły są przypisane jawnie do parametrów. `ChartDataBuilder`, odczyt i CSV
+korzystają z tego samego kontraktu; odczyt podaje czas źródłowy lub przedział,
+a marker jest umieszczany przy odpowiadającej mu próbce.
+
 `ForecastFields` definiuje dane i katalog serii. `ChartConfiguration` buduje
 gotowe konfiguracje oraz normalizuje zapisy użytkownika. Każdy wykres ma nazwę,
 listę dowolnych serii, przypisania do osi, opcjonalne granice osi oraz style

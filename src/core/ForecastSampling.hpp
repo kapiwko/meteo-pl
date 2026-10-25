@@ -3,7 +3,7 @@
 
 namespace Meteo {
 // Sampling is a property of the quantity, independent of its chosen chart style.
-enum class QuantityTiming { Instant, IntervalMean, IntervalTotal, IntervalExtremum, Category };
+enum class QuantityTiming { Instant, IntervalStatistic, IntervalTotal, IntervalExtremum, Category };
 struct ForecastSample {
     std::optional<double> value;
     qint64 sourceTimestamp;

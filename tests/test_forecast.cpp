@@ -11,7 +11,7 @@ private slots:
     {
         using namespace Meteo;
         const Series series{"unit", 1000, 10800, {1,9,std::nullopt,4}};
-        for (auto timing : {QuantityTiming::Instant, QuantityTiming::IntervalMean, QuantityTiming::IntervalTotal,
+        for (auto timing : {QuantityTiming::Instant, QuantityTiming::IntervalStatistic, QuantityTiming::IntervalTotal,
                             QuantityTiming::IntervalExtremum, QuantityTiming::Category}) {
             QVERIFY(!sampleSeries(series,999,timing));
             QCOMPARE(sampleSeries(series,1000,timing)->value.value(),1.0);
@@ -31,8 +31,12 @@ private slots:
         QCOMPARE(sampleSeries(series,6399,QuantityTiming::Instant)->sourceTimestamp,1000);
         QCOMPARE(quantityTiming("airtmp_point"),QuantityTiming::Instant);
         QCOMPARE(quantityTiming("pcpttl_aver"),QuantityTiming::IntervalTotal);
-        QCOMPARE(quantityTiming("pcpttl_max"),QuantityTiming::IntervalExtremum);
-        QCOMPARE(quantityTiming("cldtot_aver"),QuantityTiming::IntervalMean);
+        QCOMPARE(quantityTiming("pcpttl_max"),QuantityTiming::IntervalTotal);
+        QCOMPARE(quantityTiming("cldtot_aver"),QuantityTiming::Instant);
+        for (const auto &key : {"airtmp_min","airtmp_max","wchill_min","wchill_max","grdtmp_min","grdtmp_max","realhum_aver","visibl_min","fog_max"})
+            QCOMPARE(quantityTiming(key),QuantityTiming::Instant);
+        QCOMPARE(quantityTiming("pcpttlprob_point"),QuantityTiming::IntervalStatistic);
+        QCOMPARE(quantityTiming("wind_gust_max"),QuantityTiming::IntervalExtremum);
         QCOMPARE(quantityTiming("pcpttl_type_max"),QuantityTiming::Category);
     }
     void sumsPrecipitationOnItsNativeTimeline()
