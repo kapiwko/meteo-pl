@@ -33,7 +33,7 @@ jobs:
       - name: Build the desktop package with Qt and KDE dependencies
         run: python scripts/build-portable.py --target "${{ matrix.target }}" --work-dir "${{ runner.temp }}/MeteoBuild" --craft-root "${{ runner.temp }}/MeteoCraft"
       - name: Preserve the installer and checksums
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: meteo-pl-${{ matrix.target }}-${{ runner.arch }}-${{ github.sha }}
           path: dist/${{ matrix.target }}/
@@ -50,7 +50,7 @@ jobs:
       - name: Build and verify a development APK
         run: python3 scripts/build-portable.py --target android
       - name: Preserve APKs and checksums
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: meteo-pl-android-arm64-${{ github.sha }}
           path: dist/android/
