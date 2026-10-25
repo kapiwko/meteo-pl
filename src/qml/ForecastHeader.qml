@@ -4,57 +4,101 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-ColumnLayout {
+GridLayout {
     id: root
     objectName: "forecastHeader"
     required property WeatherModel weather
-    property bool expanded: false
-    spacing: 4
-    GridLayout {
+    readonly property var solar: weather.solarTimes
+    readonly property bool wide: width >= 660
+    columns: wide ? 2 : 1
+    columnSpacing: Kirigami.Units.largeSpacing * 3
+    rowSpacing: Kirigami.Units.largeSpacing
+    ColumnLayout {
         Layout.fillWidth: true
-        columns: root.width < 650 ? 1 : 2
-        columnSpacing: 16
-        rowSpacing: 4
-        ColumnLayout {
+        spacing: Kirigami.Units.smallSpacing
+        Kirigami.Heading {
+            objectName: "forecastLocationName"
+            text: root.weather.locationName
+            level: 2
             Layout.fillWidth: true
-            spacing: 4
-            Kirigami.Heading { text: root.weather.locationName; level: 2; font.pointSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-                Kirigami.Icon { source: root.weather.weatherIcon; Layout.preferredWidth: 40; Layout.preferredHeight: 40 }
-                Label { text: root.weather.temperatureText; font.pixelSize: 26; font.bold: true }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    Label { Layout.fillWidth: true; text: root.weather.summaryTime; font.pixelSize: 11; wrapMode: Text.WordWrap }
-                    Label { Layout.fillWidth: true; text: "Wiatr " + root.weather.windText + " · " + root.weather.pressureText; visible: root.weather.hasData; opacity: 0.65; wrapMode: Text.WordWrap; font.pixelSize: 10 }
-                }
-            }
+            elide: Text.ElideRight
         }
-        ColumnLayout {
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredWidth: root.width < 650 ? -1 : 320
-            spacing: 2
-            RowLayout {
+            spacing: Kirigami.Units.largeSpacing
+            Kirigami.Icon {
+                source: root.weather.weatherIcon
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                Accessible.ignored: true
+            }
+            Label {
+                text: root.weather.temperatureText
+                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 2
+                font.bold: true
+            }
+            ColumnLayout {
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                spacing: Kirigami.Units.smallSpacing / 2
                 Label {
                     Layout.fillWidth: true
-                    text: root.weather.model === "gfs" ? "10 dni · model GFS" : root.weather.model === "um4_120" ? "5 dni · model UM4" : "60 godzin · model UM4"
+                    text: root.weather.summaryTime + (root.weather.hasData && root.weather.utc ? " UTC" : "")
                     wrapMode: Text.WordWrap
-                    font.pixelSize: 12
                 }
-                ToolButton { text: "Szczegóły"; icon.name: root.expanded ? "go-up" : "go-down"; checkable: true; checked: root.expanded; onClicked: root.expanded = checked }
+                Label {
+                    Layout.fillWidth: true
+                    text: "Wiatr " + root.weather.windText + " · Ciśnienie " + root.weather.pressureText
+                    visible: root.weather.hasData
+                    color: Kirigami.Theme.disabledTextColor
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
             }
-            Label { Layout.fillWidth: true; text: "Obliczenia: " + root.weather.runText; visible: root.weather.hasData; opacity: 0.65; font.pixelSize: 10; wrapMode: Text.WordWrap }
         }
     }
     ColumnLayout {
-        visible: root.expanded
-        Layout.fillWidth: true
-        spacing: 4
-        Label { Layout.fillWidth: true; text: "Współrzędne: " + Math.abs(root.weather.latitude).toFixed(4) + (root.weather.latitude < 0 ? "°S, " : "°N, ") + Math.abs(root.weather.longitude).toFixed(4) + (root.weather.longitude < 0 ? "°W" : "°E"); wrapMode: Text.WordWrap; font.pixelSize: 11; opacity: 0.7 }
-        Label { Layout.fillWidth: true; text: "Słońce: " + root.weather.sunTimes; wrapMode: Text.WordWrap; font.pixelSize: 11; opacity: 0.7 }
-        Label { text: root.weather.utc ? "Godziny podane w UTC" : "Godziny podane w czasie lokalnym systemu"; font.pixelSize: 11; opacity: 0.7 }
+        objectName: "solarSummary"
+        visible: root.weather.hasData
+        Layout.alignment: Qt.AlignBottom | (root.wide ? Qt.AlignRight : Qt.AlignLeft)
+        spacing: Kirigami.Units.smallSpacing
+        Label {
+            text: (root.solar.today ? "Słońce dzisiaj" : "Słońce · " + (root.solar.dateLabel || "")) + (root.weather.utc ? " · UTC" : "")
+            visible: root.wide || !root.solar.today || root.weather.utc || !!root.solar.status
+            color: Kirigami.Theme.disabledTextColor
+            font: Kirigami.Theme.smallFont
+        }
+        RowLayout {
+            visible: !root.solar.status
+            spacing: Kirigami.Units.largeSpacing * 2
+            SolarEvent { title: "Wschód"; time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg" }
+            SolarEvent { title: "Zachód"; time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg" }
+        }
+        Label { text: root.solar.status || ""; visible: text.length > 0 }
+    }
+    component SolarEvent: RowLayout {
+        id: event
+        required property string title
+        required property string time
+        required property string icon
+        spacing: Kirigami.Units.smallSpacing
+        Accessible.role: Accessible.StaticText
+        Accessible.name: title + " słońca: " + time
+        ToolTip.visible: eventHover.hovered
+        ToolTip.text: "Orientacyjna godzina · " + (root.weather.utc ? "UTC" : "czas lokalny systemu")
+        HoverHandler { id: eventHover }
+        Kirigami.Icon {
+            source: Qt.resolvedUrl(event.icon)
+            isMask: true
+            color: Kirigami.Theme.neutralTextColor
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
+            Accessible.ignored: true
+        }
+        ColumnLayout {
+            spacing: 0
+            Label { text: event.title; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont }
+            Label { text: event.time; font.bold: true }
+        }
     }
 }

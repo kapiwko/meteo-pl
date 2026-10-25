@@ -543,22 +543,35 @@ QVariantList WeatherModel::nightIntervals() const
     return result;
 }
 
-QString WeatherModel::sunTimes() const
+QVariantMap WeatherModel::solarTimes() const
 {
     if (!m_forecast) return {};
     const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
-    const auto day = QDateTime::fromSecsSinceEpoch(m_forecast->firstTimestamp(), zone).date();
+    const auto timestamp = summaryTimestamp();
+    const auto day = QDateTime::fromSecsSinceEpoch(timestamp ? timestamp : m_forecast->firstTimestamp(), zone).date();
     const auto start = day.startOfDay(zone).toSecsSinceEpoch();
     const auto end = day.addDays(1).startOfDay(zone).toSecsSinceEpoch();
     bool previous = nightAt(start, m_latitude, m_longitude);
     qint64 sunrise = 0, sunset = 0;
-    for (auto time = start + 60; time <= end; time += 60) {
+    for (auto time = start + 60; time < end; time += 60) {
         const auto night = nightAt(time, m_latitude, m_longitude);
         if (previous && !night) sunrise = time;
         if (!previous && night) sunset = time;
         previous = night;
     }
-    if (!sunrise && !sunset) return previous ? QStringLiteral("Noc polarna") : QStringLiteral("Dzień polarny");
+    return {{"date", day.toString(Qt::ISODate)}, {"dateLabel", QLocale().toString(day, QStringLiteral("d MMM"))},
+        {"today", day == QDateTime::currentDateTimeUtc().toTimeZone(zone).date()},
+        {"sunrise", sunrise}, {"sunset", sunset},
+        {"sunriseText", sunrise ? formatTime(sunrise, "HH:mm") : QStringLiteral("—")},
+        {"sunsetText", sunset ? formatTime(sunset, "HH:mm") : QStringLiteral("—")},
+        {"status", !sunrise && !sunset ? (previous ? QStringLiteral("Noc polarna") : QStringLiteral("Dzień polarny")) : QString()}};
+}
+
+QString WeatherModel::sunTimes() const
+{
+    const auto solar = solarTimes();
+    if (solar.isEmpty()) return {};
+    if (!solar["status"].toString().isEmpty()) return solar["status"].toString();
     return QStringLiteral("%1 · wschód ≈ %2 · zachód ≈ %3")
-        .arg(QLocale().toString(day, QStringLiteral("d MMM")), sunrise ? formatTime(sunrise, "HH:mm") : QStringLiteral("—"), sunset ? formatTime(sunset, "HH:mm t") : QStringLiteral("—"));
+        .arg(solar["dateLabel"].toString(), solar["sunriseText"].toString(), solar["sunsetText"].toString());
 }
