@@ -45,6 +45,8 @@ qt_add_qml_module(meteo_ui
 target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)
+qt_add_resources(meteo_ui "license" PREFIX "/meteo" BASE "${PROJECT_SOURCE_DIR}"
+    FILES "${PROJECT_SOURCE_DIR}/LICENSE")
 foreach(target meteo_core meteo_ui)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /permissive-)

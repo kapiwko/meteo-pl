@@ -5,6 +5,10 @@ ICM UW z meteo.pl. Wspólny interfejs oferuje rozbudowane meteogramy, prognozę
 godzinową i dzienną, mapy oraz komentarz synoptyka i artykuły.
 Karty nawigacji mają ikony; w wąskim widoku pozostają same ikony z podpowiedziami.
 
+Kod aplikacji i plasmoidu: © 2026 Kamil Piwowarski, licencja
+[GPL-3.0-or-later](LICENSE) — GNU GPL w wersji 3 lub dowolnej późniejszej.
+Biblioteki i dane pogodowe zachowują własne warunki udostępniania.
+
 ## Uruchomienie
 
 Wymagania: CMake ≥ 3.25, kompilator C++23, Ninja, Qt ≥ 6.5

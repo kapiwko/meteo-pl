@@ -1,2 +1,3 @@
 .pragma library
 var version = "@PROJECT_VERSION@";
+var license = "@METEO_LICENSE@";

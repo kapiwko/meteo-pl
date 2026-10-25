@@ -113,7 +113,7 @@ def arch_package(stage, destination, timestamp):
     info = ["pkgname = meteo-pl", f"pkgbase = meteo-pl", f"pkgver = {version()}-1",
             "pkgdesc = ICM meteograms: Qt desktop application and Plasma 6 widget",
             f"builddate = {timestamp}", "packager = Kamil Piwowarski <kapiwko@gmail.com>",
-            f"size = {size}", f"arch = {platform.machine()}", "license = LicenseRef-Unspecified"]
+            f"size = {size}", f"arch = {platform.machine()}", "license = GPL-3.0-or-later"]
     info += [f"depend = {name}" for name in ARCH_DEPENDS]
     info += ["optdepend = plasma-desktop: Plasma 6 widget"]
     (stage / ".PKGINFO").write_text("\n".join(info)+"\n")
