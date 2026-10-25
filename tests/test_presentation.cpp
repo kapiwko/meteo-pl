@@ -109,6 +109,80 @@ private slots:
         model.setLocationName("");
         QVERIFY(!indicator->property("running").toBool());
     }
+    void windDirectionChartRendersArrows_data()
+    {
+        QTest::addColumn<QString>("renderer");
+        QTest::newRow("cpu") << QString("cpu");
+        QTest::newRow("gpu") << QString("gpu");
+    }
+    void windDirectionChartRendersArrows()
+    {
+        QFETCH(QString, renderer);
+        WeatherModel model;
+        model.setAutoRefresh(false);
+        model.refresh(false);
+        QVERIFY(model.hasData());
+        QVariantMap definition;
+        for (const auto &entry : model.chartGroups()) if (entry.toMap()["key"] == "windDirection") definition = entry.toMap();
+        QVERIFY(!definition.isEmpty());
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto originalRenderer = preferences->renderer();
+        const auto restore = qScopeGuard([&] { preferences->setRenderer(originalRenderer); });
+        preferences->setRenderer(renderer);
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import QtQuick.Layouts
+            import pl.meteo.desktop
+            Window {
+                id: root
+                required property WeatherModel weather
+                required property var directionChart
+                required property var windChart
+                width: 650; height: 400; visible: true
+                ColumnLayout {
+                    anchors.fill: parent
+                    Meteogram {
+                        Layout.fillWidth: true; weather: root.weather
+                        title: "Kierunek wiatru"; groupKey: "windDirection"
+                        fields: root.directionChart.fields
+                        chartConfiguration: root.directionChart
+                        chartHeight: 120
+                    }
+                    Meteogram {
+                        Layout.fillWidth: true; weather: root.weather
+                        title: "Prędkość wiatru"; groupKey: "wind"
+                        fields: root.windChart.fields
+                        chartConfiguration: root.windChart
+                    }
+                }
+            }
+        )", QUrl());
+        QVariantMap wind;
+        for (const auto &entry : model.chartGroups()) if (entry.toMap()["key"] == "wind") wind = entry.toMap();
+        QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)},
+            {"directionChart", definition}, {"windChart", wind}}));
+        QVERIFY2(chart, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(chart.data());
+        QVERIFY(window);
+        QTest::qWait(150);
+        auto *gpu = chart->findChild<GpuPlot *>("gpu-base-windDirection");
+        if (qEnvironmentVariableIsSet("METEO_REQUIRE_GPU") && renderer == "gpu") QVERIFY(gpu);
+        auto *plot = chart->findChild<QQuickItem *>("plot-windDirection");
+        QVERIFY(plot);
+        QVERIFY(plot->height() > 0);
+        const auto image = window->grabWindow();
+        if (const auto path = qEnvironmentVariable("METEO_WIND_SCREENSHOT"); !path.isEmpty()) QVERIFY(image.save(path));
+        int blue = 0;
+        const auto origin = plot->mapToScene({0,0}).toPoint();
+        for (int y = origin.y(); y < std::min(image.height(), origin.y()+int(plot->height())); ++y)
+            for (int x = 50; x < 606; ++x) {
+                const auto color = image.pixelColor(x,y);
+                if (color.blue() > 90 && color.red() < 90 && color.green() < 90) ++blue;
+            }
+        QVERIFY2(blue > 50, qPrintable(QString("Expected visible wind arrows; found %1 blue pixels, plot %2 x %3").arg(blue).arg(plot->width()).arg(plot->height())));
+    }
     void nativeGpuRendererDrawsClippedGeometry()
     {
         if (!qEnvironmentVariableIsSet("METEO_REQUIRE_GPU")) QSKIP("Separate GPU run checks native scene graph rendering");

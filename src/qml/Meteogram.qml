@@ -316,6 +316,10 @@ ColumnLayout {
         Layout.preferredHeight: root.chartHeight
         property bool softwareFallback: false
         readonly property string activeRenderer: UserPreferences.renderer === "cpu" || softwareFallback ? "cpu" : "gpu"
+        // Own the MSAA texture on the regular container, not on a custom
+        // scene-graph item; otherwise arrow-only items can leave an empty layer.
+        layer.enabled: activeRenderer === "gpu"
+        layer.samples: 4
         function requestPaint() {
             if (activeRenderer === "gpu") {
                 const target = renderer.item as GpuPlot;
@@ -347,8 +351,6 @@ ColumnLayout {
             GpuPlot {
                 id: gpuPlot
                 objectName: "gpu-base-" + root.groupKey
-                layer.enabled: true
-                layer.samples: 4
                 onPaint: { Style.paintChart(root, plot, getContext("2d"), false); gpuCursor.requestPaint(); }
                 onCursorPaintRequested: gpuCursor.requestPaint()
                 onSoftwareBackend: plot.softwareFallback = true
