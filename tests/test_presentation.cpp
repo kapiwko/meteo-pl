@@ -153,6 +153,13 @@ private slots:
         };
         auto *plot = findItem(findItem, item, "plot-temperature");
         QVERIFY(plot);
+        auto *navigation=findItem(findItem,item,"forecastNavigation");
+        QVERIFY(navigation);
+        auto *tabGroup=navigation->property("tabGroup").value<QObject *>();
+        QVERIFY(tabGroup);
+        auto *selectedTab=tabGroup->property("checkedButton").value<QObject *>();
+        QVERIFY(selectedTab);
+        QCOMPARE(selectedTab->property("page").toInt(),0);
         auto *header=findItem(findItem,item,"forecastHeader");
         QVERIFY(header);
         QVERIFY(header->height()<100);

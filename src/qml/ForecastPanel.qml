@@ -193,32 +193,41 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         spacing: 8
-        TabBar {
+        Kirigami.NavigationTabBar {
             id: navigation
+            objectName: "forecastNavigation"
             Layout.fillWidth: true
+            maximumContentWidth: root.width
+            spacing: Kirigami.Units.smallSpacing
+            buttonWidth: Math.max(0, (root.width - 5 * spacing) / 6)
             currentIndex: root.viewMode
-            onCurrentIndexChanged: root.viewMode = currentIndex
-            Repeater {
-                model: [
-                    {label: "Meteogram", icon: "office-chart-line"},
-                    {label: "Godzinowo", icon: "chronometer"},
-                    {label: "Dni", icon: "view-calendar"},
-                    {label: "Mapy", icon: "globe"},
-                    {label: "Synoptyk", icon: "dialog-messages"},
-                    {label: "Artykuły", icon: "view-list-text"}
-                ]
-                delegate: TabButton {
-                    required property var modelData
-                    width: root.width / 6
-                    text: modelData.label
-                    icon.name: modelData.icon
-                    icon.width: 16; icon.height: 16
-                    display: root.width < 720 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
-                    Accessible.name: text
-                    ToolTip.text: text
-                    ToolTip.visible: hovered
-                }
+            onCurrentIndexChanged: if (currentIndex >= 0) root.viewMode = currentIndex
+            function selectPage() {
+                const button = tabGroup.buttons[root.viewMode];
+                if (button && !button.checked) button.checked = true;
             }
+            Component.onCompleted: Qt.callLater(selectPage)
+            Connections { target: root; function onViewModeChanged() { navigation.selectPage(); } }
+            component ForecastTab: Kirigami.NavigationTabButton {
+                required property int page
+                Layout.minimumWidth: navigation.buttonWidth
+                Layout.maximumWidth: navigation.buttonWidth
+                Layout.fillHeight: true
+                ButtonGroup.group: navigation.tabGroup
+                checkable: true
+                checked: root.viewMode === page
+                onClicked: root.viewMode = page
+                display: root.width < 720 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
+                Accessible.name: text
+                ToolTip.text: text
+                ToolTip.visible: hovered
+            }
+            ForecastTab { page: 0; text: "Meteogram"; icon.name: "office-chart-line" }
+            ForecastTab { page: 1; text: "Godzinowo"; icon.name: "chronometer" }
+            ForecastTab { page: 2; text: "Dni"; icon.name: "view-calendar" }
+            ForecastTab { page: 3; text: "Mapy"; icon.name: "globe" }
+            ForecastTab { page: 4; text: "Synoptyk"; icon.name: "dialog-messages" }
+            ForecastTab { page: 5; text: "Artykuły"; icon.name: "view-list-text" }
         }
         Loader {
             Layout.fillWidth: true
