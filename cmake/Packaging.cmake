@@ -16,8 +16,8 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "qml6-module-org-kde-kirigami, qml6-module-org-
 set(CPACK_DEBIAN_PACKAGE_SUGGESTS "plasma-desktop")
 set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 set(CPACK_RPM_PACKAGE_RELEASE 1)
-# The repository has not declared a redistribution license.
-set(CPACK_RPM_PACKAGE_LICENSE "LicenseRef-Unspecified")
+set(CPACK_RPM_PACKAGE_LICENSE "${METEO_LICENSE}")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/Internet")
 set(CPACK_RPM_PACKAGE_REQUIRES "kf6-kirigami, kf6-qqc2-desktop-style, qt6-qtdeclarative, qt6-qtpositioning, qt6-qtsvg, qt6-qtwayland, kf6-breeze-icons")
 set(CPACK_RPM_PACKAGE_AUTOREQPROV ON)

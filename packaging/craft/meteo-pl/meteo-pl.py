@@ -42,6 +42,7 @@ class Package(CMakePackageBase):
     def createPackage(self):
         self.defines["appname"] = "meteo-pl"
         self.defines["company"] = "Kamil Piwowarski"
+        self.defines["license"] = str(Path(os.environ["METEO_SOURCE_DIR"]) / "LICENSE")
         self.defines["executable"] = r"bin\meteo-pl.exe"
         self.defines["shortcuts"] = [{"name": "Meteo", "target": "bin/meteo-pl.exe"}]
         self.addExecutableFilter(r"(bin|libexec)/(?!(meteo-pl|snoretoast|update-mime-database)([.-]|$)).*")

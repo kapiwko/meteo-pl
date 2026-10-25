@@ -45,6 +45,11 @@ Dialog {
                 }
                 Label { Kirigami.FormData.label: "Prawa autorskie:"; text: "© 2026 Kamil Piwowarski" }
                 Label {
+                    Kirigami.FormData.label: "Licencja:"
+                    text: "<a href='https://www.gnu.org/licenses/gpl-3.0.html'>" + AppInfo.license + "</a>"
+                    onLinkActivated: link => Qt.openUrlExternally(link)
+                }
+                Label {
                     Kirigami.FormData.label: "Prognozy:"
                     text: "<a href='https://www.meteo.pl/'>ICM UW / meteo.pl</a>"
                     onLinkActivated: link => Qt.openUrlExternally(link)
