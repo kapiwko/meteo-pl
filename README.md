@@ -161,6 +161,10 @@ Niedawno zapisana prognoza ogranicza powtórne pobrania przy otwieraniu kolejneg
 widoku. Ręczne **Odśwież** zawsze pyta serwer. Gdy pobieranie się nie powiedzie,
 widoczna pozostaje zapisana prognoza z datą pobrania i komunikatem.
 
+Artykuły i komentarze synoptyka są zapisywane na dysku osobno dla każdej strony
+listy i daty. Przez 30 minut ponowne otwarcie korzysta z zapisu bez sieci.
+Ręczne odświeżenie sprawdza serwer; w razie błędu zachowuje zapisaną treść.
+
 Mapy mają dodatkowy cache: do 96 MiB zdekodowanych obrazów w RAM i do 256 MiB
 cache HTTP na dysku. Powtórne żądania tego samego obrazu w procesie są łączone.
 Klucz zawiera pełny URL, w tym warstwę, start, krok i współrzędne kafelka;

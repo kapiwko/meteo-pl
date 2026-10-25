@@ -22,10 +22,13 @@
 class ServicesTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_config;
+    QTemporaryDir m_cache;
 private slots:
     void initTestCase()
     {
         QVERIFY(m_config.isValid());
+        QVERIFY(m_cache.isValid());
+        qputenv("XDG_CACHE_HOME", m_cache.path().toUtf8());
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_config.path());
     }
     void init()
@@ -136,6 +139,60 @@ private slots:
         model.more();
         QTRY_VERIFY(!model.busy());
         QCOMPARE(QUrlQuery(server.requests.last()).queryItemValue("page"), "2");
+    }
+    void editorialReusesDiskCacheAcrossViewsAndKeepsItOnFailure_data()
+    {
+        QTest::addColumn<bool>("commentary");
+        QTest::newRow("articles") << false;
+        QTest::newRow("commentary") << true;
+    }
+    void editorialReusesDiskCacheAcrossViewsAndKeepsItOnFailure()
+    {
+        QFETCH(bool, commentary);
+        ServiceFixture server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [commentary](const QUrl &url) {
+            if (commentary) return QByteArray(R"({"content":"<p>Saved comment</p>","published_date":"2026-10-25"})");
+            return QUrlQuery(url).queryItemValue("page")=="2"
+                ? QByteArray(R"([{"title":"Older article","content":"<p>Older</p>"}])")
+                : QByteArray(R"([{"title":"Latest article","content":"<p>Latest</p>"}])");
+        };
+        const auto endpoint=server.endpoint();
+        {
+            EditorialModel first(nullptr,endpoint);
+            first.setCommentary(commentary);
+            first.reload(false);
+            QTRY_VERIFY(!first.busy());
+            QCOMPARE(server.requests.size(),1);
+            if (!commentary) {
+                first.more(); QTRY_VERIFY(!first.busy());
+                QCOMPARE(first.articles().size(),2);
+            }
+        }
+        const auto requests=server.requests.size();
+        EditorialModel reopened(nullptr,endpoint);
+        reopened.setCommentary(commentary);
+        reopened.reload(false);
+        QVERIFY(!reopened.busy());
+        QCOMPARE(server.requests.size(),requests);
+        if (commentary) QVERIFY(reopened.commentHtml().contains("Saved comment"));
+        else {
+            QCOMPARE(reopened.articles().size(),1);
+            reopened.more();
+            QVERIFY(!reopened.busy());
+            QCOMPARE(reopened.articles().size(),2);
+            QCOMPARE(server.requests.size(),requests);
+        }
+        reopened.reload(); // Explicit refresh bypasses the fresh cache.
+        QTRY_VERIFY(!reopened.busy());
+        QCOMPARE(server.requests.size(),requests+1);
+        server.close();
+        reopened.reload();
+        QTRY_VERIFY(!reopened.busy());
+        QVERIFY(!reopened.notice().isEmpty());
+        QVERIFY(reopened.error().isEmpty());
+        if (commentary) QVERIFY(reopened.commentHtml().contains("Saved comment"));
+        else QCOMPARE(reopened.articles().size(),1);
     }
     void editorialRejectsFutureDatesAndExplainsMissingComments()
     {

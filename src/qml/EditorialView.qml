@@ -12,8 +12,8 @@ ColumnLayout {
     readonly property string today: Qt.formatDate(new Date(), "yyyy-MM-dd")
     readonly property string shownDate: feed.date || feed.publishedDate.slice(0, 10) || today
     EditorialModel { id: feed; commentary: root.commentary }
-    Component.onCompleted: { initialized = true; feed.reload(); }
-    onCommentaryChanged: if (initialized) { selectedArticle = null; Qt.callLater(feed.reload); }
+    Component.onCompleted: { initialized = true; feed.reload(false); }
+    onCommentaryChanged: if (initialized) { selectedArticle = null; Qt.callLater(() => feed.reload(false)); }
     function shiftDate(delta) {
         const date = new Date(shownDate + "T12:00:00");
         date.setDate(date.getDate() + delta);
