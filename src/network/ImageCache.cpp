@@ -79,7 +79,7 @@ void ImageCache::request(const QUrl &url, Completion completion, QObject *consum
     }
     int consumers = 0;
     for (const auto &pending : std::as_const(m_pending)) consumers += pending.subscribers.size();
-    if ((!m_pending.contains(key) && m_pending.size() >= 256) || consumers >= 1024) {
+    if ((!m_pending.contains(key) && m_pending.size() >= maximumPendingJobs) || consumers >= maximumSubscribers) {
         completion({}, Meteo::i18n("Too many images are waiting to load. Try again."));
         return;
     }

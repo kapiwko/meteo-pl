@@ -69,13 +69,33 @@ private slots:
         QCOMPARE(cache.queuedJobs(),0);
         QObject batch;
         int rejected = 0;
-        for (int i=0;i<300;++i)
+        for (int i=0;i<4200;++i)
             cache.request(server.url(QStringLiteral("bounded-%1").arg(i)),[&](const QImage &,const QString &error) { if (!error.isEmpty()) ++rejected; },&batch);
         QVERIFY(rejected > 0);
-        QVERIFY(cache.queuedJobs() <= 252);
+        QVERIFY(cache.queuedJobs() <= 4092);
         cache.cancelRequests(&batch);
         QTRY_COMPARE(cache.activeJobs(),0);
         QCOMPARE(cache.queuedJobs(),0);
+    }
+    void aHighResolutionMapCanQueueAllItsLayers()
+    {
+        QTemporaryDir directory;
+        ImageServer server; server.hold=true;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        Meteo::ImageCache cache(directory.path());
+        QObject viewport;
+        int failures=0;
+        // A 4K viewport can need 16×10 cells, each with three image layers.
+        for (int i=0;i<480;++i)
+            cache.request(server.url(QStringLiteral("viewport-%1").arg(i)),[&](const QImage &,const QString &error) { if (!error.isEmpty()) ++failures; },&viewport);
+        QCOMPARE(failures,0);
+        QTRY_COMPARE(server.requests.size(),4);
+        QCOMPARE(cache.activeJobs(),4);
+        QCOMPARE(cache.queuedJobs(),476);
+        cache.cancelRequests(&viewport);
+        QTRY_COMPARE(cache.activeJobs(),0);
+        QCOMPARE(cache.queuedJobs(),0);
+        QCOMPARE(failures,0);
     }
     void separateProcessesCannotOpenTheSameDiskCache()
     {

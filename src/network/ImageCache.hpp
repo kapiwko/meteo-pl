@@ -31,6 +31,8 @@ public:
     int queuedJobs() const;
     static ImageCache *shared();
 private:
+    static constexpr int maximumPendingJobs = 4096;
+    static constexpr int maximumSubscribers = 16384;
     struct Entry { QImage image; QDateTime expires; };
     struct Subscriber { Completion complete; QObject *identity; QPointer<QObject> context; };
     struct Pending {
