@@ -9,6 +9,41 @@
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void cursorUsesPreparedSampleValuesAndTheirNativePositions()
+    {
+        QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");
+        QVERIFY(source.open(QIODevice::ReadOnly));
+        auto script = QString::fromUtf8(source.readAll());
+        script.remove(0,script.indexOf('\n')+1);
+        QJSEngine engine;
+        QVERIFY(!engine.evaluate(script).isError());
+        const auto result = engine.evaluate(QStringLiteral(R"JS(
+            (function() {
+                const circles=[], ctx={};
+                for (const name of ["save","restore","beginPath","rect","clip","moveTo","lineTo","stroke","fill"])
+                    ctx[name]=function(){};
+                ctx.arc=function(x,y){circles.push({x:x,y:y});};
+                const root={
+                    leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
+                    nowTime:-1,startTime:0,endTime:20000,selectedTime:7200,exportMode:false,
+                    fields:[{key:"dwptmp_point",kind:"points"},{key:"pcpttl_aver",kind:"bars"}],
+                    probeSamples:{dwptmp_point:{number:9,sourceTimestamp:10800},
+                                  pcpttl_aver:{number:1,sourceTimestamp:0,intervalFrom:0,intervalTo:10800}},
+                    px:function(t){return t/100;},py:function(v){return 100-v;},
+                    valid:function(v){return v!==undefined&&v!==null&&isFinite(v);},
+                    shown:function(){return true;},seriesColor:function(){return "green";},isRightField:function(){return false;}
+                };
+                paintCursor(root,{width:200,height:100},ctx,false);
+                return circles;
+            })()
+        )JS"));
+        QVERIFY2(!result.isError(),qPrintable(result.toString()));
+        QCOMPARE(result.property("length").toInt(),2);
+        QCOMPARE(result.property(0).property("x").toNumber(),108.0);
+        QCOMPARE(result.property(0).property("y").toNumber(),91.0);
+        QCOMPARE(result.property(1).property("x").toNumber(),54.0);
+        QCOMPARE(result.property(1).property("y").toNumber(),99.0);
+    }
     void signedBarsHaveTheirExpectedGeometry()
     {
         QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");

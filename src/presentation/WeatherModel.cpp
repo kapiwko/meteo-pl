@@ -1,6 +1,8 @@
 #include "core/Localization.hpp"
 #include "WeatherModel.hpp"
 #include "core/ForecastAggregation.hpp"
+#include "core/ForecastSampling.hpp"
+#include "ChartDataBuilder.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 
@@ -182,20 +184,9 @@ void WeatherModel::refresh(bool force)
 void WeatherModel::apply(const Meteo::Forecast &forecast)
 {
     m_forecast = forecast;
-    m_series.clear();
-    for (auto it = forecast.series.cbegin(); it != forecast.series.cend(); ++it) {
-        QVariantList points;
-        const auto &series = it.value();
-        double scale = 1;
-        for (const auto &field : forecastFields())
-            if (field.key == it.key()) { scale = displayScale(field.key, field.scale); break; }
-        for (qsizetype i = 0; i < series.values.size(); ++i) {
-            const auto &value = series.values.at(i);
-            points.append(QVariantMap{{"time", series.firstTimestamp + qint64(i) * series.interval},
-                                      {"value", value ? QVariant(*value * scale) : QVariant()}});
-        }
-        m_series.insert(it.key(), points);
-    }
+    QHash<QString, double> scales;
+    for (const auto &field : forecastFields()) scales.insert(field.key, displayScale(field.key, field.scale));
+    m_series = buildChartSeries(forecast, scales);
 }
 
 QString WeatherModel::cachePath() const
@@ -275,7 +266,7 @@ QString WeatherModel::valueText(const QString &key, const QString &suffix, doubl
     const auto it = m_forecast->series.constFind(key);
     if (it == m_forecast->series.cend())
         return QStringLiteral("—");
-    const auto value = it->at(summaryTimestamp());
+    const auto value = Meteo::forecastValueAt(*m_forecast, key, nearestTimestamp(summaryTimestamp()));
     return value ? QLocale().toString(*value * scale, 'f', 0) + suffix : QStringLiteral("—");
 }
 
@@ -287,9 +278,7 @@ QString WeatherModel::summaryTime() const
 {
     if (!summaryTimestamp())
         return Meteo::i18n("No forecast for the current hour");
-    const auto &temperature = m_forecast->series[QStringLiteral("airtmp_point")];
-    const auto timestamp = temperature.firstTimestamp
-        + ((summaryTimestamp() - temperature.firstTimestamp) / temperature.interval) * temperature.interval;
+    const auto timestamp = nearestTimestamp(summaryTimestamp());
     return Meteo::i18n("Forecast for ") + formatTime(timestamp, QStringLiteral("ddd HH:mm"));
 }
 
@@ -297,10 +286,10 @@ QString WeatherModel::weatherIcon() const
 {
     if (!summaryTimestamp())
         return QStringLiteral("weather-none-available");
-    const auto rain = m_forecast->series.value("pcpttl_aver").at(summaryTimestamp());
+    const auto rain = Meteo::forecastValueAt(*m_forecast, "pcpttl_aver", nearestTimestamp(summaryTimestamp()));
     if (rain && *rain > 0.1)
         return QStringLiteral("weather-showers");
-    const auto clouds = m_forecast->series.value("cldtot_aver").at(summaryTimestamp());
+    const auto clouds = Meteo::forecastValueAt(*m_forecast, "cldtot_aver", nearestTimestamp(summaryTimestamp()));
     if (!clouds)
         return QStringLiteral("weather-none-available");
     if (*clouds > 0.8)
@@ -358,6 +347,7 @@ double WeatherModel::nearestTimestamp(double timestamp) const
 {
     if (!m_forecast || !std::isfinite(timestamp)) return 0;
     const auto &series = m_forecast->series[QStringLiteral("airtmp_point")];
+    timestamp = std::clamp(timestamp, firstTimestamp(), lastTimestamp());
     const auto index = std::clamp(qRound64((timestamp - series.firstTimestamp) / series.interval), qint64(0), qint64(series.values.size() - 1));
     return series.firstTimestamp + index * series.interval;
 }
@@ -371,7 +361,8 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
     for (const auto &field : forecastFields()) {
         const auto it = m_forecast->series.constFind(field.key);
         if (it == m_forecast->series.cend()) continue;
-        const auto value = it->at(time);
+        const auto sample = Meteo::sampleForecast(*m_forecast, field.key, time);
+        const auto value = sample ? sample->value : std::nullopt;
         const auto scale = displayScale(field.key, field.scale);
         const auto unit = field.unit == "m/s" ? m_windUnit : field.unit;
         QString text = value ? QLocale().toString(*value * scale, 'f', field.decimals) + (unit.isEmpty() ? QString() : ' ' + unit) : QStringLiteral("—");
@@ -383,8 +374,19 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
                 : code == 2 ? Meteo::i18n("Snow") : code == 3 ? Meteo::i18n("Sleet")
                 : Meteo::i18n("Code %1").arg(code);
         }
+        const bool instant = sample && sample->timing == Meteo::QuantityTiming::Instant;
+        const auto source = sample ? QVariant(sample->sourceTimestamp) : QVariant();
+        const auto from = sample && !instant ? QVariant(sample->intervalFrom) : QVariant();
+        const auto to = sample && !instant ? QVariant(sample->intervalTo) : QVariant();
+        const auto sourceText = !sample ? QString() : instant
+            ? Meteo::i18n("Sample: %1").arg(formatTime(sample->sourceTimestamp, QStringLiteral("d MMM HH:mm")))
+            : Meteo::i18n("Interval: %1–%2").arg(formatTime(sample->intervalFrom, QStringLiteral("d MMM HH:mm")),
+                                               formatTime(sample->intervalTo, QStringLiteral("d MMM HH:mm")));
         details.append(QVariantMap{{"key", field.key}, {"label", field.label}, {"value", text}, {"group", field.group},
-                                   {"number", value ? QVariant(*value * scale) : QVariant()}, {"unit", unit}, {"color", field.color}, {"darkColor", forecastDarkColor(field.color, field.key)}});
+            {"number", value ? QVariant(*value * scale) : QVariant()}, {"unit", unit}, {"color", field.color},
+            {"darkColor", forecastDarkColor(field.color, field.key)}, {"sourceTimestamp", source},
+            {"intervalFrom", from}, {"intervalTo", to}, {"sampleText", sourceText},
+            {"sampling", Meteo::timingName(Meteo::quantityTiming(field.key))}});
     }
     return details;
 }
@@ -469,7 +471,8 @@ QVariantList WeatherModel::hourlyForecast() const
         const auto time = base.firstTimestamp + i * base.interval;
         QVariantMap values{{"time", time}, {"label", formatTime(time, QStringLiteral("ddd HH:mm"))}};
         for (const auto &field : forecastFields()) {
-            const auto value = m_forecast->series.value(field.key).at(time);
+            const auto sample = Meteo::sampleForecast(*m_forecast, field.key, time);
+            const auto value = sample ? sample->value : std::nullopt;
             values.insert(field.key, value ? QVariant(*value * displayScale(field.key, field.scale)) : QVariant());
         }
         rows.append(values);

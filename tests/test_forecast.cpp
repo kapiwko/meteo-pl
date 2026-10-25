@@ -1,11 +1,40 @@
 #include "core/Forecast.hpp"
 #include "core/ForecastAggregation.hpp"
+#include "core/ForecastSampling.hpp"
 #include "Fixture.hpp"
 #include <QTest>
 
 class ForecastTest : public QObject {
     Q_OBJECT
 private slots:
+    void samplesNativeAxesAccordingToQuantityTiming()
+    {
+        using namespace Meteo;
+        const Series series{"unit", 1000, 10800, {1,9,std::nullopt,4}};
+        for (auto timing : {QuantityTiming::Instant, QuantityTiming::IntervalMean, QuantityTiming::IntervalTotal,
+                            QuantityTiming::IntervalExtremum, QuantityTiming::Category}) {
+            QVERIFY(!sampleSeries(series,999,timing));
+            QCOMPARE(sampleSeries(series,1000,timing)->value.value(),1.0);
+            const auto selected = sampleSeries(series,8200,timing);
+            QVERIFY(selected);
+            QCOMPARE(selected->sourceTimestamp, timing == QuantityTiming::Instant ? 11800 : 1000);
+            QCOMPARE(selected->value.value(), timing == QuantityTiming::Instant ? 9.0 : 1.0);
+            QCOMPARE(selected->intervalTo,11800);
+            QCOMPARE(selected->timing,timing);
+            QCOMPARE(sampleSeries(series,11800,timing)->value.value(),9.0);
+            QVERIFY(!sampleSeries(series,22600,timing)->value);
+            QCOMPARE(sampleSeries(series,33400,timing)->value.value(),4.0);
+            QVERIFY(!sampleSeries(series,44200,timing));
+            QCOMPARE(bool(sampleSeries(series,33401,timing)), timing != QuantityTiming::Instant);
+        }
+        QCOMPARE(sampleSeries(series,6400,QuantityTiming::Instant)->sourceTimestamp,11800); // Tie goes forward.
+        QCOMPARE(sampleSeries(series,6399,QuantityTiming::Instant)->sourceTimestamp,1000);
+        QCOMPARE(quantityTiming("airtmp_point"),QuantityTiming::Instant);
+        QCOMPARE(quantityTiming("pcpttl_aver"),QuantityTiming::IntervalTotal);
+        QCOMPARE(quantityTiming("pcpttl_max"),QuantityTiming::IntervalExtremum);
+        QCOMPARE(quantityTiming("cldtot_aver"),QuantityTiming::IntervalMean);
+        QCOMPARE(quantityTiming("pcpttl_type_max"),QuantityTiming::Category);
+    }
     void sumsPrecipitationOnItsNativeTimeline()
     {
         const auto first = QDateTime(QDate(2026,10,25),QTime(0,0),QTimeZone::utc()).toSecsSinceEpoch();

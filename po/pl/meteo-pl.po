@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-25 23:27+0100\n"
+"POT-Creation-Date: 2026-10-25 23:48+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -54,7 +54,7 @@ msgstr[0] "Wybrano %1 wykres"
 msgstr[1] "Wybrano %1 wykresy"
 msgstr[2] "Wybrano %1 wykresów"
 
-#: src/presentation/WeatherModel.cpp:571
+#: src/presentation/WeatherModel.cpp:574
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 
@@ -106,7 +106,7 @@ msgstr "Temperatura powietrza min–max"
 msgid "All"
 msgstr "Wszystkie"
 
-#: src/presentation/UserPreferences.cpp:178
+#: src/presentation/UserPreferences.cpp:198
 msgid "All charts"
 msgstr "Wszystkie wykresy"
 
@@ -173,7 +173,7 @@ msgstr "Automatycznie"
 msgid "Automatic by unit"
 msgstr "Automatycznie według jednostki"
 
-#: src/presentation/UserPreferences.cpp:178
+#: src/presentation/UserPreferences.cpp:198
 msgid "Aviation"
 msgstr "Lotniczy"
 
@@ -189,7 +189,7 @@ msgstr "Wróć do artykułów"
 msgid "Bars"
 msgstr "Słupki"
 
-#: src/presentation/UserPreferences.cpp:178
+#: src/presentation/UserPreferences.cpp:198
 msgid "Basic"
 msgstr "Podstawowy"
 
@@ -278,12 +278,12 @@ msgstr "Wybierz lokalny plik CSV."
 msgid "Choose a local PNG file."
 msgstr "Wybierz lokalny plik PNG."
 
-#: src/presentation/UserPreferences.cpp:206
-#: src/presentation/UserPreferences.cpp:233
+#: src/presentation/UserPreferences.cpp:226
+#: src/presentation/UserPreferences.cpp:253
 msgid "Choose a local file."
 msgstr "Wybierz plik lokalny."
 
-#: src/qml/LocationEditor.qml:199
+#: src/qml/LocationEditor.qml:198
 msgid "Choose a place or a point on the map"
 msgstr "Wybierz miejscowość lub punkt na mapie"
 
@@ -307,7 +307,7 @@ msgstr "Wybierz kolor"
 msgid "Choose location"
 msgstr "Wybierz lokalizację"
 
-#: src/qml/LocationEditor.qml:116
+#: src/qml/LocationEditor.qml:115
 msgid "Choose on map"
 msgstr "Wybierz na mapie"
 
@@ -317,11 +317,11 @@ msgid ""
 msgstr ""
 "Wybierz jeden lub dwa wykresy. Ich wygląd pochodzi z wybranego profilu."
 
-#: src/presentation/UserPreferences.cpp:178
+#: src/presentation/UserPreferences.cpp:198
 msgid "Classic ICM"
 msgstr "Klasyczny ICM"
 
-#: src/presentation/WeatherModel.cpp:504
+#: src/presentation/WeatherModel.cpp:507
 msgid "Clear"
 msgstr "Słonecznie"
 
@@ -390,7 +390,7 @@ msgstr "Chmury %"
 msgid "Clouds and precipitation"
 msgstr "Chmury i opady"
 
-#: src/presentation/WeatherModel.cpp:384
+#: src/presentation/WeatherModel.cpp:375
 msgid "Code %1"
 msgstr "Kod %1"
 
@@ -402,7 +402,7 @@ msgstr "Kolory według liczby wyładowań"
 msgid "Color by precipitation type"
 msgstr "Koloruj według rodzaju opadu"
 
-#: src/presentation/EditorialModel.cpp:40
+#: src/presentation/EditorialModel.cpp:42
 msgid "Commentary for future dates is not available yet."
 msgstr "Komentarze z przyszłych dni nie są jeszcze dostępne."
 
@@ -427,7 +427,7 @@ msgid "Could not delete all cached files. Try again."
 msgstr ""
 "Nie udało się usunąć wszystkich plików pamięci podręcznej. Spróbuj ponownie."
 
-#: src/qml/LocationEditor.qml:48
+#: src/qml/LocationEditor.qml:47
 msgid ""
 "Could not determine your location. Check the location service or choose a "
 "point on the map."
@@ -457,7 +457,7 @@ msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 "Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji."
 
-#: src/presentation/UserPreferences.cpp:235
+#: src/presentation/UserPreferences.cpp:255
 msgid "Could not open the file: "
 msgstr "Nie udało się otworzyć pliku: "
 
@@ -476,7 +476,7 @@ msgstr "Nie udało się przygotować obrazu wykresu."
 msgid "Could not read the map image."
 msgstr "Nie udało się odczytać obrazu mapy."
 
-#: src/presentation/EditorialModel.cpp:25
+#: src/presentation/EditorialModel.cpp:27
 msgid "Could not refresh. Showing content from the cache."
 msgstr ""
 "Nie udało się odświeżyć. Wyświetlana jest treść zapisana w pamięci "
@@ -487,11 +487,11 @@ msgstr ""
 msgid "Could not save PNG: "
 msgstr "Nie można zapisać PNG: "
 
-#: src/presentation/UserPreferences.cpp:227
+#: src/presentation/UserPreferences.cpp:247
 msgid "Could not save the file: "
 msgstr "Nie udało się zapisać pliku: "
 
-#: src/presentation/ReadingsExporter.cpp:41
+#: src/presentation/ReadingsExporter.cpp:50
 msgid "Could not save the reading: "
 msgstr "Nie można zapisać odczytu: "
 
@@ -519,12 +519,12 @@ msgstr "Własna wysokość tego wykresu"
 msgid "Custom interval"
 msgstr "Własny zakres"
 
-#: src/presentation/UserPreferences.cpp:178
-#: src/presentation/UserPreferences.cpp:213
+#: src/presentation/UserPreferences.cpp:198
+#: src/presentation/UserPreferences.cpp:233
 msgid "Custom layout"
 msgstr "Własny układ"
 
-#: src/qml/LocationEditor.qml:227
+#: src/qml/LocationEditor.qml:226
 msgid "Custom name and coordinates"
 msgstr "Własna nazwa i współrzędne"
 
@@ -624,7 +624,7 @@ msgstr ""
 "Włącz próbnik na pasku wykresów, aby odczytywać parametry pod kursorem. "
 "Kliknięcie przypina odczyt."
 
-#: src/presentation/EditorialModel.cpp:39
+#: src/presentation/EditorialModel.cpp:41
 msgid "Enter a valid date in yyyy-mm-dd format."
 msgstr "Podaj poprawną datę w formacie rrrr-mm-dd."
 
@@ -693,13 +693,13 @@ msgstr "Wypełnienie pod linią"
 msgid "Fill:"
 msgstr "Wypełnienie:"
 
-#: src/qml/Meteogram.qml:416
+#: src/qml/Meteogram.qml:426
 msgid ""
 "Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
 msgstr ""
 "Wypełnienie: opad średni. Cienkie kreski: opad maksymalny. Suma w przedziale "
 
-#: src/qml/LocationEditor.qml:53
+#: src/qml/LocationEditor.qml:52
 msgid "Find a place"
 msgstr "Znajdź miejsce"
 
@@ -719,15 +719,15 @@ msgstr "Mgła i wilgotność"
 msgid "Fog cover"
 msgstr "Pokrycie mgłą"
 
-#: src/qml/LocationEditor.qml:189 src/qml/MeteoSettings.qml:53
+#: src/qml/LocationEditor.qml:188 src/qml/MeteoSettings.qml:53
 msgid "Forecast"
 msgstr "Prognoza"
 
-#: src/presentation/WeatherModel.cpp:293
+#: src/presentation/WeatherModel.cpp:282
 msgid "Forecast for "
 msgstr "Prognoza na "
 
-#: src/qml/LocationEditor.qml:208
+#: src/qml/LocationEditor.qml:207
 msgid "Forecast model"
 msgstr "Model prognozy"
 
@@ -739,11 +739,11 @@ msgstr "Prognozy:"
 msgid "From cache: "
 msgstr "Z pamięci: "
 
-#: src/qml/LocationEditor.qml:209
+#: src/qml/LocationEditor.qml:208
 msgid "GFS · 240 hours"
 msgstr "GFS · 240 godzin"
 
-#: src/qml/LocationEditor.qml:216
+#: src/qml/LocationEditor.qml:215
 msgid "GFS: worldwide forecast."
 msgstr "GFS: prognoza dla całego świata."
 
@@ -751,7 +751,7 @@ msgstr "GFS: prognoza dla całego świata."
 msgid "GPU · Qt Quick scene graph (default)"
 msgstr "GPU · scena Qt Quick (domyślnie)"
 
-#: src/qml/Meteogram.qml:269
+#: src/qml/Meteogram.qml:279
 msgid "Ground min–max"
 msgstr "Grunt min–max"
 
@@ -764,7 +764,7 @@ msgstr "Temperatura gruntu"
 msgid "Ground temperature min–max"
 msgstr "Temperatura gruntu min–max"
 
-#: src/qml/Meteogram.qml:310
+#: src/qml/Meteogram.qml:320
 msgid "Gust above scale"
 msgstr "Poryw powyżej skali"
 
@@ -776,7 +776,7 @@ msgstr "Porywy"
 msgid "Gusts: "
 msgstr "Porywy: "
 
-#: src/qml/Meteogram.qml:235
+#: src/qml/Meteogram.qml:245
 msgid "Hide legend"
 msgstr "Ukryj legendę"
 
@@ -839,11 +839,23 @@ msgstr "Importuj…"
 msgid "Interactive map"
 msgstr "Mapa interaktywna"
 
-#: src/core/Forecast.cpp:96
+#: src/presentation/ReadingsExporter.cpp:27
+msgid "Interval end"
+msgstr "Koniec przedziału"
+
+#: src/presentation/ReadingsExporter.cpp:27
+msgid "Interval start"
+msgstr "Początek przedziału"
+
+#: src/presentation/WeatherModel.cpp:383
+msgid "Interval: %1–%2"
+msgstr "Przedział: %1–%2"
+
+#: src/core/Forecast.cpp:97
 msgid "Invalid forecast timeline."
 msgstr "Niepoprawna oś czasu prognozy."
 
-#: src/core/Forecast.cpp:108
+#: src/core/Forecast.cpp:109
 msgid "Invalid forecast values."
 msgstr "Niepoprawne wartości prognozy."
 
@@ -851,11 +863,11 @@ msgstr "Niepoprawne wartości prognozy."
 msgid "Invalid map image URL."
 msgstr "Nieprawidłowy adres obrazu mapy."
 
-#: src/core/Forecast.cpp:82
+#: src/core/Forecast.cpp:82 src/presentation/EditorialModel.cpp:21
 msgid "Invalid meteo.pl response format."
 msgstr "Niepoprawny format odpowiedzi meteo.pl."
 
-#: src/presentation/UserPreferences.cpp:261
+#: src/presentation/UserPreferences.cpp:281
 msgid ""
 "Invalid profile definition or unknown series. No profiles were imported."
 msgstr ""
@@ -882,7 +894,7 @@ msgstr "Najnowszy"
 msgid "Latest available"
 msgstr "Najnowszy dostępny"
 
-#: src/presentation/WeatherModel.cpp:52 src/presentation/WeatherModel.cpp:65
+#: src/presentation/WeatherModel.cpp:54 src/presentation/WeatherModel.cpp:67
 msgid "Latest forecast"
 msgstr "Najnowsza prognoza"
 
@@ -938,7 +950,7 @@ msgstr "Linia:"
 msgid "Load older articles"
 msgstr "Wczytaj starsze artykuły"
 
-#: src/qml/LocationEditor.qml:118
+#: src/qml/LocationEditor.qml:117
 msgid "Locating…"
 msgstr "Ustalanie pozycji…"
 
@@ -950,11 +962,11 @@ msgstr "Lokalizacja"
 msgid "Location and model"
 msgstr "Lokalizacja i model"
 
-#: src/qml/LocationEditor.qml:47
+#: src/qml/LocationEditor.qml:46
 msgid "Location lookup timed out. You can choose a point on the map."
 msgstr "Upłynął czas ustalania pozycji. Możesz wybrać punkt z mapy."
 
-#: src/qml/LocationEditor.qml:254
+#: src/qml/LocationEditor.qml:255
 msgid "Longitude (°E):"
 msgstr "Długość (°E):"
 
@@ -974,7 +986,7 @@ msgstr "Maksimum"
 msgid "Maximum feels like"
 msgstr "Odczuwalna maksymalna"
 
-#: src/qml/Meteogram.qml:310
+#: src/qml/Meteogram.qml:320
 msgid "Maximum precipitation above scale"
 msgstr "Opad max powyżej skali"
 
@@ -1028,7 +1040,7 @@ msgstr "Temperatura minimalna"
 msgid "Minimum visibility"
 msgstr "Widzialność minimalna"
 
-#: src/qml/Meteogram.qml:269
+#: src/qml/Meteogram.qml:279
 msgid "Min–max range"
 msgstr "Zakres min–max"
 
@@ -1040,7 +1052,7 @@ msgstr "Zakres min–max: obszar"
 msgid "Min–max range: stems"
 msgstr "Zakres min–max: kreski"
 
-#: src/core/Forecast.cpp:118
+#: src/core/Forecast.cpp:119
 msgid "Missing temperature or model run date."
 msgstr "Brak temperatury lub daty uruchomienia modelu."
 
@@ -1064,7 +1076,7 @@ msgstr "Start obliczeń modelu, także archiwalny"
 msgid "Model run:"
 msgstr "Start modelu:"
 
-#: src/qml/LocationEditor.qml:205
+#: src/qml/LocationEditor.qml:204
 msgid "Model:"
 msgstr "Model:"
 
@@ -1088,11 +1100,11 @@ msgstr "Przenieś wykres wyżej"
 msgid "Move the visible time interval"
 msgstr "Przesuń widoczny przedział czasu"
 
-#: src/qml/LocationEditor.qml:40
+#: src/qml/LocationEditor.qml:39
 msgid "My location"
 msgstr "Moja pozycja"
 
-#: src/qml/LocationEditor.qml:152
+#: src/qml/LocationEditor.qml:151
 msgid "My places"
 msgstr "Moje miejsca"
 
@@ -1100,7 +1112,7 @@ msgstr "Moje miejsca"
 msgid "My places · choose a forecast"
 msgstr "Moje miejsca · wybierz prognozę"
 
-#: src/qml/DisplaySettings.qml:69 src/qml/LocationEditor.qml:236
+#: src/qml/DisplaySettings.qml:69 src/qml/LocationEditor.qml:235
 msgid "Name:"
 msgstr "Nazwa:"
 
@@ -1121,11 +1133,11 @@ msgid "Near-ground temperature"
 msgstr "Temperatura przy gruncie"
 
 #: src/presentation/ChartConfiguration.cpp:158
-#: src/presentation/UserPreferences.cpp:320
+#: src/presentation/UserPreferences.cpp:340
 msgid "New chart"
 msgstr "Nowy wykres"
 
-#: src/presentation/WeatherModel.cpp:500
+#: src/presentation/WeatherModel.cpp:503
 msgid "No cloud cover data"
 msgstr "Brak danych o zachmurzeniu"
 
@@ -1137,7 +1149,7 @@ msgstr "Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."
 msgid "No forecast"
 msgstr "Brak prognozy"
 
-#: src/presentation/WeatherModel.cpp:289
+#: src/presentation/WeatherModel.cpp:280
 msgid "No forecast for the current hour"
 msgstr "Brak prognozy na bieżącą godzinę"
 
@@ -1161,12 +1173,12 @@ msgstr "Brak opublikowanych map wybranego modelu."
 msgid "No parameters to export."
 msgstr "Brak parametrów do eksportu."
 
-#: src/qml/LocationEditor.qml:108
+#: src/qml/LocationEditor.qml:107
 msgid "No places found. Refine the name or choose a point on the map."
 msgstr ""
 "Nie znaleziono miejscowości. Doprecyzuj nazwę lub wybierz punkt z mapy."
 
-#: src/presentation/EditorialModel.cpp:28
+#: src/presentation/EditorialModel.cpp:30
 msgid ""
 "No synoptic commentary for %1. Choose another date or the latest commentary."
 msgstr ""
@@ -1176,7 +1188,7 @@ msgstr ""
 msgid "No valid reading time."
 msgstr "Brak prawidłowego czasu odczytu."
 
-#: src/presentation/WeatherModel.cpp:382
+#: src/presentation/WeatherModel.cpp:373
 msgid "None"
 msgstr "Brak"
 
@@ -1205,11 +1217,11 @@ msgstr "Otwórz folder"
 msgid "Original ICM meteogram"
 msgstr "Oryginalny meteogram ICM"
 
-#: src/presentation/UserPreferences.cpp:178
+#: src/presentation/UserPreferences.cpp:198
 msgid "Outdoors"
 msgstr "Na zewnątrz"
 
-#: src/presentation/WeatherModel.cpp:504
+#: src/presentation/WeatherModel.cpp:507
 msgid "Overcast"
 msgstr "Pochmurno"
 
@@ -1241,7 +1253,7 @@ msgstr "Parametry"
 msgid "Parameters of the indicated chart"
 msgstr "Parametry wskazanego wykresu"
 
-#: src/presentation/WeatherModel.cpp:504
+#: src/presentation/WeatherModel.cpp:507
 msgid "Partly cloudy"
 msgstr "Częściowe zachmurzenie"
 
@@ -1253,11 +1265,11 @@ msgstr "Pauza"
 msgid "Pin reading"
 msgstr "Przypnij odczyt"
 
-#: src/qml/LocationEditor.qml:197
+#: src/qml/LocationEditor.qml:196
 msgid "Place:"
 msgstr "Miejsce:"
 
-#: src/qml/LocationEditor.qml:141 src/qml/WeatherMap.qml:67
+#: src/qml/LocationEditor.qml:140 src/qml/WeatherMap.qml:67
 #: src/qml/WeatherMap.qml:91
 msgid "Point on map"
 msgstr "Punkt na mapie"
@@ -1270,15 +1282,15 @@ msgstr "Promień punktu:"
 msgid "Points"
 msgstr "Punkty"
 
-#: src/presentation/WeatherModel.cpp:563
+#: src/presentation/WeatherModel.cpp:566
 msgid "Polar day"
 msgstr "Dzień polarny"
 
-#: src/presentation/WeatherModel.cpp:563
+#: src/presentation/WeatherModel.cpp:566
 msgid "Polar night"
 msgstr "Noc polarna"
 
-#: src/presentation/WeatherModel.cpp:496
+#: src/presentation/WeatherModel.cpp:499
 msgid "Possible thunderstorms"
 msgstr "Możliwe burze"
 
@@ -1339,11 +1351,11 @@ msgstr "Wyeksportowano profili: "
 msgid "Profiles imported: "
 msgstr "Zaimportowano profili: "
 
-#: src/presentation/WeatherModel.cpp:382
+#: src/presentation/WeatherModel.cpp:373
 msgid "Rain"
 msgstr "Deszcz"
 
-#: src/presentation/WeatherModel.cpp:499
+#: src/presentation/WeatherModel.cpp:502
 msgid "Rainfall"
 msgstr "Opady deszczu"
 
@@ -1380,7 +1392,7 @@ msgstr "Wilgotność względna"
 msgid "Remove chart from this profile"
 msgstr "Usuń wykres z tego profilu"
 
-#: src/qml/LocationEditor.qml:180
+#: src/qml/LocationEditor.qml:179
 msgid "Remove place: "
 msgstr "Usuń miejsce: "
 
@@ -1407,6 +1419,18 @@ msgstr "Prawa"
 #: src/qml/SeriesSettings.qml:87
 msgid "Right axis"
 msgstr "Prawa oś"
+
+#: src/presentation/ReadingsExporter.cpp:27
+msgid "Sample time"
+msgstr "Czas próbki"
+
+#: src/presentation/WeatherModel.cpp:382
+msgid "Sample: %1"
+msgstr "Próbka: %1"
+
+#: src/presentation/ReadingsExporter.cpp:27
+msgid "Sampling"
+msgstr "Próbkowanie"
 
 #: src/qml/ForecastPanel.qml:171
 msgid "Save PNG…"
@@ -1441,11 +1465,11 @@ msgstr "Ciśnienie na poziomie morza"
 msgid "Search and models:"
 msgstr "Wyszukiwanie i modele:"
 
-#: src/qml/LocationEditor.qml:66
+#: src/qml/LocationEditor.qml:65
 msgid "Search for a place"
 msgstr "Wyszukaj miejscowość"
 
-#: src/qml/LocationEditor.qml:82
+#: src/qml/LocationEditor.qml:81
 msgid "Search outside Poland too"
 msgstr "Szukaj także poza Polską"
 
@@ -1510,7 +1534,7 @@ msgstr "Pokaż prognozę"
 msgid "Show forecast: "
 msgstr "Pokaż prognozę: "
 
-#: src/qml/Meteogram.qml:235
+#: src/qml/Meteogram.qml:245
 msgid "Show legend"
 msgstr "Pokaż legendę"
 
@@ -1526,15 +1550,15 @@ msgstr "Pokaż meteogram"
 msgid "Show:"
 msgstr "Pokazuj:"
 
-#: src/presentation/WeatherModel.cpp:383 src/presentation/WeatherModel.cpp:498
+#: src/presentation/WeatherModel.cpp:374 src/presentation/WeatherModel.cpp:501
 msgid "Sleet"
 msgstr "Deszcz ze śniegiem"
 
-#: src/presentation/WeatherModel.cpp:383
+#: src/presentation/WeatherModel.cpp:374
 msgid "Snow"
 msgstr "Śnieg"
 
-#: src/presentation/WeatherModel.cpp:497
+#: src/presentation/WeatherModel.cpp:500
 msgid "Snowfall"
 msgstr "Opady śniegu"
 
@@ -1568,7 +1592,7 @@ msgstr "Intensywność burzy"
 msgid "Storms"
 msgstr "Burze"
 
-#: src/qml/Meteogram.qml:269
+#: src/qml/Meteogram.qml:279
 msgid "Storms / lightning"
 msgstr "Burze / wyładowania"
 
@@ -1632,11 +1656,11 @@ msgstr ""
 msgid "The chart was closed during export."
 msgstr "Wykres został zamknięty podczas eksportu."
 
-#: src/presentation/UserPreferences.cpp:240
+#: src/presentation/UserPreferences.cpp:260
 msgid "The file does not contain a valid JSON document."
 msgstr "Plik nie zawiera poprawnego dokumentu JSON."
 
-#: src/presentation/UserPreferences.cpp:246
+#: src/presentation/UserPreferences.cpp:266
 msgid "The file must contain between 1 and 100 profiles."
 msgstr "Plik musi zawierać od 1 do 100 profili."
 
@@ -1662,7 +1686,7 @@ msgstr ""
 "Przycisk informacji przy tytule wykresu przełącza legendę podczas oglądania. "
 "Ta opcja określa stan początkowy dla wszystkich profili."
 
-#: src/qml/LocationEditor.qml:124
+#: src/qml/LocationEditor.qml:123
 msgid ""
 "The location service is unavailable. Choose a place or a point on the map."
 msgstr ""
@@ -1672,7 +1696,7 @@ msgstr ""
 msgid "The name and chart changes are saved automatically."
 msgstr "Nazwa i zmiany wykresów zapisują się automatycznie."
 
-#: src/presentation/UserPreferences.cpp:236
+#: src/presentation/UserPreferences.cpp:256
 msgid "The profile file is too large (maximum 16 MiB)."
 msgstr "Plik profili jest zbyt duży (maksymalnie 16 MiB)."
 
@@ -1688,7 +1712,7 @@ msgstr "Odpowiedź serwera jest zbyt duża."
 msgid "The server returned an invalid JSON document."
 msgstr "Serwer zwrócił niepoprawny dokument JSON."
 
-#: src/presentation/EditorialModel.cpp:27
+#: src/presentation/EditorialModel.cpp:29
 msgid "The synoptic commentary has not been published yet. Try again later."
 msgstr "Komentarz synoptyka nie został jeszcze opublikowany. Spróbuj później."
 
@@ -1721,7 +1745,7 @@ msgstr ""
 "Lokalizacja jest poza obszarem modelu. Dla punktów poza Europą Środkową "
 "wybierz GFS."
 
-#: src/qml/LocationEditor.qml:221
+#: src/qml/LocationEditor.qml:220
 msgid "This point is outside the UM4 area. Choose the GFS model."
 msgstr "Ten punkt leży poza obszarem UM4. Wybierz model GFS."
 
@@ -1738,7 +1762,7 @@ msgstr "Zakres czasu:"
 msgid "Timestamp"
 msgstr "Czas"
 
-#: src/presentation/UserPreferences.cpp:224
+#: src/presentation/UserPreferences.cpp:244
 msgid "Too many profiles in one file. Export them separately."
 msgstr "Za dużo profili w jednym pliku. Wyeksportuj je osobno."
 
@@ -1754,7 +1778,7 @@ msgstr "Razem na dysku:"
 msgid "Total precipitation for this day."
 msgstr "Suma opadu dla całego dnia."
 
-#: src/qml/LocationEditor.qml:65
+#: src/qml/LocationEditor.qml:64
 msgid "Town or village name…"
 msgstr "Nazwa miasta lub wsi…"
 
@@ -1766,11 +1790,11 @@ msgstr "Mapy tematyczne UM / WAM"
 msgid "UM model:"
 msgstr "Model UM:"
 
-#: src/qml/LocationEditor.qml:209
+#: src/qml/LocationEditor.qml:208
 msgid "UM4 · 120 hours"
 msgstr "UM4 · 120 godzin"
 
-#: src/qml/LocationEditor.qml:209
+#: src/qml/LocationEditor.qml:208
 msgid "UM4 · 60 hours"
 msgstr "UM4 · 60 godzin"
 
@@ -1838,7 +1862,7 @@ msgstr "UM4 · chmury bardzo niskie"
 msgid "UM4 · visibility"
 msgstr "UM4 · widzialność"
 
-#: src/qml/LocationEditor.qml:216
+#: src/qml/LocationEditor.qml:215
 msgid "UM4: detailed forecasts for Poland and Central Europe."
 msgstr "UM4: szczegółowa prognoza dla Polski i Europy Środkowej."
 
@@ -1854,11 +1878,11 @@ msgstr "Jednostki i czas"
 msgid "Unpin reading"
 msgstr "Odepnij odczyt"
 
-#: src/presentation/UserPreferences.cpp:243
+#: src/presentation/UserPreferences.cpp:263
 msgid "Unsupported profile file format or version."
 msgstr "Nieobsługiwany format lub wersja pliku profili."
 
-#: src/qml/LocationEditor.qml:118
+#: src/qml/LocationEditor.qml:117
 msgid "Use my location"
 msgstr "Użyj mojej pozycji"
 

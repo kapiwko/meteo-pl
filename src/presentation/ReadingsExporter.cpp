@@ -23,7 +23,14 @@ QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readi
         for (const auto &column : columns) cells.append(quoted(column));
         data += cells.join(';').toUtf8() + "\r\n";
     };
-    appendRow({Meteo::i18n("Timestamp"), Meteo::i18n("Location"), Meteo::i18n("Model"), Meteo::i18n("Model run"), Meteo::i18n("Reading scope"), Meteo::i18n("Category"), Meteo::i18n("Key"), Meteo::i18n("Parameter"), Meteo::i18n("Value"), Meteo::i18n("Unit"), Meteo::i18n("Description"), Meteo::i18n("Source")});
+    appendRow({Meteo::i18n("Timestamp"), Meteo::i18n("Location"), Meteo::i18n("Model"), Meteo::i18n("Model run"), Meteo::i18n("Reading scope"), Meteo::i18n("Category"), Meteo::i18n("Key"), Meteo::i18n("Parameter"), Meteo::i18n("Value"), Meteo::i18n("Unit"), Meteo::i18n("Description"), Meteo::i18n("Source"),
+        Meteo::i18n("Sample time"), Meteo::i18n("Interval start"), Meteo::i18n("Interval end"), Meteo::i18n("Sampling")});
+    const auto sourceTime = [&](const QVariant &timestamp) {
+        if (!timestamp.isValid()) return QString();
+        auto date = QDateTime::fromSecsSinceEpoch(timestamp.toLongLong(), QTimeZone::UTC);
+        if (!metadata.value("utc").toBool()) date = date.toLocalTime();
+        return date.toString(Qt::ISODate);
+    };
     for (const auto &entry : readings) {
         const auto reading = entry.toMap();
         bool numeric = false;
@@ -32,7 +39,9 @@ QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readi
             metadata.value("run").toString(), metadata.value("scope").toString(), reading.value("group").toString(),
             reading.value("key").toString(), reading.value("label").toString(),
             numeric && std::isfinite(value) ? QLocale::c().toString(value, 'g', 15) : QString(),
-            reading.value("unit").toString(), reading.value("value").toString(), metadata.value("source").toString()});
+            reading.value("unit").toString(), reading.value("value").toString(), metadata.value("source").toString(),
+            sourceTime(reading.value("sourceTimestamp")), sourceTime(reading.value("intervalFrom")),
+            sourceTime(reading.value("intervalTo")), reading.value("sampling").toString()});
     }
     auto path = url.toLocalFile();
     if (QFileInfo(path).suffix().isEmpty()) path += QStringLiteral(".csv");

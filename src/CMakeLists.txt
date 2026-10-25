@@ -1,6 +1,7 @@
 add_library(meteo_core STATIC
     core/Forecast.cpp core/Forecast.hpp
     core/ForecastAggregation.cpp core/ForecastAggregation.hpp
+    core/ForecastSampling.cpp core/ForecastSampling.hpp
     core/EditorialContent.cpp core/EditorialContent.hpp
     core/Localization.cpp core/Localization.hpp
     core/Locations.cpp core/Locations.hpp
@@ -43,6 +44,7 @@ qt_add_qml_module(meteo_ui
         presentation/I18n.hpp
         presentation/LocationRules.hpp
         presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
+        presentation/ChartDataBuilder.cpp presentation/ChartDataBuilder.hpp
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp

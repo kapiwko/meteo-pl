@@ -92,7 +92,8 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
         const auto values = field.value("data").toArray();
         const auto timestamp = timestampValue(field.value("first_timestamp"));
         const int interval = field.value("interval").toInt();
-        if (timestamp <= 0 || interval <= 0 || interval > 86400 || values.isEmpty() || values.size() > 1000)
+        if (timestamp <= 0 || interval <= 0 || interval > 86400 || values.isEmpty() || values.size() > 1000
+            || timestamp > 253402300799LL - qint64(interval) * values.size())
             return fail(Meteo::i18n("Invalid forecast timeline."));
         Series series{field.value("unit").toString(), timestamp, interval, {}};
         for (const auto &value : values) {

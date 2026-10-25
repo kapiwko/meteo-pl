@@ -268,11 +268,11 @@ function paintChart(root, plot, ctx, withCursor) {
             } else if (field.kind === "bars" || field.kind === "barsBack" || field.kind === "stems" || field.kind === "rightBars") {
                 if (isPrecipitationBar && field.precipitationColors !== false) {
                     const types = root.fields.find(f => f.kind === "type");
-                    const type = types ? root.pointAt(types.points, point.time) : null;
+                    const type = types ? point.precipitationType : null;
                     const rainColor = root.seriesColor(field);
                     const snowColor = root.darkPalette ? "#60a5fa" : "#1539c0";
                     const mixedColor = root.darkPalette ? "#e879f9" : "#b72dc1";
-                    ctx.fillStyle = type && type.value === 2 ? snowColor : type && type.value === 3 ? mixedColor : rainColor;
+                    ctx.fillStyle = type === 2 ? snowColor : type === 3 ? mixedColor : rainColor;
                 }
                 if (field.kind === "stems") {
                     ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = field.lineWidth === undefined ? 2.5 : field.lineWidth;
@@ -300,10 +300,9 @@ function paintChart(root, plot, ctx, withCursor) {
         const events = flashes ? flashes.points : storm ? storm.points : [];
         const eventStep = events.length > 1 ? events[1].time - events[0].time : 3600;
         for (const point of events) {
-            const a = storm ? root.pointAt(storm.points, point.time) : null;
-            const b = flashes ? root.pointAt(flashes.points, point.time) : null;
-            const flash = b && root.valid(b.value) ? b.value : 0;
-            if (flash <= 0 && (!a || !root.valid(a.value) || a.value <= 0)) continue;
+            const intensity = storm && root.valid(point.storm) ? point.storm : 0;
+            const flash = flashes && root.valid(point.flash) ? point.flash : 0;
+            if (flash <= 0 && intensity <= 0) continue;
             const eventStyle = flashes || storm, autoColors = eventStyle.eventColors !== false, radius = eventStyle.pointSize || 4;
             ctx.fillStyle = autoColors ? (flash >= 30 ? (root.darkPalette ? "#ff6b6b" : "#f44336") : flash >= 10 ? (root.darkPalette ? "#ffb74d" : "#ff9800") : "#ffeb3b") : root.seriesColor(eventStyle);
             const eventX = root.px(point.time + eventStep / 2), eventY = (top + bottom) / 2;
@@ -361,10 +360,12 @@ function paintCursor(root, plot, ctx, reset) {
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
         for (const field of root.fields) {
             if (!root.shown(field) || ["hidden", "direction", "type", "barsBack", "storm", "flash"].indexOf(field.kind) >= 0) continue;
-            const point = root.pointAt(field.points, root.selectedTime);
-            if (!point || !root.valid(point.value)) continue;
+            const sample = root.probeSamples[field.key];
+            if (!sample || !root.valid(sample.number) || !root.valid(sample.sourceTimestamp)) continue;
+            const centered = ["pcpttl_aver", "pcpttl_max"].indexOf(field.key) >= 0 || field.kind === "gusts";
+            const sampleTime = sample.sourceTimestamp + (centered && root.valid(sample.intervalTo) ? (sample.intervalTo - sample.intervalFrom) / 2 : 0);
             ctx.fillStyle = root.seriesColor(field); ctx.strokeStyle = root.backgroundColor; ctx.lineWidth = 1.5; ctx.globalAlpha = 1;
-            ctx.beginPath(); ctx.arc(x, root.py(point.value, root.isRightField(field)), 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(root.px(sampleTime), root.py(sample.number, root.isRightField(field)), 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         }
     }
     ctx.restore();

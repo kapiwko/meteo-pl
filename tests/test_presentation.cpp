@@ -1,6 +1,7 @@
 #include "WeatherModel.hpp"
 #include "ChartConfiguration.hpp"
 #include "ChartExporter.hpp"
+#include "ReadingsExporter.hpp"
 #include "GpuPlot.hpp"
 #include "UserPreferences.hpp"
 #include "Fixture.hpp"
@@ -1107,6 +1108,66 @@ private slots:
         QCOMPARE(solar["sunriseText"].toString(), model.formatTime(solar["sunrise"].toDouble(), "HH:mm"));
         QCOMPARE(solar["sunsetText"].toString(), model.formatTime(solar["sunset"].toDouble(), "HH:mm"));
         QVERIFY(solar["status"].toString().isEmpty());
+    }
+    void nativeSamplingIsSharedByReadingsCursorAndCsv()
+    {
+        const auto hash = QCryptographicHash::hash("um4_60:52.229700:21.012200", QCryptographicHash::Sha256).toHex();
+        const auto path = m_cache.path() + "/meteo-pl/" + hash + ".json";
+        QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
+        const auto original = file.readAll(); file.close();
+        const auto restore = qScopeGuard([&] { QFile output(path); if (output.open(QIODevice::WriteOnly)) output.write(original); });
+        auto envelope = QJsonDocument::fromJson(original).object();
+        auto payload = QJsonDocument::fromJson(envelope["payload"].toString().toUtf8()).object();
+        auto fields = payload["data"].toObject();
+        const auto first = fields["airtmp_point"].toObject()["first_timestamp"].toString().toLongLong();
+        for (const auto &key : {"dwptmp_point", "pcpttl_aver", "pcpttl_type_max"}) {
+            auto field = fields["airtmp_point"].toObject();
+            field["interval"] = 10800;
+            field["data"] = QString(key) == "pcpttl_type_max" ? QJsonArray{2,3,0} : QJsonArray{1,9,QJsonValue()};
+            fields[key] = field;
+        }
+        payload["data"] = fields;
+        envelope["payload"] = QString::fromUtf8(QJsonDocument(payload).toJson());
+        QVERIFY(file.open(QIODevice::WriteOnly)); file.write(QJsonDocument(envelope).toJson()); file.close();
+        WeatherModel model; model.setAutoRefresh(false); model.refresh(false);
+        QVERIFY(model.hasData());
+        const auto selected = first + 7200;
+        const auto rows = model.detailsAt(selected);
+        const auto rowFor = [&](const QString &key) {
+            for (const auto &value : rows) if (value.toMap()["key"] == key) return value.toMap();
+            return QVariantMap();
+        };
+        const auto instant = rowFor("dwptmp_point"), rain = rowFor("pcpttl_aver");
+        QCOMPARE(instant["number"].toDouble(),9.0);
+        QCOMPARE(instant["sourceTimestamp"].toLongLong(),first+10800);
+        QVERIFY(!instant["intervalTo"].isValid());
+        QCOMPARE(rain["number"].toDouble(),1.0);
+        QCOMPARE(rain["sourceTimestamp"].toLongLong(),first);
+        QCOMPARE(rain["intervalFrom"].toLongLong(),first);
+        QCOMPARE(rain["intervalTo"].toLongLong(),first+10800);
+        QCOMPARE(rain["sampling"].toString(),"intervalTotal");
+        const auto bars = model.series()["pcpttl_aver"].toList();
+        QCOMPARE(bars[0].toMap()["precipitationType"].toDouble(),2.0);
+        QCOMPARE(bars[1].toMap()["precipitationType"].toDouble(),3.0);
+        QQmlEngine engine;
+        QQmlComponent component(&engine,QUrl("qrc:/qt/qml/pl/meteo/desktop/Meteogram.qml"));
+        const auto chart = model.chartGroups().first().toMap();
+        QScopedPointer<QObject> item(component.createWithInitialProperties({{"weather",QVariant::fromValue(&model)},
+            {"title","Test"},{"groupKey","temperature"},{"fields",chart["fields"]},{"selectedTime",double(selected)}}));
+        QVERIFY2(item,qPrintable(component.errorString()));
+        const auto samples = item->property("probeSamples").value<QJSValue>().toVariant().toMap();
+        QCOMPARE(samples["dwptmp_point"].toMap(),instant);
+        QCOMPARE(samples["pcpttl_aver"].toMap(),rain);
+        ReadingsExporter exporter;
+        QTemporaryDir output;
+        const auto csv = exporter.saveCsv(QUrl::fromLocalFile(output.filePath("samples.csv")),rows,
+            {{"timestamp",double(selected)},{"utc",true}});
+        QVERIFY(csv["ok"].toBool());
+        QFile data(csv["path"].toString()); QVERIFY(data.open(QIODevice::ReadOnly));
+        const auto text = QString::fromUtf8(data.readAll());
+        const auto iso = [](qint64 time) { return QDateTime::fromSecsSinceEpoch(time,QTimeZone::UTC).toString(Qt::ISODate); };
+        QVERIFY(text.contains('"'+iso(first+10800)+"\";\"\";\"\";\"instant\""));
+        QVERIFY(text.contains('"'+iso(first)+"\";\""+iso(first)+"\";\""+iso(first+10800)+"\";\"intervalTotal\""));
     }
     void detailsAndUnitsUseMatchingTimestamps()
     {

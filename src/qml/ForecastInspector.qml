@@ -127,7 +127,7 @@ Popup {
                             Layout.preferredWidth: Math.max(1, (readings.width - readings.columnSpacing * (readings.columns - 1)) / readings.columns)
                             Layout.minimumWidth: 0
                             Layout.fillHeight: true
-                            implicitHeight: Math.max(nameLabel.implicitHeight, valueLabel.implicitHeight) + 12
+                            implicitHeight: Math.max(nameColumn.implicitHeight, valueLabel.implicitHeight) + 12
                             color: root.highlightedKeys.indexOf(modelData.key) >= 0 ? Kirigami.Theme.alternateBackgroundColor : "transparent"
                             RowLayout {
                                 anchors.fill: parent
@@ -137,7 +137,21 @@ Popup {
                                     Layout.preferredHeight: 15
                                     color: Kirigami.Theme.backgroundColor.hslLightness < 0.5 ? reading.modelData.darkColor : reading.modelData.color
                                 }
-                                Label { id: nameLabel; text: reading.modelData.label; Layout.fillWidth: true; Layout.minimumWidth: 0; wrapMode: Text.WordWrap; font.pixelSize: 11 }
+                                ColumnLayout {
+                                    id: nameColumn
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    spacing: 1
+                                    Label { text: reading.modelData.label; Layout.fillWidth: true; wrapMode: Text.WordWrap; font.pixelSize: 11 }
+                                    Label {
+                                        visible: text.length > 0
+                                        text: reading.modelData.sampleText || ""
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                        font: Kirigami.Theme.smallFont
+                                        color: Kirigami.Theme.disabledTextColor
+                                    }
+                                }
                                 Label { id: valueLabel; text: reading.modelData.value; font.bold: true; font.pixelSize: 11 }
                             }
                         }

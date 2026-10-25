@@ -21,6 +21,12 @@ ColumnLayout {
     property real startTime: weather.firstTimestamp
     property real endTime: weather.lastTimestamp
     property real selectedTime: 0
+    readonly property var probeSamples: {
+        const result = {};
+        if (selectedTime <= 0 || !Object.keys(weather.series).length) return result;
+        for (const sample of weather.detailsAt(selectedTime)) result[sample.key] = sample;
+        return result;
+    }
     property var nights: []
     property var hiddenKeys: []
     property int chartHeight: chartConfiguration.height || Math.round((UserPreferences.profileChartHeight || UserPreferences.chartHeight) * (directionOnly ? 64 / 174 : 1))
@@ -213,10 +219,15 @@ ColumnLayout {
         return field ? field.unit : "";
     }
     function pointAt(list, time) {
-        if (!list.length) return null;
-        const step = list.length > 1 ? list[1].time - list[0].time : 3600;
-        const index = Math.round((time - list[0].time) / step);
-        return index >= 0 && index < list.length ? list[index] : null;
+        // Exact native timestamp lookup for range partners. Sampling is done
+        // once in C++, shared by the inspector, cursor and CSV exporter.
+        let low = 0, high = list.length - 1;
+        while (low <= high) {
+            const middle = Math.floor((low + high) / 2), point = list[middle];
+            if (point.time === time) return point;
+            if (point.time < time) low = middle + 1; else high = middle - 1;
+        }
+        return null;
     }
     FontMetrics { id: axisFont; font.family: "sans-serif"; font.pixelSize: 10 }
     function timeAxisLabels() {
