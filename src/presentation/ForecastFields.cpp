@@ -63,7 +63,7 @@ const QVector<ForecastChart> &forecastCharts()
         {"precipitation", "Opady i wilgotność", {"pcpttl_aver", "pcpttl_max", "pcpttl_type_max", "realhum_aver"}},
         {"probability", "Szansa opadu i burze", {"pcpttlprob_point", "storm_max", "flash_max"}},
         {"pressure", "Ciśnienie na poziomie morza", {"slpres_point"}},
-        {"wind", "Prędkość i porywy wiatru", {"wind10_sd_true_prev_point", "wind_gust_max"}},
+        {"wind", "Wiatr", {"wind10_sd_true_prev_point", "wind_gust_max", "wind10_dr_deg_true_prev_point"}},
         {"windDirection", "Kierunek wiatru", {"wind10_dr_deg_true_prev_point"}},
         {"cloudHeights", "Pionowy zasięg chmur i widzialność", {"cldbse01", "cldbse25", "cldbse45", "cldbse65", "cldbse79", "cldtop", "visibl_min"}},
         {"clouds", "Zachmurzenie i mgła", {"cldhigh_aver", "cldmed_aver", "cldlow_aver", "cldvlow_aver", "cldtot_aver", "fog_max"}},

@@ -105,7 +105,7 @@ QStringList chartFieldKeys(const QVariantList &series)
 
 QVariantList defaultChartLayout(const QString &profile)
 {
-    QStringList enabled{"temperature", "precipitation", "probability", "pressure", "wind", "windDirection", "cloudHeights", "clouds"};
+    QStringList enabled{"temperature", "precipitation", "probability", "pressure", "wind", "cloudHeights", "clouds"};
     if (profile == "basic") enabled = {"temperature", "precipitation", "wind", "pressure", "clouds"};
     if (profile == "outdoor") enabled = {"temperature", "precipitation", "probability", "wind", "clouds"};
     QVariantList layout;
@@ -117,7 +117,7 @@ QVariantList defaultChartLayout(const QString &profile)
             style["axis"] = (chart.key == "precipitation" && key == "realhum_aver") || (chart.key == "cloudHeights" && key == "visibl_min") || (chart.key == "clouds" && key == "fog_max") || (chart.key == "humidity" && key == "fog_max") ? "right" : "left";
             series.append(style);
         }
-        layout.append(QVariantMap{{"key", chart.key}, {"title", chart.title}, {"enabled", profile == "full" || enabled.contains(chart.key)},
+        layout.append(QVariantMap{{"key", chart.key}, {"title", chart.title}, {"enabled", chart.key != "windDirection" && (profile == "full" || enabled.contains(chart.key))},
             {"leftScale", chart.key == "ground" ? "temperature" : chart.key == "windDirection" ? "direction" : chart.key},
             {"rightScale", "auto"}, {"series", series}, {"fields", chartFieldKeys(series)}});
     }
@@ -165,5 +165,31 @@ QVariantList normalizeChartLayout(const QVariantList &saved)
             if (normalized.contains(axis + "Min") && normalized.contains(axis + "Max") && normalized[axis + "Min"].toDouble() >= normalized[axis + "Max"].toDouble()) { normalized.remove(axis + "Min"); normalized.remove(axis + "Max"); }
         result.append(normalized); seen.insert(key);
     }
+    return result;
+}
+
+QVariantList integrateWindDirection(const QVariantList &saved)
+{
+    auto result = normalizeChartLayout(saved);
+    int speedIndex = -1, directionIndex = -1;
+    for (int i=0; i<result.size(); ++i) {
+        const auto chart = result[i].toMap();
+        if (!chart["enabled"].toBool()) continue;
+        if (chart["key"] == "wind") speedIndex = i;
+        if (chart["key"] == "windDirection") directionIndex = i;
+    }
+    if (speedIndex < 0 || directionIndex < 0) return result;
+    auto speed = result[speedIndex].toMap(), direction = result[directionIndex].toMap();
+    auto series = speed["series"].toList();
+    const auto arrows = direction["series"].toList();
+    const auto keys = chartFieldKeys(series);
+    if (!keys.contains("wind10_sd_true_prev_point") || keys.contains("wind10_dr_deg_true_prev_point")
+        || arrows.size()!=1 || arrows[0].toMap()["key"]!="wind10_dr_deg_true_prev_point"
+        || arrows[0].toMap()["render"]!="direction") return result;
+    series.append(arrows[0]); // Keep the user's arrow color, opacity and width.
+    speed["series"] = series; speed["fields"] = chartFieldKeys(series);
+    if (speed["title"] == "Prędkość i porywy wiatru") speed["title"] = "Wiatr";
+    direction["enabled"] = false;
+    result[speedIndex] = speed; result[directionIndex] = direction;
     return result;
 }

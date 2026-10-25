@@ -210,7 +210,7 @@ private slots:
         rendererReload.setRenderer("invalid");
         QCOMPARE(rendererReload.renderer(), "cpu");
         rendererReload.setRenderer("gpu");
-        QCOMPARE(preferences.visibleGroups(), QStringList({"temperature", "precipitation", "probability", "pressure", "wind", "windDirection", "cloudHeights", "clouds"}));
+        QCOMPARE(preferences.visibleGroups(), QStringList({"temperature", "precipitation", "probability", "pressure", "wind", "cloudHeights", "clouds"}));
         const auto id = preferences.createProfile(QStringLiteral("Moje góry"));
         QVERIFY(id.startsWith("user:"));
         preferences.moveChart(4, -4);
@@ -433,6 +433,37 @@ private slots:
         }
         QVERIFY(!preferences.importProfiles(QUrl("https://example.com/profiles.json"))["ok"].toBool());
         QVERIFY(!preferences.exportProfiles(QUrl::fromLocalFile(config.filePath("missing/profiles.json")))["ok"].toBool());
+    }
+    void savedWindChartsCombineOnceAndPreserveArrowStyle()
+    {
+        QTemporaryDir config; QVERIFY(config.isValid());
+        qputenv("XDG_CONFIG_HOME", config.path().toUtf8());
+        auto arrow = defaultSeriesStyle("wind10_dr_deg_true_prev_point");
+        arrow["color"] = "#123456"; arrow["lineWidth"] = 3.0;
+        const QVariantList old{
+            QVariantMap{{"key","wind"},{"title","Mój wiatr"},{"enabled",true},
+                {"series",QVariantList{defaultSeriesStyle("wind10_sd_true_prev_point"),defaultSeriesStyle("wind_gust_max")}}},
+            QVariantMap{{"key","windDirection"},{"enabled",true},{"series",QVariantList{arrow}}}};
+        QSettings settings(QSettings::IniFormat,QSettings::UserScope,"meteo-pl","desktop");
+        settings.setValue("display/layoutVersion",2);
+        settings.setValue("display/profile","user:test");
+        settings.setValue("display/customLayout",QJsonDocument::fromVariant(old).toJson());
+        settings.setValue("display/savedProfiles",QJsonDocument::fromVariant(QVariantList{
+            QVariantMap{{"id","user:test"},{"name","Wiatr"},{"charts",old}}}).toJson());
+        settings.sync();
+        UserPreferences preferences;
+        QCOMPARE(preferences.profile(),"user:test");
+        QCOMPARE(preferences.visibleGroups(),QStringList{"wind"});
+        const auto chart=preferences.chartLayout().first().toMap();
+        QCOMPARE(chart["title"].toString(),"Mój wiatr");
+        const auto series=chart["series"].toList(); QCOMPARE(series.size(),3);
+        QCOMPARE(series.last().toMap()["color"].toString(),"#123456");
+        QCOMPARE(series.last().toMap()["lineWidth"].toDouble(),3.0);
+        preferences.setProfile("custom");
+        QCOMPARE(preferences.visibleGroups(),QStringList{"wind"});
+        preferences.setChartEnabled("windDirection",true);
+        UserPreferences reopened;
+        QVERIFY(reopened.visibleGroups().contains("windDirection")); // A later explicit choice stays intact.
     }
     void oldLayoutsMigrateAndInvalidStylesAreRejected()
     {

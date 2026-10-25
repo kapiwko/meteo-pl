@@ -185,6 +185,23 @@ function timeAxisLabels(left, right, startTime, endTime, origin, formatTime, mea
     return {hours: hours, format: format, labels: labels, days: days, midnights: midnights};
 }
 
+function paintDirections(root, ctx, left, right, center) {
+    const directions = root.fields.find(f => f.kind === "direction" && root.shown(f));
+    if (directions) {
+        let lastX = -100;
+        for (const point of directions.points) {
+            const x = root.px(point.time);
+            if (x < left || x > right || x - lastX < 12 || !root.valid(point.value)) continue;
+            lastX = x;
+            ctx.save(); ctx.translate(x, center); ctx.rotate((point.value + 180) * Math.PI / 180);
+            ctx.strokeStyle = root.seriesColor(directions); ctx.globalAlpha = directions.opacity === undefined ? 1 : directions.opacity; ctx.lineWidth = directions.lineWidth || 1.5;
+            ctx.beginPath(); ctx.moveTo(0,3.5); ctx.lineTo(0,-3.5); ctx.stroke();
+            ctx.fillStyle = root.seriesColor(directions);
+            ctx.beginPath(); ctx.moveTo(0,-7.5); ctx.lineTo(-3.5,-3.5); ctx.lineTo(3.5,-3.5); ctx.closePath(); ctx.fill(); ctx.restore();
+        }
+    }
+}
+
 function paintChart(root, plot, ctx, withCursor) {
     const width = plot.width, height = plot.height; ctx.reset();
     const left = root.leftMargin, right = width - root.rightMargin;
@@ -226,7 +243,7 @@ function paintChart(root, plot, ctx, withCursor) {
     const axis = root.timeAxisLabels();
     if (!root.directionOnly) {
         ctx.fillStyle = root.textColor; ctx.globalAlpha = 0.75;
-        for (const label of axis.labels) ctx.fillText(label.text, label.x, bottom + 15);
+        for (const label of axis.labels) ctx.fillText(label.text, label.x, bottom + root.directionBandHeight + 15);
         ctx.globalAlpha = 0.8;
         for (const label of axis.days) ctx.fillText(label.text, label.x, 12);
     }
@@ -329,22 +346,7 @@ function paintChart(root, plot, ctx, withCursor) {
             ctx.beginPath(); ctx.arc(eventX, eventY, Math.max(1, radius - 1), 0, Math.PI * 2); ctx.stroke();
         }
     }
-    {
-        const directions = root.fields.find(f => f.kind === "direction" && root.shown(f));
-        if (directions) {
-            let lastX = -100;
-            for (const point of directions.points) {
-                const x = root.px(point.time);
-                if (x < left || x > right || x - lastX < 12 || !root.valid(point.value)) continue;
-                lastX = x;
-                ctx.save(); ctx.translate(x, root.directionOnly ? (top + bottom) / 2 : bottom - 9); ctx.rotate((point.value + 180) * Math.PI / 180);
-                ctx.strokeStyle = root.seriesColor(directions); ctx.globalAlpha = directions.opacity === undefined ? 1 : directions.opacity; ctx.lineWidth = directions.lineWidth || 1.5;
-                ctx.beginPath(); ctx.moveTo(0,3.5); ctx.lineTo(0,-3.5); ctx.stroke();
-                ctx.fillStyle = root.seriesColor(directions);
-                ctx.beginPath(); ctx.moveTo(0,-7.5); ctx.lineTo(-3.5,-3.5); ctx.lineTo(3.5,-3.5); ctx.closePath(); ctx.fill(); ctx.restore();
-            }
-        }
-    }
+    if (root.directionOnly) paintDirections(root, ctx, left, right, (top + bottom) / 2);
     // The ICM grid stays visible over opaque precipitation, wind,
     // pressure and cloud fills. Cursor indicators are the top layer.
     const gridFirst = origin + Math.ceil((root.startTime - origin) / 10800) * 10800;
@@ -354,10 +356,23 @@ function paintChart(root, plot, ctx, withCursor) {
         ctx.fillRect(root.px(night.start), top, root.px(night.end) - root.px(night.start), bottom - top);
     }
     ctx.restore();
+    if (root.directionBandHeight) {
+        const bandBottom = bottom + root.directionBandHeight;
+        ctx.save(); ctx.beginPath(); ctx.rect(left, bottom, right - left, root.directionBandHeight); ctx.clip();
+        ctx.fillStyle = root.darkPalette ? "#121212" : "#ffffff";
+        ctx.fillRect(left, bottom, right - left, root.directionBandHeight);
+        root.drawGrid(ctx, left, right, bottom, bandBottom, gridFirst, 10800);
+        for (const night of root.nights) {
+            ctx.fillStyle = root.darkPalette ? "#ffffff" : "#000000"; ctx.globalAlpha = 0.1;
+            ctx.fillRect(root.px(night.start), bottom, root.px(night.end) - root.px(night.start), root.directionBandHeight);
+        }
+        paintDirections(root, ctx, left, right, bottom + root.directionBandHeight / 2);
+        ctx.restore();
+    }
     ctx.save(); ctx.strokeStyle = root.textColor; ctx.globalAlpha = 0.3; ctx.lineWidth = 1; ctx.setLineDash([]);
     for (const time of axis.midnights) {
         const x = root.px(time);
-        ctx.beginPath(); ctx.moveTo(x, root.directionOnly ? top : 2); ctx.lineTo(x, bottom); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, root.directionOnly ? top : 2); ctx.lineTo(x, bottom + root.directionBandHeight); ctx.stroke();
     }
     ctx.restore();
     if (withCursor !== false) paintCursor(root, plot, ctx, false);
@@ -366,7 +381,7 @@ function paintChart(root, plot, ctx, withCursor) {
 function paintCursor(root, plot, ctx, reset) {
     if (reset) ctx.reset();
     const left = root.leftMargin, right = plot.width - root.rightMargin;
-    const top = root.topMargin, bottom = plot.height - root.bottomMargin;
+    const top = root.topMargin, bottom = plot.height - root.bottomMargin + root.directionBandHeight;
     if (right <= left || bottom <= top) return;
     ctx.save(); ctx.beginPath(); ctx.rect(left, top, right - left, bottom - top); ctx.clip();
     if (root.nowTime >= root.startTime && root.nowTime <= root.endTime) {

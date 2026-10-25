@@ -405,7 +405,11 @@ QUrl WeatherModel::originalLookupUrl() const
 
 QVariantList WeatherModel::chartGroups() const
 {
-    return configuredCharts(defaultChartLayout("full"));
+    // This is the complete chart catalog, including optional standalone
+    // direction arrows. Profiles decide which charts are actually displayed.
+    auto catalog = defaultChartLayout("full");
+    for (auto &value : catalog) { auto chart=value.toMap(); chart["enabled"]=true; value=chart; }
+    return configuredCharts(catalog);
 }
 
 QVariantList WeatherModel::configuredCharts(const QVariantList &layout) const
