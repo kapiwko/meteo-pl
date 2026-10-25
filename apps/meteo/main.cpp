@@ -1,5 +1,6 @@
 #include <QCommandLineParser>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QTimer>
@@ -7,6 +8,7 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/icons/meteo.svg")));
     QCoreApplication::setApplicationName(QStringLiteral("meteo-pl"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
     QCoreApplication::setOrganizationName(QStringLiteral("meteo-pl"));

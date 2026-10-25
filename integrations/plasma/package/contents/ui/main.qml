@@ -9,12 +9,13 @@ import pl.meteo.desktop
 
 PlasmoidItem {
     id: root
+    property bool showMeteogram: false
     readonly property var weatherConfiguration: Plasmoid.configuration
     switchWidth: Kirigami.Units.gridUnit * 24
     switchHeight: Kirigami.Units.gridUnit * 24
     toolTipMainText: forecastModel.locationName + " · " + forecastModel.temperatureText
     toolTipSubText: forecastModel.summaryTime + "\n" + forecastModel.modelName
-    Plasmoid.icon: forecastModel.weatherIcon
+    Plasmoid.icon: forecastModel.hasData ? forecastModel.weatherIcon : Qt.resolvedUrl("../images/meteo.svg")
     Plasmoid.status: PlasmaCore.Types.ActiveStatus
 
     WeatherModel {
@@ -38,7 +39,7 @@ PlasmoidItem {
             id: compactRow
             anchors.centerIn: parent
             spacing: 3
-            Kirigami.Icon { source: forecastModel.weatherIcon; Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Kirigami.Icon { source: forecastModel.hasData ? forecastModel.weatherIcon : Qt.resolvedUrl("../images/meteo.svg"); Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
             Label { text: forecastModel.temperatureText }
         }
     }
@@ -46,27 +47,51 @@ PlasmoidItem {
         Layout.minimumWidth: Kirigami.Units.gridUnit * 20
         Layout.minimumHeight: Kirigami.Units.gridUnit * 18
         Layout.preferredWidth: Kirigami.Units.gridUnit * 34
-        Layout.preferredHeight: Kirigami.Units.gridUnit * 38
+        Layout.preferredHeight: Kirigami.Units.gridUnit * (root.showMeteogram ? 38 : 23)
         RowLayout {
             Layout.fillWidth: true
+            ToolButton { icon.name: "go-previous"; text: "Pogoda"; visible: root.showMeteogram; onClicked: root.showMeteogram = false }
             Label { text: "Meteo · ICM"; font.bold: true; Layout.fillWidth: true }
             ToolButton { icon.name: "view-refresh"; text: "Odśwież"; display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
-            ToolButton { icon.name: "configure"; text: "Wygląd"; display: AbstractButton.IconOnly; onClicked: forecastPanel.openDisplaySettings(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "configure"; text: "Wygląd"; display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "mark-location"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "internet-web-browser"; text: "Otwórz meteo.pl"; display: AbstractButton.IconOnly; onClicked: Qt.openUrlExternally("https://app.meteo.pl/meteogram"); ToolTip.text: text; ToolTip.visible: hovered }
         }
-        ForecastPanel {
-            id: forecastPanel
+        Loader {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            weather: forecastModel
-            onConfigureRequested: Plasmoid.internalAction("configure").trigger()
-            onLocationSelected: (name, latitude, longitude) => {
-                Plasmoid.configuration.locationName = name;
-                Plasmoid.configuration.latitude = latitude;
-                Plasmoid.configuration.longitude = longitude;
-                if (!(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) Plasmoid.configuration.model = "gfs";
-                UserPreferences.rememberPlace(name, latitude, longitude);
+            sourceComponent: root.showMeteogram ? details : overview
+        }
+        Component { id: overview; CompactForecast { weather: forecastModel } }
+        Component {
+            id: details
+            ForecastPanel {
+                weather: forecastModel
+                onConfigureRequested: Plasmoid.internalAction("configure").trigger()
+                onLocationSelected: (name, latitude, longitude) => {
+                    Plasmoid.configuration.locationName = name;
+                    Plasmoid.configuration.latitude = latitude;
+                    Plasmoid.configuration.longitude = longitude;
+                    if (!(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) Plasmoid.configuration.model = "gfs";
+                    UserPreferences.rememberPlace(name, latitude, longitude);
+                }
+            }
+        }
+        Button { Layout.alignment: Qt.AlignHCenter; visible: !root.showMeteogram; text: "Pokaż meteogram"; icon.name: "view-statistics"; onClicked: root.showMeteogram = true }
+        Dialog {
+            id: displayDialog
+            title: "Wygląd meteogramu"
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 24, 650)
+            height: Math.min(parent.height - 24, 680)
+            padding: 16
+            modal: true
+            standardButtons: Dialog.Close
+            contentItem: ScrollView {
+                id: displayScroll
+                clip: true
+                contentWidth: availableWidth
+                DisplaySettings { width: displayScroll.availableWidth; weather: forecastModel }
             }
         }
     }

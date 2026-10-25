@@ -165,3 +165,5 @@ Animacja przygotowuje cały cykl w cache przed odtwarzaniem; postęp i anulowani
 Wysokość wykresu dziedziczy ustawienie profilu i wartość ogólną. Domyślną widoczność legendy można ustawić globalnie i przełączać przy tytule.
 
 Zwarty nagłówek łączy temperaturę z ikoną pogody. Karty prognozy dziennej mają równe szerokości, stałe pola i ikony warunków.
+
+Plasmoid otwiera zwartą prognozę z przejściem do meteogramu. Aplikacja ma własną ikonę; skrypt developerski rejestruje wpis desktop i ikonę użytkownika.
