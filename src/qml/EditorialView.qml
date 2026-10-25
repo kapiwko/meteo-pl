@@ -63,7 +63,7 @@ ColumnLayout {
                 wrapMode: TextEdit.Wrap
                 clip: true
                 textFormat: TextEdit.RichText
-                text: root.commentary ? feed.commentHtml : root.selectedArticle ? root.selectedArticle.html : ""
+                text: MapImages.cachedHtml(root.commentary ? feed.commentHtml : root.selectedArticle ? root.selectedArticle.html : "", root.selectedArticle && root.selectedArticle.url ? root.selectedArticle.url : "https://www.meteo.pl/")
                 font.pixelSize: 15
                 background: null
                 ResponsiveImages { document: articleBody.textDocument; maximumWidth: articleBody.width - articleBody.leftPadding - articleBody.rightPadding }
@@ -78,7 +78,7 @@ ColumnLayout {
                     onClicked: root.selectedArticle = modelData
                     contentItem: RowLayout {
                         spacing: 16
-                        Image { source: article.modelData.image; asynchronous: true; fillMode: Image.PreserveAspectCrop; Layout.preferredWidth: 100; Layout.preferredHeight: 70; visible: source.toString().length > 0 }
+                        Image { source: MapImages.cached(article.modelData.image); asynchronous: true; fillMode: Image.PreserveAspectCrop; Layout.preferredWidth: 100; Layout.preferredHeight: 70; visible: source.toString().length > 0 }
                         ColumnLayout {
                             Layout.fillWidth: true
                             Label { text: article.modelData.title; textFormat: Text.RichText; font.bold: true; wrapMode: Text.WordWrap; Layout.fillWidth: true }
