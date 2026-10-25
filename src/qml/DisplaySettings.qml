@@ -17,7 +17,8 @@ ColumnLayout {
     property bool transferFailed: false
     function transferResult(result, importing) {
         transferFailed = !result.ok;
-        transferMessage = result.ok ? (importing ? "Zaimportowano profili: " : "Wyeksportowano profili: ") + result.count + (result.path ? " · " + result.path : "") : result.error;
+        transferMessage = result.ok ? (importing ? "Zaimportowano profili: " : "Wyeksportowano profili: ") + result.count : result.error;
+        transferNotice.visible = true;
     }
     FileDialog {
         id: importDialog
@@ -36,7 +37,11 @@ ColumnLayout {
         defaultSuffix: "json"
         nameFilters: ["Profile meteogramu (*.json)"]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: root.transferResult(UserPreferences.exportProfiles(selectedFile, allSaved), false)
+        onAccepted: {
+            const result = UserPreferences.exportProfiles(selectedFile, allSaved);
+            root.transferResult(result, false);
+            if (result.ok) ExportNotifications.saved(selectedFile, "Wyeksportowano profile");
+        }
     }
     Label { text: "Układ wykresów i wygląd serii"; font.bold: true }
     ComboBox {
@@ -68,13 +73,13 @@ ColumnLayout {
         Button { text: "Eksportuj profil…"; icon.name: "document-export"; onClicked: { exportDialog.allSaved = false; exportDialog.open(); } }
         Button { text: "Eksportuj zapisane…"; icon.name: "document-save-all"; onClicked: { exportDialog.allSaved = true; exportDialog.open(); } ToolTip.text: "Eksportuj wszystkie własne profile i Własny układ"; ToolTip.visible: hovered }
     }
-    Label {
+    Kirigami.InlineMessage {
+        id: transferNotice
         Layout.fillWidth: true
-        visible: root.transferMessage.length > 0
+        visible: false
         text: root.transferMessage
-        color: root.transferFailed ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
-        wrapMode: Text.WrapAnywhere
-        Accessible.role: Accessible.AlertMessage
+        type: root.transferFailed ? Kirigami.MessageType.Error : Kirigami.MessageType.Information
+        showCloseButton: true
     }
     Label {
         Layout.fillWidth: true

@@ -1,0 +1,10 @@
+[Global]
+IconName=pl.meteo.desktop
+DesktopEntry=pl.meteo.desktop
+Name=Meteo
+Comment=Meteogramy ICM UW
+
+[Event/exportFinished]
+Name=Eksport zakończony
+Comment=Zapisano wykresy, odczyt lub profile do pliku
+Action=Popup

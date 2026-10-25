@@ -21,6 +21,7 @@ qt_add_qml_module(meteo_ui
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp
+        presentation/ExportNotifications.cpp presentation/ExportNotifications.hpp
         presentation/GpuPlot.cpp presentation/GpuPlot.hpp
         presentation/ResponsiveImages.cpp presentation/ResponsiveImages.hpp
         presentation/ImagePreloader.cpp presentation/ImagePreloader.hpp
@@ -36,7 +37,7 @@ qt_add_qml_module(meteo_ui
         qml/MapTileFrame.qml qml/MapWheelHandler.qml qml/BufferedImage.qml
         qml/OriginalMeteogram.qml qml/MeteogramStyle.js qml/SeriesLegend.qml qml/SeriesSettings.qml
 )
-target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2)
+target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_options(meteo_ui PRIVATE -Wall -Wextra -Wpedantic)
 
