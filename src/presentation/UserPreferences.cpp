@@ -20,6 +20,20 @@ UserPreferences::UserPreferences(QObject *parent)
         m_settings.setValue("display/layoutVersion", 2);
         m_settings.sync();
     }
+    if (m_settings.value("display/layoutVersion", 0).toInt() < 3) {
+        if (m_settings.contains("display/customLayout")) {
+            const auto old = QJsonDocument::fromJson(m_settings.value("display/customLayout").toByteArray()).toVariant().toList();
+            m_settings.setValue("display/customLayout", QJsonDocument::fromVariant(integrateWindDirection(old)).toJson(QJsonDocument::Compact));
+        }
+        auto saved = QJsonDocument::fromJson(m_settings.value("display/savedProfiles").toByteArray()).toVariant().toList();
+        for (auto &value : saved) {
+            auto entry = value.toMap();
+            entry["charts"] = integrateWindDirection(entry["charts"].toList());
+            value = entry;
+        }
+        if (!saved.isEmpty()) m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        m_settings.setValue("display/layoutVersion", 3); m_settings.sync();
+    }
     if (m_settings.value("places/listVersion", 0).toInt() < 1) {
         auto places = favorites();
         for (const auto &value : recentPlaces()) {

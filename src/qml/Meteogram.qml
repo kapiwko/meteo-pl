@@ -34,8 +34,9 @@ ColumnLayout {
     readonly property bool hasRightAxis: fields.some(f => isRightField(f)) || ["temperature", "pressure", "wind", "probability", "clouds"].indexOf(scaleKind) >= 0
     readonly property bool wind: scaleKind === "wind"
     readonly property bool directionOnly: fields.length > 0 && fields.every(f => f.kind === "direction" || f.kind === "hidden")
+    readonly property real directionBandHeight: !directionOnly && fields.some(f => f.kind === "direction") ? 30 : 0
     readonly property real topMargin: directionOnly ? 8 : 28
-    readonly property real bottomMargin: directionOnly ? 8 : 30
+    readonly property real bottomMargin: directionOnly ? 8 : 30 + directionBandHeight
     readonly property var bounds: calculateBounds()
     readonly property var rightBounds: calculateBounds(true)
     readonly property real windScale: weather.windUnit === "km/h" ? 3.6 : weather.windUnit === "kt" ? 1.943844492 : 1
@@ -313,7 +314,7 @@ ColumnLayout {
         id: plot
         objectName: "plot-" + root.groupKey
         Layout.fillWidth: true
-        Layout.preferredHeight: root.chartHeight
+        Layout.preferredHeight: root.chartHeight + root.directionBandHeight
         property bool softwareFallback: false
         readonly property string activeRenderer: UserPreferences.renderer === "cpu" || softwareFallback ? "cpu" : "gpu"
         // Own the MSAA texture on the regular container, not on a custom

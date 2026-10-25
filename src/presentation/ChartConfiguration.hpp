@@ -7,5 +7,6 @@ QVariantMap defaultSeriesStyle(const QString &key);
 QVariantMap normalizeSeriesStyle(const QVariantMap &value);
 QVariantList defaultChartLayout(const QString &profile);
 QVariantList normalizeChartLayout(const QVariantList &saved);
+QVariantList integrateWindDirection(const QVariantList &saved);
 QStringList chartFieldKeys(const QVariantList &series);
 QString seriesScale(const QString &key);

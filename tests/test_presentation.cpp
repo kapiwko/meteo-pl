@@ -140,7 +140,7 @@ private slots:
                 required property WeatherModel weather
                 required property var directionChart
                 required property var windChart
-                width: 650; height: 400; visible: true
+                width: 650; height: 600; visible: true
                 ColumnLayout {
                     anchors.fill: parent
                     Meteogram {
@@ -182,6 +182,18 @@ private slots:
                 if (color.blue() > 90 && color.red() < 90 && color.green() < 90) ++blue;
             }
         QVERIFY2(blue > 50, qPrintable(QString("Expected visible wind arrows; found %1 blue pixels, plot %2 x %3").arg(blue).arg(plot->width()).arg(plot->height())));
+        auto *speedChart = chart->findChild<QObject *>("chart-wind");
+        auto *speedPlot = chart->findChild<QQuickItem *>("plot-wind");
+        QVERIFY(speedChart); QVERIFY(speedPlot);
+        QCOMPARE(speedChart->property("directionBandHeight").toInt(), 30);
+        const auto speedOrigin = speedPlot->mapToScene({0,0}).toPoint();
+        const int zero = speedOrigin.y() + qRound(speedPlot->height() - speedChart->property("bottomMargin").toDouble());
+        int arrowsBelowZero = 0;
+        for (int y=zero+2; y<zero+28 && y<image.height(); ++y) for (int x=50; x<606; ++x) {
+            const auto color = image.pixelColor(x,y);
+            if (color.blue()>90 && color.red()<90 && color.green()<90) ++arrowsBelowZero;
+        }
+        QVERIFY2(arrowsBelowZero>50, "The integrated wind chart must render arrows below the 0 m/s baseline");
     }
     void nativeGpuRendererDrawsClippedGeometry()
     {
@@ -480,12 +492,12 @@ private slots:
             for(auto *child:parent->childItems()) self(self,child);
         };
         collect(collect,item);
-        QCOMPARE(charts.size(),8);
+        QCOMPARE(charts.size(),7);
         QVERIFY(QMetaObject::invokeMethod(object.data(),"chooseExport"));
         auto *selection=object->findChild<QObject *>("chartExportSelection");
         QVERIFY(selection);
         QTRY_VERIFY(selection->property("opened").toBool());
-        QCOMPARE(object->property("exportSelectedKeys").value<QJSValue>().toVariant().toList().size(),8);
+        QCOMPARE(object->property("exportSelectedKeys").value<QJSValue>().toVariant().toList().size(),7);
         object->setProperty("exportSelectedKeys",QVariantList{QStringLiteral("temperature")});
         QVERIFY(QMetaObject::invokeMethod(selection,"close"));
         auto *exporter=object->findChild<ChartExporter *>("chartExporter");
