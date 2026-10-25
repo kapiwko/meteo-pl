@@ -19,7 +19,8 @@ def check(command,env):
 
 def main():
     app=shutil.which("meteo-pl")
-    if app!="/usr/bin/meteo-pl":raise RuntimeError(f"Expected installed /usr/bin/meteo-pl, found {app}")
+    if not app or Path(app).resolve()!=Path("/usr/bin/meteo-pl").resolve():
+        raise RuntimeError(f"Expected installed /usr/bin/meteo-pl, found {app}")
     widget=Path("/usr/share/plasma/plasmoids/pl.meteo.desktop/metadata.json")
     if not widget.is_file():raise RuntimeError("Installed Plasma widget is missing")
     with tempfile.TemporaryDirectory(prefix="meteo-installed-") as temporary:
