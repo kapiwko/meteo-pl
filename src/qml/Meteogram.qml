@@ -54,7 +54,7 @@ ColumnLayout {
     function configuredAxis(axis, right) {
         const prefix = right ? "right" : "left", minimum = chartConfiguration[prefix + "Min"], maximum = chartConfiguration[prefix + "Max"];
         const low = valid(minimum) ? Number(minimum) : axis.low, high = valid(maximum) ? Number(maximum) : axis.high;
-        return (valid(minimum) || valid(maximum)) && high > low ? Style.niceAxis(low, high) : axis;
+        return (valid(minimum) || valid(maximum)) && high > low ? ChartAnalysis.niceAxis(low, high) : axis;
     }
     function drawArea(ctx, field, bottom) {
         ctx.save();
@@ -130,10 +130,10 @@ ColumnLayout {
     function calculateBounds(right) {
         const kind = right ? rightScale : scaleKind;
         if (right && kind === "linked") return configuredAxis(bounds, true);
-        if (kind === "probability") return configuredAxis(Style.axis(0, 100, 20), right);
-        if (kind === "cloudHeights") return configuredAxis(Style.axis(0, 15, 1), right);
-        if (kind === "visibility") return configuredAxis(Style.axis(0, 100, 25), right);
-        if (kind === "fraction" || kind === "clouds") return configuredAxis(Style.axis(0, 100, 25), right);
+        if (kind === "probability") return configuredAxis(ChartAnalysis.axis(0, 100, 20), right);
+        if (kind === "cloudHeights") return configuredAxis(ChartAnalysis.axis(0, 15, 1), right);
+        if (kind === "visibility") return configuredAxis(ChartAnalysis.axis(0, 100, 25), right);
+        if (kind === "fraction" || kind === "clouds") return configuredAxis(ChartAnalysis.axis(0, 100, 25), right);
         let low = Infinity, high = -Infinity;
         for (const field of fields) {
             if (["hidden", "direction", "type", "storm", "flash"].indexOf(field.kind) >= 0) continue;
@@ -144,18 +144,18 @@ ColumnLayout {
             }
         }
         if (!isFinite(low)) { low = 0; high = 1; }
-        if (kind === "humidity") return configuredAxis(Style.humidityAxis(low, high), right);
-        if (kind === "precipitation") return configuredAxis(Style.precipitationAxis(high), right);
+        if (kind === "humidity") return configuredAxis(ChartAnalysis.humidityAxis(low, high), right);
+        if (kind === "precipitation") return configuredAxis(ChartAnalysis.precipitationAxis(high), right);
         if (kind === "wind") {
             const speeds = valuesFor("wind10_sd_true_prev_point"), gusts = valuesFor("wind_gust_max");
             const speedMax = speeds.length ? Math.max.apply(null, speeds) : 0;
             const gustMax = gusts.length ? Math.max.apply(null, gusts) : 0;
             const maximum = speeds.length ? Math.min(Math.max(speedMax, gustMax), speedMax * 4) : gustMax;
-            return configuredAxis(Style.windAxis(maximum / windScale, windScale), right);
+            return configuredAxis(ChartAnalysis.windAxis(maximum / windScale, windScale), right);
         }
-        if (kind === "temperature") return configuredAxis(Style.niceAxis(low - 1, high + 1), right);
-        if (kind === "pressure") return configuredAxis(Style.niceAxis(Math.round(low - Math.max(0, 15 - (high - low)) - 2), Math.round(high + 2)), right);
-        return configuredAxis(Style.niceAxis(Math.min(0, low), Math.max(1, high)), right);
+        if (kind === "temperature") return configuredAxis(ChartAnalysis.niceAxis(low - 1, high + 1), right);
+        if (kind === "pressure") return configuredAxis(ChartAnalysis.niceAxis(Math.round(low - Math.max(0, 15 - (high - low)) - 2), Math.round(high + 2)), right);
+        return configuredAxis(ChartAnalysis.niceAxis(Math.min(0, low), Math.max(1, high)), right);
     }
     function valuesFor(key) {
         const field = fields.find(f => f.key === key);
@@ -188,10 +188,9 @@ ColumnLayout {
             if (kind === "cloudHeights") return [0,0.5,2,7,15];
             if (kind === "visibility") return [0,1,5,20,100];
         }
-        const b = right ? rightBounds : bounds, result = [];
+        const b = right ? rightBounds : bounds;
         if (b.ticks) return b.ticks;
-        for (let value = b.low; value <= b.high + 0.0001; value += b.step) result.push(value);
-        return result;
+        return ChartAnalysis.axis(b.low, b.high, b.step).ticks;
     }
     function secondaryScale() {
         if (scaleKind === "temperature" || scaleKind === "probability") return 1;

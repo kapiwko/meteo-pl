@@ -6,6 +6,11 @@ qt_add_executable(test_client test_client.cpp)
 target_link_libraries(test_client PRIVATE meteo_core Qt6::Test)
 add_test(NAME client COMMAND test_client)
 
+qt_add_executable(test_chart_analysis test_chart_analysis.cpp)
+target_link_libraries(test_chart_analysis PRIVATE meteo_ui Qt6::Test)
+add_test(NAME chart_analysis COMMAND test_chart_analysis)
+set_tests_properties(chart_analysis PROPERTIES TIMEOUT 10)
+
 qt_add_executable(test_i18n test_i18n.cpp)
 target_link_libraries(test_i18n PRIVATE meteo_ui Qt6::Test Qt6::Quick)
 foreach(language en_US pl_PL)

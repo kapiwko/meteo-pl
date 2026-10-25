@@ -349,12 +349,12 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(settings,"close"));
         QTRY_VERIFY(!settings->property("visible").toBool());
         auto *chart = plot->parentItem();
-        const auto originalBounds = chart->property("bounds").value<QJSValue>().toVariant().toMap();
+        const auto originalBounds = chart->property("bounds").toMap();
         QVERIFY(originalBounds.contains("high"));
         const QStringList seriesToToggle{"airtmp_point", "airtmp_max", "dwptmp_point", "wchill_point", "wchill_max", "grdtmp_min", "grdtmp_max"};
         for (const auto &key : seriesToToggle)
             QVERIFY(QMetaObject::invokeMethod(chart, "toggle", Q_ARG(QVariant, key)));
-        QCOMPARE(chart->property("bounds").value<QJSValue>().toVariant().toMap(), originalBounds);
+        QCOMPARE(chart->property("bounds").toMap(), originalBounds);
         for (const auto &key : seriesToToggle)
             QVERIFY(QMetaObject::invokeMethod(chart, "toggle", Q_ARG(QVariant, key)));
         QTest::qWait(50);
@@ -676,8 +676,8 @@ private slots:
         QCOMPARE(chart->property("chartHeight").toInt(),220);
         chart->setProperty("legendOverride",0);
         QVERIFY(!chart->property("legendVisible").toBool());
-        auto bounds = chart->property("bounds").value<QJSValue>().toVariant().toMap();
-        auto right = chart->property("rightBounds").value<QJSValue>().toVariant().toMap();
+        auto bounds = chart->property("bounds").toMap();
+        auto right = chart->property("rightBounds").toMap();
         QCOMPARE(bounds["low"].toDouble(), -20);
         QCOMPARE(bounds["high"].toDouble(), 40);
         QCOMPARE(right["low"].toDouble(), 0);
@@ -695,8 +695,8 @@ private slots:
         QTest::qWait(100);
         QVERIFY(!window.grabWindow().isNull());
         QVERIFY(QMetaObject::invokeMethod(chart.data(), "toggle", Q_ARG(QVariant, "pcpttl_aver")));
-        QCOMPARE(chart->property("bounds").value<QJSValue>().toVariant().toMap(), bounds);
-        QCOMPARE(chart->property("rightBounds").value<QJSValue>().toVariant().toMap(), right);
+        QCOMPARE(chart->property("bounds").toMap(), bounds);
+        QCOMPARE(chart->property("rightBounds").toMap(), right);
     }
     void settingsReleaseSpaceAfterCollapsingChartsAndSeries()
     {

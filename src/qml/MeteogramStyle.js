@@ -117,40 +117,6 @@ function pressureColor(hPa, dark) {
 function windColor(mps, dark) {
     return paletteColor(windStops, Math.floor(mps / 51 * 255), dark);
 }
-function axis(low, high, step) {
-    var values = [];
-    for (var value = Math.ceil((low - 1e-8) / step) * step; value <= high + 1e-8; value += step)
-        values.push(Math.abs(value) < 1e-8 ? 0 : value);
-    return {low: low, high: high, step: step, ticks: values};
-}
-function niceAxis(low, high) {
-    if (!(high > low)) high = low + 1;
-    var raw = (high - low) / 4;
-    var magnitude = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
-    var normalized = raw / magnitude;
-    var step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10) * magnitude;
-    return axis(low, high, step);
-}
-function precipitationAxis(maximum) {
-    var high = maximum <= 5 ? 5 : maximum <= 10 ? 10 : maximum <= 20 ? 20 : 30;
-    return axis(0, high, high / 5);
-}
-function windAxis(maximum, scale) {
-    var limits = [5,10,15,20,25,30,40,50];
-    var high = 50;
-    for (var i = 0; i < limits.length; ++i) if (maximum <= limits[i]) { high = limits[i]; break; }
-    return axis(0, high * scale, (high <= 10 ? high / 5 : high <= 30 ? 5 : 10) * scale);
-}
-function humidityAxis(low, high) {
-    var steps = [2,4,5,10,15,20,25];
-    for (var i = 0; i < steps.length; ++i) {
-        var step = steps[i], start = Math.floor(low / step) * step, end = start + 5 * step;
-        if (high <= 100 && end > 100) { start = 100 - 5 * step; end = 100; }
-        if (start <= low && end >= high) return axis(start, end, step);
-    }
-    return axis(0, 100, 20);
-}
-
 function timeAxisLabels(left, right, startTime, endTime, origin, formatTime, measureText, calendarDays) {
     const width = right - left;
     const span = (endTime - startTime) / 3600;
