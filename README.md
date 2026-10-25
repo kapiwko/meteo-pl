@@ -161,3 +161,5 @@ FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
 i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
 
 Animacja przygotowuje cały cykl w cache przed odtwarzaniem; postęp i anulowanie są na mapie. Mapy tematyczne domyślnie dopasowują się do okna.
+
+Wysokość wykresu dziedziczy ustawienie profilu i wartość ogólną. Domyślną widoczność legendy można ustawić globalnie i przełączać przy tytule.

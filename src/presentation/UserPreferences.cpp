@@ -9,6 +9,7 @@
 #include <QSet>
 #include <cmath>
 #include <QUuid>
+#include <algorithm>
 
 UserPreferences::UserPreferences(QObject *parent)
     : QObject(parent), m_settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("meteo-pl"), QStringLiteral("desktop"))
@@ -43,6 +44,35 @@ QStringList UserPreferences::visibleGroups() const
 QString UserPreferences::windUnit() const { return m_settings.value("display/windUnit", "m/s").toString(); }
 bool UserPreferences::utc() const { return m_settings.value("display/utc", false).toBool(); }
 bool UserPreferences::showNight() const { return m_settings.value("display/showNight", true).toBool(); }
+bool UserPreferences::showLegend() const { return m_settings.value("display/showLegend", true).toBool(); }
+void UserPreferences::setShowLegend(bool value) { if (value==showLegend()) return; m_settings.setValue("display/showLegend",value);m_settings.sync();emit displayChanged(); }
+int UserPreferences::chartHeight() const { return std::clamp(m_settings.value("display/chartHeight", 174).toInt(),64,800); }
+int UserPreferences::profileChartHeight() const
+{
+    if (profile() == "custom") return m_settings.value("display/customChartHeight", 0).toInt();
+    for (const auto &value : savedProfiles()) if (value.toMap()["id"] == profile()) return value.toMap().value("chartHeight",0).toInt();
+    return 0;
+}
+void UserPreferences::setChartHeight(int value)
+{
+    value=std::clamp(value,64,800);
+    if (value==chartHeight()) return;
+    m_settings.setValue("display/chartHeight",value);m_settings.sync();emit displayChanged();
+}
+void UserPreferences::setProfileChartHeight(int value)
+{
+    value=value ? std::clamp(value,64,800) : 0;
+    if (value==profileChartHeight()) return;
+    if (profile().startsWith("user:")) {
+        auto saved=savedProfiles();
+        for (auto &item:saved) { auto entry=item.toMap();if (entry["id"]==profile()) { entry["chartHeight"]=value;item=entry;break; } }
+        m_settings.setValue("display/savedProfiles",QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+    } else {
+        if (profile()!="custom") m_settings.setValue("display/customLayout",QJsonDocument::fromVariant(chartLayout()).toJson(QJsonDocument::Compact));
+        m_settings.setValue("display/profile","custom");m_settings.setValue("display/customChartHeight",value);
+    }
+    m_settings.sync();emit displayChanged();
+}
 QString UserPreferences::renderer() const { return m_settings.value("display/renderer", "gpu").toString() == "cpu" ? "cpu" : "gpu"; }
 void UserPreferences::setRenderer(const QString &value)
 {
@@ -108,15 +138,15 @@ QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) cons
     if (allSaved) {
         for (const auto &value : savedProfiles()) {
             const auto entry = value.toMap();
-            exported.append(QVariantMap{{"name", entry["name"]}, {"charts", normalizeChartLayout(entry["charts"].toList())}});
+            exported.append(QVariantMap{{"name", entry["name"]}, {"charts", normalizeChartLayout(entry["charts"].toList())}, {"chartHeight",entry.value("chartHeight",0)}});
         }
         if (m_settings.contains("display/customLayout")) exported.append(QVariantMap{{"name", "Własny układ"},
-            {"charts", normalizeChartLayout(QJsonDocument::fromJson(m_settings.value("display/customLayout").toByteArray()).toVariant().toList())}});
+            {"charts", normalizeChartLayout(QJsonDocument::fromJson(m_settings.value("display/customLayout").toByteArray()).toVariant().toList())}, {"chartHeight",m_settings.value("display/customChartHeight",0)}});
     }
     if (exported.isEmpty()) {
         QString name;
         for (const auto &value : profiles()) if (value.toMap()["id"] == profile()) name = value.toMap()["name"].toString();
-        exported.append(QVariantMap{{"name", name}, {"charts", chartLayout()}});
+        exported.append(QVariantMap{{"name", name}, {"charts", chartLayout()}, {"chartHeight",profileChartHeight()}});
     }
     const auto data = QJsonDocument(QJsonObject{{"format", "pl.meteo.chart-profiles"}, {"version", 1},
         {"profiles", QJsonArray::fromVariantList(exported)}}).toJson(QJsonDocument::Indented);
@@ -163,7 +193,8 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url)
         for (int suffix = 2; names.contains(name); ++suffix) name = baseName.left(70) + " (" + QString::number(suffix) + ")";
         names.insert(name);
         const auto id = "user:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
-        saved.append(QVariantMap{{"id", id}, {"name", name}, {"charts", charts}});
+        const auto height=entry["chartHeight"].toInt();
+        saved.append(QVariantMap{{"id", id}, {"name", name}, {"charts", charts}, {"chartHeight",height ? std::clamp(height,64,800) : 0}});
         if (selected.isEmpty()) selected = id;
     }
     m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
@@ -181,6 +212,7 @@ void UserPreferences::saveLayout(const QVariantList &layout)
         for (auto &item : saved) { auto entry = item.toMap(); if (entry["id"] == profile()) { entry["charts"] = normalized; item = entry; break; } }
         m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
     } else {
+        if (profile()!="custom") m_settings.setValue("display/customChartHeight",profileChartHeight());
         m_settings.setValue("display/customLayout", QJsonDocument::fromVariant(normalized).toJson(QJsonDocument::Compact));
         m_settings.setValue("display/profile", "custom");
     }
@@ -231,7 +263,7 @@ void UserPreferences::setChartOptions(const QString &key, const QVariantMap &opt
     for (auto &value : layout) {
         auto chart = value.toMap(); if (chart["key"] != key) continue;
         for (auto it = options.cbegin(); it != options.cend(); ++it)
-            if (QStringList{"title", "leftMin", "leftMax", "rightMin", "rightMax", "leftScale", "rightScale"}.contains(it.key())) chart[it.key()] = it.value();
+            if (QStringList{"title", "leftMin", "leftMax", "rightMin", "rightMax", "leftScale", "rightScale", "height"}.contains(it.key())) chart[it.key()] = it.value();
         value = chart; break;
     }
     saveLayout(normalizeChartLayout(layout));
@@ -274,7 +306,7 @@ QString UserPreferences::createProfile(const QString &name)
     if (name.trimmed().isEmpty()) return {};
     const auto id = "user:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
     auto saved = savedProfiles();
-    saved.append(QVariantMap{{"id", id}, {"name", name.trimmed().left(80)}, {"charts", chartLayout()}});
+    saved.append(QVariantMap{{"id", id}, {"name", name.trimmed().left(80)}, {"charts", chartLayout()}, {"chartHeight",profileChartHeight()}});
     m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
     m_settings.setValue("display/profile", id); m_settings.sync(); emit displayChanged(); return id;
 }

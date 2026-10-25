@@ -160,6 +160,7 @@ QVariantList normalizeChartLayout(const QVariantList &saved)
             bool valid = false; const double value = chart[bound].toDouble(&valid);
             if (valid && !chart[bound].isNull() && std::isfinite(value)) normalized[bound] = value;
         }
+        if (chart["height"].toInt()>0) normalized["height"]=std::clamp(chart["height"].toInt(),64,800);
         for (const auto &axis : {QStringLiteral("left"), QStringLiteral("right")})
             if (normalized.contains(axis + "Min") && normalized.contains(axis + "Max") && normalized[axis + "Min"].toDouble() >= normalized[axis + "Max"].toDouble()) { normalized.remove(axis + "Min"); normalized.remove(axis + "Max"); }
         result.append(normalized); seen.insert(key);

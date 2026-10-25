@@ -162,6 +162,8 @@ private slots:
         qputenv("XDG_CONFIG_HOME", config.path().toUtf8());
         UserPreferences preferences;
         QCOMPARE(preferences.profile(), "classic");
+        QVERIFY(preferences.showLegend());
+        preferences.setShowLegend(false);
         QCOMPARE(preferences.renderer(), "gpu");
         preferences.setRenderer("cpu");
         UserPreferences rendererReload;
@@ -177,6 +179,7 @@ private slots:
         preferences.setChartEnabled("probability", false);
         UserPreferences reopened;
         QCOMPARE(reopened.profile(), id);
+        QVERIFY(!reopened.showLegend());
         QCOMPARE(reopened.chartLayout().first().toMap()["key"].toString(), "wind");
         QVERIFY(!reopened.visibleGroups().contains("probability"));
         const auto hasDew = [](const QVariantList &layout) {
@@ -243,11 +246,13 @@ private slots:
         UserPreferences preferences;
         QVERIFY(preferences.settingsFile().endsWith("/meteo-pl/desktop.ini"));
         const auto originalId = preferences.createProfile(QStringLiteral("Góry zimą"));
+        preferences.setChartHeight(220);
+        preferences.setProfileChartHeight(260);
         const auto chart = preferences.createChart("Temperatura + deszcz");
         preferences.setChartField(chart, "airtmp_point", true);
         preferences.setChartField(chart, "pcpttl_aver", true);
         preferences.setSeriesStyle(chart, "pcpttl_aver", {{"axis", "right"}, {"color", "#123456"}, {"opacity", 0.4}, {"render", "stems"}});
-        preferences.setChartOptions(chart, {{"leftMin", -20}, {"leftMax", 35}, {"rightMax", 10}});
+        preferences.setChartOptions(chart, {{"leftMin", -20}, {"leftMax", 35}, {"rightMax", 10}, {"height",190}});
         preferences.moveChart(preferences.chartLayout().size() - 1, -(preferences.chartLayout().size() - 1));
         const auto original = preferences.chartLayout();
         const auto file = QUrl::fromLocalFile(config.filePath("profil ze spacjami ż.json"));
@@ -262,6 +267,9 @@ private slots:
         const auto imported = preferences.importProfiles(file);
         QVERIFY2(imported["ok"].toBool(), qPrintable(imported["error"].toString()));
         QCOMPARE(preferences.chartLayout(), original);
+        QCOMPARE(preferences.profileChartHeight(),260);
+        QCOMPARE(preferences.chartHeight(),220);
+        QCOMPARE(preferences.chartLayout().first().toMap()["height"].toInt(),190);
         QVERIFY(preferences.profile() != originalId);
         QCOMPARE(preferences.profiles().last().toMap()["name"].toString(), QStringLiteral("Góry zimą (2)"));
         preferences.setProfile(originalId);

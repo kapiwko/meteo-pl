@@ -12,6 +12,8 @@ ColumnLayout {
     required property string groupKey
     required property var fields
     property var chartConfiguration: ({})
+    property int legendOverride: -1
+    readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
     readonly property string rightScale: chartConfiguration.rightScale || (scaleKind === "clouds" ? "fraction" : scaleKind === "cloudHeights" ? "visibility" : scaleKind === "precipitation" ? "humidity" : "linked")
     property real startTime: weather.firstTimestamp
@@ -19,7 +21,7 @@ ColumnLayout {
     property real selectedTime: 0
     property var nights: []
     property var hiddenKeys: []
-    property int chartHeight: directionOnly ? 64 : 174
+    property int chartHeight: chartConfiguration.height || Math.round((UserPreferences.profileChartHeight || UserPreferences.chartHeight) * (directionOnly ? 64 / 174 : 1))
     property real nowTime: Date.now() / 1000
     readonly property color textColor: Kirigami.Theme.textColor
     readonly property color gridColor: Kirigami.Theme.disabledTextColor
@@ -222,9 +224,36 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        Label { text: root.title; font.bold: true; Layout.fillWidth: true }
+        Label { text: root.title; font.bold: true; Layout.maximumWidth: Math.max(0, parent.width - 40); elide: Text.ElideRight }
+        AbstractButton {
+            id: legendToggle
+            text: root.legendVisible ? "Ukryj legendę" : "Pokaż legendę"
+            implicitWidth: 22
+            implicitHeight: 22
+            hoverEnabled: true
+            Accessible.name: text
+            contentItem: Item {
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 14; height: 14; radius: 7
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Kirigami.Theme.textColor
+                    opacity: legendToggle.hovered ? 0.9 : root.legendVisible ? 0.6 : 0.35
+                    Text { anchors.centerIn: parent; text: "i"; font.family: "serif"; font.pixelSize: 11; font.bold: true; color: Kirigami.Theme.textColor }
+                }
+            }
+            background: Rectangle { radius: 4; color: legendToggle.hovered ? Kirigami.Theme.alternateBackgroundColor : "transparent"; border.width: legendToggle.visualFocus ? 1 : 0; border.color: Kirigami.Theme.highlightColor }
+            checkable: true
+            checked: root.legendVisible
+            onClicked: root.legendOverride = root.legendVisible ? 0 : 1
+            ToolTip.text: text
+            ToolTip.visible: hovered
+        }
+        Item { Layout.fillWidth: true }
     }
     Flow {
+        visible: root.legendVisible
         Layout.fillWidth: true
         spacing: 8
         Repeater {
@@ -250,7 +279,7 @@ ColumnLayout {
                 contentItem: RowLayout {
                     spacing: 5
                     SeriesLegend { Layout.preferredWidth: 28; Layout.preferredHeight: 16; Layout.alignment: Qt.AlignVCenter; seriesStyle: legend.modelData; opacity: legend.checked ? 1 : 0.25 }
-                    Label { Layout.alignment: Qt.AlignVCenter; text: legend.text; opacity: legend.checked ? 0.8 : 0.35; font: legend.font }
+                    Label { Layout.alignment: Qt.AlignVCenter; text: legend.text; opacity: legend.checked ? 0.8 : 0.35; font.pixelSize: 11 }
                 }
             }
         }
@@ -367,7 +396,7 @@ ColumnLayout {
         }
     }
     Label {
-        visible: root.fields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")
+        visible: root.legendVisible && root.fields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")
         Layout.fillWidth: true
         text: "Wypełnienie: opad średni. Cienkie kreski: opad maksymalny. Suma w przedziale " + (root.fields.length && root.fields[0].points.length > 1 ? (root.fields[0].points[1].time - root.fields[0].points[0].time) / 3600 : 1) + " h."
         wrapMode: Text.WordWrap

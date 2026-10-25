@@ -54,6 +54,11 @@ ColumnLayout {
         Button { text: "Zmień nazwę"; enabled: profileName.text.trim().length > 0; onClicked: { UserPreferences.renameProfile(profileName.text); profileName.clear(); } }
         Button { text: "Usuń profil"; icon.name: "edit-delete"; onClicked: UserPreferences.deleteProfile() }
     }
+    RowLayout {
+        Layout.fillWidth: true
+        CheckBox { Layout.fillWidth: true; text: "Własna wysokość wykresów w profilu"; checked: UserPreferences.profileChartHeight > 0; onToggled: UserPreferences.profileChartHeight = checked ? UserPreferences.chartHeight : 0 }
+        SpinBox { from: 64; to: 800; stepSize: 10; enabled: UserPreferences.profileChartHeight > 0; value: UserPreferences.profileChartHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.profileChartHeight = value }
+    }
     Flow {
         Layout.fillWidth: true
         spacing: 8
@@ -112,6 +117,11 @@ ColumnLayout {
                                 placeholderText: "Nazwa wykresu"
                                 maximumLength: 80
                                 onEditingFinished: if (text.trim().length) UserPreferences.setChartOptions(chart.modelData.key, {title: text})
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                CheckBox { Layout.fillWidth: true; text: "Własna wysokość tego wykresu"; checked: (chart.modelData.height || 0) > 0; onToggled: UserPreferences.setChartOptions(chart.modelData.key, {height: checked ? UserPreferences.profileChartHeight || UserPreferences.chartHeight : 0}) }
+                                SpinBox { from: 64; to: 800; stepSize: 10; enabled: (chart.modelData.height || 0) > 0; value: chart.modelData.height || UserPreferences.profileChartHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.setChartOptions(chart.modelData.key, {height: value}) }
                             }
                             Repeater {
                                 model: chart.modelData.series
@@ -179,6 +189,10 @@ ColumnLayout {
         }
     }
     Button { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
+    CheckBox { text: "Domyślnie pokazuj legendę"; checked: UserPreferences.showLegend; onToggled: UserPreferences.showLegend = checked }
+    Label { text: "Ogólna wysokość wykresów"; font.bold: true }
+    SpinBox { from: 64; to: 800; stepSize: 10; value: UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.chartHeight = value }
+    Label { Layout.fillWidth: true; text: "Własna wysokość wykresu ma pierwszeństwo przed wysokością profilu, a profil przed ogólną. Pasek kierunku wiatru zachowuje proporcjonalnie mniejszą wysokość, jeśli nie ma własnej wartości."; wrapMode: Text.WordWrap; opacity: 0.7 }
     Label { text: "Rysowanie wykresów"; font.bold: true }
     ComboBox {
         Layout.fillWidth: true

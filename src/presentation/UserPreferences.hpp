@@ -16,12 +16,15 @@ class UserPreferences : public QObject {
     Q_PROPERTY(QString windUnit READ windUnit WRITE setWindUnit NOTIFY displayChanged)
     Q_PROPERTY(bool utc READ utc WRITE setUtc NOTIFY displayChanged)
     Q_PROPERTY(bool showNight READ showNight WRITE setShowNight NOTIFY displayChanged)
+    Q_PROPERTY(bool showLegend READ showLegend WRITE setShowLegend NOTIFY displayChanged)
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartLayout READ chartLayout NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartCatalog READ chartCatalog CONSTANT)
     Q_PROPERTY(QVariantList seriesCatalog READ seriesCatalog CONSTANT)
     Q_PROPERTY(QString settingsFile READ settingsFile CONSTANT)
     Q_PROPERTY(QString renderer READ renderer WRITE setRenderer NOTIFY displayChanged)
+    Q_PROPERTY(int chartHeight READ chartHeight WRITE setChartHeight NOTIFY displayChanged)
+    Q_PROPERTY(int profileChartHeight READ profileChartHeight WRITE setProfileChartHeight NOTIFY displayChanged)
 public:
     explicit UserPreferences(QObject *parent = nullptr);
     QVariantList favorites() const;
@@ -31,6 +34,7 @@ public:
     QString windUnit() const;
     bool utc() const;
     bool showNight() const;
+    bool showLegend() const;
     QVariantList profiles() const;
     QVariantList chartLayout() const;
     QVariantList chartCatalog() const;
@@ -38,11 +42,16 @@ public:
     QString settingsFile() const;
     QString renderer() const;
     void setRenderer(const QString &value);
+    int chartHeight() const;
+    int profileChartHeight() const;
+    void setChartHeight(int value);
+    void setProfileChartHeight(int value);
     void setProfile(const QString &value);
     void setVisibleGroups(const QStringList &value);
     void setWindUnit(const QString &value);
     void setUtc(bool value);
     void setShowNight(bool value);
+    void setShowLegend(bool value);
     Q_INVOKABLE void rememberPlace(const QString &name, double latitude, double longitude);
     Q_INVOKABLE void toggleFavorite(const QString &name, double latitude, double longitude);
     Q_INVOKABLE bool isFavorite(double latitude, double longitude) const;
