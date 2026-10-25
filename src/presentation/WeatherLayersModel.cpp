@@ -50,18 +50,18 @@ void WeatherLayersModel::setModel(const QString &value)
 {
     if (m_model == value) return;
     m_model = value; m_layerIndex = 0; m_runs.clear(); m_request.cancel();
-    if (m_active) reload(); else publish();
+    if (m_active) reload(false); else publish();
 }
 void WeatherLayersModel::setActive(bool value)
 {
     if (m_active == value) return;
     m_active = value;
-    if (value && m_runs.isEmpty()) reload(); else publish();
+    if (value && m_runs.isEmpty()) reload(false); else publish();
 }
-void WeatherLayersModel::reload()
+void WeatherLayersModel::reload(bool force)
 {
     m_busy = true; m_error.clear(); publish();
-    m_request.get(m_endpoint.resolved(QUrl(QStringLiteral("/json/") + (m_model == "gfs" ? "GFS" : "UM4") + QStringLiteral("_min_max.json"))));
+    m_request.get(m_endpoint.resolved(QUrl(QStringLiteral("/json/") + (m_model == "gfs" ? "GFS" : "UM4") + QStringLiteral("_min_max.json"))), 300, force);
 }
 void WeatherLayersModel::setLayerIndex(int value) { m_layerIndex = std::clamp(value, 0, int(layers().size()) - 1); publish(); }
 void WeatherLayersModel::setRunIndex(int value) { m_runIndex = std::clamp(value, 0, std::max(0, int(m_runs.size()) - 1)); m_step = std::clamp(m_step, firstStep(), lastStep()); publish(); }

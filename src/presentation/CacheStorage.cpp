@@ -28,6 +28,7 @@ QString CacheStorage::sizeText() const { return QLocale().formattedDataSize(m_si
 QString CacheStorage::forecastSize() const { return QLocale().formattedDataSize(m_forecasts); }
 QString CacheStorage::editorialSize() const { return QLocale().formattedDataSize(m_editorial); }
 QString CacheStorage::imageSize() const { return QLocale().formattedDataSize(m_images); }
+QString CacheStorage::lookupSize() const { return QLocale().formattedDataSize(m_lookups); }
 void CacheStorage::refresh() { inspect(false); }
 void CacheStorage::clear() { inspect(true); }
 void CacheStorage::inspect(bool remove)
@@ -45,7 +46,7 @@ void CacheStorage::inspect(bool remove)
     if (remove) Meteo::ImageCache::shared()->clear();
     m_worker.start(QRunnable::create([this, path, remove] {
         const bool ok = !remove || removeFiles(path);
-        qint64 total = 0, forecasts = 0, editorial = 0, images = 0;
+        qint64 total = 0, forecasts = 0, editorial = 0, images = 0, lookups = 0;
         QDirIterator files(path, QDir::Files | QDir::Hidden | QDir::System, QDirIterator::Subdirectories);
         while (files.hasNext()) {
             files.next();
@@ -56,10 +57,12 @@ void CacheStorage::inspect(bool remove)
             const auto relative = QDir(path).relativeFilePath(file.absoluteFilePath());
             if (relative.startsWith("maps/")) images += size;
             else if (relative.startsWith("editorial/")) editorial += size;
+            else if (relative.startsWith("metadata/")) lookups += size;
             else if (!relative.contains('/') && relative.endsWith(".json")) forecasts += size;
         }
-        QMetaObject::invokeMethod(this, [this, total, forecasts, editorial, images, ok, remove] {
+        QMetaObject::invokeMethod(this, [this, total, forecasts, editorial, images, lookups, ok, remove] {
             m_size = total; m_forecasts = forecasts; m_editorial = editorial; m_images = images;
+            m_lookups = lookups;
             m_busy = false;
             if (!ok) m_error = QStringLiteral("Nie udało się usunąć wszystkich plików pamięci podręcznej. Spróbuj ponownie.");
             emit changed();

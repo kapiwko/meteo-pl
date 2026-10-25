@@ -10,6 +10,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
+#include <QCryptographicHash>
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -98,6 +99,55 @@ private slots:
         model.setQuery("");
         QVERIFY(!model.busy());
         QVERIFY(model.results().isEmpty());
+        const auto count=server.requests.size();
+        model.setPolandOnly(true);
+        model.setQuery(QStringLiteral("Chęciny"));
+        model.search();
+        QTRY_VERIFY(!model.busy());
+        QCOMPARE(model.results().size(),1);
+        QCOMPARE(server.requests.size(),count);
+    }
+    void metadataCacheHonorsExpiryCancellationAndForcedRefresh()
+    {
+        ServiceFixture server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response=[](const QUrl &) { return QByteArray(R"({"value":42})"); };
+        const auto url=server.endpoint().resolved(QUrl("/cache?model=um4"));
+        Meteo::JsonRequest request;
+        QSignalSpy received(&request,&Meteo::JsonRequest::received), failed(&request,&Meteo::JsonRequest::failed);
+        request.get(url,60);
+        QTRY_COMPARE(received.size(),1);
+        QCOMPARE(server.requests.size(),1);
+        request.get(url,60);
+        request.cancel();
+        QTest::qWait(20);
+        QCOMPARE(received.size(),1);
+        request.get(url,60);
+        QTRY_COMPARE(received.size(),2);
+        QCOMPARE(server.requests.size(),1);
+        request.get(url,60,true);
+        QTRY_COMPARE(received.size(),3);
+        QCOMPARE(server.requests.size(),2);
+        server.status=503;
+        request.get(url,60,true);
+        QTRY_COMPARE(failed.size(),1);
+        request.get(url,60);
+        QTRY_COMPARE(received.size(),4); // A failed refresh cannot replace valid data.
+        QCOMPARE(server.requests.size(),3);
+        const auto hash=QCryptographicHash::hash(url.toEncoded(),QCryptographicHash::Sha256).toHex();
+        QFile file(CacheStorage::directory()+"/metadata/"+QString::fromLatin1(hash)+".json");
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        auto entry=QJsonDocument::fromJson(file.readAll()).object();file.close();
+        entry["savedAt"]=QDateTime::currentDateTimeUtc().addSecs(-120).toString(Qt::ISODate);
+        QVERIFY(file.open(QIODevice::WriteOnly|QIODevice::Truncate));
+        file.write(QJsonDocument(entry).toJson());file.close();
+        request.get(url,60);
+        QTRY_COMPARE(failed.size(),2);
+        QCOMPARE(server.requests.size(),4);
+        server.status=200;
+        request.get(server.endpoint().resolved(QUrl("/cache?model=gfs")),60);
+        QTRY_COMPARE(received.size(),5);
+        QCOMPARE(server.requests.size(),5);
     }
     void weatherMapsUsePublishedRunAndForecastStep()
     {
@@ -119,6 +169,14 @@ private slots:
         QCOMPARE(model.lastStep(), 120);
         model.setStep(1000);
         QCOMPARE(model.step(), 120);
+        WeatherLayersModel reopened(nullptr,server.endpoint());
+        reopened.setActive(true);
+        QTRY_VERIFY(!reopened.busy());
+        QCOMPARE(reopened.runs().size(),2);
+        QCOMPARE(server.requests.size(),1);
+        reopened.reload();
+        QTRY_VERIFY(!reopened.busy());
+        QCOMPARE(server.requests.size(),2);
     }
     void editorialSupportsArchivesAndPagination()
     {
@@ -235,6 +293,7 @@ private slots:
         QVERIFY(write(root+"/forecast.json",100));
         QVERIFY(write(root+"/editorial/article.json",200));
         QVERIFY(write(root+"/maps/test/data/tile",300));
+        QVERIFY(write(root+"/metadata/search.json",400));
         const auto outside=m_config.filePath("keep-profile.ini");
         QVERIFY(write(outside,400));
 #ifndef Q_OS_WIN
@@ -242,7 +301,7 @@ private slots:
 #endif
         cache.refresh();
         QTRY_VERIFY(!cache.busy());
-        QCOMPARE(cache.size(),600);
+        QCOMPARE(cache.size(),1000);
         QVERIFY(!cache.sizeText().isEmpty());
         QSignalSpy cleared(&cache,&CacheStorage::cleared);
         cache.clear();
@@ -255,6 +314,7 @@ private slots:
         QVERIFY(!QFile::exists(root+"/forecast.json"));
         QVERIFY(!QFile::exists(root+"/editorial/article.json"));
         QVERIFY(!QFile::exists(root+"/maps/test/data/tile"));
+        QVERIFY(!QFile::exists(root+"/metadata/search.json"));
     }
     void originalMeteogramUsesCoordinatesReturnedByTheOfficialSelector()
     {

@@ -44,7 +44,7 @@ public:
     void setStep(int value);
     Q_INVOKABLE QUrl tileUrl(int x, int y, int zoom) const;
     Q_INVOKABLE QUrl tileUrlAtStep(int x, int y, int zoom, int step) const;
-    Q_INVOKABLE void reload();
+    Q_INVOKABLE void reload(bool force = true);
 private:
     QString layerId() const;
     void publish();
