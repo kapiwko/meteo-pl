@@ -1128,6 +1128,46 @@ private slots:
         QVERIFY(!model.dailyForecast().isEmpty());
         QVERIFY(model.chartGroups().size() >= 9);
     }
+    void locationEditorAcceptsPreciseCoordinatesAndValidatesManualDrafts()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl("qrc:/qt/qml/pl/meteo/desktop/LocationEditor.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        const double latitude = 50.866123456789012;
+        const double longitude = 20.628612345678901;
+        QScopedPointer<QObject> editor(component.createWithInitialProperties({
+            {"locationName", "GPS point"}, {"latitude", latitude}, {"longitude", longitude}}));
+        QVERIFY2(editor, qPrintable(component.errorString()));
+        QVERIFY(editor->property("valid").toBool());
+        auto *manual = editor->findChild<QObject *>("manualLocationToggle");
+        auto *lat = editor->findChild<QObject *>("manualLatitude");
+        auto *lon = editor->findChild<QObject *>("manualLongitude");
+        QVERIFY(manual); QVERIFY(lat); QVERIFY(lon);
+        manual->setProperty("checked", true);
+        QVERIFY(editor->property("valid").toBool());
+        QCOMPARE(lat->property("text").toString(), "50.866123");
+        QCOMPARE(lon->property("text").toString(), "20.628612");
+        QCOMPARE(editor->property("latitude").toDouble(), latitude);
+        QCOMPARE(editor->property("longitude").toDouble(), longitude);
+        lat->setProperty("text", "-");
+        QVERIFY(!editor->property("valid").toBool());
+        manual->setProperty("checked", false);
+        QVERIFY(editor->property("valid").toBool());
+        manual->setProperty("checked", true);
+        lat->setProperty("text", "50,123456");
+        QVERIFY(QMetaObject::invokeMethod(lat, "textEdited"));
+        QCOMPARE(editor->property("latitude").toDouble(), 50.123456);
+        QVERIFY(editor->property("valid").toBool());
+        editor->setProperty("model", "unknown");
+        QVERIFY(!editor->property("valid").toBool());
+        editor->setProperty("latitude", 1.2345678912345);
+        editor->setProperty("model", "um4_60");
+        QVERIFY(!editor->property("valid").toBool());
+        editor->setProperty("model", "gfs");
+        QVERIFY(editor->property("valid").toBool());
+        editor->setProperty("latitude", 91);
+        QVERIFY(!editor->property("valid").toBool());
+    }
     void locationDialogUsesInsetContentAndFitsNarrowWindows()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));

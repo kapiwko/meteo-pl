@@ -40,6 +40,7 @@ qt_add_qml_module(meteo_ui
     VERSION 1.0
     SOURCES presentation/WeatherModel.cpp presentation/WeatherModel.hpp
         presentation/I18n.hpp
+        presentation/LocationRules.hpp
         presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp

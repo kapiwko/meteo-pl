@@ -14,10 +14,9 @@ ColumnLayout {
     property bool showMap: false
     property string positionError: ""
     property bool positionRequested: false
-    readonly property bool valid: locationName.trim().length > 0 && latField.acceptableInput && lonField.acceptableInput
-        && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
-        && (model === "gfs" || (latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176))
-    readonly property bool outsideModel: model !== "gfs" && !(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)
+    readonly property bool valid: locationName.trim().length > 0 && LocationRules.valid(latitude, longitude, model)
+        && (!manual.checked || (latField.acceptableInput && lonField.acceptableInput))
+    readonly property bool outsideModel: model !== "gfs" && !LocationRules.valid(latitude, longitude, model)
     spacing: Kirigami.Units.largeSpacing
 
     function resetDraft(name, lat, lon, forecastModel) {
@@ -242,19 +241,21 @@ ColumnLayout {
         }
         TextField {
             id: latField
+            objectName: "manualLatitude"
             Kirigami.FormData.label: I18n.i18n("Latitude (°N):")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            Binding on text { value: String(root.latitude); when: !latField.activeFocus; restoreMode: Binding.RestoreNone }
+            Binding on text { value: root.latitude.toFixed(6); when: !latField.activeFocus; restoreMode: Binding.RestoreNone }
             validator: RegularExpressionValidator { regularExpression: /-?\d{1,2}([.,]\d{1,6})?/ }
             onTextEdited: if (acceptableInput) root.latitude = Number(text.replace(",", "."));
         }
         TextField {
             id: lonField
+            objectName: "manualLongitude"
             Kirigami.FormData.label: I18n.i18n("Longitude (°E):")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            Binding on text { value: String(root.longitude); when: !lonField.activeFocus; restoreMode: Binding.RestoreNone }
+            Binding on text { value: root.longitude.toFixed(6); when: !lonField.activeFocus; restoreMode: Binding.RestoreNone }
             validator: RegularExpressionValidator { regularExpression: /-?\d{1,3}([.,]\d{1,6})?/ }
             onTextEdited: if (acceptableInput) root.longitude = Number(text.replace(",", "."));
         }

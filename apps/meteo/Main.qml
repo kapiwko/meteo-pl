@@ -35,7 +35,7 @@ Kirigami.ApplicationWindow {
     }
     function selectLocation(name, latitude, longitude) {
         settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
-        if (name.length && !(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) settings.model = "gfs";
+        if (name.length) settings.model = LocationRules.modelFor(latitude, longitude, settings.model);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
     SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude) }

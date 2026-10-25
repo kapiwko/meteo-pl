@@ -32,7 +32,7 @@ PlasmoidItem {
         Plasmoid.configuration.locationName = name;
         Plasmoid.configuration.latitude = latitude;
         Plasmoid.configuration.longitude = longitude;
-        if (name.length && !(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) Plasmoid.configuration.model = "gfs";
+        if (name.length) Plasmoid.configuration.model = LocationRules.modelFor(latitude, longitude, Plasmoid.configuration.model);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
     SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude) }
