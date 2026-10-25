@@ -83,3 +83,5 @@ Repozytorium zawiera wyłącznie syntetyczne dane testowe, a interfejs podaje ź
 
 Poza zakresem tej wersji: radar, mapa lokalizacji, wyszukiwanie wszystkich
 miejscowości, GPS, archiwum i profile parametrów meteogramu.
+
+Modele QML udostępniają wyszukiwanie nazw miejscowości, regiony, ulubione, ostatnie miejsca oraz zapisywane profile wykresów.

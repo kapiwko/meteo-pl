@@ -1,8 +1,12 @@
 add_library(meteo_core STATIC
     core/Forecast.cpp
     core/Forecast.hpp
+    core/Locations.cpp
+    core/Locations.hpp
     network/MeteoClient.cpp
     network/MeteoClient.hpp
+    network/JsonRequest.cpp
+    network/JsonRequest.hpp
 )
 target_include_directories(meteo_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network)
@@ -17,6 +21,12 @@ qt_add_qml_module(meteo_ui
     VERSION 1.0
     NO_PLUGIN_OPTIONAL
     SOURCES
+        presentation/ForecastFields.cpp
+        presentation/ForecastFields.hpp
+        presentation/PlaceSearchModel.cpp
+        presentation/PlaceSearchModel.hpp
+        presentation/UserPreferences.cpp
+        presentation/UserPreferences.hpp
         presentation/WeatherModel.cpp
         presentation/WeatherModel.hpp
     QML_FILES
