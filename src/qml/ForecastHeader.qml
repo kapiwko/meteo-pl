@@ -8,6 +8,7 @@ GridLayout {
     id: root
     objectName: "forecastHeader"
     required property WeatherModel weather
+    signal locationSelected(string name, real latitude, real longitude)
     readonly property var solar: weather.solarTimes
     readonly property bool wide: width >= 660
     columns: wide ? 2 : 1
@@ -16,14 +17,13 @@ GridLayout {
     ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
-        Kirigami.Heading {
-            objectName: "forecastLocationName"
-            text: root.weather.locationName
-            level: 2
+        PlacePicker {
             Layout.fillWidth: true
-            elide: Text.ElideRight
+            weather: root.weather
+            onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
         }
         RowLayout {
+            visible: root.weather.locationName.length > 0
             Layout.fillWidth: true
             spacing: Kirigami.Units.largeSpacing
             Kirigami.Icon {

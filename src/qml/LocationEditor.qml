@@ -86,16 +86,40 @@ ColumnLayout {
     }
     Label { visible: placeSearch.query.length >= 2 && !placeSearch.busy && !placeSearch.results.length && !placeSearch.error; text: "Nie znaleziono miejscowości. Doprecyzuj nazwę lub wybierz punkt z mapy."; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     Kirigami.InlineMessage { visible: placeSearch.error.length > 0; text: placeSearch.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
-    Flow {
+    GroupBox {
+        title: "Moje miejsca"
+        visible: UserPreferences.places.length > 0
         Layout.fillWidth: true
-        spacing: 4
-        Repeater {
-            model: UserPreferences.favorites.length ? UserPreferences.favorites : UserPreferences.recentPlaces
-            delegate: Button {
+        padding: Kirigami.Units.smallSpacing
+        contentItem: ListView {
+            implicitHeight: Math.min(180, contentHeight)
+            clip: true
+            model: UserPreferences.places
+            ScrollBar.vertical: ScrollBar {}
+            delegate: ItemDelegate {
+                id: savedPlace
                 required property var modelData
-                text: modelData.name
-                icon.name: UserPreferences.favorites.length ? "rating" : "document-open-recent"
+                width: ListView.view.width
+                highlighted: Math.abs(modelData.latitude-root.latitude) < 0.000001 && Math.abs(modelData.longitude-root.longitude) < 0.000001
                 onClicked: root.selectPlace(modelData)
+                contentItem: RowLayout {
+                    Label { text: savedPlace.modelData.name; Layout.fillWidth: true; elide: Text.ElideRight }
+                    ToolButton {
+                        icon.name: "edit-delete"
+                        onClicked: {
+                            const selected = Math.abs(savedPlace.modelData.latitude-root.latitude) < 0.000001 && Math.abs(savedPlace.modelData.longitude-root.longitude) < 0.000001;
+                            UserPreferences.removePlace(savedPlace.modelData.latitude, savedPlace.modelData.longitude);
+                            if (selected) {
+                                const first = UserPreferences.places[0];
+                                if (first) root.selectPlace(first);
+                                else root.resetDraft("", 0, 0, root.model);
+                            }
+                        }
+                        ToolTip.text: "Usuń miejsce: " + savedPlace.modelData.name
+                        ToolTip.visible: hovered
+                        Accessible.name: ToolTip.text
+                    }
+                }
             }
         }
     }
@@ -109,15 +133,7 @@ ColumnLayout {
                 Label { text: root.locationName; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
                 Label { text: root.latitude.toFixed(4) + "°N, " + root.longitude.toFixed(4) + "°E"; opacity: 0.65 }
             }
-            ToolButton {
-                text: "Ulubione"
-                icon.name: checked ? "rating" : "rating-unrated"
-                checkable: true
-                checked: { const places = UserPreferences.favorites; return UserPreferences.isFavorite(root.latitude, root.longitude); }
-                onClicked: UserPreferences.toggleFavorite(root.locationName, root.latitude, root.longitude)
-                ToolTip.text: checked ? "Usuń z ulubionych" : "Dodaj do ulubionych"
-                ToolTip.visible: hovered
-            }
+
         }
     }
     RowLayout {

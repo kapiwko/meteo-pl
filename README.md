@@ -22,11 +22,17 @@ ctest --preset dev
 ./build/dev/apps/meteo/meteo-pl
 ```
 
-Przycisk **Lokalizacja** otwiera wyszukiwarkę miast i wsi z opisem regionu,
-ulubione i ostatnio wybrane miejsca. Można także wskazać punkt na mapie,
+Przycisk **Lokalizacja** otwiera wyszukiwarkę miast i wsi z opisem regionu
+oraz wspólną listę **Moje miejsca**. Można także wskazać punkt na mapie,
 pobrać pozycję przez systemową usługę lokalizacji lub wpisać współrzędne.
 GPS wymaga dostępnego dostawcy Qt Positioning; bez niego można użyć wyszukiwarki
 lub mapy. Wyszukiwanie domyślnie obejmuje Polskę, opcjonalnie cały świat.
+Każda otwarta lokalizacja jest zapisywana w **Moich miejscach**. Przy kilku miejscach
+nazwa w nagłówku staje się polem wyboru, także w kompaktowym widoku widgetu.
+Listą zarządzasz w oknie lokalizacji; usunięcie wybranego miejsca przełącza dany
+widok na następne, a usunięcie ostatniego pokazuje wybór nowej lokalizacji.
+Aplikacja i każdy widget zachowują własny wybór z tej wspólnej listy.
+Dotychczasowe ulubione i ostatnie miejsca są zachowane przy aktualizacji.
 Dostępne modele: UM4 60 h, UM4 120 h i GFS 240 h.
 UM4 obejmuje obszar 44,5–66,482°N i 8,21–30,176°E; GFS jest globalny.
 Współrzędne przyjmują kropkę lub przecinek dziesiętny.

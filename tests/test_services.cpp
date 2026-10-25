@@ -236,6 +236,45 @@ private slots:
         QCOMPARE(reopened.profile(), "classic");
         QVERIFY(!reopened.profiles().last().toMap()["id"].toString().startsWith("user:"));
     }
+    void savedPlacesNotifyOtherInstancesAfterAtomicSettingsWrites()
+    {
+        UserPreferences application, widget;
+        QSignalSpy changed(&widget, &UserPreferences::placesChanged);
+        application.savePlace("Kielce", 50.8661, 20.6286);
+        QTRY_COMPARE(changed.size(), 1);
+        QCOMPARE(widget.favorites().size(), 1);
+        changed.clear();
+        application.savePlace("Warszawa", 52.2297, 21.0122);
+        QTRY_COMPARE(changed.size(), 1);
+        QCOMPARE(widget.favorites().size(), 2);
+        changed.clear();
+        application.removePlace(50.8661, 20.6286);
+        QTRY_COMPARE(changed.size(), 1);
+        QCOMPARE(widget.favorites().first().toMap()["name"].toString(), "Warszawa");
+        QTest::qWait(100);
+        QCOMPARE(changed.size(), 1);
+    }
+    void savedPlacesPreserveOldFavoritesAndRecentsWithoutDuplicates()
+    {
+        QSettings legacy(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
+        const QVariantMap first{{"name", "Kielce"}, {"latitude", 50.8661}, {"longitude", 20.6286}};
+        const QVariantMap second{{"name", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}};
+        legacy.setValue("places/favorites", QJsonDocument::fromVariant(QVariantList{first}).toJson());
+        legacy.setValue("places/recent", QJsonDocument::fromVariant(QVariantList{first, second}).toJson());
+        legacy.sync();
+        UserPreferences preferences;
+        QCOMPARE(preferences.favorites().size(), 2);
+        preferences.rememberPlace("Gdańsk", 54.352, 18.6466);
+        preferences.rememberPlace("Gdańsk", 54.352, 18.6466);
+        QCOMPARE(preferences.favorites().size(), 3);
+        preferences.savePlace("Kielce centrum", 50.8661, 20.6286);
+        QCOMPARE(preferences.favorites().size(), 3);
+        QCOMPARE(preferences.favorites().first().toMap()["name"].toString(), "Kielce centrum");
+        preferences.removePlace(52.2297, 21.0122);
+        UserPreferences reopened;
+        QCOMPARE(reopened.favorites().size(), 2);
+        QVERIFY(!reopened.isFavorite(52.2297, 21.0122));
+    }
     void duplicatesKeepLayoutsAndDeletingScratchRestoresDefaults()
     {
         UserPreferences preferences;
