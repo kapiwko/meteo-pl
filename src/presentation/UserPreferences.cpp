@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QDataStream>
 #include <QFile>
 #include <QFileInfo>
 #include <QSaveFile>
@@ -50,6 +51,8 @@ UserPreferences::UserPreferences(QObject *parent)
         m_settings.setValue("places/listVersion", 1); m_settings.sync();
     }
     m_lastPlaces = placesSnapshot();
+    m_lastDisplay = displaySnapshot();
+    connect(this, &UserPreferences::displayChanged, this, [this] { m_lastDisplay = displaySnapshot(); });
     m_settingsWatcher.addPath(QFileInfo(m_settings.fileName()).absolutePath());
     m_settingsWatcher.addPath(m_settings.fileName());
     m_placesReload.setSingleShot(true);
@@ -62,15 +65,32 @@ UserPreferences::UserPreferences(QObject *parent)
             m_settingsWatcher.addPath(m_settings.fileName());
         m_settings.sync();
         const auto current = placesSnapshot();
-        if (current == m_lastPlaces) return;
-        m_lastPlaces = current;
-        emit placesChanged();
+        if (current != m_lastPlaces) {
+            m_lastPlaces = current;
+            emit placesChanged();
+        }
+        const auto display = displaySnapshot();
+        if (display != m_lastDisplay) {
+            m_lastDisplay = display;
+            emit displayChanged();
+        }
     });
 }
 
 QByteArray UserPreferences::placesSnapshot() const
 {
     return m_settings.value("places/favorites").toByteArray() + '\n' + m_settings.value("places/recent").toByteArray();
+}
+
+QByteArray UserPreferences::displaySnapshot() const
+{
+    QVariantMap values;
+    for (const auto &key : m_settings.allKeys())
+        if (key.startsWith("display/")) values.insert(key, m_settings.value(key));
+    QByteArray snapshot;
+    QDataStream stream(&snapshot, QIODevice::WriteOnly);
+    stream << values;
+    return snapshot;
 }
 
 QVariantList UserPreferences::readPlaces(const QString &key) const

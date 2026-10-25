@@ -86,10 +86,12 @@ private:
     QVariantList readPlaces(const QString &key) const;
     void writePlaces(const QString &key, const QVariantList &places);
     QByteArray placesSnapshot() const;
+    QByteArray displaySnapshot() const;
     mutable QSettings m_settings;
     QFileSystemWatcher m_settingsWatcher;
     QTimer m_placesReload;
     QByteArray m_lastPlaces;
+    QByteArray m_lastDisplay;
 signals:
     void placesChanged();
     void displayChanged();

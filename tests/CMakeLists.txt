@@ -23,6 +23,11 @@ qt_add_executable(test_services test_services.cpp)
 target_link_libraries(test_services PRIVATE meteo_ui Qt6::Test)
 add_test(NAME services COMMAND test_services)
 
+qt_add_executable(test_preferences test_preferences.cpp)
+target_link_libraries(test_preferences PRIVATE meteo_ui Qt6::Test)
+add_test(NAME preferences COMMAND test_preferences)
+set_tests_properties(preferences PROPERTIES ENVIRONMENT "QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
+
 qt_add_executable(test_presentation test_presentation.cpp)
 target_link_libraries(test_presentation PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)
 target_compile_definitions(test_presentation PRIVATE METEO_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
