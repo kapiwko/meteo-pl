@@ -35,9 +35,11 @@ Współrzędne przyjmują kropkę lub przecinek dziesiętny.
 
 Podsumowanie pokazuje prognozę na oznaczoną godzinę, a nie pomiar stacji.
 Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przerywany.
-Domyślnie najechanie pokazuje parametry wskazanego wykresu. W ustawieniach
-można wybrać wszystkie parametry lub wyłączyć odczyt po najechaniu.
-Kliknięcie zawsze otwiera i przypina odczyt, a Escape go zamyka.
+Domyślnie wykresy nie pokazują odczytu pod kursorem. Próbnik (ikona pipety)
+na pasku pod wykresami włącza tryb identyfikacji. W tym trybie najechanie
+pokazuje parametry, kliknięcie przypina odczyt, a Escape go zamyka.
+Wyłączenie próbnika zamyka także przypięty odczyt.
+W ustawieniach można wybrać parametry wskazanego wykresu lub wszystkie parametry.
 Wszystkie parametry mają karty kategorii; przy szerokim oknie odczyt używa dwóch kolumn.
 Przycisk eksportu w odczycie zapisuje aktualną kategorię (lub wszystkie parametry)
 do PNG albo CSV, także wiersze poza widocznym obszarem przewijania.

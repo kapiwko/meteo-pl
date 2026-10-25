@@ -14,6 +14,7 @@ ColumnLayout {
     property var chartConfiguration: ({})
     property int legendOverride: -1
     property bool exportMode: false
+    property bool identificationEnabled: false
     readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
     readonly property string rightScale: chartConfiguration.rightScale || (scaleKind === "clouds" ? "fraction" : scaleKind === "cloudHeights" ? "visibility" : scaleKind === "precipitation" ? "humidity" : "linked")
@@ -382,15 +383,17 @@ ColumnLayout {
         MouseArea {
             anchors.fill: parent
             enabled: !root.exportMode
-            hoverEnabled: true
-            cursorShape: Qt.CrossCursor
+            hoverEnabled: root.identificationEnabled
+            cursorShape: root.identificationEnabled ? Qt.CrossCursor : Qt.ArrowCursor
             onPositionChanged: mouse => {
+                if (!root.identificationEnabled) return;
                 if (mouse.x < root.leftMargin || mouse.x > width - root.rightMargin) return;
                 const time = root.startTime + (mouse.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);
                 root.probeMoved(root.weather.nearestTimestamp(time), mapToItem(null, mouse.x, mouse.y));
             }
             onExited: root.probeLeft()
             onClicked: mouse => {
+                if (!root.identificationEnabled) return;
                 if (mouse.x < root.leftMargin || mouse.x > width - root.rightMargin) return;
                 const time = root.startTime + (mouse.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);
                 root.pinRequested(root.weather.nearestTimestamp(time), mapToItem(null, mouse.x, mouse.y));

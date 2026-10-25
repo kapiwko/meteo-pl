@@ -17,6 +17,8 @@ Item {
     property real selectedTime: 0
     property string selectedGroup: ""
     property bool pinned: false
+    property bool identificationEnabled: false
+    onIdentificationEnabledChanged: if (!identificationEnabled) inspector.close()
     property Repeater chartRepeater: null
     property var exportItems: []
     property var exportCandidates: []
@@ -232,7 +234,7 @@ Item {
         viewportEnd = viewportStart + span;
     }
     function showProbe(time, position, group, force) {
-        if (pinned || (!force && UserPreferences.probeMode === "off")) return;
+        if (pinned || (!force && !identificationEnabled)) return;
         closeProbe.stop(); selectedTime = time; selectedGroup = group;
         if (inspector.parent) {
             const fitsRight = inspector.parent.width - position.x >= inspector.width + 24;
@@ -422,6 +424,17 @@ Item {
                                 onClicked: root.resetRange()
                             }
                             ToolButton {
+                                objectName: "identificationButton"
+                                icon.name: "color-picker"
+                                implicitWidth: 28; implicitHeight: 28
+                                checkable: true
+                                checked: root.identificationEnabled
+                                onClicked: root.identificationEnabled = checked
+                                Accessible.name: "Tryb identyfikacji parametrów"
+                                ToolTip.text: checked ? "Wyłącz identyfikację parametrów" : "Identyfikuj parametry · przesuń kursor po wykresie"
+                                ToolTip.visible: hovered
+                            }
+                            ToolButton {
                                 text: chartExporter.busy ? "Eksportuję…" : "Eksportuj…"
                                 icon.name: "document-export"
                                 enabled: !chartExporter.busy && root.visibleCharts.length > 0
@@ -488,6 +501,7 @@ Item {
                         startTime: root.viewportStart
                         endTime: root.viewportEnd
                         selectedTime: root.selectedTime
+                        identificationEnabled: root.identificationEnabled
                         nights: UserPreferences.showNight ? root.weather.nightIntervals : []
                         onProbeMoved: (timestamp, position) => root.showProbe(timestamp, position, groupKey)
                         onProbeLeft: closeProbe.restart()
@@ -582,11 +596,7 @@ Item {
     }
     Component { id: mapsComponent; Pane { padding: Kirigami.Units.largeSpacing; background: null; contentItem: WeatherMap { weather: root.weather; onLocationSelected: (name, latitude, longitude) => { root.locationSelected(name, latitude, longitude); root.viewMode = 0; } } } }
     Component { id: contentComponent; Pane { padding: Kirigami.Units.largeSpacing; background: null; contentItem: EditorialView { commentary: root.viewMode === 4 } } }
-    Connections {
-        target: UserPreferences
-        function onDisplayChanged() { if (UserPreferences.probeMode === "off" && !root.pinned) inspector.close(); }
-    }
-    onViewModeChanged: inspector.close()
+    onViewModeChanged: { identificationEnabled = false; inspector.close(); }
     Timer { id: closeProbe; interval: 220; onTriggered: if (!root.pinned && !inspector.hovered) inspector.close() }
     ForecastInspector {
         id: inspector

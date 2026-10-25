@@ -201,7 +201,7 @@ private slots:
         probeReload.setProbeMode("invalid");
         QCOMPARE(probeReload.probeMode(), "all");
         probeReload.setProbeMode("off");
-        QCOMPARE(preferences.probeMode(), "off");
+        QCOMPARE(preferences.probeMode(), "all");
         probeReload.setProbeMode("chart");
         QCOMPARE(preferences.renderer(), "gpu");
         preferences.setRenderer("cpu");
