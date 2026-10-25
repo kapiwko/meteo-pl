@@ -14,7 +14,7 @@ ColumnLayout {
     onAnimationKeyChanged: { animationCache.cancel(); if (play.checked) prepareDelay.restart(); }
     function prepareAnimation() {
         if (play.checked && !map.loading && map.hasFrame && !layers.busy && !animationCache.busy && !animationCache.ready)
-            animationCache.start(map.animationUrls(layers.firstStep, layers.lastStep, weather.model === "gfs" ? 3 : 1));
+            animationCache.start(map.animationUrls(layers.firstStep, layers.lastStep, layers.stepHours));
     }
     ImagePreloader {
         id: animationCache
@@ -22,7 +22,7 @@ ColumnLayout {
         onFailed: play.checked = false
     }
     Timer { id: prepareDelay; interval: 120; onTriggered: root.prepareAnimation() }
-    function nextStep() { return layers.step >= layers.lastStep ? layers.firstStep : layers.step + (weather.model === "gfs" ? 3 : 1); }
+    function nextStep() { return layers.step >= layers.lastStep ? layers.firstStep : Math.min(layers.lastStep, layers.step + layers.stepHours); }
     signal locationSelected(string name, real latitude, real longitude)
     RowLayout {
         Layout.fillWidth: true
@@ -44,7 +44,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Button { id: play; text: checked ? animationCache.ready ? I18n.i18n("Pause") : I18n.i18n("Cancel loading") : I18n.i18n("Animate"); icon.name: checked ? "media-playback-pause" : "media-playback-start"; checkable: true; enabled: layers.runs.length > 0; onCheckedChanged: { if (checked) root.prepareAnimation(); else animationCache.cancel(); } }
-        Slider { Layout.fillWidth: true; from: layers.firstStep; to: layers.lastStep; stepSize: root.weather.model === "gfs" ? 3 : 1; value: layers.step; onMoved: layers.step = Math.round(value) }
+        Slider { Layout.fillWidth: true; from: layers.firstStep; to: layers.lastStep; stepSize: layers.stepHours; value: layers.step; onMoved: layers.step = Math.round(value) }
         Label { text: "+" + layers.step + " h" }
         ToolButton { icon.name: "view-refresh"; onClicked: layers.reload(); enabled: !layers.busy }
     }

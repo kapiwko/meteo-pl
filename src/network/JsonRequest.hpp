@@ -4,14 +4,16 @@
 #include <QNetworkAccessManager>
 #include <QPointer>
 #include <QUrl>
+#include <functional>
 
 class QNetworkReply;
 namespace Meteo {
 class JsonRequest : public QObject {
     Q_OBJECT
 public:
+    using Validator = std::function<bool(const QJsonDocument &)>;
     explicit JsonRequest(QObject *parent = nullptr, RequestPolicy policy = {});
-    void get(const QUrl &url, int cacheSeconds = 0, bool force = false);
+    void get(const QUrl &url, int cacheSeconds = 0, bool force = false, Validator validator = {});
     void cancel();
     int statusCode() const { return m_statusCode; }
 signals:

@@ -7,6 +7,7 @@
 #include "ReadingsExporter.hpp"
 #include "ChartConfiguration.hpp"
 #include "core/Locations.hpp"
+#include "network/MeteoMapSource.hpp"
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
@@ -164,6 +165,9 @@ private slots:
         QCOMPARE(tile.queryItemValue("TIME"), "2026-10-25T06:00:00Z");
         QCOMPARE(tile.queryItemValue("DIM_FORECAST"), "12");
         QCOMPARE(tile.queryItemValue("srs"), "EPSG:3857");
+        QCOMPARE(model.tileUrl(35,22,6).host(),server.endpoint().host());
+        QCOMPARE(model.tileUrl(35,22,6).port(),server.endpoint().port());
+        QCOMPARE(model.legendUrl().port(),server.endpoint().port());
         QVERIFY(tile.queryItemValue("bbox").contains(','));
         model.setRunIndex(1);
         QCOMPARE(model.lastStep(), 120);
@@ -177,6 +181,49 @@ private slots:
         reopened.reload();
         QTRY_VERIFY(!reopened.busy());
         QCOMPARE(server.requests.size(),2);
+        const auto accepted=model.runs();
+        const auto selectedRun=model.runIndex(), selectedStep=model.step();
+        server.response=[](const QUrl &) { return QByteArray(R"({"dates":[{"date":"20261025T06:00:00Z","firstStep":120,"lastStep":1}]})"); };
+        model.reload();
+        QTRY_VERIFY(!model.busy());
+        QVERIFY(!model.error().isEmpty());
+        QCOMPARE(model.runs(),accepted);
+        QCOMPARE(model.runIndex(),selectedRun);
+        QCOMPARE(model.step(),selectedStep);
+        model.setStep(999);
+        QCOMPARE(model.step(),120);
+        const auto requests=server.requests.size();
+        WeatherLayersModel afterMalformed(nullptr,server.endpoint());
+        afterMalformed.setActive(true);
+        QTRY_VERIFY(!afterMalformed.busy());
+        QCOMPARE(afterMalformed.runs(),accepted);
+        QCOMPARE(server.requests.size(),requests); // Rejected data never replaced the valid disk catalog.
+    }
+    void mapProtocolValidatesRunsWrapsTheWorldAndHonorsNativeSteps()
+    {
+        using namespace Meteo;
+        const auto parsed=MeteoMapSource::parseRuns(QJsonDocument::fromJson(R"({"dates":[
+            {"date":"20261025T06:00:00Z","firstStep":60,"lastStep":3},
+            {"date":"2026-10-25T00:00:00Z","firstStep":3,"lastStep":384},
+            {"date":"20261024T12:00:00Z","firstStep":3,"lastStep":384},
+            {"date":"invalid","firstStep":3,"lastStep":384}]})"),"gfs");
+        QVERIFY(parsed); QCOMPARE(parsed->size(),2);
+        const auto run=parsed->first();
+        QCOMPARE(run.stepHours,3);
+        QCOMPARE(run.boundedStep(8),6);
+        QCOMPARE(run.boundedStep(-100),3);
+        QCOMPARE(run.boundedStep(999),384);
+        QVERIFY(!run.sourceRevision.isEmpty());
+        MeteoMapSource source(QUrl("https://maps.example.test"));
+        const auto left=source.tileUrl("test",run,8,-1,0,2);
+        QCOMPARE(left,source.tileUrl("test",run,8,3,0,2));
+        QCOMPARE(source.tileUrl("test",run,8,4,0,2),source.tileUrl("test",run,8,0,0,2));
+        QCOMPARE(left.host(),"maps.example.test");
+        QCOMPARE(QUrlQuery(left).queryItemValue("DIM_FORECAST"),"6");
+        QVERIFY(source.tileUrl("test",run,8,0,-1,2).isEmpty());
+        QVERIFY(source.tileUrl("test",run,8,0,4,2).isEmpty());
+        QVERIFY(!MeteoMapSource::parseRuns(QJsonDocument::fromJson("{}"),"gfs"));
+        QVERIFY(!MeteoMapSource::parseRuns(QJsonDocument::fromJson(R"({"dates":[]})"),"unknown"));
     }
     void editorialRetriesTheLastFailedPageAndRejectsMalformedContent()
     {

@@ -59,13 +59,13 @@ void JsonRequest::cancel()
         m_reply = nullptr;
     }
 }
-void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force)
+void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force, Validator validator)
 {
     cancel();
     m_statusCode = 0;
     if (cacheSeconds>0 && !force) {
         const auto document=readCache(url,cacheSeconds);
-        if (!document.isNull()) {
+        if (!document.isNull() && (!validator || validator(document))) {
             const auto generation=m_generation;
             QTimer::singleShot(0,this,[this,generation,document] {
                 if (generation!=m_generation) return;
@@ -83,7 +83,7 @@ void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force)
     m_reply = reply;
     const auto generation = m_generation;
     m_policy.enforce(reply);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, generation, url, cacheSeconds] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, generation, url, cacheSeconds, validator=std::move(validator)] {
         reply->deleteLater();
         if (generation != m_generation) return;
         m_reply = nullptr;
@@ -102,6 +102,10 @@ void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force)
         const auto document = body.trimmed() == "null" ? QJsonDocument(QJsonArray{}) : QJsonDocument::fromJson(body, &error);
         if (error.error != QJsonParseError::NoError || document.isNull()) {
             emit failed(Meteo::i18n("The server returned an invalid JSON document."));
+            return;
+        }
+        if (validator && !validator(document)) {
+            emit failed(Meteo::i18n("Invalid meteo.pl response format."));
             return;
         }
         const auto policy=reply->rawHeader("Cache-Control").toLower();

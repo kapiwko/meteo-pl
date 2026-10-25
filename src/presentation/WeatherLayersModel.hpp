@@ -1,6 +1,7 @@
 #pragma once
 #include "MeteoUiExport.hpp"
 #include "network/JsonRequest.hpp"
+#include "network/MeteoMapSource.hpp"
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
@@ -18,6 +19,7 @@ class METEO_UI_EXPORT WeatherLayersModel : public QObject {
     Q_PROPERTY(int step READ step WRITE setStep NOTIFY changed)
     Q_PROPERTY(int firstStep READ firstStep NOTIFY changed)
     Q_PROPERTY(int lastStep READ lastStep NOTIFY changed)
+    Q_PROPERTY(int stepHours READ stepHours NOTIFY changed)
     Q_PROPERTY(QString timeLabel READ timeLabel NOTIFY changed)
     Q_PROPERTY(QUrl legendUrl READ legendUrl NOTIFY changed)
     Q_PROPERTY(int revision READ revision NOTIFY changed)
@@ -34,6 +36,7 @@ public:
     int step() const { return m_step; }
     int firstStep() const;
     int lastStep() const;
+    int stepHours() const;
     QString timeLabel() const;
     QUrl legendUrl() const;
     int revision() const { return m_revision; }
@@ -51,9 +54,10 @@ private:
     Meteo::JsonRequest m_request;
     QString m_model = QStringLiteral("um4_60"), m_error;
     QVariantList m_runs;
+    QVector<Meteo::MapRun> m_publishedRuns;
     bool m_active = false, m_busy = false;
     int m_layerIndex = 0, m_runIndex = 0, m_step = 1, m_revision = 0;
-    QUrl m_endpoint;
+    Meteo::MeteoMapSource m_source;
 signals:
     void changed();
 };

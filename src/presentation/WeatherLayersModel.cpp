@@ -1,31 +1,29 @@
 #include "core/Localization.hpp"
 #include "WeatherLayersModel.hpp"
+#include "core/Forecast.hpp"
 #include <QDateTime>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QLocale>
-#include <QUrlQuery>
-#include <cmath>
 #include <algorithm>
 
-WeatherLayersModel::WeatherLayersModel(QObject *parent, QUrl endpoint) : QObject(parent), m_endpoint(std::move(endpoint))
+WeatherLayersModel::WeatherLayersModel(QObject *parent, QUrl endpoint) : QObject(parent), m_source(std::move(endpoint))
 {
     connect(&m_request, &Meteo::JsonRequest::received, this, [this](const QJsonDocument &document) {
-        m_runs.clear();
-        for (const auto &entry : document.object().value("dates").toArray()) {
-            const auto object = entry.toObject();
-            const auto compact = object.value("date").toString();
-            const auto iso = compact.left(4) + '-' + compact.mid(4, 2) + '-' + compact.mid(6, 2) + compact.mid(8);
-            const auto date = QDateTime::fromString(iso, Qt::ISODate);
-            if (!date.isValid()) continue;
-            m_runs.append(QVariantMap{{"time", date.toSecsSinceEpoch()}, {"iso", date.toUTC().toString(Qt::ISODate)},
-                                      {"label", QLocale().toString(date.toLocalTime(), QStringLiteral("ddd d MMM, HH:mm"))},
-                                      {"firstStep", object.value("firstStep").toInt(1)}, {"lastStep", object.value("lastStep").toInt(60)}});
-        }
-        std::sort(m_runs.begin(), m_runs.end(), [](const QVariant &a, const QVariant &b) { return a.toMap()["time"].toLongLong() > b.toMap()["time"].toLongLong(); });
-        m_runIndex = 0;
-        m_step = std::clamp(1, firstStep(), lastStep());
+        const auto parsed = Meteo::MeteoMapSource::parseRuns(document,m_model);
         m_busy = false;
+        if (!parsed) {
+            m_error = Meteo::i18n("Invalid meteo.pl response format.");
+            publish();
+            return;
+        }
+        m_publishedRuns = *parsed;
+        m_runs.clear();
+        for (const auto &run : m_publishedRuns) {
+            m_runs.append(QVariantMap{{"time",run.date.toSecsSinceEpoch()},{"iso",run.date.toString(Qt::ISODate)},
+                {"label",QLocale().toString(run.date.toLocalTime(),QStringLiteral("ddd d MMM, HH:mm"))},
+                {"firstStep",run.firstStep},{"lastStep",run.lastStep},{"stepHours",run.stepHours},{"sourceRevision",run.sourceRevision}});
+        }
+        m_runIndex = 0;
+        m_step = m_publishedRuns.isEmpty() ? 1 : m_publishedRuns.first().boundedStep(1);
         m_error = m_runs.isEmpty() ? Meteo::i18n("No maps have been published for this model.") : QString();
         publish();
     });
@@ -49,8 +47,8 @@ QVariantList WeatherLayersModel::layers() const
 void WeatherLayersModel::publish() { ++m_revision; emit changed(); }
 void WeatherLayersModel::setModel(const QString &value)
 {
-    if (m_model == value) return;
-    m_model = value; m_layerIndex = 0; m_runs.clear(); m_request.cancel();
+    if (!Meteo::knownModel(value) || m_model == value) return;
+    m_model = value; m_layerIndex = 0; m_runs.clear(); m_publishedRuns.clear(); m_busy = false; m_request.cancel();
     if (m_active) reload(false); else publish();
 }
 void WeatherLayersModel::setActive(bool value)
@@ -62,13 +60,17 @@ void WeatherLayersModel::setActive(bool value)
 void WeatherLayersModel::reload(bool force)
 {
     m_busy = true; m_error.clear(); publish();
-    m_request.get(m_endpoint.resolved(QUrl(QStringLiteral("/json/") + (m_model == "gfs" ? "GFS" : "UM4") + QStringLiteral("_min_max.json"))), 300, force);
+    const auto model=m_model;
+    m_request.get(m_source.runsUrl(model), 300, force, [model](const QJsonDocument &document) {
+        return Meteo::MeteoMapSource::parseRuns(document,model).has_value();
+    });
 }
 void WeatherLayersModel::setLayerIndex(int value) { m_layerIndex = std::clamp(value, 0, int(layers().size()) - 1); publish(); }
-void WeatherLayersModel::setRunIndex(int value) { m_runIndex = std::clamp(value, 0, std::max(0, int(m_runs.size()) - 1)); m_step = std::clamp(m_step, firstStep(), lastStep()); publish(); }
-void WeatherLayersModel::setStep(int value) { const auto step = std::clamp(value, firstStep(), lastStep()); if (m_step == step) return; m_step = step; publish(); }
-int WeatherLayersModel::firstStep() const { return m_runs.isEmpty() ? 1 : m_runs.at(m_runIndex).toMap()["firstStep"].toInt(); }
-int WeatherLayersModel::lastStep() const { return m_runs.isEmpty() ? 1 : m_runs.at(m_runIndex).toMap()["lastStep"].toInt(); }
+void WeatherLayersModel::setRunIndex(int value) { m_runIndex = std::clamp(value, 0, std::max(0, int(m_runs.size()) - 1)); m_step = m_publishedRuns.isEmpty() ? 1 : m_publishedRuns[m_runIndex].boundedStep(m_step); publish(); }
+void WeatherLayersModel::setStep(int value) { const auto step = m_publishedRuns.isEmpty() ? 1 : m_publishedRuns[m_runIndex].boundedStep(value); if (m_step == step) return; m_step = step; publish(); }
+int WeatherLayersModel::firstStep() const { return m_publishedRuns.isEmpty() ? 1 : m_publishedRuns[m_runIndex].firstStep; }
+int WeatherLayersModel::lastStep() const { return m_publishedRuns.isEmpty() ? 1 : m_publishedRuns[m_runIndex].lastStep; }
+int WeatherLayersModel::stepHours() const { return m_publishedRuns.isEmpty() ? 1 : m_publishedRuns[m_runIndex].stepHours; }
 QString WeatherLayersModel::layerId() const { return layers().at(m_layerIndex).toMap()["id"].toString(); }
 QString WeatherLayersModel::timeLabel() const
 {
@@ -82,26 +84,10 @@ QUrl WeatherLayersModel::tileUrl(int x, int y, int zoom) const
 }
 QUrl WeatherLayersModel::tileUrlAtStep(int x, int y, int zoom, int step) const
 {
-    if (m_runs.isEmpty() || zoom < 0 || zoom > 20) return {};
-    constexpr double edge = 20037508.342789244;
-    const double tileSize = 2 * edge / std::pow(2, zoom);
-    const double left = -edge + x * tileSize, top = edge - y * tileSize;
-    QUrl url(QStringLiteral("https://mapy.meteo.pl/geoserver/gwc/service/wms"));
-    QUrlQuery query;
-    const QList<QPair<QString, QString>> items{{"service", "WMS"}, {"request", "GetMap"}, {"version", "1.1.1"},
-        {"styles", ""}, {"format", "image/png"}, {"transparent", "true"}, {"tiled", "true"}, {"width", "256"},
-        {"height", "256"}, {"srs", "EPSG:3857"}, {"layers", layerId()}, {"TIME", m_runs.at(m_runIndex).toMap()["iso"].toString()},
-        {"DIM_FORECAST", QString::number(std::clamp(step, firstStep(), lastStep()))}, {"client", "app"},
-        {"bbox", QStringLiteral("%1,%2,%3,%4").arg(left, 0, 'f', 6).arg(top - tileSize, 0, 'f', 6).arg(left + tileSize, 0, 'f', 6).arg(top, 0, 'f', 6)}};
-    for (const auto &item : items) query.addQueryItem(item.first, item.second);
-    url.setQuery(query);
-    return url;
+    if (m_publishedRuns.isEmpty()) return {};
+    return m_source.tileUrl(layerId(),m_publishedRuns[m_runIndex],step,x,y,zoom);
 }
 QUrl WeatherLayersModel::legendUrl() const
 {
-    QUrl url(QStringLiteral("https://mapy.meteo.pl/geoserver/wms"));
-    QUrlQuery query;
-    query.addQueryItem("service", "WMS"); query.addQueryItem("request", "GetLegendGraphic");
-    query.addQueryItem("format", "image/png"); query.addQueryItem("layer", layerId());
-    url.setQuery(query); return url;
+    return m_source.legendUrl(layerId());
 }
