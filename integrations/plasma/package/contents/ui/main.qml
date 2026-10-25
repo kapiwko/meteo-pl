@@ -57,7 +57,6 @@ PlasmoidItem {
             ToolButton { icon.name: "view-refresh"; text: "Odśwież"; display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "configure"; text: "Ustawienia"; display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "mark-location"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
-            ToolButton { icon.name: "internet-web-browser"; text: "Otwórz meteo.pl"; display: AbstractButton.IconOnly; onClicked: Qt.openUrlExternally("https://app.meteo.pl/meteogram"); ToolTip.text: text; ToolTip.visible: hovered }
         }
         Loader {
             id: forecastView
