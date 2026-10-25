@@ -44,6 +44,8 @@ PlasmoidItem {
         }
     }
     fullRepresentation: ColumnLayout {
+        id: fullView
+        readonly property ForecastPanel chartView: forecastView.item as ForecastPanel
         Layout.minimumWidth: Kirigami.Units.gridUnit * 20
         Layout.minimumHeight: Kirigami.Units.gridUnit * 18
         Layout.preferredWidth: Kirigami.Units.gridUnit * 34
@@ -53,11 +55,12 @@ PlasmoidItem {
             ToolButton { icon.name: "go-previous"; text: "Pogoda"; visible: root.showMeteogram; onClicked: root.showMeteogram = false }
             Label { text: "Meteo · ICM"; font.bold: true; Layout.fillWidth: true }
             ToolButton { icon.name: "view-refresh"; text: "Odśwież"; display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
-            ToolButton { icon.name: "configure"; text: "Wygląd"; display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "configure"; text: "Ustawienia"; display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "mark-location"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "internet-web-browser"; text: "Otwórz meteo.pl"; display: AbstractButton.IconOnly; onClicked: Qt.openUrlExternally("https://app.meteo.pl/meteogram"); ToolTip.text: text; ToolTip.visible: hovered }
         }
         Loader {
+            id: forecastView
             Layout.fillWidth: true
             Layout.fillHeight: true
             sourceComponent: root.showMeteogram ? details : overview
@@ -78,21 +81,16 @@ PlasmoidItem {
             }
         }
         Button { Layout.alignment: Qt.AlignHCenter; visible: !root.showMeteogram; text: "Pokaż meteogram"; icon.name: "view-statistics"; onClicked: root.showMeteogram = true }
-        Dialog {
+        MeteoSettings {
             id: displayDialog
-            title: "Wygląd meteogramu"
-            anchors.centerIn: parent
+            parent: fullView
             width: Math.min(parent.width - 24, 650)
             height: Math.min(parent.height - 24, 680)
-            padding: 16
-            modal: true
-            standardButtons: Dialog.Close
-            contentItem: ScrollView {
-                id: displayScroll
-                clip: true
-                contentWidth: availableWidth
-                DisplaySettings { width: displayScroll.availableWidth; weather: forecastModel }
-            }
+            weather: forecastModel
+            showTimeRange: fullView.chartView !== null && fullView.chartView.viewMode === 0
+            startTime: fullView.chartView ? fullView.chartView.viewportStart : forecastModel.firstTimestamp
+            endTime: fullView.chartView ? fullView.chartView.viewportEnd : forecastModel.lastTimestamp
+            onHoursSelected: hours => { if (fullView.chartView) fullView.chartView.setHours(hours); }
         }
     }
 }

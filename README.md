@@ -47,7 +47,7 @@ Linie siatki są delikatne. Etykiety czasu na wąskich wykresach pomijają minut
 i w razie potrzeby pojawiają się rzadziej, bez nakładania się godzin i dat.
 
 Domyślny renderer **GPU** przekazuje geometrię wykresów bezpośrednio do sceny
-Qt Quick (RHI), z wygładzaniem MSAA. W ustawieniach **Wygląd → Rysowanie
+Qt Quick (RHI), z wygładzaniem MSAA. W **Ustawienia → Wykresy i aplikacja → Rysowanie
 wykresów** można od razu przełączyć na **CPU · Canvas**. Oba renderery używają
 tych samych obliczeń, kolorów, warstw i obsługi kursora. Bez akceleracji sceny
 Qt Quick aplikacja automatycznie korzysta z CPU.
@@ -78,8 +78,9 @@ strzałki przesuwania, suwak powiększenia i przycisk dopasowania całej prognoz
 Powiększanie zatrzymuje się na 24 godzinach, a dla krótszej prognozy na jej
 pełnym zakresie. Ctrl + kółko myszy również zmienia powiększenie. Podczas
 oglądania fragmentu pojawia się drugi suwak do przesuwania czasu.
-Przycisk **Widok** w pasku statusu otwiera **Profil wykresów**, **Zakres czasu**
-i **Start modelu**, a także odnośnik do edycji profili i ustawień wyglądu.
+Przycisk **Ustawienia** w górnym pasku otwiera wspólne okno. Zakładka
+**Prognoza** zawiera **Profil wykresów**, **Zakres czasu** i **Start modelu**,
+a **Wykresy i aplikacja** edytor profili i ustawienia wyglądu oraz jednostek.
 Zakres i start dotyczą bieżącego widoku; wybór profilu jest zapamiętywany.
 Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
 

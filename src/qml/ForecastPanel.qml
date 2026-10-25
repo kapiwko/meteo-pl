@@ -33,7 +33,7 @@ Item {
         return weather.configuredCharts(UserPreferences.chartLayout);
     }
 
-    function openDisplaySettings() { displayDialog.open(); }
+    function openSettings() { settingsDialog.open(); }
     function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
     function resetRange() { viewportStart = weather.firstTimestamp; viewportEnd = weather.lastTimestamp; }
     function setHours(hours) {
@@ -213,14 +213,7 @@ Item {
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.resetRange()
                             }
-                            ToolButton {
-                                objectName: "viewOptionsButton"
-                                text: "Widok"
-                                icon.name: "configure"
-                                Accessible.name: "Opcje widoku"
-                                ToolTip.text: "Profil wykresów, zakres czasu i start modelu"; ToolTip.visible: hovered
-                                onClicked: viewOptions.open()
-                            }
+
                         }
                     }
                     Slider {
@@ -413,97 +406,12 @@ Item {
             }
         }
     }
-    Dialog {
-        id: viewOptions
-        objectName: "viewOptionsDialog"
-        title: "Opcje widoku"
-        parent: Overlay.overlay
-        anchors.centerIn: parent
-        width: Math.min(430, parent ? parent.width - 24 : 430)
-        padding: 16
-        modal: false
-        standardButtons: Dialog.Close
-        contentItem: ColumnLayout {
-            spacing: 12
-            GridLayout {
-                Layout.fillWidth: true
-                columns: 1
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Profil wykresów"; font.pixelSize: 11; opacity: 0.7 }
-                    ComboBox {
-                        Layout.fillWidth: true
-                        Accessible.name: "Profil wykresów"
-                        model: UserPreferences.profiles
-                        textRole: "name"
-                        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
-                        onActivated: index => UserPreferences.profile = model[index].id
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Zakres czasu"; font.pixelSize: 11; opacity: 0.7 }
-                    ComboBox {
-                        Layout.fillWidth: true
-                        Accessible.name: "Zakres czasu na wykresach"
-                        model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny", "Własny zakres"]
-                        currentIndex: {
-                            const hours = (root.viewportEnd - root.viewportStart) / 3600;
-                            if (Math.abs(root.viewportStart - root.weather.firstTimestamp) < 1 && Math.abs(root.viewportEnd - root.weather.lastTimestamp) < 1) return 0;
-                            const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
-                            return index < 0 ? 4 : index + 1;
-                        }
-                        onActivated: index => { if (index < 4) root.setHours([0,24,48,72][index]); }
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Start modelu"; font.pixelSize: 11; opacity: 0.7 }
-                    ComboBox {
-                        id: archiveCombo
-                        Layout.fillWidth: true
-                        Accessible.name: "Start obliczeń modelu, także archiwalny"
-                        model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowszy dostępny"}]
-                        textRole: "label"
-                        onDownChanged: if (down) root.weather.loadRuns()
-                        currentIndex: { const entries = root.weather.availableRuns; const index = entries.findIndex(e => e.timestamp === root.weather.requestedRun); return Math.max(0, index); }
-                        onActivated: index => {
-                            if (!root.weather.availableRuns.length) root.weather.refresh();
-                            else root.weather.requestedRun = root.weather.availableRuns[index].timestamp;
-                        }
-                    }
-                }
-            }
-            Button {
-                text: "Edytuj profile i wygląd…"
-                icon.name: "preferences-desktop-theme-global"
-                onClicked: { viewOptions.close(); root.openDisplaySettings(); }
-            }
-            Label {
-                Layout.fillWidth: true
-                text: "Zakres czasu i start modelu dotyczą tego widoku. Wybrany profil jest zapamiętywany."
-                font.pixelSize: 11
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
-        }
-    }
-    Dialog {
-        id: displayDialog
-        objectName: "chartSettingsDialog"
-        title: "Wygląd meteogramu"
-        parent: Overlay.overlay
-        anchors.centerIn: parent
-        width: Math.min(650, parent ? parent.width - 32 : 650)
-        height: Math.min(740, parent ? parent.height - 32 : 740)
-        padding: 20
-        modal: true
-        standardButtons: Dialog.Close
-        contentItem: ScrollView {
-            id: settingsScroll
-            contentWidth: availableWidth
-            clip: true
-            DisplaySettings { width: settingsScroll.availableWidth; weather: root.weather }
-        }
+    MeteoSettings {
+        id: settingsDialog
+        weather: root.weather
+        showTimeRange: root.viewMode === 0
+        startTime: root.viewportStart
+        endTime: root.viewportEnd
+        onHoursSelected: hours => root.setHours(hours)
     }
 }

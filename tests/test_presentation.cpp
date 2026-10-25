@@ -129,8 +129,9 @@ private slots:
             QVERIFY(screenshot.save(screenshotPath));
         const auto settingsScreenshot = qEnvironmentVariable("METEO_SETTINGS_SCREENSHOT");
         if (!settingsScreenshot.isEmpty()) {
-            auto *settings = object->findChild<QObject *>("chartSettingsDialog");
+            auto *settings = object->findChild<QObject *>("meteoSettingsDialog");
             QVERIFY(settings);
+            settings->setProperty("section",1);
             QVERIFY(QMetaObject::invokeMethod(settings, "open"));
             QTest::qWait(300);
             auto *editor = object->findChild<QObject *>("meteogramDisplaySettings");
@@ -157,14 +158,18 @@ private slots:
         auto *zoomSlider=findItem(findItem,item,"chartZoomSlider");
         QVERIFY(zoomSlider);
         QCOMPARE(zoomSlider->property("value").toDouble(),1.0);
-        auto *options=object->findChild<QObject *>("viewOptionsDialog");
-        QVERIFY(options);
-        QVERIFY(!options->property("visible").toBool());
-        auto *optionsButton=findItem(findItem,item,"viewOptionsButton");
-        QVERIFY(optionsButton);
-        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,optionsButton->mapToScene({optionsButton->width()/2,optionsButton->height()/2}).toPoint());
-        QTRY_VERIFY(options->property("visible").toBool());
-        QVERIFY(QMetaObject::invokeMethod(options,"close"));
+        QVERIFY(!findItem(findItem,item,"viewOptionsButton"));
+        auto *settings=object->findChild<QObject *>("meteoSettingsDialog");
+        QVERIFY(settings);
+        settings->setProperty("section",0);
+        QVERIFY(QMetaObject::invokeMethod(object.data(),"openSettings"));
+        QTRY_VERIFY(settings->property("visible").toBool());
+        auto *timeRange=settings->findChild<QObject *>("settingsTimeRange");
+        QVERIFY(timeRange);
+        QVERIFY(QMetaObject::invokeMethod(timeRange,"activated",Q_ARG(int,1)));
+        QCOMPARE(object->property("viewportEnd").toDouble()-object->property("viewportStart").toDouble(),24*3600.0);
+        QVERIFY(QMetaObject::invokeMethod(object.data(),"resetRange"));
+        QVERIFY(QMetaObject::invokeMethod(settings,"close"));
         auto *chart = plot->parentItem();
         const auto originalBounds = chart->property("bounds").value<QJSValue>().toVariant().toMap();
         QVERIFY(originalBounds.contains("high"));
@@ -200,7 +205,7 @@ private slots:
         item->setWidth(450);
         window.resize(450,1000);
         QTest::qWait(50);
-        QVERIFY(optionsButton->mapToScene({optionsButton->width(),0}).x()<=450);
+        QVERIFY(zoomSlider->mapToScene({zoomSlider->width(),0}).x()<=450);
         item->setWidth(780);
         window.resize(780,1000);
         object->setProperty("viewMode",2);
