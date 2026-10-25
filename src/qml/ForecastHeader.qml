@@ -60,23 +60,13 @@ GridLayout {
             }
         }
     }
-    ColumnLayout {
+    RowLayout {
         objectName: "solarSummary"
         visible: root.weather.hasData
         Layout.alignment: Qt.AlignBottom | (root.wide ? Qt.AlignRight : Qt.AlignLeft)
-        spacing: Kirigami.Units.smallSpacing
-        Label {
-            text: (root.solar.today ? "Słońce dzisiaj" : "Słońce · " + (root.solar.dateLabel || "")) + (root.weather.utc ? " · UTC" : "")
-            visible: root.wide || !root.solar.today || root.weather.utc || !!root.solar.status
-            color: Kirigami.Theme.disabledTextColor
-            font: Kirigami.Theme.smallFont
-        }
-        RowLayout {
-            visible: !root.solar.status
-            spacing: Kirigami.Units.largeSpacing * 2
-            SolarEvent { title: "Wschód"; time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg" }
-            SolarEvent { title: "Zachód"; time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg" }
-        }
+        spacing: Kirigami.Units.largeSpacing * 2
+        SolarEvent { title: "Wschód"; time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg"; visible: !root.solar.status }
+        SolarEvent { title: "Zachód"; time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg"; visible: !root.solar.status }
         Label { text: root.solar.status || ""; visible: text.length > 0 }
     }
     component SolarEvent: RowLayout {
@@ -86,22 +76,22 @@ GridLayout {
         required property string icon
         spacing: Kirigami.Units.smallSpacing
         Accessible.role: Accessible.StaticText
-        Accessible.name: title + " słońca: " + time
+        Accessible.name: title + " słońca: " + time + (root.weather.utc ? " UTC" : "")
         ToolTip.visible: eventHover.hovered
-        ToolTip.text: "Orientacyjna godzina · " + (root.weather.utc ? "UTC" : "czas lokalny systemu")
+        ToolTip.text: (root.solar.dateLabel || "") + " · orientacyjna godzina · " + (root.weather.utc ? "UTC" : "czas lokalny systemu")
         HoverHandler { id: eventHover }
         Kirigami.Icon {
             source: Qt.resolvedUrl(event.icon)
             isMask: true
             color: Kirigami.Theme.neutralTextColor
-            Layout.preferredWidth: 24
-            Layout.preferredHeight: 24
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
             Accessible.ignored: true
         }
         ColumnLayout {
             spacing: 0
-            Label { text: event.title; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont }
-            Label { text: event.time; font.bold: true }
+            Label { text: event.title + (root.weather.utc ? " · UTC" : ""); color: Kirigami.Theme.disabledTextColor }
+            Label { text: event.time; font.bold: true; font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.4 }
         }
     }
 }
