@@ -35,8 +35,10 @@ Współrzędne przyjmują kropkę lub przecinek dziesiętny.
 
 Podsumowanie pokazuje prognozę na oznaczoną godzinę, a nie pomiar stacji.
 Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przerywany.
-Najechanie pokazuje wspólny odczyt parametrów dla wybranej godziny; kliknięcie
-przypina odczyt, a Escape go zamyka. Wykresy mają zakresy min/max, temperaturę
+Domyślnie najechanie pokazuje parametry wskazanego wykresu. W ustawieniach
+można wybrać wszystkie parametry lub wyłączyć odczyt po najechaniu.
+Kliknięcie zawsze otwiera i przypina odczyt, a Escape go zamyka.
+Wszystkie parametry mają karty kategorii; przy szerokim oknie odczyt używa dwóch kolumn. Wykresy mają zakresy min/max, temperaturę
 odczuwalną, rodzaj i prawdopodobieństwo opadów, kierunki i porywy wiatru,
 warstwy oraz podstawy chmur, wilgotność, mgłę, widzialność i wskaźniki burz.
 Brakujące wartości pozostają lukami. Dostępność parametrów zależy od modelu.

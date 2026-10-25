@@ -22,6 +22,7 @@ class UserPreferences : public QObject {
     Q_PROPERTY(QVariantList chartCatalog READ chartCatalog CONSTANT)
     Q_PROPERTY(QVariantList seriesCatalog READ seriesCatalog CONSTANT)
     Q_PROPERTY(QString settingsFile READ settingsFile CONSTANT)
+    Q_PROPERTY(QString probeMode READ probeMode WRITE setProbeMode NOTIFY displayChanged)
     Q_PROPERTY(QString renderer READ renderer WRITE setRenderer NOTIFY displayChanged)
     Q_PROPERTY(int chartHeight READ chartHeight WRITE setChartHeight NOTIFY displayChanged)
     Q_PROPERTY(int profileChartHeight READ profileChartHeight WRITE setProfileChartHeight NOTIFY displayChanged)
@@ -40,6 +41,8 @@ public:
     QVariantList chartCatalog() const;
     QVariantList seriesCatalog() const;
     QString settingsFile() const;
+    QString probeMode() const;
+    void setProbeMode(const QString &value);
     QString renderer() const;
     void setRenderer(const QString &value);
     int chartHeight() const;

@@ -40,7 +40,7 @@ ColumnLayout {
     readonly property real windScale: weather.windUnit === "km/h" ? 3.6 : weather.windUnit === "kt" ? 1.943844492 : 1
     signal probeMoved(real timestamp, point position)
     signal probeLeft()
-    signal pinRequested()
+    signal pinRequested(real timestamp, point position)
     signal zoomRequested(real factor, real center)
     spacing: 6
     objectName: "chart-" + groupKey
@@ -390,7 +390,11 @@ ColumnLayout {
                 root.probeMoved(root.weather.nearestTimestamp(time), mapToItem(null, mouse.x, mouse.y));
             }
             onExited: root.probeLeft()
-            onClicked: root.pinRequested()
+            onClicked: mouse => {
+                if (mouse.x < root.leftMargin || mouse.x > width - root.rightMargin) return;
+                const time = root.startTime + (mouse.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);
+                root.pinRequested(root.weather.nearestTimestamp(time), mapToItem(null, mouse.x, mouse.y));
+            }
             onWheel: wheel => {
                 if (wheel.modifiers & Qt.ControlModifier) {
                     const center = root.startTime + (wheel.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);

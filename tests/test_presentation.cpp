@@ -192,6 +192,10 @@ private slots:
         auto *sourceInfo = about->findChild<QObject *>("forecastSourceInfo");
         QVERIFY(sourceInfo);
         QVERIFY(sourceInfo->property("text").toString().contains(model.runText()));
+        if (const auto path = qEnvironmentVariable("METEO_ABOUT_SCREENSHOT"); !path.isEmpty()) {
+            QTest::qWait(400);
+            QVERIFY(window.grabWindow().save(path));
+        }
         QVERIFY(QMetaObject::invokeMethod(about, "close"));
         QTRY_VERIFY(!about->property("visible").toBool());
         QVERIFY(QMetaObject::invokeMethod(settings,"close"));
@@ -214,6 +218,13 @@ private slots:
         auto *inspector = object->findChild<QObject *>("forecastInspector");
         QVERIFY(inspector);
         QTRY_VERIFY(inspector->property("visible").toBool());
+        const auto detailList = [](QObject *popup, const char *property) {
+            const auto value = popup->property(property);
+            return value.metaType() == QMetaType::fromType<QJSValue>() ? value.value<QJSValue>().toVariant().toList() : value.toList();
+        };
+        QVERIFY(!detailList(inspector, "details").isEmpty());
+        for (const auto &value : detailList(inspector, "details"))
+            QVERIFY((QStringList{"temperature", "ground"}.contains(value.toMap()["group"].toString())));
         if (gpu) {
             QTest::qWait(50);
             QCOMPARE(gpu->frameCount(), baseFrames); // Moving the cursor must not rebuild the chart geometry.
@@ -222,6 +233,46 @@ private slots:
         QVERIFY(object->property("pinned").toBool());
         QTest::keyClick(&window, Qt::Key_Escape);
         QTRY_VERIFY(!inspector->property("visible").toBool());
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QVERIFY(preferences);
+        const auto previousProbe = preferences->probeMode();
+        const auto restoreProbe = qScopeGuard([&] { preferences->setProbeMode(previousProbe); });
+        preferences->setProbeMode("off");
+        QTest::mouseMove(&window, {10, 10});
+        QTest::mouseMove(&window, cursorPoint);
+        QTest::qWait(250);
+        QVERIFY(!inspector->property("visible").toBool());
+        QCOMPARE(object->property("selectedTime").toDouble(), 0.0);
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, cursorPoint);
+        QTRY_VERIFY(inspector->property("visible").toBool());
+        QVERIFY(object->property("pinned").toBool());
+        QTest::keyClick(&window, Qt::Key_Escape);
+        QTRY_VERIFY(!inspector->property("visible").toBool());
+        preferences->setProbeMode("all");
+        item->setWidth(1100);
+        window.resize(1100, 1000);
+        QTest::mouseMove(&window, {10, 10});
+        QTest::mouseMove(&window, plot->mapToScene({plot->width()/2, plot->height()/2}).toPoint());
+        QTRY_VERIFY(inspector->property("visible").toBool());
+        QTRY_COMPARE(inspector->property("columns").toInt(), 2);
+        QVERIFY(detailList(inspector, "details").size() > 9);
+        if (const auto path = qEnvironmentVariable("METEO_INSPECTOR_SCREENSHOT"); !path.isEmpty()) {
+            QTest::qWait(400);
+            QVERIFY(window.grabWindow().save(path));
+        }
+        inspector->setProperty("category", "wind");
+        QVERIFY(!detailList(inspector, "visibleDetails").isEmpty());
+        for (const auto &value : detailList(inspector, "visibleDetails")) QCOMPARE(value.toMap()["group"].toString(), "wind");
+        object->setProperty("pinned", true);
+        item->setWidth(450);
+        window.resize(450, 1000);
+        QTRY_COMPARE(inspector->property("columns").toInt(), 1);
+        inspector->setProperty("category", "");
+        QTest::keyClick(&window, Qt::Key_Escape);
+        QTRY_VERIFY(!inspector->property("visible").toBool());
+        preferences->setProbeMode("chart");
+        item->setWidth(780);
+        window.resize(780, 1000);
         const auto fullSpan = object->property("viewportEnd").toDouble() - object->property("viewportStart").toDouble();
         QVERIFY(QMetaObject::invokeMethod(object.data(), "zoom", Q_ARG(QVariant, 0.5), Q_ARG(QVariant, model.firstTimestamp() + fullSpan / 2)));
         QVERIFY(object->property("viewportEnd").toDouble() - object->property("viewportStart").toDouble() < fullSpan);

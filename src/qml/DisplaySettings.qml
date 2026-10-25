@@ -197,6 +197,16 @@ ColumnLayout {
     }
     Button { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
     CheckBox { text: "Domyślnie pokazuj legendę"; checked: UserPreferences.showLegend; onToggled: UserPreferences.showLegend = checked }
+    Label { text: "Odczyt po najechaniu na wykres"; font.bold: true }
+    ComboBox {
+        objectName: "probeModeSetting"
+        Layout.fillWidth: true
+        model: [{id: "chart", name: "Parametry wskazanego wykresu"}, {id: "all", name: "Wszystkie parametry"}, {id: "off", name: "Wyłączony"}]
+        textRole: "name"
+        currentIndex: model.findIndex(entry => entry.id === UserPreferences.probeMode)
+        onActivated: index => UserPreferences.probeMode = model[index].id
+    }
+    Label { Layout.fillWidth: true; text: "Kliknięcie zawsze otwiera i przypina odczyt. Wszystkie parametry można przeglądać w kartach kategorii; szerokie okno pokazuje dwie kolumny."; wrapMode: Text.WordWrap; opacity: 0.7 }
     Label { text: "Ogólna wysokość wykresów"; font.bold: true }
     SpinBox { from: 64; to: 800; stepSize: 10; value: UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.chartHeight = value }
     Label { Layout.fillWidth: true; text: "Własna wysokość wykresu ma pierwszeństwo przed wysokością profilu, a profil przed ogólną. Pasek kierunku wiatru zachowuje proporcjonalnie mniejszą wysokość, jeśli nie ma własnej wartości."; wrapMode: Text.WordWrap; opacity: 0.7 }
