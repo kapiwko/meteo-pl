@@ -67,8 +67,8 @@ Item {
     function saveSelectedCharts() {
         exportItems = exportCandidates.filter(entry => exportSelectedKeys.indexOf(entry.key) >= 0).map(entry => entry.item);
         if (!exportItems.length) return;
-        exportTitle = exportItems.length === 1 ? exportItems[0].title : "Meteogram";
-        chartFileDialog.title = "Zapisz wybrane wykresy";
+        exportTitle = exportItems.length === 1 ? exportItems[0].title : I18n.i18n("Meteogram");
+        chartFileDialog.title = I18n.i18n("Save selected charts");
         chartFileDialog.selectedFile = chartExporter.suggestedFile(weather.locationName, exportItems.length === 1 ? exportTitle : "", weather.formatTime(viewportStart, "yyyyMMdd-HHmm"));
         chartFileDialog.open();
     }
@@ -76,22 +76,22 @@ Item {
         exportingReadings = false;
         return chartExporter.savePng(file, items, {
             title: weather.locationName + " · " + title,
-            details: weather.modelName + " · obliczenia: " + weather.runText + "\n"
+            details: weather.modelName + I18n.i18n(" · model run: ") + weather.runText + "\n"
                 + weather.formatTime(viewportStart, "d MMM yyyy HH:mm") + " – " + weather.formatTime(viewportEnd, "d MMM yyyy HH:mm")
-                + (weather.utc ? " UTC" : " · czas lokalny") + "\n"
+                + (weather.utc ? " UTC" : I18n.i18n(" · local time")) + "\n"
                 + weather.latitude.toFixed(4) + "°, " + weather.longitude.toFixed(4) + "°",
-            source: "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · pobrano: " + weather.updatedText,
+            source: "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · " + I18n.i18n("Downloaded: %1").arg(weather.updatedText),
             background: Kirigami.Theme.backgroundColor, foreground: Kirigami.Theme.textColor
         });
     }
     function reportExport(file, error, readings) {
         exportFailed = error.length > 0;
         if (!exportFailed) exportedFile = file;
-        exportMessage = exportFailed ? error : readings ? "Zapisano odczyt parametrów." : "Zapisano wybrane wykresy.";
+        exportMessage = exportFailed ? error : readings ? I18n.i18n("Parameter reading saved.") : I18n.i18n("Selected charts saved.");
         exportItems = [];
         exportingReadings = false;
         exportReported();
-        if (!exportFailed) ExportNotifications.saved(file, readings ? "Wyeksportowano odczyt" : "Wyeksportowano wykresy");
+        if (!exportFailed) ExportNotifications.saved(file, readings ? I18n.i18n("Reading exported") : I18n.i18n("Charts exported"));
     }
     function chooseReadingExport(format) {
         if (chartExporter.busy || selectedTime <= 0 || !inspector.visibleDetails.length) return;
@@ -105,12 +105,12 @@ Item {
     function exportReadingsToFile(file, format) {
         if (chartExporter.busy) return false;
         if (selectedTime <= 0 || !inspector.visibleDetails.length || !inspector.opened) {
-            reportExport(file, "Otwórz odczyt parametrów i spróbuj ponownie.", true);
+            reportExport(file, I18n.i18n("Open a parameter reading and try again."), true);
             return false;
         }
         pinned = true;
         closeProbe.stop();
-        const scope = allProbeParameters ? (inspector.categories.find(entry => entry.key === inspector.category) || {name: "Wszystkie"}).name : selectedChart ? selectedChart.title : "Parametry";
+        const scope = allProbeParameters ? (inspector.categories.find(entry => entry.key === inspector.category) || {name: I18n.i18n("All")}).name : selectedChart ? selectedChart.title : I18n.i18n("Parameters");
         const source = "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office";
         if (format === "csv") {
             const result = readingsExporter.saveCsv(file, inspector.visibleDetails, {
@@ -123,8 +123,8 @@ Item {
         if (format !== "png") return false;
         exportingReadings = true;
         return chartExporter.savePng(file, [inspector.readingsItem], {
-            title: weather.locationName + " · odczyt parametrów · " + scope,
-            details: weather.formatTime(selectedTime, "ddd d MMM yyyy · HH:mm t") + "\n" + weather.modelName + " · obliczenia: " + weather.runText,
+            title: weather.locationName + I18n.i18n(" · parameter reading · ") + scope,
+            details: weather.formatTime(selectedTime, "ddd d MMM yyyy · HH:mm t") + "\n" + weather.modelName + I18n.i18n(" · model run: ") + weather.runText,
             source: source, background: Kirigami.Theme.backgroundColor, foreground: Kirigami.Theme.textColor
         });
     }
@@ -133,9 +133,9 @@ Item {
         id: readingFileDialog
         objectName: "readingExportDialog"
         property string format: "png"
-        title: format === "csv" ? "Zapisz odczyt parametrów jako CSV" : "Zapisz odczyt parametrów jako PNG"
+        title: format === "csv" ? I18n.i18n("Save parameter reading as CSV") : I18n.i18n("Save parameter reading as PNG")
         fileMode: Dialogs.FileDialog.SaveFile
-        nameFilters: format === "csv" ? ["Dane CSV (*.csv)"] : ["Obraz PNG (*.png)"]
+        nameFilters: format === "csv" ? [I18n.i18n("CSV data (*.csv)")] : [I18n.i18n("PNG image (*.png)")]
         defaultSuffix: format
         currentFolder: StandardPaths.writableLocation(format === "csv" ? StandardPaths.DocumentsLocation : StandardPaths.PicturesLocation)
         onAccepted: root.exportReadingsToFile(selectedFile, format)
@@ -150,7 +150,7 @@ Item {
         id: chartFileDialog
         objectName: "chartExportDialog"
         fileMode: Dialogs.FileDialog.SaveFile
-        nameFilters: ["Obraz PNG (*.png)"]
+        nameFilters: [I18n.i18n("PNG image (*.png)")]
         defaultSuffix: "png"
         currentFolder: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
         onAccepted: root.exportToFile(selectedFile, root.exportItems, root.exportTitle)
@@ -159,7 +159,7 @@ Item {
     Dialog {
         id: exportSelection
         objectName: "chartExportSelection"
-        title: "Eksport wykresów"
+        title: I18n.i18n("Export charts")
         parent: Overlay.overlay
         anchors.centerIn: parent
         width: Math.min(460, parent ? parent.width - 24 : 460)
@@ -168,24 +168,24 @@ Item {
         modal: true
         standardButtons: Dialog.Save | Dialog.Cancel
         onOpened: {
-            standardButton(Dialog.Save).text = "Zapisz PNG…";
+            standardButton(Dialog.Save).text = I18n.i18n("Save PNG…");
             standardButton(Dialog.Save).enabled = Qt.binding(() => root.exportSelectedKeys.length > 0);
         }
         onAccepted: root.saveSelectedCharts()
         contentItem: ColumnLayout {
             spacing: 10
-            Label { text: "Wybierz wykresy do wspólnego obrazu PNG."; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            Label { text: I18n.i18n("Choose charts to combine into one PNG image."); Layout.fillWidth: true; wrapMode: Text.WordWrap }
             Label {
-                text: root.weather.formatTime(root.viewportStart, "d MMM HH:mm") + " – " + root.weather.formatTime(root.viewportEnd, "d MMM HH:mm") + (root.weather.utc ? " UTC" : " · czas lokalny")
+                text: root.weather.formatTime(root.viewportStart, "d MMM HH:mm") + " – " + root.weather.formatTime(root.viewportEnd, "d MMM HH:mm") + (root.weather.utc ? " UTC" : I18n.i18n(" · local time"))
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
                 opacity: 0.7
                 font.pixelSize: 11
             }
             RowLayout {
-                Button { text: "Wszystkie"; onClicked: root.exportSelectedKeys = root.exportCandidates.map(entry => entry.key) }
-                Button { text: "Żaden"; onClicked: root.exportSelectedKeys = [] }
-                Label { text: "Wybrano: " + root.exportSelectedKeys.length; opacity: 0.7; font.pixelSize: 11 }
+                Button { text: I18n.i18n("All"); onClicked: root.exportSelectedKeys = root.exportCandidates.map(entry => entry.key) }
+                Button { text: I18n.i18n("Deselect all"); onClicked: root.exportSelectedKeys = [] }
+                Label { text: I18n.i18np("%1 chart selected", "%1 charts selected", root.exportSelectedKeys.length); opacity: 0.7; font.pixelSize: 11 }
             }
             ScrollView {
                 id: exportScroll
@@ -211,7 +211,7 @@ Item {
                     }
                 }
             }
-            Label { text: "Zachowany zostanie wygląd wykresów, widoczność serii i legend."; Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: 0.7; font.pixelSize: 11 }
+            Label { text: I18n.i18n("Chart appearance, series visibility and legends will be preserved."); Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: 0.7; font.pixelSize: 11 }
         }
     }
     function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
@@ -313,12 +313,12 @@ Item {
                     }
                 }
             }
-            ForecastTab { page: 0; text: "Meteogram"; icon.name: "office-chart-line" }
-            ForecastTab { page: 1; text: "Godzinowo"; icon.name: "chronometer" }
-            ForecastTab { page: 2; text: "Dni"; icon.name: "view-calendar" }
-            ForecastTab { page: 3; text: "Mapy"; icon.name: "globe" }
-            ForecastTab { page: 4; text: "Synoptyk"; icon.name: "dialog-messages" }
-            ForecastTab { page: 5; text: "Artykuły"; icon.name: "view-list-text" }
+            ForecastTab { page: 0; text: I18n.i18n("Meteogram"); icon.name: "office-chart-line" }
+            ForecastTab { page: 1; text: I18n.i18n("Hourly"); icon.name: "chronometer" }
+            ForecastTab { page: 2; text: I18n.i18n("Days"); icon.name: "view-calendar" }
+            ForecastTab { page: 3; text: I18n.i18n("Maps"); icon.name: "globe" }
+            ForecastTab { page: 4; text: I18n.i18n("Synoptic"); icon.name: "dialog-messages" }
+            ForecastTab { page: 5; text: I18n.i18n("Articles"); icon.name: "view-list-text" }
         }
         Loader {
             Layout.fillWidth: true
@@ -340,15 +340,15 @@ Item {
                 onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
             }
             Kirigami.InlineMessage { visible: root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
-            Kirigami.InlineMessage { visible: root.weather.archive; text: "Archiwalne uruchomienie modelu. Daty i godziny wykresu odnoszą się do wybranej prognozy."; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
-            Kirigami.InlineMessage { visible: root.weather.stale; text: "Prognoza może być nieaktualna. Ostatnie pobranie: " + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
+            Kirigami.InlineMessage { visible: root.weather.archive; text: I18n.i18n("Archived model run. Chart dates and times refer to the selected forecast."); type: Kirigami.MessageType.Information; Layout.fillWidth: true }
+            Kirigami.InlineMessage { visible: root.weather.stale; text: I18n.i18n("The forecast may be outdated. Last downloaded: ") + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.PlaceholderMessage {
                 Layout.fillWidth: true
                 visible: !root.weather.hasData && !forecastHeader.loading
                 icon.name: "mark-location"
-                text: "Brak prognozy"
-                explanation: "Wybierz miejscowość i pobierz meteogram."
-                helpfulAction: Kirigami.Action { text: "Wybierz lokalizację"; onTriggered: root.configureRequested() }
+                text: I18n.i18n("No forecast")
+                explanation: I18n.i18n("Choose a place to download its meteogram.")
+                helpfulAction: Kirigami.Action { text: I18n.i18n("Choose location"); onTriggered: root.configureRequested() }
             }
             Loader {
                 Layout.fillWidth: true
@@ -383,7 +383,7 @@ Item {
                                 icon.name: "go-previous"
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial && root.viewportStart > root.weather.firstTimestamp + 1
-                                Accessible.name: "Wcześniejszy przedział"
+                                Accessible.name: I18n.i18n("Earlier interval")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.moveRange(-1)
                             }
@@ -395,7 +395,7 @@ Item {
                                 opacity: 0.7
                                 elide: Text.ElideRight
                                 horizontalAlignment: Text.AlignHCenter
-                                ToolTip.text: "Widoczny przedział · " + (root.weather.utc ? "UTC" : "czas lokalny")
+                                ToolTip.text: I18n.i18n("Visible interval · ") + (root.weather.utc ? "UTC" : I18n.i18n("local time"))
                                 ToolTip.visible: dateHover.hovered
                                 HoverHandler { id: dateHover }
                             }
@@ -403,7 +403,7 @@ Item {
                                 icon.name: "go-next"
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial && root.viewportEnd < root.weather.lastTimestamp - 1
-                                Accessible.name: "Późniejszy przedział"
+                                Accessible.name: I18n.i18n("Later interval")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.moveRange(1)
                             }
@@ -415,7 +415,7 @@ Item {
                                 icon.name: "zoom-out"
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial
-                                Accessible.name: "Pokaż dłuższy przedział"
+                                Accessible.name: I18n.i18n("Show a longer interval")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.zoom(1.5, (root.viewportStart + root.viewportEnd) / 2)
                             }
@@ -431,8 +431,8 @@ Item {
                                 to: Math.max(1, chartStatus.fullSpan / Math.max(1, root.minimumViewportSpan))
                                 value: chartStatus.fullSpan / chartStatus.span
                                 enabled: to > from
-                                Accessible.name: "Powiększenie wykresów"
-                                ToolTip.text: Math.round(value * 100) + "% · " + Math.round(chartStatus.span / 3600) + " godzin"
+                                Accessible.name: I18n.i18n("Chart zoom")
+                                ToolTip.text: Math.round(value * 100) + "% · " + Math.round(chartStatus.span / 3600) + I18n.i18n(" hours")
                                 ToolTip.visible: hovered || pressed
                                 onMoved: root.zoom(chartStatus.fullSpan / value / chartStatus.span, (root.viewportStart + root.viewportEnd) / 2)
                             }
@@ -440,7 +440,7 @@ Item {
                                 icon.name: "zoom-in"
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.span > root.minimumViewportSpan + 1
-                                Accessible.name: "Pokaż krótszy przedział"
+                                Accessible.name: I18n.i18n("Show a shorter interval")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.zoom(0.67, (root.viewportStart + root.viewportEnd) / 2)
                             }
@@ -448,7 +448,7 @@ Item {
                                 icon.name: "zoom-fit-best"
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial
-                                Accessible.name: "Cała prognoza"
+                                Accessible.name: I18n.i18n("Entire forecast")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.resetRange()
                             }
@@ -459,15 +459,15 @@ Item {
                                 checkable: true
                                 checked: root.identificationEnabled
                                 onClicked: root.identificationEnabled = checked
-                                Accessible.name: "Tryb identyfikacji parametrów"
-                                ToolTip.text: checked ? "Wyłącz identyfikację parametrów" : "Identyfikuj parametry · przesuń kursor po wykresie"
+                                Accessible.name: I18n.i18n("Parameter identification mode")
+                                ToolTip.text: checked ? I18n.i18n("Disable parameter identification") : I18n.i18n("Identify parameters · move the cursor over a chart")
                                 ToolTip.visible: hovered
                             }
                             ToolButton {
-                                text: chartExporter.busy ? "Eksportuję…" : "Eksportuj…"
+                                text: chartExporter.busy ? I18n.i18n("Exporting…") : I18n.i18n("Export…")
                                 icon.name: "document-export"
                                 enabled: !chartExporter.busy && root.visibleCharts.length > 0
-                                Accessible.name: "Eksportuj wybrane wykresy do PNG"
+                                Accessible.name: I18n.i18n("Export selected charts to PNG")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.chooseExport()
                             }
@@ -481,7 +481,7 @@ Item {
                         from: root.weather.firstTimestamp
                         to: Math.max(from, root.weather.lastTimestamp - chartStatus.span)
                         value: root.viewportStart
-                        Accessible.name: "Przesuń widoczny przedział czasu"
+                        Accessible.name: I18n.i18n("Move the visible time interval")
                         onMoved: { const span = chartStatus.span; root.viewportStart = value; root.viewportEnd = value + span; }
                     }
 
@@ -497,8 +497,8 @@ Item {
                 showCloseButton: true
                 Connections { target: root; function onExportReported() { exportNotice.visible = true; } }
                 actions: [
-                    Kirigami.Action { text: "Otwórz"; icon.name: "document-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFile(root.exportedFile) },
-                    Kirigami.Action { text: "Otwórz folder"; icon.name: "folder-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFolder(root.exportedFile) }
+                    Kirigami.Action { text: I18n.i18n("Open"); icon.name: "document-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFile(root.exportedFile) },
+                    Kirigami.Action { text: I18n.i18n("Open folder"); icon.name: "folder-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFolder(root.exportedFile) }
                 ]
             }
 
@@ -554,8 +554,8 @@ Item {
                 width: hourScroll.contentWidth
                 Row {
                     Repeater {
-                        model: ["Godzina", "Temp.", "Odczuw.", "Opad mm", "Szansa %", "Wiatr " + root.weather.windUnit, "Porywy", "hPa", "Chmury %"]
-                        delegate: Label { required property string modelData; width: modelData === "Godzina" ? 122 : 95; text: modelData; font.bold: true; padding: 8 }
+                        model: [I18n.i18n("Time"), I18n.i18n("Temp."), I18n.i18n("Feels like"), I18n.i18n("Precip. mm"), I18n.i18n("Chance %"), I18n.i18n("Wind ") + root.weather.windUnit, I18n.i18n("Gusts"), "hPa", I18n.i18n("Clouds %")]
+                        delegate: Label { required property string modelData; width: modelData === I18n.i18n("Time") ? 122 : 95; text: modelData; font.bold: true; padding: 8 }
                     }
                 }
                 Repeater {
@@ -615,8 +615,8 @@ Item {
                                 Label { text: root.number(dayCard.modelData.maximum, 0) + "°"; font.pixelSize: 20; font.bold: true }
                                 Label { text: root.number(dayCard.modelData.minimum, 0) + "°"; font.pixelSize: 16; opacity: 0.65 }
                             }
-                            Label { Layout.fillWidth: true; text: "Opad: " + root.number(dayCard.modelData.rain, 1) + " mm"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
-                            Label { Layout.fillWidth: true; text: "Porywy: " + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                            Label { Layout.fillWidth: true; text: I18n.i18n("Precipitation: ") + root.number(dayCard.modelData.rain, 1) + " mm"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                            Label { Layout.fillWidth: true; text: I18n.i18n("Gusts: ") + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
                         }
                     }
                 }

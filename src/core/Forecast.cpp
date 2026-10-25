@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "Forecast.hpp"
 
 #include <QJsonArray>
@@ -69,7 +70,7 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
         return std::nullopt;
     };
     if (json.size() > 2 * 1024 * 1024)
-        return fail(QStringLiteral("Odpowiedź serwera jest zbyt duża."));
+        return fail(Meteo::i18n("The server response is too large."));
 
     // The upstream occasionally serializes missing numbers as bare nan tokens.
     QString normalized = QString::fromUtf8(json);
@@ -78,7 +79,7 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
     QJsonParseError parseError;
     const auto document = QJsonDocument::fromJson(normalized.toUtf8(), &parseError);
     if (parseError.error != QJsonParseError::NoError || !document.isObject())
-        return fail(QStringLiteral("Niepoprawny format odpowiedzi meteo.pl."));
+        return fail(Meteo::i18n("Invalid meteo.pl response format."));
 
     const auto root = document.object();
     const auto data = root.value("data").toObject();
@@ -92,7 +93,7 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
         const auto timestamp = timestampValue(field.value("first_timestamp"));
         const int interval = field.value("interval").toInt();
         if (timestamp <= 0 || interval <= 0 || interval > 86400 || values.isEmpty() || values.size() > 1000)
-            return fail(QStringLiteral("Niepoprawna oś czasu prognozy."));
+            return fail(Meteo::i18n("Invalid forecast timeline."));
         Series series{field.value("unit").toString(), timestamp, interval, {}};
         for (const auto &value : values) {
             if (value.isNull()) {
@@ -104,7 +105,7 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
                     series.values.append(std::nullopt);
                 else series.values.append(value.toDouble());
             } else {
-                return fail(QStringLiteral("Niepoprawne wartości prognozy."));
+                return fail(Meteo::i18n("Invalid forecast values."));
             }
         }
         if (!forecast.modelRun.isValid())
@@ -114,7 +115,7 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
     const auto temperature = forecast.series.constFind("airtmp_point");
     if (temperature == forecast.series.cend() || !forecast.modelRun.isValid()
         || std::none_of(temperature->values.begin(), temperature->values.end(), [](const auto &v) { return v.has_value(); }))
-        return fail(QStringLiteral("Brak temperatury lub daty uruchomienia modelu."));
+        return fail(Meteo::i18n("Missing temperature or model run date."));
     return forecast;
 }
 

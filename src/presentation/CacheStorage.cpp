@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "CacheStorage.hpp"
 #include "network/ImageCache.hpp"
 #include <QDir>
@@ -37,7 +38,7 @@ void CacheStorage::inspect(bool remove)
     const auto path = directory();
     m_error.clear();
     if (QFileInfo(path).isSymLink()) {
-        m_error = QStringLiteral("Katalog pamięci podręcznej jest dowiązaniem. Nie można go wyczyścić automatycznie.");
+        m_error = Meteo::i18n("The cache directory is a symbolic link and cannot be cleared automatically.");
         emit changed();
         return;
     }
@@ -64,7 +65,7 @@ void CacheStorage::inspect(bool remove)
             m_size = total; m_forecasts = forecasts; m_editorial = editorial; m_images = images;
             m_lookups = lookups;
             m_busy = false;
-            if (!ok) m_error = QStringLiteral("Nie udało się usunąć wszystkich plików pamięci podręcznej. Spróbuj ponownie.");
+            if (!ok) m_error = Meteo::i18n("Could not delete all cached files. Try again.");
             emit changed();
             if (remove && ok) emit cleared();
         }, Qt::QueuedConnection);

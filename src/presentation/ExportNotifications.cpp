@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "ExportNotifications.hpp"
 #include <KNotification>
 #include <QDesktopServices>
@@ -17,9 +18,9 @@ void ExportNotifications::saved(const QUrl &file, const QString &title)
     notification->setUrls({file});
     notification->setHint(QStringLiteral("desktop-entry"), QStringLiteral("pl.meteo.desktop"));
     const auto open = [file] { QDesktopServices::openUrl(file); };
-    connect(notification->addDefaultAction(QStringLiteral("Otwórz")), &KNotificationAction::activated, notification, open);
-    connect(notification->addAction(QStringLiteral("Otwórz")), &KNotificationAction::activated, notification, open);
-    connect(notification->addAction(QStringLiteral("Otwórz folder")), &KNotificationAction::activated, notification, [file] {
+    connect(notification->addDefaultAction(Meteo::i18n("Open")), &KNotificationAction::activated, notification, open);
+    connect(notification->addAction(Meteo::i18n("Open")), &KNotificationAction::activated, notification, open);
+    connect(notification->addAction(Meteo::i18n("Open folder")), &KNotificationAction::activated, notification, [file] {
         QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(file.toLocalFile()).absolutePath()));
     });
     notification->sendEvent();

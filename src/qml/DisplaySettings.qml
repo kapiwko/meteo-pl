@@ -19,14 +19,14 @@ ColumnLayout {
     readonly property bool savedProfile: UserPreferences.profile.startsWith("user:")
     function transferResult(result, importing) {
         transferFailed = !result.ok;
-        transferMessage = result.ok ? (importing ? "Zaimportowano profili: " : "Wyeksportowano profili: ") + result.count : result.error;
+        transferMessage = result.ok ? (importing ? I18n.i18n("Profiles imported: ") : I18n.i18n("Profiles exported: ")) + result.count : result.error;
         transferNotice.visible = true;
     }
     FileDialog {
         id: importDialog
         objectName: "profileImportDialog"
-        title: "Importuj profile meteogramu"
-        nameFilters: ["Profile meteogramu (*.json)"]
+        title: I18n.i18n("Import meteogram profiles")
+        nameFilters: [I18n.i18n("Meteogram profiles (*.json)")]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         onAccepted: root.transferResult(UserPreferences.importProfiles(selectedFile), true)
     }
@@ -34,27 +34,27 @@ ColumnLayout {
         id: exportDialog
         objectName: "profileExportDialog"
         property bool allSaved: false
-        title: allSaved ? "Eksportuj zapisane profile" : "Eksportuj bieżący profil"
+        title: allSaved ? I18n.i18n("Export saved profiles") : I18n.i18n("Export current profile")
         fileMode: FileDialog.SaveFile
         defaultSuffix: "json"
-        nameFilters: ["Profile meteogramu (*.json)"]
+        nameFilters: [I18n.i18n("Meteogram profiles (*.json)")]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         onAccepted: {
             const result = UserPreferences.exportProfiles(selectedFile, allSaved);
             root.transferResult(result, false);
-            if (result.ok) ExportNotifications.saved(selectedFile, "Wyeksportowano profile");
+            if (result.ok) ExportNotifications.saved(selectedFile, I18n.i18n("Profiles exported"));
         }
     }
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Profil wykresów"
+        title: I18n.i18n("Chart profile")
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
             Kirigami.FormLayout {
                 Layout.fillWidth: true
                 ComboBox {
-                    Kirigami.FormData.label: "Edytowany profil:"
+                    Kirigami.FormData.label: I18n.i18n("Editing profile:")
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 20
@@ -66,7 +66,7 @@ ColumnLayout {
                 TextField {
                     id: profileName
                     objectName: "profileNameField"
-                    Kirigami.FormData.label: "Nazwa:"
+                    Kirigami.FormData.label: I18n.i18n("Name:")
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 20
@@ -79,9 +79,9 @@ ColumnLayout {
                     }
                 }
                 RowLayout {
-                    Kirigami.FormData.label: "Wysokość wykresów:"
+                    Kirigami.FormData.label: I18n.i18n("Chart height:")
                     CheckBox {
-                        text: "Własna"
+                        text: I18n.i18n("Custom")
                         checked: UserPreferences.profileChartHeight > 0
                         onToggled: UserPreferences.profileChartHeight = checked ? UserPreferences.chartHeight : 0
                     }
@@ -91,7 +91,7 @@ ColumnLayout {
                         value: UserPreferences.profileChartHeight || UserPreferences.chartHeight
                         textFromValue: value => value + " px"
                         onValueModified: UserPreferences.profileChartHeight = value
-                        Accessible.name: "Wysokość wykresów w profilu"
+                        Accessible.name: I18n.i18n("Chart height in this profile")
                     }
                 }
             }
@@ -100,7 +100,7 @@ ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 Button {
                     objectName: "profileDuplicateButton"
-                    text: "Duplikuj profil"
+                    text: I18n.i18n("Duplicate profile")
                     icon.name: "edit-duplicate"
                     onClicked: {
                         if (UserPreferences.duplicateProfile().length) {
@@ -111,23 +111,23 @@ ColumnLayout {
                 }
                 Button {
                     objectName: "profileDeleteButton"
-                    text: UserPreferences.profile === "custom" ? "Wyczyść układ" : "Usuń profil"
+                    text: UserPreferences.profile === "custom" ? I18n.i18n("Reset layout") : I18n.i18n("Delete profile")
                     icon.name: "edit-delete"
                     enabled: root.savedProfile || UserPreferences.profile === "custom"
                     onClicked: UserPreferences.deleteProfile()
-                    ToolTip.text: enabled ? text : "Gotowy profil możesz zduplikować i edytować jako własny."
+                    ToolTip.text: enabled ? text : I18n.i18n("Duplicate a preset to edit your own copy.")
                     ToolTip.visible: hovered
                 }
             }
             Kirigami.ActionToolBar {
                 Layout.fillWidth: true
                 actions: [
-                    Kirigami.Action { text: "Importuj…"; icon.name: "document-import"; onTriggered: importDialog.open() },
+                    Kirigami.Action { text: I18n.i18n("Import…"); icon.name: "document-import"; onTriggered: importDialog.open() },
                     Kirigami.Action {
-                        text: "Eksportuj"; icon.name: "document-export"
+                        text: I18n.i18n("Export"); icon.name: "document-export"
                         children: [
-                            Kirigami.Action { text: "Bieżący profil…"; onTriggered: { exportDialog.allSaved = false; exportDialog.open(); } },
-                            Kirigami.Action { text: "Wszystkie zapisane profile…"; onTriggered: { exportDialog.allSaved = true; exportDialog.open(); } }
+                            Kirigami.Action { text: I18n.i18n("Current profile…"); onTriggered: { exportDialog.allSaved = false; exportDialog.open(); } },
+                            Kirigami.Action { text: I18n.i18n("All saved profiles…"); onTriggered: { exportDialog.allSaved = true; exportDialog.open(); } }
                         ]
                     }
                 ]
@@ -145,16 +145,16 @@ ColumnLayout {
     Label {
         Layout.fillWidth: true
         text: UserPreferences.profile === "custom"
-            ? "To roboczy układ. Duplikuj profil, aby zapisać go pod własną nazwą."
-            : root.savedProfile ? "Nazwa i zmiany wykresów zapisują się automatycznie."
-            : "Gotowy profil możesz zduplikować. Edycja jego wykresów tworzy roboczy „Własny układ”."
+            ? I18n.i18n("This is a draft layout. Duplicate the profile to save it with your own name.")
+            : root.savedProfile ? I18n.i18n("The name and chart changes are saved automatically.")
+            : I18n.i18n("You can duplicate a preset. Editing its charts creates a draft “Custom layout”.")
         wrapMode: Text.WordWrap
         color: Kirigami.Theme.disabledTextColor
     }
     RowLayout {
         Layout.fillWidth: true
-        Kirigami.Heading { text: "Wykresy w profilu"; level: 3; Layout.fillWidth: true }
-        ToolButton { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
+        Kirigami.Heading { text: I18n.i18n("Charts in profile"); level: 3; Layout.fillWidth: true }
+        ToolButton { text: I18n.i18n("Add chart"); icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart(I18n.i18n("New chart")) }
     }
     Repeater {
         model: UserPreferences.chartLayout
@@ -175,10 +175,10 @@ ColumnLayout {
                         onToggled: UserPreferences.setChartEnabled(chart.modelData.key, checked)
                     }
                     Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chart.modelData.title; wrapMode: Text.WordWrap }
-                    ToolButton { text: "Serie"; icon.name: root.expandedChart === chart.modelData.key ? "arrow-up" : "arrow-down"; checkable: true; checked: root.expandedChart === chart.modelData.key; onClicked: root.expandedChart = checked ? chart.modelData.key : "" }
-                    ToolButton { icon.name: "go-up"; enabled: chart.index > 0; onClicked: UserPreferences.moveChart(chart.index, -1); ToolTip.text: "Przenieś wykres wyżej"; ToolTip.visible: hovered }
-                    ToolButton { icon.name: "go-down"; enabled: chart.index < UserPreferences.chartLayout.length - 1; onClicked: UserPreferences.moveChart(chart.index, 1); ToolTip.text: "Przenieś wykres niżej"; ToolTip.visible: hovered }
-                    ToolButton { icon.name: "edit-delete"; onClicked: UserPreferences.deleteChart(chart.modelData.key); ToolTip.text: "Usuń wykres z tego profilu"; ToolTip.visible: hovered }
+                    ToolButton { text: I18n.i18n("Series"); icon.name: root.expandedChart === chart.modelData.key ? "arrow-up" : "arrow-down"; checkable: true; checked: root.expandedChart === chart.modelData.key; onClicked: root.expandedChart = checked ? chart.modelData.key : "" }
+                    ToolButton { icon.name: "go-up"; enabled: chart.index > 0; onClicked: UserPreferences.moveChart(chart.index, -1); ToolTip.text: I18n.i18n("Move chart up"); ToolTip.visible: hovered }
+                    ToolButton { icon.name: "go-down"; enabled: chart.index < UserPreferences.chartLayout.length - 1; onClicked: UserPreferences.moveChart(chart.index, 1); ToolTip.text: I18n.i18n("Move chart down"); ToolTip.visible: hovered }
+                    ToolButton { icon.name: "edit-delete"; onClicked: UserPreferences.deleteChart(chart.modelData.key); ToolTip.text: I18n.i18n("Remove chart from this profile"); ToolTip.visible: hovered }
                 }
                 Loader {
                     Layout.fillWidth: true
@@ -190,13 +190,13 @@ ColumnLayout {
                             TextField {
                                 Layout.fillWidth: true
                                 text: chart.modelData.title
-                                placeholderText: "Nazwa wykresu"
+                                placeholderText: I18n.i18n("Chart name")
                                 maximumLength: 80
                                 onEditingFinished: if (text.trim().length) UserPreferences.setChartOptions(chart.modelData.key, {title: text})
                             }
                             RowLayout {
                                 Layout.fillWidth: true
-                                CheckBox { Layout.fillWidth: true; text: "Własna wysokość tego wykresu"; checked: (chart.modelData.height || 0) > 0; onToggled: UserPreferences.setChartOptions(chart.modelData.key, {height: checked ? UserPreferences.profileChartHeight || UserPreferences.chartHeight : 0}) }
+                                CheckBox { Layout.fillWidth: true; text: I18n.i18n("Custom height for this chart"); checked: (chart.modelData.height || 0) > 0; onToggled: UserPreferences.setChartOptions(chart.modelData.key, {height: checked ? UserPreferences.profileChartHeight || UserPreferences.chartHeight : 0}) }
                                 SpinBox { from: 64; to: 800; stepSize: 10; enabled: (chart.modelData.height || 0) > 0; value: chart.modelData.height || UserPreferences.profileChartHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.setChartOptions(chart.modelData.key, {height: value}) }
                             }
                             Repeater {
@@ -218,16 +218,16 @@ ColumnLayout {
                                     Layout.fillWidth: true
                                     model: UserPreferences.seriesCatalog.filter(series => !chart.modelData.series.some(existing => existing.key === series.key))
                                     textRole: "label"
-                                    displayText: currentIndex >= 0 ? currentText : "Wybierz serię…"
+                                    displayText: currentIndex >= 0 ? currentText : I18n.i18n("Choose a series…")
                                 }
-                                Button { text: "Dodaj serię"; enabled: addSeries.currentIndex >= 0; onClicked: UserPreferences.setChartField(chart.modelData.key, addSeries.model[addSeries.currentIndex].key, true) }
+                                Button { text: I18n.i18n("Add series"); enabled: addSeries.currentIndex >= 0; onClicked: UserPreferences.setChartField(chart.modelData.key, addSeries.model[addSeries.currentIndex].key, true) }
                             }
                             GridLayout {
                                 Layout.fillWidth: true
                                 columns: 3
-                                Label { text: "Zakres osi"; font.bold: true }
-                                Label { text: "Minimum" }
-                                Label { text: "Maksimum" }
+                                Label { text: I18n.i18n("Axis range"); font.bold: true }
+                                Label { text: I18n.i18n("Minimum") }
+                                Label { text: I18n.i18n("Maximum") }
                                 Repeater {
                                     model: ["left", "right"]
                                     delegate: RowLayout {
@@ -235,7 +235,7 @@ ColumnLayout {
                                         required property string modelData
                                         Layout.columnSpan: 3
                                         Layout.fillWidth: true
-                                        Label { text: axis.modelData === "left" ? "Lewa" : "Prawa"; Layout.preferredWidth: 65 }
+                                        Label { text: axis.modelData === "left" ? I18n.i18n("Left") : I18n.i18n("Right"); Layout.preferredWidth: 65 }
                                         Repeater {
                                             model: ["Min", "Max"]
                                             delegate: TextField {
@@ -244,7 +244,7 @@ ColumnLayout {
                                                 readonly property string option: axis.modelData + modelData
                                                 Layout.fillWidth: true
                                                 text: chart.modelData[option] === undefined ? "" : String(chart.modelData[option])
-                                                placeholderText: "Automatycznie"
+                                                placeholderText: I18n.i18n("Automatic")
                                                 validator: DoubleValidator { locale: "C" }
                                                 onEditingFinished: {
                                                     if (!text.length || acceptableInput) {
@@ -257,7 +257,7 @@ ColumnLayout {
                                     }
                                 }
                             }
-                            Label { Layout.fillWidth: true; text: "Przy łączeniu różnych jednostek przypisz serie do lewej lub prawej osi. Puste granice oznaczają skalę automatyczną."; wrapMode: Text.WordWrap; font.pixelSize: 11; opacity: 0.65 }
+                            Label { Layout.fillWidth: true; text: I18n.i18n("When combining different units, assign series to the left or right axis. Empty bounds use automatic scaling."); wrapMode: Text.WordWrap; font.pixelSize: 11; opacity: 0.65 }
                         }
                     }
                 }

@@ -18,6 +18,7 @@ class ReleaseTest(unittest.TestCase):
             (root/"VERSION").write_text("1.2.3\n")
             (root/"CMakeLists.txt").write_text("# synthetic project\n")
             (root/"src").mkdir();(root/"src/test.cpp").write_text("// synthetic source\n")
+            (root/"po/pl").mkdir(parents=True);(root/"po/pl/meteo-pl.po").write_text('msgid "Weather"\nmsgstr "Pogoda"\n')
             (root/"scripts").mkdir();script=root/"scripts/release.py";script.write_text("#!/usr/bin/env python3\n");script.chmod(0o755)
             for name in ("build", ".git", ".idea", "src/__pycache__"):
                 path=root/name;path.mkdir(parents=True,exist_ok=True);(path/"secret").write_text("private")
@@ -31,6 +32,7 @@ class ReleaseTest(unittest.TestCase):
             with tarfile.open(a[0]) as archive:
                 names=archive.getnames()
                 self.assertIn("meteo-pl-1.2.3/src/test.cpp",names)
+                self.assertIn("meteo-pl-1.2.3/po/pl/meteo-pl.po",names)
                 self.assertFalse(any("secret" in name for name in names))
                 self.assertTrue(all(p.uid==0 and p.gid==0 and p.mtime==1700000000 for p in archive.getmembers()))
                 self.assertEqual(archive.getmember("meteo-pl-1.2.3/scripts/release.py").mode,0o755)

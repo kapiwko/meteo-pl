@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "MeteoClient.hpp"
 #include "core/Forecast.hpp"
 
@@ -48,13 +49,13 @@ void MeteoClient::readReply(QNetworkReply *reply, quint64 generation, const std:
         m_reply = nullptr;
         const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (reply->error() != QNetworkReply::NoError || status != 200) {
-            emit failed(QStringLiteral("Nie udało się pobrać prognozy z meteo.pl (HTTP %1). %2")
+            emit failed(Meteo::i18n("Could not download the forecast from meteo.pl (HTTP %1). %2")
                             .arg(status).arg(reply->errorString()));
             return;
         }
         const auto body = reply->readAll();
         if (body.size() > 2 * 1024 * 1024) {
-            emit failed(QStringLiteral("Odpowiedź serwera jest zbyt duża."));
+            emit failed(Meteo::i18n("The server response is too large."));
             return;
         }
         consume(body);
@@ -65,7 +66,7 @@ void MeteoClient::fetch(double latitude, double longitude, const QString &model,
 {
     cancel();
     if (!validLocation(latitude, longitude, model)) {
-        emit failed(QStringLiteral("Lokalizacja jest poza obszarem modelu. Dla punktów poza Europą Środkową wybierz GFS."));
+        emit failed(Meteo::i18n("This location is outside the model area. Choose GFS for locations outside Central Europe."));
         return;
     }
     const auto generation = m_generation;
@@ -81,7 +82,7 @@ void MeteoClient::fetch(double latitude, double longitude, const QString &model,
         const auto run = requestedRun > 0 && runs.contains(requestedRun) ? std::optional<qint64>(requestedRun)
             : requestedRun > 0 ? std::nullopt : latestRun(body, model);
         if (!run) {
-            emit failed(QStringLiteral("Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."));
+            emit failed(Meteo::i18n("No current run is available for the selected model."));
             return;
         }
         const QJsonObject point{{"lat", QString::number(latitude, 'f', 6)}, {"lon", QString::number(longitude, 'f', 6)}};

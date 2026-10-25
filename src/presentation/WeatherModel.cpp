@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "WeatherModel.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
@@ -47,7 +48,7 @@ WeatherModel::WeatherModel(QObject *parent) : QObject(parent)
     m_clockTimer.start();
     connect(&m_client, &Meteo::MeteoClient::runsReceived, this, [this](const QList<qint64> &runs) {
         m_runs.clear();
-        m_runs.append(QVariantMap{{"timestamp", 0}, {"label", QStringLiteral("Najnowsza prognoza")}});
+        m_runs.append(QVariantMap{{"timestamp", 0}, {"label", Meteo::i18n("Latest forecast")}});
         for (const auto run : runs)
             m_runs.append(QVariantMap{{"timestamp", run}, {"label", formatTime(run, QStringLiteral("ddd d MMM · HH:mm t"))}});
         emit runsChanged();
@@ -60,7 +61,7 @@ WeatherModel::WeatherModel(QObject *parent) : QObject(parent)
         }
         std::sort(runs.begin(), runs.end(), std::greater<>());
         m_runs.clear();
-        m_runs.append(QVariantMap{{"timestamp", 0}, {"label", QStringLiteral("Najnowsza prognoza")}});
+        m_runs.append(QVariantMap{{"timestamp", 0}, {"label", Meteo::i18n("Latest forecast")}});
         for (const auto run : runs)
             m_runs.append(QVariantMap{{"timestamp", run}, {"label", formatTime(run, QStringLiteral("ddd d MMM · HH:mm t"))}});
         emit runsChanged();
@@ -284,11 +285,11 @@ QString WeatherModel::pressureText() const { return valueText("slpres_point", QS
 QString WeatherModel::summaryTime() const
 {
     if (!summaryTimestamp())
-        return QStringLiteral("Brak prognozy na bieżącą godzinę");
+        return Meteo::i18n("No forecast for the current hour");
     const auto &temperature = m_forecast->series[QStringLiteral("airtmp_point")];
     const auto timestamp = temperature.firstTimestamp
         + ((summaryTimestamp() - temperature.firstTimestamp) / temperature.interval) * temperature.interval;
-    return QStringLiteral("Prognoza na ") + formatTime(timestamp, QStringLiteral("ddd HH:mm"));
+    return Meteo::i18n("Forecast for ") + formatTime(timestamp, QStringLiteral("ddd HH:mm"));
 }
 
 QString WeatherModel::weatherIcon() const
@@ -377,9 +378,9 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
         if (field.kind == "type" && value) {
             // Precipitation categories used by the upstream client.
             const int code = qRound(*value);
-            text = code == 0 ? QStringLiteral("Brak") : code == 1 ? QStringLiteral("Deszcz")
-                : code == 2 ? QStringLiteral("Śnieg") : code == 3 ? QStringLiteral("Deszcz ze śniegiem")
-                : QStringLiteral("Kod %1").arg(code);
+            text = code == 0 ? Meteo::i18n("None") : code == 1 ? Meteo::i18n("Rain")
+                : code == 2 ? Meteo::i18n("Snow") : code == 3 ? Meteo::i18n("Sleet")
+                : Meteo::i18n("Code %1").arg(code);
         }
         details.append(QVariantMap{{"key", field.key}, {"label", field.label}, {"value", text}, {"group", field.group},
                                    {"number", value ? QVariant(*value * scale) : QVariant()}, {"unit", unit}, {"color", field.color}, {"darkColor", forecastDarkColor(field.color, field.key)}});
@@ -503,15 +504,15 @@ QVariantList WeatherModel::dailyForecast() const
     }
     for (auto day : days) {
         QString icon, description;
-        if (day["storm"].toBool()) { icon = "weather-storm"; description = "Możliwe burze"; }
-        else if (day["snow"].toBool()) { icon = "weather-snow"; description = "Opady śniegu"; }
-        else if (day["mixed"].toBool()) { icon = "weather-snow-rain"; description = "Deszcz ze śniegiem"; }
-        else if (day["rain"].toDouble() > 0.1) { icon = "weather-showers"; description = "Opady deszczu"; }
-        else if (!day["cloudCount"].toInt()) { icon = "weather-none-available"; description = "Brak danych o zachmurzeniu"; }
+        if (day["storm"].toBool()) { icon = "weather-storm"; description = Meteo::i18n("Possible thunderstorms"); }
+        else if (day["snow"].toBool()) { icon = "weather-snow"; description = Meteo::i18n("Snowfall"); }
+        else if (day["mixed"].toBool()) { icon = "weather-snow-rain"; description = Meteo::i18n("Sleet"); }
+        else if (day["rain"].toDouble() > 0.1) { icon = "weather-showers"; description = Meteo::i18n("Rainfall"); }
+        else if (!day["cloudCount"].toInt()) { icon = "weather-none-available"; description = Meteo::i18n("No cloud cover data"); }
         else {
             const auto clouds = day["cloudSum"].toDouble() / day["cloudCount"].toInt();
             icon = clouds > 80 ? "weather-overcast" : clouds > 25 ? "weather-clouds" : "weather-clear";
-            description = clouds > 80 ? "Pochmurno" : clouds > 25 ? "Częściowe zachmurzenie" : "Słonecznie";
+            description = clouds > 80 ? Meteo::i18n("Overcast") : clouds > 25 ? Meteo::i18n("Partly cloudy") : Meteo::i18n("Clear");
         }
         day["icon"] = icon; day["description"] = description;
         for (const auto &key : {"cloudSum", "cloudCount", "storm", "snow", "mixed"}) day.remove(key);
@@ -570,7 +571,7 @@ QVariantMap WeatherModel::solarTimes() const
         {"sunrise", sunrise}, {"sunset", sunset},
         {"sunriseText", sunrise ? formatTime(sunrise, "HH:mm") : QStringLiteral("—")},
         {"sunsetText", sunset ? formatTime(sunset, "HH:mm") : QStringLiteral("—")},
-        {"status", !sunrise && !sunset ? (previous ? QStringLiteral("Noc polarna") : QStringLiteral("Dzień polarny")) : QString()}};
+        {"status", !sunrise && !sunset ? (previous ? Meteo::i18n("Polar night") : Meteo::i18n("Polar day")) : QString()}};
 }
 
 QString WeatherModel::sunTimes() const
@@ -578,6 +579,6 @@ QString WeatherModel::sunTimes() const
     const auto solar = solarTimes();
     if (solar.isEmpty()) return {};
     if (!solar["status"].toString().isEmpty()) return solar["status"].toString();
-    return QStringLiteral("%1 · wschód ≈ %2 · zachód ≈ %3")
+    return Meteo::i18n("%1 · sunrise ≈ %2 · sunset ≈ %3")
         .arg(solar["dateLabel"].toString(), solar["sunriseText"].toString(), solar["sunsetText"].toString());
 }

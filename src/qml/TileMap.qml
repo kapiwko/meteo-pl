@@ -107,7 +107,7 @@ Item {
         if (pending !== frame) return;
         pending = null;
         frame.destroy();
-        error = "Nie udało się pobrać wszystkich kafelków. Poprzednia mapa pozostaje widoczna.";
+        error = I18n.i18n("Could not download all tiles. Keeping the previous map visible.");
     }
     function prefetchStep(step) {
         if (!weatherLayer || !front) return;
@@ -204,10 +204,10 @@ Item {
                     highlighted: placeMarker.current
                     font.bold: placeMarker.current
                     onClicked: root.placeSelected(placeMarker.modelData.name, Number(placeMarker.modelData.latitude), Number(placeMarker.modelData.longitude))
-                    ToolTip.text: "Pokaż prognozę: " + text
+                    ToolTip.text: I18n.i18n("Show forecast: ") + text
                     ToolTip.visible: hovered
                     Accessible.name: ToolTip.text
-                    Accessible.description: placeMarker.current ? "Wybrana lokalizacja" : ""
+                    Accessible.description: placeMarker.current ? I18n.i18n("Selected location") : ""
                 }
             }
         }

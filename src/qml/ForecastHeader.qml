@@ -46,12 +46,12 @@ GridLayout {
                 Label {
                     Layout.fillWidth: true
                     objectName: "forecastSummaryTime"
-                    text: root.loading ? "Pobieranie prognozy…" : root.weather.summaryTime + (root.weather.hasData && root.weather.utc ? " UTC" : "")
+                    text: root.loading ? I18n.i18n("Downloading forecast…") : root.weather.summaryTime + (root.weather.hasData && root.weather.utc ? " UTC" : "")
                     wrapMode: Text.WordWrap
                 }
                 Label {
                     Layout.fillWidth: true
-                    text: "Wiatr " + root.weather.windText + " · Ciśnienie " + root.weather.pressureText
+                    text: I18n.i18n("Wind ") + root.weather.windText + I18n.i18n(" · Pressure ") + root.weather.pressureText
                     visible: root.weather.hasData
                     color: Kirigami.Theme.disabledTextColor
                     font: Kirigami.Theme.smallFont
@@ -65,8 +65,8 @@ GridLayout {
         visible: root.weather.hasData
         Layout.alignment: Qt.AlignBottom | (root.wide ? Qt.AlignRight : Qt.AlignLeft)
         spacing: Kirigami.Units.largeSpacing * 2
-        SolarEvent { title: "Wschód"; time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg"; visible: !root.solar.status }
-        SolarEvent { title: "Zachód"; time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg"; visible: !root.solar.status }
+        SolarEvent { title: I18n.i18n("Sunrise"); time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg"; visible: !root.solar.status }
+        SolarEvent { title: I18n.i18n("Sunset"); time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg"; visible: !root.solar.status }
         Label { text: root.solar.status || ""; visible: text.length > 0 }
     }
     component SolarEvent: RowLayout {
@@ -76,9 +76,9 @@ GridLayout {
         required property string icon
         spacing: Kirigami.Units.smallSpacing
         Accessible.role: Accessible.StaticText
-        Accessible.name: title + " słońca: " + time + (root.weather.utc ? " UTC" : "")
+        Accessible.name: title + I18n.i18n(": ") + time + (root.weather.utc ? " UTC" : "")
         ToolTip.visible: eventHover.hovered
-        ToolTip.text: (root.solar.dateLabel || "") + " · orientacyjna godzina · " + (root.weather.utc ? "UTC" : "czas lokalny systemu")
+        ToolTip.text: (root.solar.dateLabel || "") + I18n.i18n(" · approximate time · ") + (root.weather.utc ? "UTC" : I18n.i18n("system local time"))
         HoverHandler { id: eventHover }
         Kirigami.Icon {
             source: Qt.resolvedUrl(event.icon)

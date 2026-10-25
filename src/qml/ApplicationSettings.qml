@@ -14,20 +14,20 @@ ColumnLayout {
     spacing: Kirigami.Units.largeSpacing
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Wykresy"
+        title: I18n.i18n("Charts")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
             ComboBox {
                 objectName: "rendererSetting"
-                Kirigami.FormData.label: "Renderer:"
+                Kirigami.FormData.label: I18n.i18n("Renderer:")
                 Layout.fillWidth: true
-                model: [{id: "gpu", name: "GPU · scena Qt Quick (domyślnie)"}, {id: "cpu", name: "CPU · Canvas"}]
+                model: [{id: "gpu", name: I18n.i18n("GPU · Qt Quick scene graph (default)")}, {id: "cpu", name: "CPU · Canvas"}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === UserPreferences.renderer)
                 onActivated: index => UserPreferences.renderer = model[index].id
             }
             SpinBox {
-                Kirigami.FormData.label: "Wysokość domyślna:"
+                Kirigami.FormData.label: I18n.i18n("Default height:")
                 from: 64; to: 800; stepSize: 10
                 value: UserPreferences.chartHeight
                 textFromValue: value => value + " px"
@@ -35,56 +35,56 @@ ColumnLayout {
             }
             Label {
                 Layout.fillWidth: true
-                text: "Profil i poszczególne wykresy mogą nadpisywać tę wysokość."
+                text: I18n.i18n("Profiles and individual charts can override this height.")
                 wrapMode: Text.WordWrap
                 color: Kirigami.Theme.disabledTextColor
             }
-            CheckBox { text: "Cieniuj noc"; checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
+            CheckBox { text: I18n.i18n("Shade nighttime"); checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
         }
     }
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Jednostki i czas"
+        title: I18n.i18n("Units and time")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
             ComboBox {
-                Kirigami.FormData.label: "Prędkość wiatru:"
+                Kirigami.FormData.label: I18n.i18n("Wind speed:")
                 model: ["m/s", "km/h", "kt"]
                 currentIndex: model.indexOf(UserPreferences.windUnit)
                 onActivated: UserPreferences.windUnit = currentText
             }
-            CheckBox { text: "Pokazuj czas UTC"; checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
-            Label { text: "Domyślnie używana jest strefa systemowa."; Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Kirigami.Theme.disabledTextColor }
+            CheckBox { text: I18n.i18n("Show UTC time"); checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
+            Label { text: I18n.i18n("The system time zone is used by default."); Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Kirigami.Theme.disabledTextColor }
         }
     }
     GroupBox {
-        title: "Pamięć podręczna"
+        title: I18n.i18n("Cache")
         padding: Kirigami.Units.largeSpacing
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
             Kirigami.FormLayout {
                 Layout.fillWidth: true
-                Label { Kirigami.FormData.label: "Prognozy:"; text: CacheStorage.forecastSize }
-                Label { Kirigami.FormData.label: "Artykuły i komentarze:"; text: CacheStorage.editorialSize }
-                Label { Kirigami.FormData.label: "Obrazy i mapy:"; text: CacheStorage.imageSize }
-                Label { Kirigami.FormData.label: "Wyszukiwanie i modele:"; text: CacheStorage.lookupSize }
+                Label { Kirigami.FormData.label: I18n.i18n("Forecasts:"); text: CacheStorage.forecastSize }
+                Label { Kirigami.FormData.label: I18n.i18n("Articles and commentary:"); text: CacheStorage.editorialSize }
+                Label { Kirigami.FormData.label: I18n.i18n("Images and maps:"); text: CacheStorage.imageSize }
+                Label { Kirigami.FormData.label: I18n.i18n("Search and models:"); text: CacheStorage.lookupSize }
                 RowLayout {
-                    Kirigami.FormData.label: "Razem na dysku:"
+                    Kirigami.FormData.label: I18n.i18n("Total on disk:")
                     Label { text: CacheStorage.sizeText; font.bold: true }
                     BusyIndicator { running: CacheStorage.busy; visible: running; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
                 }
             }
             Button {
                 objectName: "clearCacheButton"
-                text: "Wyczyść pamięć podręczną"
+                text: I18n.i18n("Clear cache")
                 icon.name: "edit-clear"
                 enabled: !CacheStorage.busy && CacheStorage.size > 0
                 onClicked: { root.cacheCleared = false; CacheStorage.clear(); }
             }
             Label {
                 Layout.fillWidth: true
-                text: "Dane zostaną pobrane ponownie, gdy będą potrzebne. Zapisane miejsca i profile pozostaną zachowane."
+                text: I18n.i18n("Data will be downloaded again when needed. Saved places and profiles will be kept.")
                 wrapMode: Text.WordWrap
                 color: Kirigami.Theme.disabledTextColor
             }
@@ -92,18 +92,18 @@ ColumnLayout {
                 Layout.fillWidth: true
                 visible: root.cacheCleared || CacheStorage.error.length > 0
                 type: CacheStorage.error.length > 0 ? Kirigami.MessageType.Warning : Kirigami.MessageType.Information
-                text: CacheStorage.error || "Pamięć podręczna została wyczyszczona."
+                text: CacheStorage.error || I18n.i18n("The cache has been cleared.")
             }
         }
     }
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Konfiguracja"
+        title: I18n.i18n("Configuration")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
             TextArea {
                 objectName: "settingsFilePath"
-                Kirigami.FormData.label: "Plik ustawień:"
+                Kirigami.FormData.label: I18n.i18n("Settings file:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 22

@@ -1,8 +1,10 @@
 {
   "KPlugin": {
     "Id": "pl.meteo.desktop",
-    "Name": "Meteo · meteogram ICM",
-    "Description": "Meteogramy meteo.pl: temperatura, opady, wiatr i ciśnienie",
+    "Name": "Meteo · ICM meteogram",
+    "Name[pl]": "Meteo · meteogram ICM",
+    "Description": "meteo.pl meteograms: temperature, precipitation, wind and pressure",
+    "Description[pl]": "Meteogramy meteo.pl: temperatura, opady, wiatr i ciśnienie",
     "Icon": "pl.meteo.desktop",
     "Version": "0.1.0",
     "Category": "Environment",

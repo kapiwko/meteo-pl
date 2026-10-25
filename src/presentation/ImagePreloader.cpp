@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "ImagePreloader.hpp"
 #include "network/ImageCache.hpp"
 #include <QPointer>
@@ -43,7 +44,7 @@ void ImagePreloader::pump(quint64 generation)
             --self->m_inFlight;
             if (!error.isEmpty()) {
                 self->m_busy = false;
-                self->m_error = QStringLiteral("Nie udało się przygotować wszystkich klatek animacji. Spróbuj ponownie lub wybierz wcześniejszy start.");
+                self->m_error = Meteo::i18n("Could not prepare all animation frames. Try again or choose an earlier run.");
                 emit self->changed(); emit self->failed(); return;
             }
             ++self->m_completed;

@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "ChartExporter.hpp"
 #include <QDir>
 #include <QFileInfo>
@@ -22,7 +23,7 @@ ChartExporter::ChartExporter(QObject *parent) : QObject(parent)
 {
     m_deadline.setSingleShot(true);
     m_deadline.setInterval(15000);
-    connect(&m_deadline, &QTimer::timeout, this, [this] { fail(QStringLiteral("Upłynął czas przygotowania obrazu. Spróbuj ponownie.")); });
+    connect(&m_deadline, &QTimer::timeout, this, [this] { fail(Meteo::i18n("Image preparation timed out. Try again.")); });
 }
 ChartExporter::~ChartExporter() { restore(); }
 
@@ -38,8 +39,8 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
 {
     if (m_busy) return false;
     m_error.clear();
-    if (!file.isLocalFile() || file.toLocalFile().isEmpty()) { fail(QStringLiteral("Wybierz lokalny plik PNG.")); return false; }
-    if (items.isEmpty() || items.size() > 50) { fail(QStringLiteral("Wybierz od 1 do 50 wykresów do eksportu.")); return false; }
+    if (!file.isLocalFile() || file.toLocalFile().isEmpty()) { fail(Meteo::i18n("Choose a local PNG file.")); return false; }
+    if (items.isEmpty() || items.size() > 50) { fail(Meteo::i18n("Select between 1 and 50 charts to export.")); return false; }
     int contentWidth = 0;
     qint64 contentHeight = 0;
     for (const auto &value : items) {
@@ -48,7 +49,7 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
         auto *item = qobject_cast<QQuickItem *>(object);
         if (!item || !item->window() || !item->isVisible() || !std::isfinite(item->width()) || !std::isfinite(item->height())
             || item->width() < 1 || item->height() < 1 || item->width() > 8192 || item->height() > 8192) {
-            fail(QStringLiteral("Wykres nie jest gotowy do eksportu. Otwórz meteogram i spróbuj ponownie.")); return false;
+            fail(Meteo::i18n("The chart is not ready to export. Open the meteogram and try again.")); return false;
         }
         const QSize size(qCeil(item->width()), qCeil(item->height()));
         m_items.append({item, size, item->property("exportMode")});
@@ -68,10 +69,10 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
     const qint64 height = m_y + contentHeight + (items.size() - 1) * gap + gap + footerHeight + margin;
     const int width = contentWidth + 2 * margin;
     if (height > 65535 || width * height > maximumPixels) {
-        fail(QStringLiteral("Obraz jest zbyt duży. Zmniejsz wysokość wykresów lub wyeksportuj je osobno.")); return false;
+        fail(Meteo::i18n("The image is too large. Reduce chart heights or export charts separately.")); return false;
     }
     m_image = QImage(width, int(height), QImage::Format_ARGB32_Premultiplied);
-    if (m_image.isNull()) { fail(QStringLiteral("Brak pamięci na obraz meteogramu.")); return false; }
+    if (m_image.isNull()) { fail(Meteo::i18n("Not enough memory for the meteogram image.")); return false; }
     const auto background = metadata.value("background", QColor(Qt::white)).value<QColor>();
     const auto foreground = metadata.value("foreground", QColor(Qt::black)).value<QColor>();
     m_image.fill(background.isValid() ? background : QColor(Qt::white));
@@ -96,7 +97,7 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
     for (const auto &capture : std::as_const(m_items)) {
         if (capture.exportMode.isValid()) capture.item->setProperty("exportMode", true);
         const auto changed = [this, generation] {
-            if (m_busy && generation == m_generation) fail(QStringLiteral("Widok zmienił się podczas eksportu. Spróbuj ponownie."));
+            if (m_busy && generation == m_generation) fail(Meteo::i18n("The view changed during export. Try again."));
         };
         m_connections.append(connect(capture.item, &QObject::destroyed, this, changed));
         m_connections.append(connect(capture.item, &QQuickItem::widthChanged, this, changed));
@@ -113,27 +114,27 @@ void ChartExporter::captureNext()
     if (!m_busy) return;
     if (m_index == m_items.size()) {
         QSaveFile file(m_file.toLocalFile());
-        if (!file.open(QIODevice::WriteOnly)) { fail(QStringLiteral("Nie można zapisać PNG: ") + file.errorString()); return; }
+        if (!file.open(QIODevice::WriteOnly)) { fail(Meteo::i18n("Could not save PNG: ") + file.errorString()); return; }
         QImageWriter writer(&file, "png");
         writer.setCompression(3);
-        if (!writer.write(m_image)) { fail(QStringLiteral("Nie można utworzyć PNG: ") + writer.errorString()); return; }
-        if (!file.commit()) { fail(QStringLiteral("Nie można zapisać PNG: ") + file.errorString()); return; }
+        if (!writer.write(m_image)) { fail(Meteo::i18n("Could not create PNG: ") + writer.errorString()); return; }
+        if (!file.commit()) { fail(Meteo::i18n("Could not save PNG: ") + file.errorString()); return; }
         const auto savedFile = m_file;
         restore(); m_busy = false;
         emit stateChanged(); emit saved(savedFile, savedFile.toLocalFile());
         return;
     }
     const auto &capture = m_items[m_index];
-    if (!capture.item) { fail(QStringLiteral("Wykres został zamknięty podczas eksportu.")); return; }
+    if (!capture.item) { fail(Meteo::i18n("The chart was closed during export.")); return; }
     capture.item->ensurePolished();
     m_grab = capture.item->grabToImage(capture.size);
-    if (!m_grab) { fail(QStringLiteral("Nie udało się przygotować obrazu wykresu.")); return; }
+    if (!m_grab) { fail(Meteo::i18n("Could not prepare the chart image.")); return; }
     const auto generation = m_generation;
     connect(m_grab.data(), &QQuickItemGrabResult::ready, this, [this, generation] {
         if (!m_busy || generation != m_generation) return;
         const auto grab = m_grab;
         const auto image = grab->image();
-        if (image.isNull()) { fail(QStringLiteral("Renderer nie zwrócił obrazu wykresu.")); return; }
+        if (image.isNull()) { fail(Meteo::i18n("The renderer did not return a chart image.")); return; }
         const auto size = m_items[m_index].size;
         {
             QPainter painter(&m_image);
@@ -159,4 +160,4 @@ void ChartExporter::fail(const QString &message)
     restore(); m_busy = false; m_error = message;
     emit stateChanged(); emit failed(message);
 }
-void ChartExporter::cancel() { if (m_busy) fail(QStringLiteral("Przerwano eksport.")); }
+void ChartExporter::cancel() { if (m_busy) fail(Meteo::i18n("Export cancelled.")); }

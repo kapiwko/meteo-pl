@@ -37,20 +37,20 @@ ColumnLayout {
         active: false
         onPositionChanged: {
             if (!position.coordinate.isValid) return;
-            root.selectPlace({name: "Moja pozycja", latitude: position.coordinate.latitude, longitude: position.coordinate.longitude});
+            root.selectPlace({name: I18n.i18n("My location"), latitude: position.coordinate.latitude, longitude: position.coordinate.longitude});
             root.positionRequested = false;
         }
         onSourceErrorChanged: {
             if (!root.positionRequested || sourceError === PositionSource.NoError) return;
             root.positionRequested = false;
             root.positionError = sourceError === PositionSource.UpdateTimeoutError
-                ? "Upłynął czas ustalania pozycji. Możesz wybrać punkt z mapy."
-                : "Nie udało się ustalić pozycji. Sprawdź usługę lokalizacji lub wybierz punkt z mapy.";
+                ? I18n.i18n("Location lookup timed out. You can choose a point on the map.")
+                : I18n.i18n("Could not determine your location. Check the location service or choose a point on the map.");
         }
     }
 
     GroupBox {
-        title: "Znajdź miejsce"
+        title: I18n.i18n("Find a place")
         Layout.fillWidth: true
         padding: Kirigami.Units.largeSpacing
         contentItem: ColumnLayout {
@@ -62,8 +62,8 @@ ColumnLayout {
                     objectName: "placeSearchField"
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    placeholderText: "Nazwa miasta lub wsi…"
-                    Accessible.name: "Wyszukaj miejscowość"
+                    placeholderText: I18n.i18n("Town or village name…")
+                    Accessible.name: I18n.i18n("Search for a place")
                     autoAccept: false
                     onTextChanged: if (!text.length) placeSearch.query = ""
                     onTextEdited: placeSearch.query = text
@@ -79,7 +79,7 @@ ColumnLayout {
                     BusyIndicator { anchors.fill: parent; running: placeSearch.busy }
                 }
             }
-            CheckBox { text: "Szukaj także poza Polską"; checked: !placeSearch.polandOnly; onToggled: placeSearch.polandOnly = !checked }
+            CheckBox { text: I18n.i18n("Search outside Poland too"); checked: !placeSearch.polandOnly; onToggled: placeSearch.polandOnly = !checked }
             Frame {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(220, searchResults.contentHeight + padding * 2)
@@ -105,7 +105,7 @@ ColumnLayout {
             }
             Label {
                 visible: placeSearch.query.length >= 2 && !placeSearch.busy && !placeSearch.results.length && !placeSearch.error
-                text: "Nie znaleziono miejscowości. Doprecyzuj nazwę lub wybierz punkt z mapy."
+                text: I18n.i18n("No places found. Refine the name or choose a point on the map.")
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }
@@ -113,15 +113,15 @@ ColumnLayout {
             Flow {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
-                Button { text: "Wybierz na mapie"; icon.name: "map-globe"; checkable: true; checked: root.showMap; onToggled: root.showMap = checked }
+                Button { text: I18n.i18n("Choose on map"); icon.name: "map-globe"; checkable: true; checked: root.showMap; onToggled: root.showMap = checked }
                 Button {
-                    text: root.positionRequested ? "Ustalanie pozycji…" : "Użyj mojej pozycji"
+                    text: root.positionRequested ? I18n.i18n("Locating…") : I18n.i18n("Use my location")
                     icon.name: "find-location"
                     enabled: !root.positionRequested
                     onClicked: {
                         root.positionError = "";
                         if (positionSource.valid) { root.positionRequested = true; positionSource.update(15000); }
-                        else root.positionError = "Usługa lokalizacji jest niedostępna. Wybierz miejscowość lub punkt z mapy.";
+                        else root.positionError = I18n.i18n("The location service is unavailable. Choose a place or a point on the map.");
                     }
                 }
             }
@@ -138,7 +138,7 @@ ColumnLayout {
                     markerName: root.locationName
                     places: UserPreferences.places
                     onPlaceSelected: (name, latitude, longitude) => root.selectPlace({name: name, latitude: latitude, longitude: longitude})
-                    onCoordinateSelected: (latitude, longitude) => root.selectPlace({name: "Punkt na mapie", latitude: Number(latitude.toFixed(6)), longitude: Number(longitude.toFixed(6))})
+                    onCoordinateSelected: (latitude, longitude) => root.selectPlace({name: I18n.i18n("Point on map"), latitude: Number(latitude.toFixed(6)), longitude: Number(longitude.toFixed(6))})
                 }
             }
         }
@@ -149,7 +149,7 @@ ColumnLayout {
         function onLongitudeChanged() { const map = locationMap.item as TileMap; if (map) map.longitude = root.longitude; }
     }
     GroupBox {
-        title: "Moje miejsca"
+        title: I18n.i18n("My places")
         visible: UserPreferences.places.length > 0
         Layout.fillWidth: true
         padding: Kirigami.Units.smallSpacing
@@ -177,7 +177,7 @@ ColumnLayout {
                                 else root.resetDraft("", 0, 0, root.model);
                             }
                         }
-                        ToolTip.text: "Usuń miejsce: " + savedPlace.modelData.name
+                        ToolTip.text: I18n.i18n("Remove place: ") + savedPlace.modelData.name
                         ToolTip.visible: hovered
                         Accessible.name: ToolTip.text
                     }
@@ -186,7 +186,7 @@ ColumnLayout {
         }
     }
     GroupBox {
-        title: "Prognoza"
+        title: I18n.i18n("Forecast")
         Layout.fillWidth: true
         padding: Kirigami.Units.largeSpacing
         contentItem: ColumnLayout {
@@ -194,37 +194,37 @@ ColumnLayout {
             Kirigami.FormLayout {
                 Layout.fillWidth: true
                 Label {
-                    Kirigami.FormData.label: "Miejsce:"
+                    Kirigami.FormData.label: I18n.i18n("Place:")
                     Layout.fillWidth: true
-                    text: root.locationName.length ? root.locationName : "Wybierz miejscowość lub punkt na mapie"
+                    text: root.locationName.length ? root.locationName : I18n.i18n("Choose a place or a point on the map")
                     font.bold: root.locationName.length > 0
                     wrapMode: Text.WordWrap
                 }
                 ComboBox {
                     objectName: "locationModelSelector"
-                    Kirigami.FormData.label: "Model:"
+                    Kirigami.FormData.label: I18n.i18n("Model:")
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Accessible.name: "Model prognozy"
-                    model: ["UM4 · 60 godzin", "UM4 · 120 godzin", "GFS · 240 godzin"]
+                    Accessible.name: I18n.i18n("Forecast model")
+                    model: [I18n.i18n("UM4 · 60 hours"), I18n.i18n("UM4 · 120 hours"), I18n.i18n("GFS · 240 hours")]
                     currentIndex: ["um4_60", "um4_120", "gfs"].indexOf(root.model)
                     onActivated: index => root.model = ["um4_60", "um4_120", "gfs"][index]
                 }
             }
             Label {
                 Layout.fillWidth: true
-                text: root.model === "gfs" ? "GFS: prognoza dla całego świata." : "UM4: szczegółowa prognoza dla Polski i Europy Środkowej."
+                text: root.model === "gfs" ? I18n.i18n("GFS: worldwide forecast.") : I18n.i18n("UM4: detailed forecasts for Poland and Central Europe.")
                 color: Kirigami.Theme.disabledTextColor
                 font: Kirigami.Theme.smallFont
                 wrapMode: Text.WordWrap
             }
-            Kirigami.InlineMessage { Layout.fillWidth: true; visible: root.outsideModel; text: "Ten punkt leży poza obszarem UM4. Wybierz model GFS."; type: Kirigami.MessageType.Warning }
+            Kirigami.InlineMessage { Layout.fillWidth: true; visible: root.outsideModel; text: I18n.i18n("This point is outside the UM4 area. Choose the GFS model."); type: Kirigami.MessageType.Warning }
         }
     }
     ToolButton {
         id: manual
         objectName: "manualLocationToggle"
-        text: "Własna nazwa i współrzędne"
+        text: I18n.i18n("Custom name and coordinates")
         icon.name: checked ? "arrow-down" : "arrow-right"
         checkable: true
     }
@@ -233,7 +233,7 @@ ColumnLayout {
         Layout.fillWidth: true
         TextField {
             objectName: "customLocationName"
-            Kirigami.FormData.label: "Nazwa:"
+            Kirigami.FormData.label: I18n.i18n("Name:")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             text: root.locationName
@@ -242,7 +242,7 @@ ColumnLayout {
         }
         TextField {
             id: latField
-            Kirigami.FormData.label: "Szerokość (°N):"
+            Kirigami.FormData.label: I18n.i18n("Latitude (°N):")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Binding on text { value: String(root.latitude); when: !latField.activeFocus; restoreMode: Binding.RestoreNone }
@@ -251,7 +251,7 @@ ColumnLayout {
         }
         TextField {
             id: lonField
-            Kirigami.FormData.label: "Długość (°E):"
+            Kirigami.FormData.label: I18n.i18n("Longitude (°E):")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Binding on text { value: String(root.longitude); when: !lonField.activeFocus; restoreMode: Binding.RestoreNone }

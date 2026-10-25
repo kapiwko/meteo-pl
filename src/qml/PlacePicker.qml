@@ -11,7 +11,7 @@ ColumnLayout {
     signal locationSelected(string name, real latitude, real longitude)
     Kirigami.Heading {
         objectName: "forecastLocationName"
-        text: root.weather.locationName.length ? root.weather.locationName : "Wybierz lokalizację"
+        text: root.weather.locationName.length ? root.weather.locationName : I18n.i18n("Choose location")
         visible: UserPreferences.places.length < 2
         level: 2
         Layout.fillWidth: true
@@ -29,7 +29,7 @@ ColumnLayout {
         textRole: "name"
         displayText: root.weather.locationName
         currentIndex: model.findIndex(place => Math.abs(place.latitude-root.weather.latitude) < 0.000001 && Math.abs(place.longitude-root.weather.longitude) < 0.000001)
-        Accessible.name: "Moje miejsca · wybierz prognozę"
+        Accessible.name: I18n.i18n("My places · choose a forecast")
         onActivated: index => {
             const place = model[index];
             if (place) root.locationSelected(place.name, place.latitude, place.longitude);

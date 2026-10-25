@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "UserPreferences.hpp"
 #include "ForecastFields.hpp"
 #include "ChartConfiguration.hpp"
@@ -170,7 +171,7 @@ QVariantList UserPreferences::savedProfiles() const
 QVariantList UserPreferences::profiles() const
 {
     QVariantList result;
-    const QList<QPair<QString, QString>> presets{{"classic", "Klasyczny ICM"}, {"full", "Wszystkie wykresy"}, {"basic", "Podstawowy"}, {"aviation", "Lotniczy"}, {"outdoor", "Na zewnątrz"}, {"custom", "Własny układ"}};
+    const QList<QPair<QString, QString>> presets{{"classic", Meteo::i18n("Classic ICM")}, {"full", Meteo::i18n("All charts")}, {"basic", Meteo::i18n("Basic")}, {"aviation", Meteo::i18n("Aviation")}, {"outdoor", Meteo::i18n("Outdoors")}, {"custom", Meteo::i18n("Custom layout")}};
     for (const auto &preset : presets) result.append(QVariantMap{{"id", preset.first}, {"name", preset.second}, {"builtin", true}});
     for (const auto &entry : savedProfiles()) result.append(QVariantMap{{"id", entry.toMap()["id"]}, {"name", entry.toMap()["name"]}, {"builtin", false}});
     return result;
@@ -195,14 +196,14 @@ QString UserPreferences::settingsFile() const { return m_settings.fileName(); }
 
 QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) const
 {
-    if (!url.isLocalFile()) return {{"ok", false}, {"error", "Wybierz plik lokalny."}};
+    if (!url.isLocalFile()) return {{"ok", false}, {"error", Meteo::i18n("Choose a local file.")}};
     QVariantList exported;
     if (allSaved) {
         for (const auto &value : savedProfiles()) {
             const auto entry = value.toMap();
             exported.append(QVariantMap{{"name", entry["name"]}, {"charts", normalizeChartLayout(entry["charts"].toList())}, {"chartHeight",entry.value("chartHeight",0)}});
         }
-        if (m_settings.contains("display/customLayout")) exported.append(QVariantMap{{"name", "Własny układ"},
+        if (m_settings.contains("display/customLayout")) exported.append(QVariantMap{{"name", Meteo::i18n("Custom layout")},
             {"charts", normalizeChartLayout(QJsonDocument::fromJson(m_settings.value("display/customLayout").toByteArray()).toVariant().toList())}, {"chartHeight",m_settings.value("display/customChartHeight",0)}});
     }
     if (exported.isEmpty()) {
@@ -213,29 +214,29 @@ QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) cons
     const auto data = QJsonDocument(QJsonObject{{"format", "pl.meteo.chart-profiles"}, {"version", 1},
         {"profiles", QJsonArray::fromVariantList(exported)}}).toJson(QJsonDocument::Indented);
     if (exported.size() > 100 || data.size() > 16 * 1024 * 1024)
-        return {{"ok", false}, {"error", "Za dużo profili w jednym pliku. Wyeksportuj je osobno."}};
+        return {{"ok", false}, {"error", Meteo::i18n("Too many profiles in one file. Export them separately.")}};
     QSaveFile file(url.toLocalFile());
     if (!file.open(QIODevice::WriteOnly) || file.write(data) != data.size() || !file.commit())
-        return {{"ok", false}, {"error", "Nie udało się zapisać pliku: " + file.errorString()}};
+        return {{"ok", false}, {"error", Meteo::i18n("Could not save the file: ") + file.errorString()}};
     return {{"ok", true}, {"count", exported.size()}, {"path", url.toLocalFile()}};
 }
 
 QVariantMap UserPreferences::importProfiles(const QUrl &url)
 {
-    if (!url.isLocalFile()) return {{"ok", false}, {"error", "Wybierz plik lokalny."}};
+    if (!url.isLocalFile()) return {{"ok", false}, {"error", Meteo::i18n("Choose a local file.")}};
     QFile file(url.toLocalFile());
-    if (!file.open(QIODevice::ReadOnly)) return {{"ok", false}, {"error", "Nie udało się otworzyć pliku: " + file.errorString()}};
-    if (file.size() > 16 * 1024 * 1024) return {{"ok", false}, {"error", "Plik profili jest zbyt duży (maksymalnie 16 MiB)."}};
+    if (!file.open(QIODevice::ReadOnly)) return {{"ok", false}, {"error", Meteo::i18n("Could not open the file: ") + file.errorString()}};
+    if (file.size() > 16 * 1024 * 1024) return {{"ok", false}, {"error", Meteo::i18n("The profile file is too large (maximum 16 MiB).")}};
     QJsonParseError error;
     const auto document = QJsonDocument::fromJson(file.readAll(), &error);
     if (error.error != QJsonParseError::NoError || !document.isObject())
-        return {{"ok", false}, {"error", "Plik nie zawiera poprawnego dokumentu JSON."}};
+        return {{"ok", false}, {"error", Meteo::i18n("The file does not contain a valid JSON document.")}};
     const auto root = document.object();
     if (root["format"] != "pl.meteo.chart-profiles" || root["version"].toDouble(-1) != 1)
-        return {{"ok", false}, {"error", "Nieobsługiwany format lub wersja pliku profili."}};
+        return {{"ok", false}, {"error", Meteo::i18n("Unsupported profile file format or version.")}};
     const auto imported = root["profiles"].toArray();
     if (imported.isEmpty() || imported.size() > 100)
-        return {{"ok", false}, {"error", "Plik musi zawierać od 1 do 100 profili."}};
+        return {{"ok", false}, {"error", Meteo::i18n("The file must contain between 1 and 100 profiles.")}};
     auto saved = savedProfiles();
     QSet<QString> names;
     for (const auto &value : profiles()) names.insert(value.toMap()["name"].toString());
@@ -250,7 +251,7 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url)
             const auto series = source[i].toObject()["series"];
             valid = series.isArray() && charts[i].toMap()["series"].toList().size() == series.toArray().size();
         }
-        if (!valid) return {{"ok", false}, {"error", "Nieprawidłowa definicja profilu lub nieznana seria. Nie zaimportowano żadnego profilu."}};
+        if (!valid) return {{"ok", false}, {"error", Meteo::i18n("Invalid profile definition or unknown series. No profiles were imported.")}};
         QString name = baseName;
         for (int suffix = 2; names.contains(name); ++suffix) name = baseName.left(70) + " (" + QString::number(suffix) + ")";
         names.insert(name);
@@ -309,7 +310,7 @@ QString UserPreferences::createChart(const QString &title)
     auto layout = chartLayout();
     if (layout.size() >= 50) return {};
     const auto key = "chart:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
-    layout.append(QVariantMap{{"key", key}, {"title", title.trimmed().isEmpty() ? "Nowy wykres" : title.trimmed().left(80)},
+    layout.append(QVariantMap{{"key", key}, {"title", title.trimmed().isEmpty() ? Meteo::i18n("New chart") : title.trimmed().left(80)},
         {"enabled", true}, {"leftScale", "auto"}, {"rightScale", "auto"}, {"series", QVariantList{}}});
     saveLayout(normalizeChartLayout(layout)); return key;
 }

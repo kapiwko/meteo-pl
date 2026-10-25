@@ -11,7 +11,7 @@ Item {
     implicitWidth: Kirigami.Units.iconSizes.large
     implicitHeight: implicitWidth
     Accessible.role: Accessible.StaticText
-    Accessible.name: loading ? "Pobieranie prognozy" : weather.hasData ? weather.summaryTime : "Brak prognozy"
+    Accessible.name: loading ? I18n.i18n("Downloading forecast") : weather.hasData ? weather.summaryTime : I18n.i18n("No forecast")
     Kirigami.Icon {
         objectName: "forecastWeatherIcon"
         anchors.fill: parent

@@ -18,11 +18,11 @@ Popup {
     readonly property bool hovered: inspectorHover.hovered
     readonly property alias readingsItem: readingsBackground
     readonly property int columns: readings.columns
-    readonly property var categories: [{key: "", name: "Wszystkie"},
-        {key: "temperature", name: "Temperatura"}, {key: "precipitation", name: "Opady"},
-        {key: "wind", name: "Wiatr"}, {key: "pressure", name: "Ciśnienie"},
-        {key: "clouds", name: "Chmury"}, {key: "moisture", name: "Mgła i wilgotność"},
-        {key: "storms", name: "Burze"}].filter(entry => !entry.key || details.some(detail => categoryFor(detail.group) === entry.key))
+    readonly property var categories: [{key: "", name: I18n.i18n("All")},
+        {key: "temperature", name: I18n.i18n("Temperature")}, {key: "precipitation", name: I18n.i18n("Precipitation")},
+        {key: "wind", name: I18n.i18n("Wind")}, {key: "pressure", name: I18n.i18n("Pressure")},
+        {key: "clouds", name: I18n.i18n("Clouds")}, {key: "moisture", name: I18n.i18n("Fog and humidity")},
+        {key: "storms", name: I18n.i18n("Storms")}].filter(entry => !entry.key || details.some(detail => categoryFor(detail.group) === entry.key))
     readonly property var visibleDetails: details.filter(detail => !allParameters || !category || categoryFor(detail.group) === category)
     signal pinToggled()
     signal pointerLeft()
@@ -57,7 +57,7 @@ Popup {
                 checkable: true
                 checked: root.pinned
                 onClicked: root.pinToggled()
-                ToolTip.text: root.pinned ? "Odepnij odczyt" : "Przypnij odczyt"
+                ToolTip.text: root.pinned ? I18n.i18n("Unpin reading") : I18n.i18n("Pin reading")
                 ToolTip.visible: hovered
                 Accessible.name: ToolTip.text
             }
@@ -65,19 +65,19 @@ Popup {
                 icon.name: "document-export"
                 enabled: !root.exportBusy && root.visibleDetails.length > 0
                 onClicked: { if (!root.pinned) root.pinToggled(); readingExportMenu.popup(); }
-                ToolTip.text: "Eksportuj widoczne parametry"
+                ToolTip.text: I18n.i18n("Export visible parameters")
                 ToolTip.visible: hovered
                 Accessible.name: ToolTip.text
                 Menu {
                     id: readingExportMenu
-                    MenuItem { text: "Zapisz odczyt jako PNG…"; icon.name: "image-png"; onTriggered: root.exportRequested("png") }
-                    MenuItem { text: "Zapisz odczyt jako CSV…"; icon.name: "text-csv"; onTriggered: root.exportRequested("csv") }
+                    MenuItem { text: I18n.i18n("Save reading as PNG…"); icon.name: "image-png"; onTriggered: root.exportRequested("png") }
+                    MenuItem { text: I18n.i18n("Save reading as CSV…"); icon.name: "text-csv"; onTriggered: root.exportRequested("csv") }
                 }
             }
-            ToolButton { icon.name: "dialog-close"; onClicked: root.close(); Accessible.name: "Zamknij odczyt" }
+            ToolButton { icon.name: "dialog-close"; onClicked: root.close(); Accessible.name: I18n.i18n("Close reading") }
         }
         Label {
-            text: root.pinned ? "Odczyt przypięty · kliknij wykres, aby odpiąć" : "Kliknij wykres, aby przypiąć odczyt"
+            text: root.pinned ? I18n.i18n("Reading pinned · click a chart to unpin") : I18n.i18n("Click a chart to pin the reading")
             opacity: 0.6
             font.pixelSize: 10
             wrapMode: Text.WordWrap
@@ -89,7 +89,7 @@ Popup {
             implicitWidth: 0
             visible: root.allParameters
             currentIndex: Math.max(0, root.categories.findIndex(entry => entry.key === root.category))
-            TabButton { baselineOffset: height / 2; text: "Wszystkie"; width: implicitWidth; onClicked: root.category = "" }
+            TabButton { baselineOffset: height / 2; text: I18n.i18n("All"); width: implicitWidth; onClicked: root.category = "" }
             Repeater {
                 model: root.categories.slice(1)
                 delegate: TabButton {

@@ -232,7 +232,7 @@ ColumnLayout {
             id: legendToggle
             opacity: root.exportMode ? 0 : 1
             enabled: !root.exportMode
-            text: root.legendVisible ? "Ukryj legendę" : "Pokaż legendę"
+            text: root.legendVisible ? I18n.i18n("Hide legend") : I18n.i18n("Show legend")
             implicitWidth: 22
             implicitHeight: 22
             hoverEnabled: true
@@ -266,7 +266,7 @@ ColumnLayout {
             delegate: AbstractButton {
                 id: legend
                 required property var modelData
-                text: modelData.kind === "upper" ? "Zakres min–max" : modelData.kind === "feelUpper" ? "Odczuwalna min–max" : modelData.kind === "groundHigh" ? "Grunt min–max" : modelData.kind === "storm" || modelData.kind === "flash" ? "Burze / wyładowania" : modelData.label
+                text: modelData.kind === "upper" ? I18n.i18n("Min–max range") : modelData.kind === "feelUpper" ? I18n.i18n("Feels like min–max") : modelData.kind === "groundHigh" ? I18n.i18n("Ground min–max") : modelData.kind === "storm" || modelData.kind === "flash" ? I18n.i18n("Storms / lightning") : modelData.label
                 checkable: true
                 checked: root.shown(modelData)
                 padding: 4
@@ -290,9 +290,9 @@ ColumnLayout {
         }
         Repeater {
             model: root.fields.some(f => f.kind === "type") ? [
-                {label: "Deszcz", color: root.darkPalette ? "#4ade80" : "#00aa00"},
-                {label: "Śnieg", color: root.darkPalette ? "#60a5fa" : "#1539c0"},
-                {label: "Deszcz ze śniegiem", color: root.darkPalette ? "#e879f9" : "#b72dc1"}
+                {label: I18n.i18n("Rain"), color: root.darkPalette ? "#4ade80" : "#00aa00"},
+                {label: I18n.i18n("Snow"), color: root.darkPalette ? "#60a5fa" : "#1539c0"},
+                {label: I18n.i18n("Sleet"), color: root.darkPalette ? "#e879f9" : "#b72dc1"}
             ] : []
             delegate: RowLayout {
                 required property var modelData
@@ -307,7 +307,7 @@ ColumnLayout {
             spacing: 5
             height: 26
             Rectangle { Layout.preferredWidth: 4; Layout.preferredHeight: 4; Layout.alignment: Qt.AlignVCenter; radius: 2; color: root.darkPalette ? "#ff6b6b" : "#f44336" }
-            Label { Layout.alignment: Qt.AlignVCenter; text: root.wind ? "Poryw powyżej skali" : "Opad max powyżej skali"; font.pixelSize: 11; opacity: 0.8 }
+            Label { Layout.alignment: Qt.AlignVCenter; text: root.wind ? I18n.i18n("Gust above scale") : I18n.i18n("Maximum precipitation above scale"); font.pixelSize: 11; opacity: 0.8 }
         }
     }
     Item {
@@ -413,7 +413,7 @@ ColumnLayout {
     Label {
         visible: root.legendVisible && root.fields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")
         Layout.fillWidth: true
-        text: "Wypełnienie: opad średni. Cienkie kreski: opad maksymalny. Suma w przedziale " + (root.fields.length && root.fields[0].points.length > 1 ? (root.fields[0].points[1].time - root.fields[0].points[0].time) / 3600 : 1) + " h."
+        text: I18n.i18n("Fill: mean precipitation. Thin stems: maximum precipitation. Total over ") + (root.fields.length && root.fields[0].points.length > 1 ? (root.fields[0].points[1].time - root.fields[0].points[0].time) / 3600 : 1) + " h."
         wrapMode: Text.WordWrap
         font.pixelSize: 10
         opacity: 0.65

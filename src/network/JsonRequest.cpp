@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "JsonRequest.hpp"
 #include <QNetworkReply>
 #include <QJsonArray>
@@ -95,14 +96,14 @@ void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force)
         const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         m_statusCode = status;
         if (reply->error() != QNetworkReply::NoError || status != 200) {
-            emit failed(QStringLiteral("Nie udało się pobrać danych (HTTP %1). %2").arg(status).arg(reply->errorString()));
+            emit failed(Meteo::i18n("Could not download data (HTTP %1). %2").arg(status).arg(reply->errorString()));
             return;
         }
         QJsonParseError error;
         const auto body = reply->readAll();
         const auto document = body.trimmed() == "null" ? QJsonDocument(QJsonArray{}) : QJsonDocument::fromJson(body, &error);
         if (error.error != QJsonParseError::NoError || document.isNull()) {
-            emit failed(QStringLiteral("Serwer zwrócił niepoprawny dokument JSON."));
+            emit failed(Meteo::i18n("The server returned an invalid JSON document."));
             return;
         }
         const auto policy=reply->rawHeader("Cache-Control").toLower();

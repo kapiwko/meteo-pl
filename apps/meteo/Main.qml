@@ -41,11 +41,11 @@ Kirigami.ApplicationWindow {
     SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude) }
     pageStack.initialPage: Kirigami.Page {
         padding: 0
-        title: "Meteogram"
+        title: I18n.i18n("Meteogram")
         actions: [
-            Kirigami.Action { text: "Lokalizacja"; icon.name: "mark-location"; onTriggered: locationDialog.open() },
-            Kirigami.Action { text: "Ustawienia"; icon.name: "configure"; onTriggered: forecastPanel.openSettings() },
-            Kirigami.Action { text: "Odśwież"; icon.name: "view-refresh"; enabled: !forecastModel.busy; onTriggered: forecastModel.refresh() }
+            Kirigami.Action { text: I18n.i18n("Location"); icon.name: "mark-location"; onTriggered: locationDialog.open() },
+            Kirigami.Action { text: I18n.i18n("Settings"); icon.name: "configure"; onTriggered: forecastPanel.openSettings() },
+            Kirigami.Action { text: I18n.i18n("Refresh"); icon.name: "view-refresh"; enabled: !forecastModel.busy; onTriggered: forecastModel.refresh() }
         ]
         ForecastPanel {
             id: forecastPanel
@@ -59,7 +59,7 @@ Kirigami.ApplicationWindow {
     Dialog {
         id: locationDialog
         objectName: "locationDialog"
-        title: "Lokalizacja i model"
+        title: I18n.i18n("Location and model")
         anchors.centerIn: parent
         width: Math.min(window.width - 24, 660)
         padding: 0
@@ -71,7 +71,7 @@ Kirigami.ApplicationWindow {
             onAccepted: locationDialog.accept()
             onRejected: locationDialog.reject()
             Button {
-                text: "Pokaż prognozę"
+                text: I18n.i18n("Show forecast")
                 icon.name: "weather-few-clouds"
                 enabled: locationEditor.valid
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole

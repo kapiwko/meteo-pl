@@ -13,7 +13,7 @@ Dialog {
     property real endTime: weather.lastTimestamp
     property alias section: sections.currentIndex
     signal hoursSelected(int hours)
-    title: "Ustawienia"
+    title: I18n.i18n("Settings")
     parent: Overlay.overlay
     anchors.centerIn: parent
     width: Math.min(700, parent ? parent.width - 24 : 700)
@@ -25,7 +25,7 @@ Dialog {
         standardButtons: DialogButtonBox.Close
         onRejected: root.reject()
         Button {
-            text: "O aplikacji"
+            text: I18n.i18n("About")
             icon.name: "help-about"
             DialogButtonBox.buttonRole: DialogButtonBox.HelpRole
             onClicked: aboutDialog.open()
@@ -50,10 +50,10 @@ Dialog {
             id: sections
             objectName: "settingsSections"
             Layout.fillWidth: true
-            TabButton { baselineOffset: height / 2; text: "Prognoza"; icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
-            TabButton { baselineOffset: height / 2; text: "Profile"; icon.name: "view-statistics"; icon.width: 16; icon.height: 16 }
-            TabButton { baselineOffset: height / 2; text: "Odczyt"; icon.name: "color-picker"; icon.width: 16; icon.height: 16 }
-            TabButton { baselineOffset: height / 2; text: "Aplikacja"; icon.name: "configure"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: I18n.i18n("Profiles"); icon.name: "view-statistics"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: I18n.i18n("Readings"); icon.name: "color-picker"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: I18n.i18n("Application"); icon.name: "configure"; icon.width: 16; icon.height: 16 }
         }
         StackLayout {
             Layout.fillWidth: true

@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "EditorialModel.hpp"
 #include <QJsonArray>
 #include <QJsonObject>
@@ -21,10 +22,10 @@ EditorialModel::EditorialModel(QObject *parent, QUrl endpoint) : QObject(parent)
     connect(&m_request, &Meteo::JsonRequest::failed, this, [this](const QString &error) {
         m_busy = false;
         if (m_cached) {
-            m_notice = QStringLiteral("Nie udało się odświeżyć. Wyświetlana jest treść zapisana w pamięci podręcznej.");
+            m_notice = Meteo::i18n("Could not refresh. Showing content from the cache.");
         } else if (m_commentary && m_request.statusCode() == 404) {
-            m_notice = m_date.isEmpty() ? QStringLiteral("Komentarz synoptyka nie został jeszcze opublikowany. Spróbuj później.")
-                : QStringLiteral("Brak komentarza synoptyka z %1. Wybierz inny dzień lub najnowszy komentarz.").arg(m_date);
+            m_notice = m_date.isEmpty() ? Meteo::i18n("The synoptic commentary has not been published yet. Try again later.")
+                : Meteo::i18n("No synoptic commentary for %1. Choose another date or the latest commentary.").arg(m_date);
         } else m_error = error;
         emit changed();
     });
@@ -35,8 +36,8 @@ void EditorialModel::setDate(const QString &value)
     if (m_date == value) return;
     if (!value.isEmpty()) {
         const auto date = QDate::fromString(value, Qt::ISODate);
-        if (!date.isValid()) { m_notice = QStringLiteral("Podaj poprawną datę w formacie rrrr-mm-dd."); emit changed(); return; }
-        if (date > QDate::currentDate()) { m_notice = QStringLiteral("Komentarze z przyszłych dni nie są jeszcze dostępne."); emit changed(); return; }
+        if (!date.isValid()) { m_notice = Meteo::i18n("Enter a valid date in yyyy-mm-dd format."); emit changed(); return; }
+        if (date > QDate::currentDate()) { m_notice = Meteo::i18n("Commentary for future dates is not available yet."); emit changed(); return; }
     }
     m_date = value; m_commentHtml.clear(); m_publishedDate.clear(); reload(false);
 }

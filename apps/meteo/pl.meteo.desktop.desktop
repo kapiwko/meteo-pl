@@ -1,11 +1,14 @@
 [Desktop Entry]
 Type=Application
 Name=Meteo
-GenericName=Meteogramy ICM
-Comment=Prognoza pogody z meteo.pl
+GenericName=ICM meteograms
+GenericName[pl]=Meteogramy ICM
+Comment=Weather forecasts from meteo.pl
+Comment[pl]=Prognoza pogody z meteo.pl
 Exec=meteo-pl
 Icon=pl.meteo.desktop
 Terminal=false
 Categories=Qt;KDE;Education;Science;Geography;
-Keywords=pogoda;meteogram;ICM;meteo;weather;
+Keywords=weather;forecast;meteogram;ICM;meteo;
+Keywords[pl]=pogoda;prognoza;meteogram;ICM;meteo;
 StartupNotify=true

@@ -66,11 +66,11 @@ PlasmoidItem {
         Layout.preferredHeight: Kirigami.Units.gridUnit * (root.showMeteogram ? 38 : 23)
         RowLayout {
             Layout.fillWidth: true
-            ToolButton { icon.name: "go-previous"; text: "Pogoda"; visible: root.showMeteogram; onClicked: root.showMeteogram = false }
+            ToolButton { icon.name: "go-previous"; text: I18n.i18n("Weather"); visible: root.showMeteogram; onClicked: root.showMeteogram = false }
             Label { text: "Meteo · ICM"; font.bold: true; Layout.fillWidth: true }
-            ToolButton { icon.name: "view-refresh"; text: "Odśwież"; display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
-            ToolButton { icon.name: "configure"; text: "Ustawienia"; display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
-            ToolButton { icon.name: "mark-location"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "view-refresh"; text: I18n.i18n("Refresh"); display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "configure"; text: I18n.i18n("Settings"); display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "mark-location"; text: I18n.i18n("Location"); display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
         }
         Loader {
             id: forecastView
@@ -87,7 +87,7 @@ PlasmoidItem {
                 onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
             }
         }
-        Button { Layout.alignment: Qt.AlignHCenter; visible: !root.showMeteogram; text: "Pokaż meteogram"; icon.name: "view-statistics"; onClicked: root.showMeteogram = true }
+        Button { Layout.alignment: Qt.AlignHCenter; visible: !root.showMeteogram; text: I18n.i18n("Show meteogram"); icon.name: "view-statistics"; onClicked: root.showMeteogram = true }
         MeteoSettings {
             id: displayDialog
             parent: fullView

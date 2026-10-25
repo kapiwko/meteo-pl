@@ -6,6 +6,14 @@ qt_add_executable(test_client test_client.cpp)
 target_link_libraries(test_client PRIVATE meteo_core Qt6::Test)
 add_test(NAME client COMMAND test_client)
 
+qt_add_executable(test_i18n test_i18n.cpp)
+target_link_libraries(test_i18n PRIVATE meteo_ui Qt6::Test Qt6::Quick)
+foreach(language en_US pl_PL)
+    add_test(NAME translation_${language} COMMAND test_i18n)
+    set_tests_properties(translation_${language} PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;LC_ALL=en_US.UTF-8;LANGUAGE=${language};METEO_TEST_LANGUAGE=${language};QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
+endforeach()
+
 qt_add_executable(test_services test_services.cpp)
 target_link_libraries(test_services PRIVATE meteo_ui Qt6::Test)
 add_test(NAME services COMMAND test_services)

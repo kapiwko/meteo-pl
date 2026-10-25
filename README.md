@@ -105,7 +105,8 @@ Availability of individual parameters depends on the forecast model.
 
 Requirements: CMake 3.25+, Ninja, a C++23 compiler, Qt 6.5+ and KDE Frameworks 6.
 Qt modules: Core, Network, Qml, Quick, QuickControls2, Positioning, Widgets and
-Test. KDE dependencies: Kirigami, Notifications and QQC2 Desktop Style. The
+Test. KDE dependencies: Kirigami, Notifications, KI18n and QQC2 Desktop Style.
+GNU gettext tools are required to compile translations. The
 widget additionally requires Plasma 6 and its QML modules.
 
 ```bash
@@ -141,6 +142,8 @@ sudo cmake --install build/release
   run the tests.
 - [Chart parity](docs/chart-parity.md): correspondence with the web client and
   parameter availability.
+- [Translations](docs/translations.md): English source messages and gettext
+  catalogs, including the Polish translation.
 - [Architecture](docs/architecture.md): shared backend and frontend structure.
 
 Preferences and saved places are stored in

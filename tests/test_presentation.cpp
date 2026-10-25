@@ -103,7 +103,7 @@ private slots:
         QVERIFY(header->property("loading").toBool());
         QVERIFY(indicator->property("running").toBool());
         QVERIFY(icon->property("source").toString().isEmpty());
-        QCOMPARE(time->property("text").toString(), "Pobieranie prognozy…");
+        QCOMPARE(time->property("text").toString(), "Downloading forecast…");
         model.setAutoRefresh(false); // Cancel the deferred request; this regression test stays offline.
         QVERIFY(!header->property("loading").toBool());
         model.setLocationName("");
@@ -608,7 +608,7 @@ private slots:
         QImage image(pngPath); QVERIFY(!image.isNull());
         QVERIFY(image.height() > readings->height());
         QVERIFY(image.height() > window.height() + 150);
-        QVERIFY(image.text("Title").contains("Wszystkie"));
+        QVERIFY(image.text("Title").contains("All"));
         const auto background = readings->property("color").value<QColor>();
         QCOMPARE(image.pixelColor(image.width()/2, image.height()/2), background);
         int finalReadingPixels = 0;
@@ -618,7 +618,7 @@ private slots:
         QVERIFY(finalReadingPixels > 10); // The last parameter's swatch is below the scroll viewport.
         QVERIFY(object->property("pinned").toBool());
         QVERIFY(!object->property("exportingReadings").toBool());
-        QVERIFY(object->property("exportMessage").toString().contains("odczyt"));
+        QVERIFY(object->property("exportMessage").toString().contains("reading"));
     }
     void exportFailurePreservesFileAndCanBeRetried()
     {

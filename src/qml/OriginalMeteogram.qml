@@ -10,8 +10,8 @@ ColumnLayout {
     property real imageScale: 1
     LegacyMeteogramModel { id: original; lookup: root.weather.originalLookupUrl }
     RowLayout {
-        Label { text: "Oryginalny meteogram ICM"; font.bold: true; Layout.fillWidth: true }
-        ToolButton { text: "Legenda"; checkable: true; id: legendToggle }
+        Label { text: I18n.i18n("Original ICM meteogram"); font.bold: true; Layout.fillWidth: true }
+        ToolButton { text: I18n.i18n("Legend"); checkable: true; id: legendToggle }
         ToolButton { icon.name: "zoom-out"; onClicked: root.imageScale = Math.max(0.5, root.imageScale / 1.25) }
         ToolButton { icon.name: "zoom-in"; onClicked: root.imageScale = Math.min(3, root.imageScale * 1.25) }
         ToolButton { icon.name: "view-refresh"; onClicked: original.reload(); enabled: !original.busy }
@@ -49,5 +49,5 @@ ColumnLayout {
             MapWheelHandler { onZoomRequested: steps => root.imageScale = Math.max(0.5, Math.min(3, root.imageScale * Math.pow(1.25, steps))) }
         }
     }
-    Label { text: "Źródło: ICM UW / meteo.pl · oryginalny obraz wraz z oznaczeniami autora"; font.pixelSize: 10; opacity: 0.65; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+    Label { text: I18n.i18n("Source: ICM UW / meteo.pl · original image with the author's annotations"); font.pixelSize: 10; opacity: 0.65; wrapMode: Text.WordWrap; Layout.fillWidth: true }
 }

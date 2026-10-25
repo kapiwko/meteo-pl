@@ -1,0 +1,1933 @@
+# SPDX-FileCopyrightText: 2026 Kamil Piwowarski <kapiwko@gmail.com>
+# SPDX-License-Identifier: GPL-3.0-or-later
+msgid ""
+msgstr ""
+"Project-Id-Version: meteo-pl\n"
+"Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
+"POT-Creation-Date: 2026-10-25 22:51+0100\n"
+"PO-Revision-Date: 2026-10-25 23:00+0100\n"
+"Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+
+#: src/qml/ForecastPanel.qml:435
+msgid " hours"
+msgstr " godzin"
+
+#: src/qml/WeatherMap.qml:98
+msgid " · ICM UW data"
+msgstr " · dane ICM UW"
+
+#: src/qml/ForecastHeader.qml:54
+msgid " · Pressure "
+msgstr " · Ciśnienie "
+
+#: src/qml/ForecastHeader.qml:81
+msgid " · approximate time · "
+msgstr " · orientacyjna godzina · "
+
+#: src/qml/ForecastPanel.qml:81 src/qml/ForecastPanel.qml:179
+msgid " · local time"
+msgstr " · czas lokalny"
+
+#: src/qml/ForecastPanel.qml:79 src/qml/ForecastPanel.qml:127
+msgid " · model run: "
+msgstr " · obliczenia: "
+
+#: src/qml/ForecastPanel.qml:126
+msgid " · parameter reading · "
+msgstr " · odczyt parametrów · "
+
+#: src/qml/ThematicMaps.qml:40
+msgid " · run: "
+msgstr " · start: "
+
+#: src/qml/ForecastPanel.qml:188
+msgid "%1 chart selected"
+msgid_plural "%1 charts selected"
+msgstr[0] "Wybrano %1 wykres"
+msgstr[1] "Wybrano %1 wykresy"
+msgstr[2] "Wybrano %1 wykresów"
+
+#: src/presentation/WeatherModel.cpp:582
+msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
+msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
+
+#: src/qml/ForecastSettings.qml:39
+msgid "24 hours"
+msgstr "24 godziny"
+
+#: src/qml/ForecastSettings.qml:39
+msgid "48 hours"
+msgstr "48 godzin"
+
+#: src/qml/ForecastSettings.qml:39
+msgid "72 hours"
+msgstr "72 godziny"
+
+#: src/qml/ForecastHeader.qml:79
+msgid ": "
+msgstr " słońca: "
+
+#: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:28
+msgid "About"
+msgstr "O aplikacji"
+
+#: src/qml/DisplaySettings.qml:157
+msgid "Add chart"
+msgstr "Dodaj wykres"
+
+#: src/qml/DisplaySettings.qml:223
+msgid "Add series"
+msgstr "Dodaj serię"
+
+#: src/presentation/ForecastFields.cpp:9
+msgid "Air temperature"
+msgstr "Temperatura powietrza"
+
+#: src/presentation/ChartConfiguration.cpp:50
+msgid "Air temperature min–max"
+msgstr "Temperatura powietrza min–max"
+
+#: src/qml/ForecastInspector.qml:21 src/qml/ForecastInspector.qml:92
+#: src/qml/ForecastPanel.qml:113 src/qml/ForecastPanel.qml:186
+msgid "All"
+msgstr "Wszystkie"
+
+#: src/presentation/UserPreferences.cpp:174
+msgid "All charts"
+msgstr "Wszystkie wykresy"
+
+#: src/qml/ReadingSettings.qml:24
+msgid "All parameters"
+msgstr "Wszystkie parametry"
+
+#: src/qml/DisplaySettings.qml:130
+msgid "All saved profiles…"
+msgstr "Wszystkie zapisane profile…"
+
+#: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
+msgid "Animate"
+msgstr "Animuj"
+
+#: src/qml/SeriesSettings.qml:50
+msgid "Appearance"
+msgstr "Wygląd"
+
+#: src/qml/MeteoSettings.qml:56
+msgid "Application"
+msgstr "Aplikacja"
+
+#: src/qml/MeteoAbout.qml:33
+msgid "Application and Plasma widget for ICM UW meteograms"
+msgstr "Aplikacja i plasmoid z meteogramami ICM UW"
+
+#: src/qml/ForecastPanel.qml:343
+msgid ""
+"Archived model run. Chart dates and times refer to the selected forecast."
+msgstr ""
+"Archiwalne uruchomienie modelu. Daty i godziny wykresu odnoszą się do "
+"wybranej prognozy."
+
+#: src/qml/EditorialView.qml:24
+msgid "Article"
+msgstr "Artykuł"
+
+#: src/qml/ForecastPanel.qml:321
+msgid "Articles"
+msgstr "Artykuły"
+
+#: src/qml/ApplicationSettings.qml:69
+msgid "Articles and commentary:"
+msgstr "Artykuły i komentarze:"
+
+#: src/qml/MeteoAbout.qml:39
+msgid "Author:"
+msgstr "Autor:"
+
+#: src/qml/DisplaySettings.qml:247
+msgid "Automatic"
+msgstr "Automatycznie"
+
+#: src/qml/SeriesSettings.qml:87
+msgid "Automatic by unit"
+msgstr "Automatycznie według jednostki"
+
+#: src/presentation/UserPreferences.cpp:174
+msgid "Aviation"
+msgstr "Lotniczy"
+
+#: src/qml/DisplaySettings.qml:228
+msgid "Axis range"
+msgstr "Zakres osi"
+
+#: src/qml/EditorialView.qml:42
+msgid "Back to articles"
+msgstr "Wróć do artykułów"
+
+#: src/qml/SeriesSettings.qml:19
+msgid "Bars"
+msgstr "Słupki"
+
+#: src/presentation/UserPreferences.cpp:174
+msgid "Basic"
+msgstr "Podstawowy"
+
+#: src/qml/ForecastPanel.qml:138
+msgid "CSV data (*.csv)"
+msgstr "Dane CSV (*.csv)"
+
+#: src/qml/ApplicationSettings.qml:61
+msgid "Cache"
+msgstr "Pamięć podręczna"
+
+#: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
+msgid "Cancel loading"
+msgstr "Anuluj ładowanie"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Category"
+msgstr "Kategoria"
+
+#: src/qml/ForecastPanel.qml:557
+msgid "Chance %"
+msgstr "Szansa %"
+
+#: src/qml/ForecastPanel.qml:214
+msgid "Chart appearance, series visibility and legends will be preserved."
+msgstr "Zachowany zostanie wygląd wykresów, widoczność serii i legend."
+
+#: src/qml/DisplaySettings.qml:94
+msgid "Chart height in this profile"
+msgstr "Wysokość wykresów w profilu"
+
+#: src/qml/DisplaySettings.qml:82
+msgid "Chart height:"
+msgstr "Wysokość wykresów:"
+
+#: src/qml/ReadingSettings.qml:40
+msgid "Chart legends"
+msgstr "Legenda wykresów"
+
+#: src/qml/DisplaySettings.qml:193
+msgid "Chart name"
+msgstr "Nazwa wykresu"
+
+#: src/qml/DisplaySettings.qml:50 src/qml/ForecastSettings.qml:25
+msgid "Chart profile"
+msgstr "Profil wykresów"
+
+#: src/qml/ForecastSettings.qml:21
+msgid "Chart profile:"
+msgstr "Profil wykresów:"
+
+#: src/qml/ForecastSettings.qml:38
+msgid "Chart time interval"
+msgstr "Zakres czasu na wykresach"
+
+#: src/qml/ForecastPanel.qml:434
+msgid "Chart zoom"
+msgstr "Powiększenie wykresów"
+
+#: src/qml/ApplicationSettings.qml:17
+msgid "Charts"
+msgstr "Wykresy"
+
+#: src/qml/ForecastPanel.qml:94
+msgid "Charts exported"
+msgstr "Wyeksportowano wykresy"
+
+#: src/qml/DisplaySettings.qml:156
+msgid "Charts in profile"
+msgstr "Wykresy w profilu"
+
+#: apps/meteo/main.cpp:43
+msgid "Check QML startup without downloading data."
+msgstr "Sprawdź uruchomienie QML bez pobierania danych."
+
+#: src/presentation/ReadingsExporter.cpp:12
+msgid "Choose a local CSV file."
+msgstr "Wybierz lokalny plik CSV."
+
+#: src/presentation/ChartExporter.cpp:42
+msgid "Choose a local PNG file."
+msgstr "Wybierz lokalny plik PNG."
+
+#: src/presentation/UserPreferences.cpp:199
+#: src/presentation/UserPreferences.cpp:226
+msgid "Choose a local file."
+msgstr "Wybierz plik lokalny."
+
+#: src/qml/LocationEditor.qml:199
+msgid "Choose a place or a point on the map"
+msgstr "Wybierz miejscowość lub punkt na mapie"
+
+#: src/qml/ForecastPanel.qml:350
+msgid "Choose a place to download its meteogram."
+msgstr "Wybierz miejscowość i pobierz meteogram."
+
+#: src/qml/DisplaySettings.qml:221
+msgid "Choose a series…"
+msgstr "Wybierz serię…"
+
+#: src/qml/ForecastPanel.qml:177
+msgid "Choose charts to combine into one PNG image."
+msgstr "Wybierz wykresy do wspólnego obrazu PNG."
+
+#: src/qml/SeriesSettings.qml:103
+msgid "Choose color"
+msgstr "Wybierz kolor"
+
+#: src/qml/ForecastPanel.qml:351 src/qml/PlacePicker.qml:14
+msgid "Choose location"
+msgstr "Wybierz lokalizację"
+
+#: src/qml/LocationEditor.qml:116
+msgid "Choose on map"
+msgstr "Wybierz na mapie"
+
+#: src/presentation/UserPreferences.cpp:174
+msgid "Classic ICM"
+msgstr "Klasyczny ICM"
+
+#: src/presentation/WeatherModel.cpp:515
+msgid "Clear"
+msgstr "Słonecznie"
+
+#: src/qml/ApplicationSettings.qml:80
+msgid "Clear cache"
+msgstr "Wyczyść pamięć podręczną"
+
+#: src/qml/ForecastInspector.qml:80
+msgid "Click a chart to pin the reading"
+msgstr "Kliknij wykres, aby przypiąć odczyt"
+
+#: src/qml/ForecastInspector.qml:77
+msgid "Close reading"
+msgstr "Zamknij odczyt"
+
+#: src/presentation/ForecastFields.cpp:32
+msgid "Cloud base · >0.1 octas"
+msgstr "Podstawa chmur · >0,1 okt."
+
+#: src/presentation/ForecastFields.cpp:33
+msgid "Cloud base · >2.5 octas"
+msgstr "Podstawa chmur · >2,5 okt."
+
+#: src/presentation/ForecastFields.cpp:34
+msgid "Cloud base · >4.5 octas"
+msgstr "Podstawa chmur · >4,5 okt."
+
+#: src/presentation/ForecastFields.cpp:35
+msgid "Cloud base · >6.5 octas"
+msgstr "Podstawa chmur · >6,5 okt."
+
+#: src/presentation/ForecastFields.cpp:36
+msgid "Cloud base · >7.9 octas"
+msgstr "Podstawa chmur · >7,9 okt."
+
+#: src/qml/SeriesSettings.qml:20
+msgid "Cloud cover"
+msgstr "Pokrycie chmur"
+
+#: src/presentation/ForecastFields.cpp:70
+msgid "Cloud cover and fog"
+msgstr "Zachmurzenie i mgła"
+
+#: src/presentation/ForecastFields.cpp:69
+msgid "Cloud heights and visibility"
+msgstr "Pionowy zasięg chmur i widzialność"
+
+#: src/qml/SeriesSettings.qml:21
+msgid "Cloud points"
+msgstr "Punkty chmur"
+
+#: src/presentation/ForecastFields.cpp:37
+msgid "Cloud tops"
+msgstr "Wierzchołki chmur"
+
+#: src/qml/ForecastInspector.qml:24
+msgid "Clouds"
+msgstr "Chmury"
+
+#: src/qml/ForecastPanel.qml:557
+msgid "Clouds %"
+msgstr "Chmury %"
+
+#: src/presentation/WeatherLayersModel.cpp:40
+#: src/presentation/WeatherLayersModel.cpp:47
+msgid "Clouds and precipitation"
+msgstr "Chmury i opady"
+
+#: src/presentation/WeatherModel.cpp:383
+msgid "Code %1"
+msgstr "Kod %1"
+
+#: src/qml/SeriesSettings.qml:150
+msgid "Color by lightning count"
+msgstr "Kolory według liczby wyładowań"
+
+#: src/qml/SeriesSettings.qml:144
+msgid "Color by precipitation type"
+msgstr "Koloruj według rodzaju opadu"
+
+#: src/presentation/EditorialModel.cpp:40
+msgid "Commentary for future dates is not available yet."
+msgstr "Komentarze z przyszłych dni nie są jeszcze dostępne."
+
+#: src/qml/ApplicationSettings.qml:101
+msgid "Configuration"
+msgstr "Konfiguracja"
+
+#: src/qml/MeteoAbout.qml:42
+msgid "Contact:"
+msgstr "Kontakt:"
+
+#: src/qml/MeteoAbout.qml:46
+msgid "Copyright:"
+msgstr "Prawa autorskie:"
+
+#: src/presentation/ChartExporter.cpp:120
+msgid "Could not create PNG: "
+msgstr "Nie można utworzyć PNG: "
+
+#: src/presentation/CacheStorage.cpp:68
+msgid "Could not delete all cached files. Try again."
+msgstr ""
+"Nie udało się usunąć wszystkich plików pamięci podręcznej. Spróbuj ponownie."
+
+#: src/qml/LocationEditor.qml:48
+msgid ""
+"Could not determine your location. Check the location service or choose a "
+"point on the map."
+msgstr ""
+"Nie udało się ustalić pozycji. Sprawdź usługę lokalizacji lub wybierz punkt "
+"z mapy."
+
+#: src/qml/TileMap.qml:110
+msgid "Could not download all tiles. Keeping the previous map visible."
+msgstr ""
+"Nie udało się pobrać wszystkich kafelków. Poprzednia mapa pozostaje widoczna."
+
+#: src/network/JsonRequest.cpp:99
+msgid "Could not download data (HTTP %1). %2"
+msgstr "Nie udało się pobrać danych (HTTP %1). %2"
+
+#: src/network/MeteoClient.cpp:52
+msgid "Could not download the forecast from meteo.pl (HTTP %1). %2"
+msgstr "Nie udało się pobrać prognozy z meteo.pl (HTTP %1). %2"
+
+#: src/qml/BufferedImage.qml:39
+msgid "Could not download the map. Keeping the previous image visible."
+msgstr "Nie udało się pobrać mapy. Poprzedni obraz pozostaje widoczny."
+
+#: src/presentation/LegacyMeteogramModel.cpp:42
+msgid "Could not find the original ICM meteogram for this location."
+msgstr ""
+"Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji."
+
+#: src/presentation/UserPreferences.cpp:228
+msgid "Could not open the file: "
+msgstr "Nie udało się otworzyć pliku: "
+
+#: src/presentation/ImagePreloader.cpp:47
+msgid ""
+"Could not prepare all animation frames. Try again or choose an earlier run."
+msgstr ""
+"Nie udało się przygotować wszystkich klatek animacji. Spróbuj ponownie lub "
+"wybierz wcześniejszy start."
+
+#: src/presentation/ChartExporter.cpp:131
+msgid "Could not prepare the chart image."
+msgstr "Nie udało się przygotować obrazu wykresu."
+
+#: src/network/ImageCache.cpp:110
+msgid "Could not read the map image."
+msgstr "Nie udało się odczytać obrazu mapy."
+
+#: src/presentation/EditorialModel.cpp:25
+msgid "Could not refresh. Showing content from the cache."
+msgstr ""
+"Nie udało się odświeżyć. Wyświetlana jest treść zapisana w pamięci "
+"podręcznej."
+
+#: src/presentation/ChartExporter.cpp:117
+#: src/presentation/ChartExporter.cpp:121
+msgid "Could not save PNG: "
+msgstr "Nie można zapisać PNG: "
+
+#: src/presentation/UserPreferences.cpp:220
+msgid "Could not save the file: "
+msgstr "Nie udało się zapisać pliku: "
+
+#: src/presentation/ReadingsExporter.cpp:41
+msgid "Could not save the reading: "
+msgstr "Nie można zapisać odczytu: "
+
+#: src/qml/ForecastSettings.qml:17
+msgid "Current forecast"
+msgstr "Bieżąca prognoza"
+
+#: src/qml/MeteoAbout.qml:64
+msgid "Current forecast data"
+msgstr "Dane bieżącej prognozy"
+
+#: src/qml/DisplaySettings.qml:129
+msgid "Current profile…"
+msgstr "Bieżący profil…"
+
+#: src/qml/DisplaySettings.qml:84
+msgid "Custom"
+msgstr "Własna"
+
+#: src/qml/DisplaySettings.qml:199
+msgid "Custom height for this chart"
+msgstr "Własna wysokość tego wykresu"
+
+#: src/qml/ForecastSettings.qml:39
+msgid "Custom interval"
+msgstr "Własny zakres"
+
+#: src/presentation/UserPreferences.cpp:174
+#: src/presentation/UserPreferences.cpp:206
+msgid "Custom layout"
+msgstr "Własny układ"
+
+#: src/qml/LocationEditor.qml:227
+msgid "Custom name and coordinates"
+msgstr "Własna nazwa i współrzędne"
+
+#: src/qml/SeriesSettings.qml:93
+msgid "Dark theme:"
+msgstr "Ciemny motyw:"
+
+#: src/qml/SeriesSettings.qml:135
+msgid "Dashed"
+msgstr "Przerywana"
+
+#: src/qml/ApplicationSettings.qml:87
+msgid ""
+"Data will be downloaded again when needed. Saved places and profiles will be "
+"kept."
+msgstr ""
+"Dane zostaną pobrane ponownie, gdy będą potrzebne. Zapisane miejsca i "
+"profile pozostaną zachowane."
+
+#: src/qml/ForecastPanel.qml:318
+msgid "Days"
+msgstr "Dni"
+
+#: src/qml/ApplicationSettings.qml:30
+msgid "Default height:"
+msgstr "Wysokość domyślna:"
+
+#: src/qml/DisplaySettings.qml:114
+msgid "Delete profile"
+msgstr "Usuń profil"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Description"
+msgstr "Opis"
+
+#: src/qml/ForecastPanel.qml:187
+msgid "Deselect all"
+msgstr "Odznacz wszystkie"
+
+#: src/presentation/ForecastFields.cpp:12
+msgid "Dew point"
+msgstr "Punkt rosy"
+
+#: src/qml/SeriesSettings.qml:21
+msgid "Direction arrows"
+msgstr "Strzałki kierunku"
+
+#: src/qml/ForecastPanel.qml:463
+msgid "Disable parameter identification"
+msgstr "Wyłącz identyfikację parametrów"
+
+#: src/qml/SeriesSettings.qml:135
+msgid "Dotted"
+msgstr "Kropkowana"
+
+#: src/qml/ForecastPanel.qml:83
+msgid "Downloaded: %1"
+msgstr "Pobrano: %1"
+
+#: src/qml/WeatherSymbol.qml:14
+msgid "Downloading forecast"
+msgstr "Pobieranie prognozy"
+
+#: src/qml/CompactForecast.qml:24 src/qml/ForecastHeader.qml:49
+msgid "Downloading forecast…"
+msgstr "Pobieranie prognozy…"
+
+#: src/qml/SeriesSettings.qml:77
+msgid "Drawing:"
+msgstr "Rysowanie:"
+
+#: src/qml/DisplaySettings.qml:118
+msgid "Duplicate a preset to edit your own copy."
+msgstr "Gotowy profil możesz zduplikować i edytować jako własny."
+
+#: src/qml/DisplaySettings.qml:103
+msgid "Duplicate profile"
+msgstr "Duplikuj profil"
+
+#: src/qml/ForecastPanel.qml:386
+msgid "Earlier interval"
+msgstr "Wcześniejszy przedział"
+
+#: src/qml/DisplaySettings.qml:57
+msgid "Editing profile:"
+msgstr "Edytowany profil:"
+
+#: src/qml/ReadingSettings.qml:32
+msgid ""
+"Enable the pipette in the chart status bar to read values under the cursor. "
+"Click to pin a reading."
+msgstr ""
+"Włącz próbnik na pasku wykresów, aby odczytywać parametry pod kursorem. "
+"Kliknięcie przypina odczyt."
+
+#: src/presentation/EditorialModel.cpp:39
+msgid "Enter a valid date in yyyy-mm-dd format."
+msgstr "Podaj poprawną datę w formacie rrrr-mm-dd."
+
+#: src/qml/ForecastPanel.qml:451 src/qml/ForecastSettings.qml:39
+msgid "Entire forecast"
+msgstr "Cała prognoza"
+
+#: src/qml/DisplaySettings.qml:127
+msgid "Export"
+msgstr "Eksportuj"
+
+#: src/presentation/ChartExporter.cpp:163
+msgid "Export cancelled."
+msgstr "Przerwano eksport."
+
+#: src/qml/ForecastPanel.qml:162
+msgid "Export charts"
+msgstr "Eksport wykresów"
+
+#: src/qml/DisplaySettings.qml:37
+msgid "Export current profile"
+msgstr "Eksportuj bieżący profil"
+
+#: src/qml/DisplaySettings.qml:37
+msgid "Export saved profiles"
+msgstr "Eksportuj zapisane profile"
+
+#: src/qml/ForecastPanel.qml:470
+msgid "Export selected charts to PNG"
+msgstr "Eksportuj wybrane wykresy do PNG"
+
+#: src/qml/ForecastInspector.qml:68
+msgid "Export visible parameters"
+msgstr "Eksportuj widoczne parametry"
+
+#: src/qml/ForecastPanel.qml:467
+msgid "Exporting…"
+msgstr "Eksportuję…"
+
+#: src/qml/ForecastPanel.qml:467
+msgid "Export…"
+msgstr "Eksportuj…"
+
+#: src/qml/ForecastPanel.qml:557
+msgid "Feels like"
+msgstr "Odczuw."
+
+#: src/presentation/ChartConfiguration.cpp:50
+msgid "Feels like min–max"
+msgstr "Odczuwalna min–max"
+
+#: src/presentation/ForecastFields.cpp:13
+msgid "Feels like temperature"
+msgstr "Temperatura odczuwalna"
+
+#: src/qml/SeriesSettings.qml:18
+msgid "Fill below line"
+msgstr "Wypełnienie pod linią"
+
+#: src/qml/SeriesSettings.qml:155
+msgid "Fill:"
+msgstr "Wypełnienie:"
+
+#: src/qml/Meteogram.qml:416
+msgid ""
+"Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
+msgstr ""
+"Wypełnienie: opad średni. Cienkie kreski: opad maksymalny. Suma w przedziale "
+
+#: src/qml/LocationEditor.qml:53
+msgid "Find a place"
+msgstr "Znajdź miejsce"
+
+#: src/qml/ThematicMaps.qml:90
+msgid "Fit"
+msgstr "Dopasuj"
+
+#: src/qml/ThematicMaps.qml:90
+msgid "Fit the entire map to the view"
+msgstr "Dopasuj całą mapę do widoku"
+
+#: src/qml/ForecastInspector.qml:24
+msgid "Fog and humidity"
+msgstr "Mgła i wilgotność"
+
+#: src/presentation/ForecastFields.cpp:39
+msgid "Fog cover"
+msgstr "Pokrycie mgłą"
+
+#: src/qml/LocationEditor.qml:189 src/qml/MeteoSettings.qml:53
+msgid "Forecast"
+msgstr "Prognoza"
+
+#: src/presentation/WeatherModel.cpp:292
+msgid "Forecast for "
+msgstr "Prognoza na "
+
+#: src/qml/LocationEditor.qml:208
+msgid "Forecast model"
+msgstr "Model prognozy"
+
+#: src/qml/ApplicationSettings.qml:68 src/qml/MeteoAbout.qml:53
+msgid "Forecasts:"
+msgstr "Prognozy:"
+
+#: src/qml/MeteoAbout.qml:71
+msgid "From cache: "
+msgstr "Z pamięci: "
+
+#: src/qml/LocationEditor.qml:209
+msgid "GFS · 240 hours"
+msgstr "GFS · 240 godzin"
+
+#: src/qml/LocationEditor.qml:216
+msgid "GFS: worldwide forecast."
+msgstr "GFS: prognoza dla całego świata."
+
+#: src/qml/ApplicationSettings.qml:24
+msgid "GPU · Qt Quick scene graph (default)"
+msgstr "GPU · scena Qt Quick (domyślnie)"
+
+#: src/qml/Meteogram.qml:269
+msgid "Ground min–max"
+msgstr "Grunt min–max"
+
+#: src/presentation/WeatherLayersModel.cpp:38
+#: src/presentation/WeatherLayersModel.cpp:43
+msgid "Ground temperature"
+msgstr "Temperatura gruntu"
+
+#: src/presentation/ChartConfiguration.cpp:50
+msgid "Ground temperature min–max"
+msgstr "Temperatura gruntu min–max"
+
+#: src/qml/Meteogram.qml:310
+msgid "Gust above scale"
+msgstr "Poryw powyżej skali"
+
+#: src/qml/ForecastPanel.qml:557
+msgid "Gusts"
+msgstr "Porywy"
+
+#: src/qml/ForecastPanel.qml:619
+msgid "Gusts: "
+msgstr "Porywy: "
+
+#: src/qml/Meteogram.qml:235
+msgid "Hide legend"
+msgstr "Ukryj legendę"
+
+#: src/presentation/ForecastFields.cpp:31
+msgid "High clouds"
+msgstr "Chmury wysokie"
+
+#: src/qml/SeriesSettings.qml:141
+msgid ""
+"Higher values draw a series later within its layer; fills stay below lines"
+msgstr ""
+"Wyższa wartość rysuje serię później w jej warstwie; wypełnienia pozostają "
+"pod liniami"
+
+#: src/qml/SeriesSettings.qml:19
+msgid "Horizontal segments"
+msgstr "Poziome kreski"
+
+#: src/qml/ForecastPanel.qml:317
+msgid "Hourly"
+msgstr "Godzinowo"
+
+#: src/presentation/ForecastFields.cpp:72
+msgid "Humidity and fog"
+msgstr "Wilgotność i mgła"
+
+#: src/qml/ThematicMaps.qml:134
+msgid "ICM UW / meteo.pl thematic maps · selected run and forecast step"
+msgstr "Mapy tematyczne ICM UW / meteo.pl · wskazany start i krok prognozy"
+
+#: src/qml/SeriesSettings.qml:158
+msgid "ICM pressure palette"
+msgstr "Paleta ciśnienia ICM"
+
+#: src/qml/SeriesSettings.qml:158
+msgid "ICM wind palette"
+msgstr "Paleta wiatru ICM"
+
+#: src/qml/ForecastPanel.qml:463
+msgid "Identify parameters · move the cursor over a chart"
+msgstr "Identyfikuj parametry · przesuń kursor po wykresie"
+
+#: src/presentation/ChartExporter.cpp:26
+msgid "Image preparation timed out. Try again."
+msgstr "Upłynął czas przygotowania obrazu. Spróbuj ponownie."
+
+#: src/qml/ApplicationSettings.qml:70
+msgid "Images and maps:"
+msgstr "Obrazy i mapy:"
+
+#: src/qml/DisplaySettings.qml:28
+msgid "Import meteogram profiles"
+msgstr "Importuj profile meteogramu"
+
+#: src/qml/DisplaySettings.qml:125
+msgid "Import…"
+msgstr "Importuj…"
+
+#: src/qml/WeatherMap.qml:29
+msgid "Interactive map"
+msgstr "Mapa interaktywna"
+
+#: src/core/Forecast.cpp:96
+msgid "Invalid forecast timeline."
+msgstr "Niepoprawna oś czasu prognozy."
+
+#: src/core/Forecast.cpp:108
+msgid "Invalid forecast values."
+msgstr "Niepoprawne wartości prognozy."
+
+#: src/network/ImageCache.cpp:47
+msgid "Invalid map image URL."
+msgstr "Nieprawidłowy adres obrazu mapy."
+
+#: src/core/Forecast.cpp:82
+msgid "Invalid meteo.pl response format."
+msgstr "Niepoprawny format odpowiedzi meteo.pl."
+
+#: src/presentation/UserPreferences.cpp:254
+msgid ""
+"Invalid profile definition or unknown series. No profiles were imported."
+msgstr ""
+"Nieprawidłowa definicja profilu lub nieznana seria. Nie zaimportowano "
+"żadnego profilu."
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Key"
+msgstr "Klucz"
+
+#: src/qml/MeteoAbout.qml:71
+msgid "Last downloaded: "
+msgstr "Ostatnie pobranie: "
+
+#: src/qml/ForecastPanel.qml:406
+msgid "Later interval"
+msgstr "Późniejszy przedział"
+
+#: src/qml/EditorialView.qml:40 src/qml/ThematicMaps.qml:81
+msgid "Latest"
+msgstr "Najnowszy"
+
+#: src/qml/ForecastSettings.qml:54
+msgid "Latest available"
+msgstr "Najnowszy dostępny"
+
+#: src/presentation/WeatherModel.cpp:51 src/presentation/WeatherModel.cpp:64
+msgid "Latest forecast"
+msgstr "Najnowsza prognoza"
+
+#: src/qml/LocationEditor.qml:245
+msgid "Latitude (°N):"
+msgstr "Szerokość (°N):"
+
+#: src/qml/SeriesSettings.qml:141
+msgid "Layer order:"
+msgstr "Kolejność w warstwie:"
+
+#: src/qml/DisplaySettings.qml:238
+msgid "Left"
+msgstr "Lewa"
+
+#: src/qml/SeriesSettings.qml:87
+msgid "Left axis"
+msgstr "Lewa oś"
+
+#: src/qml/OriginalMeteogram.qml:14 src/qml/WeatherMap.qml:97
+msgid "Legend"
+msgstr "Legenda"
+
+#: src/qml/MeteoAbout.qml:48
+msgid "License:"
+msgstr "Licencja:"
+
+#: src/qml/SeriesSettings.qml:93
+msgid "Light theme:"
+msgstr "Jasny motyw:"
+
+#: src/qml/SeriesSettings.qml:22
+msgid "Lightning"
+msgstr "Wyładowania"
+
+#: src/presentation/ForecastFields.cpp:42
+msgid "Lightning indicator"
+msgstr "Wskaźnik wyładowań"
+
+#: src/qml/SeriesSettings.qml:18
+msgid "Line"
+msgstr "Linia"
+
+#: src/qml/SeriesSettings.qml:118
+msgid "Line width:"
+msgstr "Grubość linii:"
+
+#: src/qml/SeriesSettings.qml:133
+msgid "Line:"
+msgstr "Linia:"
+
+#: src/qml/EditorialView.qml:90
+msgid "Load older articles"
+msgstr "Wczytaj starsze artykuły"
+
+#: src/qml/LocationEditor.qml:118
+msgid "Locating…"
+msgstr "Ustalanie pozycji…"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Location"
+msgstr "Lokalizacja"
+
+#: apps/meteo/Main.qml:62
+msgid "Location and model"
+msgstr "Lokalizacja i model"
+
+#: src/qml/LocationEditor.qml:47
+msgid "Location lookup timed out. You can choose a point on the map."
+msgstr "Upłynął czas ustalania pozycji. Możesz wybrać punkt z mapy."
+
+#: src/qml/LocationEditor.qml:254
+msgid "Longitude (°E):"
+msgstr "Długość (°E):"
+
+#: src/presentation/ForecastFields.cpp:29
+msgid "Low clouds"
+msgstr "Chmury niskie"
+
+#: src/qml/ForecastPanel.qml:319
+msgid "Maps"
+msgstr "Mapy"
+
+#: src/qml/DisplaySettings.qml:230
+msgid "Maximum"
+msgstr "Maksimum"
+
+#: src/presentation/ForecastFields.cpp:15
+msgid "Maximum feels like"
+msgstr "Odczuwalna maksymalna"
+
+#: src/qml/Meteogram.qml:310
+msgid "Maximum precipitation above scale"
+msgstr "Opad max powyżej skali"
+
+#: src/presentation/ForecastFields.cpp:19
+msgid "Maximum precipitation in interval"
+msgstr "Opad maksymalny w przedziale"
+
+#: src/presentation/ForecastFields.cpp:11
+msgid "Maximum temperature"
+msgstr "Temperatura maksymalna"
+
+#: src/presentation/ForecastFields.cpp:18
+msgid "Mean precipitation in interval"
+msgstr "Opad średni w przedziale"
+
+#: src/presentation/ForecastFields.cpp:30
+msgid "Medium clouds"
+msgstr "Chmury średnie"
+
+#: apps/meteo/main.cpp:29
+msgid "Meteo · ICM meteograms"
+msgstr "Meteo · meteogramy ICM"
+
+#: apps/meteo/Main.qml:44 src/qml/ForecastPanel.qml:70
+#: src/qml/ForecastPanel.qml:316
+msgid "Meteogram"
+msgstr "Meteogram"
+
+#: src/qml/WeatherMap.qml:89
+msgid "Meteogram for the selected point"
+msgstr "Meteogram dla wskazanego punktu"
+
+#: src/qml/DisplaySettings.qml:29 src/qml/DisplaySettings.qml:40
+msgid "Meteogram profiles (*.json)"
+msgstr "Profile meteogramu (*.json)"
+
+#: src/qml/DisplaySettings.qml:229
+msgid "Minimum"
+msgstr "Minimum"
+
+#: src/presentation/ForecastFields.cpp:14
+msgid "Minimum feels like"
+msgstr "Odczuwalna minimalna"
+
+#: src/presentation/ForecastFields.cpp:10
+msgid "Minimum temperature"
+msgstr "Temperatura minimalna"
+
+#: src/presentation/ForecastFields.cpp:40
+#: src/presentation/ForecastFields.cpp:73
+msgid "Minimum visibility"
+msgstr "Widzialność minimalna"
+
+#: src/qml/Meteogram.qml:269
+msgid "Min–max range"
+msgstr "Zakres min–max"
+
+#: src/qml/SeriesSettings.qml:24
+msgid "Min–max range: area"
+msgstr "Zakres min–max: obszar"
+
+#: src/qml/SeriesSettings.qml:24
+msgid "Min–max range: stems"
+msgstr "Zakres min–max: kreski"
+
+#: src/core/Forecast.cpp:118
+msgid "Missing temperature or model run date."
+msgstr "Brak temperatury lub daty uruchomienia modelu."
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Model"
+msgstr "Model"
+
+#: src/qml/WeatherMap.qml:98
+msgid "Model forecast "
+msgstr "Prognoza modelu "
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Model run"
+msgstr "Obliczenia modelu"
+
+#: src/qml/ForecastSettings.qml:53
+msgid "Model run, including archived forecasts"
+msgstr "Start obliczeń modelu, także archiwalny"
+
+#: src/qml/ForecastSettings.qml:49
+msgid "Model run:"
+msgstr "Start modelu:"
+
+#: src/qml/LocationEditor.qml:205
+msgid "Model:"
+msgstr "Model:"
+
+#: src/qml/MeteoAbout.qml:70
+msgid ""
+"Model: %1\n"
+"Model run: %2"
+msgstr ""
+"Model: %1\n"
+"Obliczenia: %2"
+
+#: src/qml/DisplaySettings.qml:180
+msgid "Move chart down"
+msgstr "Przenieś wykres niżej"
+
+#: src/qml/DisplaySettings.qml:179
+msgid "Move chart up"
+msgstr "Przenieś wykres wyżej"
+
+#: src/qml/ForecastPanel.qml:484
+msgid "Move the visible time interval"
+msgstr "Przesuń widoczny przedział czasu"
+
+#: src/qml/LocationEditor.qml:40
+msgid "My location"
+msgstr "Moja pozycja"
+
+#: src/qml/LocationEditor.qml:152
+msgid "My places"
+msgstr "Moje miejsca"
+
+#: src/qml/PlacePicker.qml:32
+msgid "My places · choose a forecast"
+msgstr "Moje miejsca · wybierz prognozę"
+
+#: src/qml/DisplaySettings.qml:69 src/qml/LocationEditor.qml:236
+msgid "Name:"
+msgstr "Nazwa:"
+
+#: src/qml/SeriesSettings.qml:20
+msgid "Narrow bars"
+msgstr "Wąskie słupki"
+
+#: src/presentation/ForecastFields.cpp:17
+msgid "Near ground · maximum"
+msgstr "Przy gruncie · maksimum"
+
+#: src/presentation/ForecastFields.cpp:16
+msgid "Near ground · minimum"
+msgstr "Przy gruncie · minimum"
+
+#: src/presentation/ForecastFields.cpp:71
+msgid "Near-ground temperature"
+msgstr "Temperatura przy gruncie"
+
+#: src/presentation/ChartConfiguration.cpp:157
+#: src/presentation/UserPreferences.cpp:313
+msgid "New chart"
+msgstr "Nowy wykres"
+
+#: src/presentation/WeatherModel.cpp:511
+msgid "No cloud cover data"
+msgstr "Brak danych o zachmurzeniu"
+
+#: src/network/MeteoClient.cpp:85
+msgid "No current run is available for the selected model."
+msgstr "Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."
+
+#: src/qml/ForecastPanel.qml:349 src/qml/WeatherSymbol.qml:14
+msgid "No forecast"
+msgstr "Brak prognozy"
+
+#: src/presentation/WeatherModel.cpp:288
+msgid "No forecast for the current hour"
+msgstr "Brak prognozy na bieżącą godzinę"
+
+#: src/qml/MeteoAbout.qml:72
+msgid "No forecast has been downloaded yet."
+msgstr "Nie pobrano jeszcze prognozy."
+
+#: src/qml/ThematicMaps.qml:92
+msgid ""
+"No map is available for this run and step. Choose an earlier run or another "
+"hour."
+msgstr ""
+"Mapa dla tego uruchomienia i kroku nie jest dostępna. Wybierz wcześniejszy "
+"start lub inną godzinę."
+
+#: src/presentation/WeatherLayersModel.cpp:29
+msgid "No maps have been published for this model."
+msgstr "Brak opublikowanych map wybranego modelu."
+
+#: src/presentation/ReadingsExporter.cpp:13
+msgid "No parameters to export."
+msgstr "Brak parametrów do eksportu."
+
+#: src/qml/LocationEditor.qml:108
+msgid "No places found. Refine the name or choose a point on the map."
+msgstr ""
+"Nie znaleziono miejscowości. Doprecyzuj nazwę lub wybierz punkt z mapy."
+
+#: src/presentation/EditorialModel.cpp:28
+msgid ""
+"No synoptic commentary for %1. Choose another date or the latest commentary."
+msgstr ""
+"Brak komentarza synoptyka z %1. Wybierz inny dzień lub najnowszy komentarz."
+
+#: src/presentation/ReadingsExporter.cpp:16
+msgid "No valid reading time."
+msgstr "Brak prawidłowego czasu odczytu."
+
+#: src/presentation/WeatherModel.cpp:381
+msgid "None"
+msgstr "Brak"
+
+#: src/presentation/ChartExporter.cpp:75
+msgid "Not enough memory for the meteogram image."
+msgstr "Brak pamięci na obraz meteogramu."
+
+#: src/qml/SeriesSettings.qml:140
+msgid "Opacity:"
+msgstr "Krycie:"
+
+#: src/presentation/ExportNotifications.cpp:21
+#: src/presentation/ExportNotifications.cpp:22
+msgid "Open"
+msgstr "Otwórz"
+
+#: src/qml/ForecastPanel.qml:108
+msgid "Open a parameter reading and try again."
+msgstr "Otwórz odczyt parametrów i spróbuj ponownie."
+
+#: src/presentation/ExportNotifications.cpp:23
+msgid "Open folder"
+msgstr "Otwórz folder"
+
+#: src/qml/OriginalMeteogram.qml:13
+msgid "Original ICM meteogram"
+msgstr "Oryginalny meteogram ICM"
+
+#: src/presentation/UserPreferences.cpp:174
+msgid "Outdoors"
+msgstr "Na zewnątrz"
+
+#: src/presentation/WeatherModel.cpp:515
+msgid "Overcast"
+msgstr "Pochmurno"
+
+#: src/qml/ForecastPanel.qml:138 src/qml/ForecastPanel.qml:153
+msgid "PNG image (*.png)"
+msgstr "Obraz PNG (*.png)"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Parameter"
+msgstr "Parametr"
+
+#: src/qml/ReadingSettings.qml:12
+msgid "Parameter identification"
+msgstr "Identyfikacja parametrów"
+
+#: src/qml/ForecastPanel.qml:462
+msgid "Parameter identification mode"
+msgstr "Tryb identyfikacji parametrów"
+
+#: src/qml/ForecastPanel.qml:90
+msgid "Parameter reading saved."
+msgstr "Zapisano odczyt parametrów."
+
+#: src/qml/ForecastPanel.qml:113
+msgid "Parameters"
+msgstr "Parametry"
+
+#: src/qml/ReadingSettings.qml:24
+msgid "Parameters of the indicated chart"
+msgstr "Parametry wskazanego wykresu"
+
+#: src/presentation/WeatherModel.cpp:515
+msgid "Partly cloudy"
+msgstr "Częściowe zachmurzenie"
+
+#: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
+msgid "Pause"
+msgstr "Pauza"
+
+#: src/qml/ForecastInspector.qml:60
+msgid "Pin reading"
+msgstr "Przypnij odczyt"
+
+#: src/qml/LocationEditor.qml:197
+msgid "Place:"
+msgstr "Miejsce:"
+
+#: src/qml/LocationEditor.qml:141 src/qml/WeatherMap.qml:67
+#: src/qml/WeatherMap.qml:91
+msgid "Point on map"
+msgstr "Punkt na mapie"
+
+#: src/qml/SeriesSettings.qml:125
+msgid "Point radius:"
+msgstr "Promień punktu:"
+
+#: src/qml/SeriesSettings.qml:18
+msgid "Points"
+msgstr "Punkty"
+
+#: src/presentation/WeatherModel.cpp:574
+msgid "Polar day"
+msgstr "Dzień polarny"
+
+#: src/presentation/WeatherModel.cpp:574
+msgid "Polar night"
+msgstr "Noc polarna"
+
+#: src/presentation/WeatherModel.cpp:507
+msgid "Possible thunderstorms"
+msgstr "Możliwe burze"
+
+#: src/qml/ForecastPanel.qml:557
+msgid "Precip. mm"
+msgstr "Opad mm"
+
+#: src/qml/ForecastInspector.qml:22
+msgid "Precipitation"
+msgstr "Opady"
+
+#: src/presentation/ForecastFields.cpp:64
+msgid "Precipitation and humidity"
+msgstr "Opady i wilgotność"
+
+#: src/presentation/ForecastFields.cpp:65
+msgid "Precipitation chance and storms"
+msgstr "Szansa opadu i burze"
+
+#: src/presentation/ForecastFields.cpp:21
+msgid "Precipitation type"
+msgstr "Rodzaj opadu"
+
+#: src/qml/ForecastPanel.qml:618
+msgid "Precipitation: "
+msgstr "Opad: "
+
+#: src/qml/ThematicMaps.qml:126 src/qml/WeatherMap.qml:81
+msgid "Preparing animation: "
+msgstr "Przygotowywanie animacji: "
+
+#: src/presentation/WeatherLayersModel.cpp:39
+#: src/presentation/WeatherLayersModel.cpp:44
+msgid "Pressure"
+msgstr "Ciśnienie"
+
+#: src/presentation/ForecastFields.cpp:20
+msgid "Probability of precipitation"
+msgstr "Prawdopodobieństwo opadu"
+
+#: src/qml/MeteoSettings.qml:54
+msgid "Profiles"
+msgstr "Profile"
+
+#: src/qml/ApplicationSettings.qml:38
+msgid "Profiles and individual charts can override this height."
+msgstr "Profil i poszczególne wykresy mogą nadpisywać tę wysokość."
+
+#: src/qml/DisplaySettings.qml:45
+msgid "Profiles exported"
+msgstr "Wyeksportowano profile"
+
+#: src/qml/DisplaySettings.qml:22
+msgid "Profiles exported: "
+msgstr "Wyeksportowano profili: "
+
+#: src/qml/DisplaySettings.qml:22
+msgid "Profiles imported: "
+msgstr "Zaimportowano profili: "
+
+#: src/presentation/WeatherModel.cpp:381
+msgid "Rain"
+msgstr "Deszcz"
+
+#: src/presentation/WeatherModel.cpp:510
+msgid "Rainfall"
+msgstr "Opady deszczu"
+
+#: src/qml/EditorialView.qml:91
+msgid "Read on meteo.pl"
+msgstr "Czytaj w meteo.pl"
+
+#: src/qml/ForecastPanel.qml:94
+msgid "Reading exported"
+msgstr "Wyeksportowano odczyt"
+
+#: src/qml/ForecastInspector.qml:80
+msgid "Reading pinned · click a chart to unpin"
+msgstr "Odczyt przypięty · kliknij wykres, aby odpiąć"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Reading scope"
+msgstr "Zakres odczytu"
+
+#: src/qml/MeteoSettings.qml:55
+msgid "Readings"
+msgstr "Odczyt"
+
+#: apps/meteo/Main.qml:48 integrations/plasma/package/contents/ui/main.qml:71
+#: src/qml/EditorialView.qml:25
+msgid "Refresh"
+msgstr "Odśwież"
+
+#: src/presentation/ForecastFields.cpp:38
+msgid "Relative humidity"
+msgstr "Wilgotność względna"
+
+#: src/qml/DisplaySettings.qml:181
+msgid "Remove chart from this profile"
+msgstr "Usuń wykres z tego profilu"
+
+#: src/qml/LocationEditor.qml:180
+msgid "Remove place: "
+msgstr "Usuń miejsce: "
+
+#: src/qml/SeriesSettings.qml:62
+msgid "Remove series"
+msgstr "Usuń serię"
+
+#: src/qml/ApplicationSettings.qml:22
+msgid "Renderer:"
+msgstr "Renderer:"
+
+#: src/qml/DisplaySettings.qml:114
+msgid "Reset layout"
+msgstr "Wyczyść układ"
+
+#: src/qml/WeatherMap.qml:56
+msgid "Retry"
+msgstr "Ponów"
+
+#: src/qml/DisplaySettings.qml:238
+msgid "Right"
+msgstr "Prawa"
+
+#: src/qml/SeriesSettings.qml:87
+msgid "Right axis"
+msgstr "Prawa oś"
+
+#: src/qml/ForecastPanel.qml:171
+msgid "Save PNG…"
+msgstr "Zapisz PNG…"
+
+#: src/qml/ForecastPanel.qml:136
+msgid "Save parameter reading as CSV"
+msgstr "Zapisz odczyt parametrów jako CSV"
+
+#: src/qml/ForecastPanel.qml:136
+msgid "Save parameter reading as PNG"
+msgstr "Zapisz odczyt parametrów jako PNG"
+
+#: src/qml/ForecastInspector.qml:74
+msgid "Save reading as CSV…"
+msgstr "Zapisz odczyt jako CSV…"
+
+#: src/qml/ForecastInspector.qml:73
+msgid "Save reading as PNG…"
+msgstr "Zapisz odczyt jako PNG…"
+
+#: src/qml/ForecastPanel.qml:71
+msgid "Save selected charts"
+msgstr "Zapisz wybrane wykresy"
+
+#: src/presentation/ForecastFields.cpp:25
+#: src/presentation/ForecastFields.cpp:66
+msgid "Sea level pressure"
+msgstr "Ciśnienie na poziomie morza"
+
+#: src/qml/ApplicationSettings.qml:71
+msgid "Search and models:"
+msgstr "Wyszukiwanie i modele:"
+
+#: src/qml/LocationEditor.qml:66
+msgid "Search for a place"
+msgstr "Wyszukaj miejscowość"
+
+#: src/qml/LocationEditor.qml:82
+msgid "Search outside Poland too"
+msgstr "Szukaj także poza Polską"
+
+#: src/presentation/ChartExporter.cpp:43
+msgid "Select between 1 and 50 charts to export."
+msgstr "Wybierz od 1 do 50 wykresów do eksportu."
+
+#: src/qml/ForecastPanel.qml:90
+msgid "Selected charts saved."
+msgstr "Zapisano wybrane wykresy."
+
+#: src/qml/TileMap.qml:210
+msgid "Selected location"
+msgstr "Wybrana lokalizacja"
+
+#: src/qml/DisplaySettings.qml:178
+msgid "Series"
+msgstr "Serie"
+
+#: src/qml/SeriesSettings.qml:53
+msgid "Series appearance"
+msgstr "Wygląd serii"
+
+#: src/qml/SeriesSettings.qml:35 src/qml/SeriesSettings.qml:158
+msgid "Series color"
+msgstr "Kolor serii"
+
+#: apps/meteo/Main.qml:47 integrations/plasma/package/contents/ui/main.qml:72
+#: src/qml/MeteoSettings.qml:16
+msgid "Settings"
+msgstr "Ustawienia"
+
+#: src/qml/ApplicationSettings.qml:106
+msgid "Settings file:"
+msgstr "Plik ustawień:"
+
+#: src/qml/ApplicationSettings.qml:42
+msgid "Shade nighttime"
+msgstr "Cieniuj noc"
+
+#: src/qml/ApplicationSettings.qml:56
+msgid "Show UTC time"
+msgstr "Pokazuj czas UTC"
+
+#: src/qml/ForecastPanel.qml:418
+msgid "Show a longer interval"
+msgstr "Pokaż dłuższy przedział"
+
+#: src/qml/ForecastPanel.qml:443
+msgid "Show a shorter interval"
+msgstr "Pokaż krótszy przedział"
+
+#: apps/meteo/Main.qml:74
+msgid "Show forecast"
+msgstr "Pokaż prognozę"
+
+#: src/qml/TileMap.qml:207
+msgid "Show forecast: "
+msgstr "Pokaż prognozę: "
+
+#: src/qml/Meteogram.qml:235
+msgid "Show legend"
+msgstr "Pokaż legendę"
+
+#: src/qml/ReadingSettings.qml:46
+msgid "Show legends by default"
+msgstr "Domyślnie pokazuj legendę"
+
+#: integrations/plasma/package/contents/ui/main.qml:90
+msgid "Show meteogram"
+msgstr "Pokaż meteogram"
+
+#: src/qml/ReadingSettings.qml:20
+msgid "Show:"
+msgstr "Pokazuj:"
+
+#: src/presentation/WeatherModel.cpp:382 src/presentation/WeatherModel.cpp:509
+msgid "Sleet"
+msgstr "Deszcz ze śniegiem"
+
+#: src/presentation/WeatherModel.cpp:382
+msgid "Snow"
+msgstr "Śnieg"
+
+#: src/presentation/WeatherModel.cpp:508
+msgid "Snowfall"
+msgstr "Opady śniegu"
+
+#: src/qml/SeriesSettings.qml:135
+msgid "Solid"
+msgstr "Ciągła"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Source"
+msgstr "Źródło"
+
+#: src/qml/EditorialView.qml:92
+msgid "Source: ICM UW / meteo.pl"
+msgstr "Źródło: ICM UW / meteo.pl"
+
+#: src/qml/OriginalMeteogram.qml:52
+msgid ""
+"Source: ICM UW / meteo.pl · original image with the author's annotations"
+msgstr ""
+"Źródło: ICM UW / meteo.pl · oryginalny obraz wraz z oznaczeniami autora"
+
+#: src/qml/SeriesSettings.qml:22
+msgid "Storm indicator"
+msgstr "Wskaźnik burzy"
+
+#: src/presentation/ForecastFields.cpp:41
+msgid "Storm intensity"
+msgstr "Intensywność burzy"
+
+#: src/qml/ForecastInspector.qml:25
+msgid "Storms"
+msgstr "Burze"
+
+#: src/qml/Meteogram.qml:269
+msgid "Storms / lightning"
+msgstr "Burze / wyładowania"
+
+#: src/presentation/ForecastFields.cpp:74
+msgid "Storms and lightning"
+msgstr "Burze i wyładowania"
+
+#: src/qml/ForecastHeader.qml:68
+msgid "Sunrise"
+msgstr "Wschód"
+
+#: src/qml/ForecastHeader.qml:69
+msgid "Sunset"
+msgstr "Zachód"
+
+#: src/presentation/ForecastFields.cpp:26
+msgid "Surface pressure"
+msgstr "Ciśnienie na wysokości terenu"
+
+#: src/qml/ForecastPanel.qml:320
+msgid "Synoptic"
+msgstr "Synoptyk"
+
+#: src/qml/EditorialView.qml:24
+msgid "Synoptic commentary"
+msgstr "Komentarz synoptyka"
+
+#: src/qml/ForecastPanel.qml:557
+msgid "Temp."
+msgstr "Temp."
+
+#: src/presentation/ForecastFields.cpp:63
+msgid "Temperature"
+msgstr "Temperatura"
+
+#: src/presentation/WeatherLayersModel.cpp:42
+msgid "Temperature at 1.5 m"
+msgstr "Temperatura na 1,5 m"
+
+#: src/presentation/WeatherLayersModel.cpp:37
+msgid "Temperature at 2 m"
+msgstr "Temperatura na 2 m"
+
+#: src/presentation/CacheStorage.cpp:41
+msgid ""
+"The cache directory is a symbolic link and cannot be cleared automatically."
+msgstr ""
+"Katalog pamięci podręcznej jest dowiązaniem. Nie można go wyczyścić "
+"automatycznie."
+
+#: src/qml/ApplicationSettings.qml:95
+msgid "The cache has been cleared."
+msgstr "Pamięć podręczna została wyczyszczona."
+
+#: src/presentation/ChartExporter.cpp:52
+msgid "The chart is not ready to export. Open the meteogram and try again."
+msgstr ""
+"Wykres nie jest gotowy do eksportu. Otwórz meteogram i spróbuj ponownie."
+
+#: src/presentation/ChartExporter.cpp:128
+msgid "The chart was closed during export."
+msgstr "Wykres został zamknięty podczas eksportu."
+
+#: src/presentation/UserPreferences.cpp:233
+msgid "The file does not contain a valid JSON document."
+msgstr "Plik nie zawiera poprawnego dokumentu JSON."
+
+#: src/presentation/UserPreferences.cpp:239
+msgid "The file must contain between 1 and 100 profiles."
+msgstr "Plik musi zawierać od 1 do 100 profili."
+
+#: src/qml/ForecastPanel.qml:344
+msgid "The forecast may be outdated. Last downloaded: "
+msgstr "Prognoza może być nieaktualna. Ostatnie pobranie: "
+
+#: src/presentation/ChartExporter.cpp:72
+msgid ""
+"The image is too large. Reduce chart heights or export charts separately."
+msgstr ""
+"Obraz jest zbyt duży. Zmniejsz wysokość wykresów lub wyeksportuj je osobno."
+
+#: src/qml/ReadingSettings.qml:52
+msgid ""
+"The information button next to a chart title toggles its legend. This option "
+"sets the initial state for all profiles."
+msgstr ""
+"Przycisk informacji przy tytule wykresu przełącza legendę podczas oglądania. "
+"Ta opcja określa stan początkowy dla wszystkich profili."
+
+#: src/qml/LocationEditor.qml:124
+msgid ""
+"The location service is unavailable. Choose a place or a point on the map."
+msgstr ""
+"Usługa lokalizacji jest niedostępna. Wybierz miejscowość lub punkt z mapy."
+
+#: src/qml/DisplaySettings.qml:149
+msgid "The name and chart changes are saved automatically."
+msgstr "Nazwa i zmiany wykresów zapisują się automatycznie."
+
+#: src/presentation/UserPreferences.cpp:229
+msgid "The profile file is too large (maximum 16 MiB)."
+msgstr "Plik profili jest zbyt duży (maksymalnie 16 MiB)."
+
+#: src/presentation/ChartExporter.cpp:137
+msgid "The renderer did not return a chart image."
+msgstr "Renderer nie zwrócił obrazu wykresu."
+
+#: src/core/Forecast.cpp:73 src/network/MeteoClient.cpp:58
+msgid "The server response is too large."
+msgstr "Odpowiedź serwera jest zbyt duża."
+
+#: src/network/JsonRequest.cpp:106
+msgid "The server returned an invalid JSON document."
+msgstr "Serwer zwrócił niepoprawny dokument JSON."
+
+#: src/presentation/EditorialModel.cpp:27
+msgid "The synoptic commentary has not been published yet. Try again later."
+msgstr "Komentarz synoptyka nie został jeszcze opublikowany. Spróbuj później."
+
+#: src/qml/ApplicationSettings.qml:57
+msgid "The system time zone is used by default."
+msgstr "Domyślnie używana jest strefa systemowa."
+
+#: src/qml/ForecastSettings.qml:70
+msgid ""
+"The time interval and model run apply to this view. The selected profile is "
+"remembered."
+msgstr ""
+"Zakres czasu i start modelu dotyczą bieżącej prognozy. Wybrany profil jest "
+"zapamiętywany."
+
+#: src/presentation/ChartExporter.cpp:100
+msgid "The view changed during export. Try again."
+msgstr "Widok zmienił się podczas eksportu. Spróbuj ponownie."
+
+#: src/qml/DisplaySettings.qml:148
+msgid ""
+"This is a draft layout. Duplicate the profile to save it with your own name."
+msgstr "To roboczy układ. Duplikuj profil, aby zapisać go pod własną nazwą."
+
+#: src/network/MeteoClient.cpp:69
+msgid ""
+"This location is outside the model area. Choose GFS for locations outside "
+"Central Europe."
+msgstr ""
+"Lokalizacja jest poza obszarem modelu. Dla punktów poza Europą Środkową "
+"wybierz GFS."
+
+#: src/qml/LocationEditor.qml:221
+msgid "This point is outside the UM4 area. Choose the GFS model."
+msgstr "Ten punkt leży poza obszarem UM4. Wybierz model GFS."
+
+#: src/qml/ForecastPanel.qml:557 src/qml/ForecastPanel.qml:558
+msgid "Time"
+msgstr "Czas"
+
+#: src/qml/ForecastSettings.qml:33
+msgid "Time interval:"
+msgstr "Zakres czasu:"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Timestamp"
+msgstr "Czas"
+
+#: src/presentation/UserPreferences.cpp:217
+msgid "Too many profiles in one file. Export them separately."
+msgstr "Za dużo profili w jednym pliku. Wyeksportuj je osobno."
+
+#: src/presentation/ForecastFields.cpp:27
+msgid "Total cloud cover"
+msgstr "Zachmurzenie całkowite"
+
+#: src/qml/ApplicationSettings.qml:73
+msgid "Total on disk:"
+msgstr "Razem na dysku:"
+
+#: src/qml/LocationEditor.qml:65
+msgid "Town or village name…"
+msgstr "Nazwa miasta lub wsi…"
+
+#: src/qml/WeatherMap.qml:30
+msgid "UM / WAM thematic maps"
+msgstr "Mapy tematyczne UM / WAM"
+
+#: src/qml/MeteoAbout.qml:58
+msgid "UM model:"
+msgstr "Model UM:"
+
+#: src/qml/LocationEditor.qml:209
+msgid "UM4 · 120 hours"
+msgstr "UM4 · 120 godzin"
+
+#: src/qml/LocationEditor.qml:209
+msgid "UM4 · 60 hours"
+msgstr "UM4 · 60 godzin"
+
+#: src/qml/ThematicMaps.qml:24
+msgid "UM4 · fog"
+msgstr "UM4 · mgła"
+
+#: src/qml/ThematicMaps.qml:30
+msgid "UM4 · high clouds"
+msgstr "UM4 · chmury wysokie"
+
+#: src/qml/ThematicMaps.qml:25
+msgid "UM4 · humidity over ice"
+msgstr "UM4 · wilgotność względem lodu"
+
+#: src/qml/ThematicMaps.qml:26
+msgid "UM4 · humidity over water"
+msgstr "UM4 · wilgotność względem wody"
+
+#: src/qml/ThematicMaps.qml:28
+msgid "UM4 · low clouds"
+msgstr "UM4 · chmury niskie"
+
+#: src/qml/ThematicMaps.qml:22
+msgid "UM4 · maximum gusts"
+msgstr "UM4 · maksymalne porywy"
+
+#: src/qml/ThematicMaps.qml:29
+msgid "UM4 · medium clouds"
+msgstr "UM4 · chmury średnie"
+
+#: src/qml/ThematicMaps.qml:19
+msgid "UM4 · precipitation"
+msgstr "UM4 · opady"
+
+#: src/qml/ThematicMaps.qml:16
+msgid "UM4 · pressure"
+msgstr "UM4 · ciśnienie"
+
+#: src/qml/ThematicMaps.qml:20
+msgid "UM4 · storms"
+msgstr "UM4 · burze"
+
+#: src/qml/ThematicMaps.qml:18
+msgid "UM4 · surface temperature"
+msgstr "UM4 · temperatura powierzchni"
+
+#: src/qml/ThematicMaps.qml:21
+msgid "UM4 · surface wind"
+msgstr "UM4 · wiatr przy powierzchni"
+
+#: src/qml/ThematicMaps.qml:17
+msgid "UM4 · temperature and streamlines"
+msgstr "UM4 · temperatura i linie prądu"
+
+#: src/qml/ThematicMaps.qml:31
+msgid "UM4 · total cloud cover"
+msgstr "UM4 · zachmurzenie całkowite"
+
+#: src/qml/ThematicMaps.qml:27
+msgid "UM4 · very low clouds"
+msgstr "UM4 · chmury bardzo niskie"
+
+#: src/qml/ThematicMaps.qml:23
+msgid "UM4 · visibility"
+msgstr "UM4 · widzialność"
+
+#: src/qml/LocationEditor.qml:216
+msgid "UM4: detailed forecasts for Poland and Central Europe."
+msgstr "UM4: szczegółowa prognoza dla Polski i Europy Środkowej."
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Unit"
+msgstr "Jednostka"
+
+#: src/qml/ApplicationSettings.qml:47
+msgid "Units and time"
+msgstr "Jednostki i czas"
+
+#: src/qml/ForecastInspector.qml:60
+msgid "Unpin reading"
+msgstr "Odepnij odczyt"
+
+#: src/presentation/UserPreferences.cpp:236
+msgid "Unsupported profile file format or version."
+msgstr "Nieobsługiwany format lub wersja pliku profili."
+
+#: src/qml/LocationEditor.qml:118
+msgid "Use my location"
+msgstr "Użyj mojej pozycji"
+
+#: src/presentation/ReadingsExporter.cpp:26
+msgid "Value"
+msgstr "Wartość"
+
+#: src/qml/SeriesSettings.qml:85
+msgid "Value axis:"
+msgstr "Oś wartości:"
+
+#: src/qml/SeriesSettings.qml:19
+msgid "Vertical stems"
+msgstr "Pionowe szpilki"
+
+#: src/presentation/ForecastFields.cpp:28
+msgid "Very low clouds"
+msgstr "Chmury bardzo niskie"
+
+#: src/qml/ForecastPanel.qml:398
+msgid "Visible interval · "
+msgstr "Widoczny przedział · "
+
+#: src/qml/ThematicMaps.qml:33
+msgid "WAM · mean wave period"
+msgstr "WAM · średni okres fali"
+
+#: src/qml/ThematicMaps.qml:34
+msgid "WAM · peak wave period"
+msgstr "WAM · okres szczytowy fali"
+
+#: src/qml/ThematicMaps.qml:32
+msgid "WAM · significant wave height"
+msgstr "WAM · wysokość fali znacznej"
+
+#: integrations/plasma/package/contents/ui/main.qml:69
+msgid "Weather"
+msgstr "Pogoda"
+
+#: src/qml/DisplaySettings.qml:260
+msgid ""
+"When combining different units, assign series to the left or right axis. "
+"Empty bounds use automatic scaling."
+msgstr ""
+"Przy łączeniu różnych jednostek przypisz serie do lewej lub prawej osi. "
+"Puste granice oznaczają skalę automatyczną."
+
+#: src/presentation/ChartConfiguration.cpp:192
+#: src/presentation/ForecastFields.cpp:67
+msgid "Wind"
+msgstr "Wiatr"
+
+#: src/qml/ForecastHeader.qml:54 src/qml/ForecastPanel.qml:557
+msgid "Wind "
+msgstr "Wiatr "
+
+#: src/presentation/WeatherLayersModel.cpp:46
+msgid "Wind and gusts"
+msgstr "Wiatr i porywy"
+
+#: src/presentation/ForecastFields.cpp:22
+#: src/presentation/WeatherLayersModel.cpp:45
+msgid "Wind at 10 m"
+msgstr "Wiatr na 10 m"
+
+#: src/presentation/ForecastFields.cpp:68
+msgid "Wind direction"
+msgstr "Kierunek wiatru"
+
+#: src/presentation/ForecastFields.cpp:24
+msgid "Wind direction · from"
+msgstr "Kierunek wiatru · skąd wieje"
+
+#: src/presentation/ForecastFields.cpp:23
+msgid "Wind gusts"
+msgstr "Porywy wiatru"
+
+#: src/presentation/ChartConfiguration.cpp:192
+msgid "Wind speed and gusts"
+msgstr "Prędkość i porywy wiatru"
+
+#: src/qml/ApplicationSettings.qml:51
+msgid "Wind speed:"
+msgstr "Prędkość wiatru:"
+
+#: src/qml/DisplaySettings.qml:150
+msgid ""
+"You can duplicate a preset. Editing its charts creates a draft “Custom "
+"layout”."
+msgstr ""
+"Gotowy profil możesz zduplikować. Edycja jego wykresów tworzy roboczy "
+"„Własny układ”."
+
+#: src/qml/ForecastPanel.qml:398
+msgid "local time"
+msgstr "czas lokalny"
+
+#: src/qml/EditorialView.qml:24
+msgid "meteo.pl articles"
+msgstr "Artykuły meteo.pl"
+
+#: apps/meteo/main.cpp:40
+msgid "meteo.pl meteograms for the KDE desktop"
+msgstr "Meteogramy meteo.pl dla pulpitu KDE"
+
+#: src/qml/SeriesSettings.qml:48
+msgid "no data"
+msgstr "brak danych"
+
+#: src/qml/ForecastHeader.qml:81
+msgid "system local time"
+msgstr "czas lokalny systemu"
+
+#~ msgid ""
+#~ "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · downloaded: "
+#~ msgstr ""
+#~ "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · pobrano: "
+
+#~ msgid "Selected: "
+#~ msgstr "Wybrano: "

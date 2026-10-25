@@ -36,7 +36,7 @@ Item {
         } else if (image.status === Image.Error) {
             pending = null;
             image.destroy();
-            error = "Nie udało się pobrać mapy. Poprzedni obraz pozostaje widoczny.";
+            error = I18n.i18n("Could not download the map. Keeping the previous image visible.");
             failed();
         }
     }

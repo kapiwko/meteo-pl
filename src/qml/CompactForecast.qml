@@ -17,11 +17,11 @@ ColumnLayout {
         Label { text: root.weather.temperatureText; font.pointSize: 24; font.bold: true }
         WeatherSymbol { id: weatherSymbol; weather: root.weather; Layout.preferredWidth: 64; Layout.preferredHeight: 64 }
         ColumnLayout {
-            Label { text: "Wiatr"; opacity: 0.65; font.pointSize: 9 }
+            Label { text: I18n.i18n("Wind"); opacity: 0.65; font.pointSize: 9 }
             Label { text: root.weather.windText }
         }
     }
-    Label { Layout.fillWidth: true; text: weatherSymbol.loading ? "Pobieranie prognozy…" : root.weather.summaryTime; horizontalAlignment: Text.AlignHCenter; opacity: 0.65; font.pointSize: 9 }
+    Label { Layout.fillWidth: true; text: weatherSymbol.loading ? I18n.i18n("Downloading forecast…") : root.weather.summaryTime; horizontalAlignment: Text.AlignHCenter; opacity: 0.65; font.pointSize: 9 }
     Kirigami.InlineMessage { Layout.fillWidth: true; text: root.weather.error; visible: text.length > 0; type: Kirigami.MessageType.Warning }
     GridLayout {
         id: forecastGrid

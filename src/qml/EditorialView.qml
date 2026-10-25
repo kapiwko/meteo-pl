@@ -21,8 +21,8 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        Kirigami.Heading { text: root.commentary ? "Komentarz synoptyka" : root.selectedArticle ? "Artykuł" : "Artykuły meteo.pl"; level: 2; Layout.fillWidth: true }
-        ToolButton { text: "Odśwież"; icon.name: "view-refresh"; enabled: !feed.busy; onClicked: feed.reload(); ToolTip.text: text; ToolTip.visible: hovered }
+        Kirigami.Heading { text: root.commentary ? I18n.i18n("Synoptic commentary") : root.selectedArticle ? I18n.i18n("Article") : I18n.i18n("meteo.pl articles"); level: 2; Layout.fillWidth: true }
+        ToolButton { text: I18n.i18n("Refresh"); icon.name: "view-refresh"; enabled: !feed.busy; onClicked: feed.reload(); ToolTip.text: text; ToolTip.visible: hovered }
     }
     RowLayout {
         visible: root.commentary
@@ -37,9 +37,9 @@ ColumnLayout {
             onAccepted: feed.date = text
         }
         Button { text: "›"; enabled: !feed.busy && root.shownDate < root.today; onClicked: root.shiftDate(1) }
-        Button { text: "Najnowszy"; enabled: !feed.busy; onClicked: { if (feed.date.length) feed.date = ""; else feed.reload(); } }
+        Button { text: I18n.i18n("Latest"); enabled: !feed.busy; onClicked: { if (feed.date.length) feed.date = ""; else feed.reload(); } }
     }
-    Button { visible: !root.commentary && root.selectedArticle !== null; text: "Wróć do artykułów"; icon.name: "go-previous"; onClicked: root.selectedArticle = null }
+    Button { visible: !root.commentary && root.selectedArticle !== null; text: I18n.i18n("Back to articles"); icon.name: "go-previous"; onClicked: root.selectedArticle = null }
     BusyIndicator { running: feed.busy; visible: running; Layout.alignment: Qt.AlignHCenter }
     Kirigami.InlineMessage { Layout.fillWidth: true; visible: feed.error.length > 0; text: feed.error; type: Kirigami.MessageType.Warning }
     Kirigami.InlineMessage { Layout.fillWidth: true; visible: feed.notice.length > 0; text: feed.notice; type: Kirigami.MessageType.Information }
@@ -87,9 +87,9 @@ ColumnLayout {
                     }
                 }
             }
-            Button { visible: !root.commentary && !root.selectedArticle; text: "Wczytaj starsze artykuły"; enabled: !feed.busy; onClicked: feed.more() }
-            Button { visible: root.selectedArticle !== null; text: "Czytaj w meteo.pl"; icon.name: "internet-web-browser"; onClicked: if (root.selectedArticle) Qt.openUrlExternally(root.selectedArticle.url) }
-            Label { text: "Źródło: ICM UW / meteo.pl"; opacity: 0.65; font.pixelSize: 11 }
+            Button { visible: !root.commentary && !root.selectedArticle; text: I18n.i18n("Load older articles"); enabled: !feed.busy; onClicked: feed.more() }
+            Button { visible: root.selectedArticle !== null; text: I18n.i18n("Read on meteo.pl"); icon.name: "internet-web-browser"; onClicked: if (root.selectedArticle) Qt.openUrlExternally(root.selectedArticle.url) }
+            Label { text: I18n.i18n("Source: ICM UW / meteo.pl"); opacity: 0.65; font.pixelSize: 11 }
         }
     }
 }

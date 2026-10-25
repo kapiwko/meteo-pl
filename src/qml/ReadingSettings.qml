@@ -9,7 +9,7 @@ ColumnLayout {
     spacing: Kirigami.Units.largeSpacing
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Identyfikacja parametrów"
+        title: I18n.i18n("Parameter identification")
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
@@ -17,11 +17,11 @@ ColumnLayout {
                 Layout.fillWidth: true
                 ComboBox {
                     objectName: "probeModeSetting"
-                    Kirigami.FormData.label: "Pokazuj:"
+                    Kirigami.FormData.label: I18n.i18n("Show:")
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-                    model: [{id: "chart", name: "Parametry wskazanego wykresu"}, {id: "all", name: "Wszystkie parametry"}]
+                    model: [{id: "chart", name: I18n.i18n("Parameters of the indicated chart")}, {id: "all", name: I18n.i18n("All parameters")}]
                     textRole: "name"
                     currentIndex: model.findIndex(entry => entry.id === UserPreferences.probeMode)
                     onActivated: index => UserPreferences.probeMode = model[index].id
@@ -29,7 +29,7 @@ ColumnLayout {
             }
             Label {
                 Layout.fillWidth: true
-                text: "Włącz próbnik na pasku wykresów, aby odczytywać parametry pod kursorem. Kliknięcie przypina odczyt."
+                text: I18n.i18n("Enable the pipette in the chart status bar to read values under the cursor. Click to pin a reading.")
                 wrapMode: Text.WordWrap
                 color: Kirigami.Theme.disabledTextColor
             }
@@ -37,19 +37,19 @@ ColumnLayout {
     }
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Legenda wykresów"
+        title: I18n.i18n("Chart legends")
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
             CheckBox {
                 objectName: "defaultLegendSetting"
-                text: "Domyślnie pokazuj legendę"
+                text: I18n.i18n("Show legends by default")
                 checked: UserPreferences.showLegend
                 onToggled: UserPreferences.showLegend = checked
             }
             Label {
                 Layout.fillWidth: true
-                text: "Przycisk informacji przy tytule wykresu przełącza legendę podczas oglądania. Ta opcja określa stan początkowy dla wszystkich profili."
+                text: I18n.i18n("The information button next to a chart title toggles its legend. This option sets the initial state for all profiles.")
                 wrapMode: Text.WordWrap
                 color: Kirigami.Theme.disabledTextColor
             }

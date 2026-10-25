@@ -14,15 +14,15 @@ ColumnLayout {
     spacing: Kirigami.Units.largeSpacing
     GroupBox {
         padding: Kirigami.Units.largeSpacing
-        title: "Bieżąca prognoza"
+        title: I18n.i18n("Current forecast")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
             ComboBox {
-                Kirigami.FormData.label: "Profil wykresów:"
+                Kirigami.FormData.label: I18n.i18n("Chart profile:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-                Accessible.name: "Profil wykresów"
+                Accessible.name: I18n.i18n("Chart profile")
                 model: UserPreferences.profiles
                 textRole: "name"
                 currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
@@ -30,13 +30,13 @@ ColumnLayout {
             }
             ComboBox {
                 objectName: "settingsTimeRange"
-                Kirigami.FormData.label: "Zakres czasu:"
+                Kirigami.FormData.label: I18n.i18n("Time interval:")
                 visible: root.showTimeRange
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-                Accessible.name: "Zakres czasu na wykresach"
-                model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny", "Własny zakres"]
+                Accessible.name: I18n.i18n("Chart time interval")
+                model: [I18n.i18n("Entire forecast"), I18n.i18n("24 hours"), I18n.i18n("48 hours"), I18n.i18n("72 hours"), I18n.i18n("Custom interval")]
                 currentIndex: {
                     const hours = (root.endTime - root.startTime) / 3600;
                     if (Math.abs(root.startTime - root.weather.firstTimestamp) < 1 && Math.abs(root.endTime - root.weather.lastTimestamp) < 1) return 0;
@@ -46,12 +46,12 @@ ColumnLayout {
                 onActivated: index => { if (index < 4) root.hoursSelected([0,24,48,72][index]); }
             }
             ComboBox {
-                Kirigami.FormData.label: "Start modelu:"
+                Kirigami.FormData.label: I18n.i18n("Model run:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 20
-                Accessible.name: "Start obliczeń modelu, także archiwalny"
-                model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowszy dostępny"}]
+                Accessible.name: I18n.i18n("Model run, including archived forecasts")
+                model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: I18n.i18n("Latest available")}]
                 textRole: "label"
                 onDownChanged: if (down) root.weather.loadRuns()
                 currentIndex: {
@@ -67,7 +67,7 @@ ColumnLayout {
     }
     Label {
         Layout.fillWidth: true
-        text: "Zakres czasu i start modelu dotyczą bieżącej prognozy. Wybrany profil jest zapamiętywany."
+        text: I18n.i18n("The time interval and model run apply to this view. The selected profile is remembered.")
         color: Kirigami.Theme.disabledTextColor
         wrapMode: Text.WordWrap
     }

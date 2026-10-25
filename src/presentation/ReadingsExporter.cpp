@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "ReadingsExporter.hpp"
 #include <QDateTime>
 #include <QFileInfo>
@@ -8,11 +9,11 @@
 QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readings, const QVariantMap &metadata) const
 {
     const auto failure = [](const QString &error) -> QVariantMap { return {{"ok", false}, {"error", error}}; };
-    if (!url.isLocalFile() || url.toLocalFile().isEmpty()) return failure(QStringLiteral("Wybierz lokalny plik CSV."));
-    if (readings.isEmpty() || readings.size() > 1000) return failure(QStringLiteral("Brak parametrów do eksportu."));
+    if (!url.isLocalFile() || url.toLocalFile().isEmpty()) return failure(Meteo::i18n("Choose a local CSV file."));
+    if (readings.isEmpty() || readings.size() > 1000) return failure(Meteo::i18n("No parameters to export."));
     const auto timestamp = metadata.value("timestamp").toDouble();
     if (!std::isfinite(timestamp) || timestamp <= 0 || timestamp > 253402300799.0)
-        return failure(QStringLiteral("Brak prawidłowego czasu odczytu."));
+        return failure(Meteo::i18n("No valid reading time."));
     auto time = QDateTime::fromSecsSinceEpoch(qint64(timestamp), QTimeZone::UTC);
     if (!metadata.value("utc").toBool()) time = time.toLocalTime();
     const auto quoted = [](QString text) { text.replace('"', QStringLiteral("\"\"")); return '"' + text + '"'; };
@@ -22,7 +23,7 @@ QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readi
         for (const auto &column : columns) cells.append(quoted(column));
         data += cells.join(';').toUtf8() + "\r\n";
     };
-    appendRow({"Czas", "Lokalizacja", "Model", "Obliczenia modelu", "Zakres odczytu", "Kategoria", "Klucz", "Parametr", "Wartość", "Jednostka", "Opis", "Źródło"});
+    appendRow({Meteo::i18n("Timestamp"), Meteo::i18n("Location"), Meteo::i18n("Model"), Meteo::i18n("Model run"), Meteo::i18n("Reading scope"), Meteo::i18n("Category"), Meteo::i18n("Key"), Meteo::i18n("Parameter"), Meteo::i18n("Value"), Meteo::i18n("Unit"), Meteo::i18n("Description"), Meteo::i18n("Source")});
     for (const auto &entry : readings) {
         const auto reading = entry.toMap();
         bool numeric = false;
@@ -37,6 +38,6 @@ QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readi
     if (QFileInfo(path).suffix().isEmpty()) path += QStringLiteral(".csv");
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly) || file.write(data) != data.size() || !file.commit())
-        return failure(QStringLiteral("Nie można zapisać odczytu: ") + file.errorString());
+        return failure(Meteo::i18n("Could not save the reading: ") + file.errorString());
     return {{"ok", true}, {"file", QUrl::fromLocalFile(path)}, {"path", path}};
 }

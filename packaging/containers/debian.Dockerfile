@@ -2,7 +2,7 @@ ARG BASE_IMAGE=debian:trixie-slim
 FROM ${BASE_IMAGE}
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install --yes --no-install-recommends \
-    build-essential ccache cmake ninja-build pkg-config python3 git file binutils \
+    build-essential ccache cmake ninja-build pkg-config python3 git file binutils gettext libkf6i18n-dev locales \
     dpkg-dev dbus-x11 fonts-dejavu-core desktop-file-utils \
     qt6-base-dev qt6-base-dev-tools qt6-declarative-dev qt6-declarative-dev-tools \
     qt6-positioning-dev libqt6svg6-dev libkirigami-dev libkf6notifications-dev \
@@ -15,3 +15,4 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install --yes --no-install-recommends xvfb xauth plasma-desktop && rm -rf /var/lib/apt/lists/*
 WORKDIR /source
+RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen

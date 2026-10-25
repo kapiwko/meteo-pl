@@ -26,8 +26,8 @@ ColumnLayout {
     signal locationSelected(string name, real latitude, real longitude)
     RowLayout {
         Layout.fillWidth: true
-        Button { text: "Mapa interaktywna"; checkable: true; checked: !root.thematic; onClicked: root.thematic = false }
-        Button { text: "Mapy tematyczne UM / WAM"; checkable: true; checked: root.thematic; onClicked: root.thematic = true }
+        Button { text: I18n.i18n("Interactive map"); checkable: true; checked: !root.thematic; onClicked: root.thematic = false }
+        Button { text: I18n.i18n("UM / WAM thematic maps"); checkable: true; checked: root.thematic; onClicked: root.thematic = true }
     }
     Loader { Layout.fillWidth: true; Layout.fillHeight: true; active: root.thematic; visible: active; sourceComponent: ThematicMaps { weather: root.weather } }
     ColumnLayout {
@@ -43,7 +43,7 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        Button { id: play; text: checked ? animationCache.ready ? "Pauza" : "Anuluj ładowanie" : "Animuj"; icon.name: checked ? "media-playback-pause" : "media-playback-start"; checkable: true; enabled: layers.runs.length > 0; onCheckedChanged: { if (checked) root.prepareAnimation(); else animationCache.cancel(); } }
+        Button { id: play; text: checked ? animationCache.ready ? I18n.i18n("Pause") : I18n.i18n("Cancel loading") : I18n.i18n("Animate"); icon.name: checked ? "media-playback-pause" : "media-playback-start"; checkable: true; enabled: layers.runs.length > 0; onCheckedChanged: { if (checked) root.prepareAnimation(); else animationCache.cancel(); } }
         Slider { Layout.fillWidth: true; from: layers.firstStep; to: layers.lastStep; stepSize: root.weather.model === "gfs" ? 3 : 1; value: layers.step; onMoved: layers.step = Math.round(value) }
         Label { text: "+" + layers.step + " h" }
         ToolButton { icon.name: "view-refresh"; onClicked: layers.reload(); enabled: !layers.busy }
@@ -53,7 +53,7 @@ ColumnLayout {
     Kirigami.InlineMessage { text: animationCache.error; visible: text.length > 0; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
     Kirigami.InlineMessage {
         text: map.error; visible: text.length > 0; type: Kirigami.MessageType.Warning; Layout.fillWidth: true
-        actions: Kirigami.Action { text: "Ponów"; onTriggered: map.scheduleFrame() }
+        actions: Kirigami.Action { text: I18n.i18n("Retry"); onTriggered: map.scheduleFrame() }
     }
     TileMap {
         id: map
@@ -64,7 +64,7 @@ ColumnLayout {
         longitude: root.weather.longitude
         markerLatitude: root.picked ? root.picked.latitude : root.weather.latitude
         markerLongitude: root.picked ? root.picked.longitude : root.weather.longitude
-        markerName: root.picked ? "Punkt na mapie" : root.weather.locationName
+        markerName: root.picked ? I18n.i18n("Point on map") : root.weather.locationName
         places: UserPreferences.places
         zoom: 6
         weatherLayer: layers
@@ -78,7 +78,7 @@ ColumnLayout {
             anchors.centerIn: parent
             spacing: 8
             BusyIndicator { anchors.horizontalCenter: parent.horizontalCenter; running: layers.busy || map.loading || animationCache.busy; visible: running }
-            Label { visible: animationCache.busy; text: "Przygotowywanie animacji: " + animationCache.completed + " / " + animationCache.total; padding: 8; background: Rectangle { radius: 4; color: Kirigami.Theme.backgroundColor } }
+            Label { visible: animationCache.busy; text: I18n.i18n("Preparing animation: ") + animationCache.completed + " / " + animationCache.total; padding: 8; background: Rectangle { radius: 4; color: Kirigami.Theme.backgroundColor } }
             ProgressBar { anchors.horizontalCenter: parent.horizontalCenter; width: 200; visible: animationCache.busy; from: 0; to: Math.max(1, animationCache.total); value: animationCache.completed }
         }
     }
@@ -86,16 +86,16 @@ ColumnLayout {
         Layout.fillWidth: true
         Button {
             visible: root.picked !== null
-            text: "Meteogram dla wskazanego punktu"
+            text: I18n.i18n("Meteogram for the selected point")
             icon.name: "view-statistics"
-            onClicked: root.locationSelected("Punkt na mapie", Number(root.picked.latitude.toFixed(6)), Number(root.picked.longitude.toFixed(6)))
+            onClicked: root.locationSelected(I18n.i18n("Point on map"), Number(root.picked.latitude.toFixed(6)), Number(root.picked.longitude.toFixed(6)))
         }
         Label { visible: root.picked !== null; text: root.picked ? root.picked.latitude.toFixed(3) + "°N, " + root.picked.longitude.toFixed(3) + "°E" : ""; opacity: 0.7 }
     }
     RowLayout {
         Layout.fillWidth: true
-        ToolButton { id: legendToggle; text: "Legenda"; checkable: true }
-        Label { text: "Prognoza modelu " + (root.weather.model === "gfs" ? "GFS" : "UM4") + " · dane ICM UW"; opacity: 0.65; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+        ToolButton { id: legendToggle; text: I18n.i18n("Legend"); checkable: true }
+        Label { text: I18n.i18n("Model forecast ") + (root.weather.model === "gfs" ? "GFS" : "UM4") + I18n.i18n(" · ICM UW data"); opacity: 0.65; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.WordWrap }
     }
     ScrollView {
         visible: legendToggle.checked

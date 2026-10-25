@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 #include <QColor>
@@ -46,7 +47,7 @@ QVariantMap defaultSeriesStyle(const QString &key)
         if (key == "storm_max") render = "storm";
         if (key == "flash_max") render = "flash";
         QString label = field.label;
-        if (!lower.isEmpty()) label = key == "grdtmp_max" ? "Temperatura gruntu min–max" : key == "wchill_max" ? "Odczuwalna min–max" : "Temperatura powietrza min–max";
+        if (!lower.isEmpty()) label = key == "grdtmp_max" ? Meteo::i18n("Ground temperature min–max") : key == "wchill_max" ? Meteo::i18n("Feels like min–max") : Meteo::i18n("Air temperature min–max");
         return {{"key", key}, {"label", label}, {"unit", field.unit}, {"enabled", true},
             {"render", render}, {"lowerKey", lower}, {"axis", "auto"}, {"color", field.color},
             {"darkColor", forecastDarkColor(field.color, key)}, {"lineWidth", render == "stems" ? 2.5 : render == "rangeStems" || render == "cloudArea" ? 1.25 : 2.0},
@@ -153,7 +154,7 @@ QVariantList normalizeChartLayout(const QVariantList &saved)
                 if (!style.isEmpty() && !seriesSeen.contains(field)) { series.append(style); seriesSeen.insert(field); }
             }
         }
-        QVariantMap normalized{{"key", key}, {"title", chart.value("title", standard.value("title", "Nowy wykres")).toString().trimmed().left(80)},
+        QVariantMap normalized{{"key", key}, {"title", chart.value("title", standard.value("title", Meteo::i18n("New chart"))).toString().trimmed().left(80)},
             {"enabled", chart["enabled"].toBool()}, {"series", series}, {"fields", chartFieldKeys(series)},
             {"leftScale", chart.value("leftScale", standard.value("leftScale", "auto"))}, {"rightScale", chart.value("rightScale", "auto")}};
         for (const auto &bound : {"leftMin", "leftMax", "rightMin", "rightMax"}) {
@@ -188,7 +189,7 @@ QVariantList integrateWindDirection(const QVariantList &saved)
         || arrows[0].toMap()["render"]!="direction") return result;
     series.append(arrows[0]); // Keep the user's arrow color, opacity and width.
     speed["series"] = series; speed["fields"] = chartFieldKeys(series);
-    if (speed["title"] == "Prędkość i porywy wiatru") speed["title"] = "Wiatr";
+    if (speed["title"] == Meteo::i18n("Wind speed and gusts")) speed["title"] = Meteo::i18n("Wind");
     direction["enabled"] = false;
     result[speedIndex] = speed; result[directionIndex] = direction;
     return result;

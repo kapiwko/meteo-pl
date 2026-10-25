@@ -1,11 +1,29 @@
 add_library(meteo_core STATIC
     core/Forecast.cpp core/Forecast.hpp
+    core/Localization.cpp core/Localization.hpp
     core/Locations.cpp core/Locations.hpp
     network/MeteoClient.cpp network/MeteoClient.hpp
     network/JsonRequest.cpp network/JsonRequest.hpp
 )
 target_include_directories(meteo_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network)
+target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network KF6::I18n)
+
+file(GLOB METEO_TRANSLATION_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/po/*/meteo-pl.po")
+set(METEO_TRANSLATION_ROOT "${CMAKE_CURRENT_BINARY_DIR}/locale")
+set(METEO_CATALOGS)
+foreach(po_file IN LISTS METEO_TRANSLATION_FILES)
+    get_filename_component(language_dir "${po_file}" DIRECTORY)
+    get_filename_component(language "${language_dir}" NAME)
+    set(catalog "${METEO_TRANSLATION_ROOT}/${language}/LC_MESSAGES/meteo-pl.mo")
+    add_custom_command(OUTPUT "${catalog}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${METEO_TRANSLATION_ROOT}/${language}/LC_MESSAGES"
+        COMMAND "${GETTEXT_MSGFMT_EXECUTABLE}" --check --check-format -o "${catalog}" "${po_file}"
+        DEPENDS "${po_file}" VERBATIM)
+    list(APPEND METEO_CATALOGS "${catalog}")
+    install(FILES "${catalog}" DESTINATION "${CMAKE_INSTALL_LOCALEDIR}/${language}/LC_MESSAGES")
+endforeach()
+qt_add_resources(meteo_core "meteo_translations" PREFIX "/meteo/locale"
+    BASE "${METEO_TRANSLATION_ROOT}" FILES ${METEO_CATALOGS})
 
 foreach(component Meteogram ForecastPanel ForecastInspector ForecastHeader WeatherSymbol PlacePicker SavedPlaceSelection CompactForecast LocationEditor TileMap MapTileFrame MapWheelHandler BufferedImage MeteoSettings ForecastSettings MeteoAbout DisplaySettings ReadingSettings ApplicationSettings SeriesLegend SeriesSettings WeatherMap EditorialView ThematicMaps OriginalMeteogram)
     set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)
@@ -20,6 +38,7 @@ qt_add_qml_module(meteo_ui
     URI pl.meteo.desktop
     VERSION 1.0
     SOURCES presentation/WeatherModel.cpp presentation/WeatherModel.hpp
+        presentation/I18n.hpp
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp

@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "WeatherLayersModel.hpp"
 #include <QDateTime>
 #include <QJsonArray>
@@ -25,7 +26,7 @@ WeatherLayersModel::WeatherLayersModel(QObject *parent, QUrl endpoint) : QObject
         m_runIndex = 0;
         m_step = std::clamp(1, firstStep(), lastStep());
         m_busy = false;
-        m_error = m_runs.isEmpty() ? QStringLiteral("Brak opublikowanych map wybranego modelu.") : QString();
+        m_error = m_runs.isEmpty() ? Meteo::i18n("No maps have been published for this model.") : QString();
         publish();
     });
     connect(&m_request, &Meteo::JsonRequest::failed, this, [this](const QString &error) { m_error = error; m_busy = false; publish(); });
@@ -33,17 +34,17 @@ WeatherLayersModel::WeatherLayersModel(QObject *parent, QUrl endpoint) : QObject
 QVariantList WeatherLayersModel::layers() const
 {
     if (m_model == "gfs") return {
-        QVariantMap{{"id", "gfs:GFS_TMP_2-HTGL"}, {"label", "Temperatura na 2 m"}},
-        QVariantMap{{"id", "gfs:GFS_TMP_0-SFC"}, {"label", "Temperatura gruntu"}},
-        QVariantMap{{"id", "gfs:GFS_pressure"}, {"label", "Ciśnienie"}},
-        QVariantMap{{"id", "gfs:GFS_cloud"}, {"label", "Chmury i opady"}}};
+        QVariantMap{{"id", "gfs:GFS_TMP_2-HTGL"}, {"label", Meteo::i18n("Temperature at 2 m")}},
+        QVariantMap{{"id", "gfs:GFS_TMP_0-SFC"}, {"label", Meteo::i18n("Ground temperature")}},
+        QVariantMap{{"id", "gfs:GFS_pressure"}, {"label", Meteo::i18n("Pressure")}},
+        QVariantMap{{"id", "gfs:GFS_cloud"}, {"label", Meteo::i18n("Clouds and precipitation")}}};
     return {
-        QVariantMap{{"id", "um:UM4_TEMPERATURE_AT_1_5M"}, {"label", "Temperatura na 1,5 m"}},
-        QVariantMap{{"id", "um:UM4_SURFACE_TEMP_AFTER_TIMESTEP"}, {"label", "Temperatura gruntu"}},
-        QVariantMap{{"id", "um:UM4_PRESSURE_AT_MEAN_SEA_LEVEL"}, {"label", "Ciśnienie"}},
-        QVariantMap{{"id", "um:UM4_WIND"}, {"label", "Wiatr na 10 m"}},
-        QVariantMap{{"id", "um:UM4_wind_vect"}, {"label", "Wiatr i porywy"}},
-        QVariantMap{{"id", "um:UM4_CLOUD"}, {"label", "Chmury i opady"}}};
+        QVariantMap{{"id", "um:UM4_TEMPERATURE_AT_1_5M"}, {"label", Meteo::i18n("Temperature at 1.5 m")}},
+        QVariantMap{{"id", "um:UM4_SURFACE_TEMP_AFTER_TIMESTEP"}, {"label", Meteo::i18n("Ground temperature")}},
+        QVariantMap{{"id", "um:UM4_PRESSURE_AT_MEAN_SEA_LEVEL"}, {"label", Meteo::i18n("Pressure")}},
+        QVariantMap{{"id", "um:UM4_WIND"}, {"label", Meteo::i18n("Wind at 10 m")}},
+        QVariantMap{{"id", "um:UM4_wind_vect"}, {"label", Meteo::i18n("Wind and gusts")}},
+        QVariantMap{{"id", "um:UM4_CLOUD"}, {"label", Meteo::i18n("Clouds and precipitation")}}};
 }
 void WeatherLayersModel::publish() { ++m_revision; emit changed(); }
 void WeatherLayersModel::setModel(const QString &value)

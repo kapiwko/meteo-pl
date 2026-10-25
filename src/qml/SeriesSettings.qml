@@ -15,13 +15,13 @@ ColumnLayout {
     signal toggleAppearance()
     readonly property var renderers: {
         const result = [
-            {id:"line",name:"Linia"}, {id:"points",name:"Punkty"}, {id:"area",name:"Wypełnienie pod linią"},
-            {id:"bars",name:"Słupki"}, {id:"stems",name:"Pionowe szpilki"}, {id:"gusts",name:"Poziome kreski"},
-            {id:"rightBars",name:"Wąskie słupki"}, {id:"cloudArea",name:"Pokrycie chmur"},
-            {id:"cloudPoint",name:"Punkty chmur"}, {id:"direction",name:"Strzałki kierunku"},
-            {id:"storm",name:"Wskaźnik burzy"}, {id:"flash",name:"Wyładowania"}, {id:"type",name:"Rodzaj opadu"}
+            {id:"line",name:I18n.i18n("Line")}, {id:"points",name:I18n.i18n("Points")}, {id:"area",name:I18n.i18n("Fill below line")},
+            {id:"bars",name:I18n.i18n("Bars")}, {id:"stems",name:I18n.i18n("Vertical stems")}, {id:"gusts",name:I18n.i18n("Horizontal segments")},
+            {id:"rightBars",name:I18n.i18n("Narrow bars")}, {id:"cloudArea",name:I18n.i18n("Cloud cover")},
+            {id:"cloudPoint",name:I18n.i18n("Cloud points")}, {id:"direction",name:I18n.i18n("Direction arrows")},
+            {id:"storm",name:I18n.i18n("Storm indicator")}, {id:"flash",name:I18n.i18n("Lightning")}, {id:"type",name:I18n.i18n("Precipitation type")}
         ];
-        if (seriesStyle.lowerKey) result.push({id:"range",name:"Zakres min–max: obszar"}, {id:"rangeStems",name:"Zakres min–max: kreski"});
+        if (seriesStyle.lowerKey) result.push({id:"range",name:I18n.i18n("Min–max range: area")}, {id:"rangeStems",name:I18n.i18n("Min–max range: stems")});
         return result;
     }
     function change(options) {
@@ -32,7 +32,7 @@ ColumnLayout {
     ColorDialog {
         id: colorDialog
         property string option: "color"
-        title: "Kolor serii"
+        title: I18n.i18n("Series color")
         onAccepted: { const options = {}; options[option] = selectedColor.toString(); root.change(options); }
     }
     spacing: Kirigami.Units.smallSpacing
@@ -45,12 +45,12 @@ ColumnLayout {
         }
         Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: root.seriesStyle.label; wrapMode: Text.WordWrap }
         SeriesLegend { seriesStyle: root.seriesStyle; Layout.preferredWidth: 42; opacity: root.seriesStyle.enabled ? 1 : 0.3 }
-        Label { text: root.available ? root.seriesStyle.unit : "brak danych"; opacity: 0.65; font.pixelSize: 11 }
+        Label { text: root.available ? root.seriesStyle.unit : I18n.i18n("no data"); opacity: 0.65; font.pixelSize: 11 }
         ToolButton {
-            text: "Wygląd"
+            text: I18n.i18n("Appearance")
             icon.name: "configure"
             display: root.width < 520 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
-            ToolTip.text: "Wygląd serii"
+            ToolTip.text: I18n.i18n("Series appearance")
             ToolTip.visible: hovered
             Accessible.name: ToolTip.text
             checkable: true
@@ -59,7 +59,7 @@ ColumnLayout {
         }
         ToolButton {
             icon.name: "list-remove"
-            text: "Usuń serię"
+            text: I18n.i18n("Remove series")
             display: AbstractButton.IconOnly
             ToolTip.text: text
             ToolTip.visible: hovered
@@ -74,7 +74,7 @@ ColumnLayout {
             Kirigami.FormLayout {
                 Layout.fillWidth: true
                 ComboBox {
-                    Kirigami.FormData.label: "Rysowanie:"
+                    Kirigami.FormData.label: I18n.i18n("Drawing:")
                     Layout.fillWidth: true
                     model: root.renderers
                     textRole: "name"
@@ -82,15 +82,15 @@ ColumnLayout {
                     onActivated: index => root.change({render: model[index].id})
                 }
                 ComboBox {
-                    Kirigami.FormData.label: "Oś wartości:"
+                    Kirigami.FormData.label: I18n.i18n("Value axis:")
                     Layout.fillWidth: true
-                    model: [{id:"auto",name:"Automatycznie według jednostki"}, {id:"left",name:"Lewa oś"}, {id:"right",name:"Prawa oś"}]
+                    model: [{id:"auto",name:I18n.i18n("Automatic by unit")}, {id:"left",name:I18n.i18n("Left axis")}, {id:"right",name:I18n.i18n("Right axis")}]
                     textRole: "name"
                     currentIndex: model.findIndex(item => item.id === root.seriesStyle.axis)
                     onActivated: index => root.change({axis: model[index].id})
                 }
                 Repeater {
-                    model: [{key: "color", label: "Jasny motyw:"}, {key: "darkColor", label: "Ciemny motyw:"}]
+                    model: [{key: "color", label: I18n.i18n("Light theme:")}, {key: "darkColor", label: I18n.i18n("Dark theme:")}]
                     delegate: RowLayout {
                         id: colorRow
                         required property var modelData
@@ -100,7 +100,7 @@ ColumnLayout {
                         ToolButton {
                             icon.name: "color-picker"
                             onClicked: root.chooseColor(colorRow.modelData.key)
-                            ToolTip.text: "Wybierz kolor"
+                            ToolTip.text: I18n.i18n("Choose color")
                             ToolTip.visible: hovered
                             Accessible.name: ToolTip.text
                         }
@@ -115,14 +115,14 @@ ColumnLayout {
                     }
                 }
                 SpinBox {
-                    Kirigami.FormData.label: "Grubość linii:"
+                    Kirigami.FormData.label: I18n.i18n("Line width:")
                     from: 5; to: 80; stepSize: 5
                     value: Math.round(root.seriesStyle.lineWidth * 10)
                     textFromValue: (value, locale) => Number(value / 10).toLocaleString(locale, 'f', 1) + " px"
                     onValueModified: root.change({lineWidth: value / 10})
                 }
                 SpinBox {
-                    Kirigami.FormData.label: "Promień punktu:"
+                    Kirigami.FormData.label: I18n.i18n("Point radius:")
                     visible: ["points", "cloudPoint", "storm", "flash"].indexOf(root.seriesStyle.render) >= 0
                     from: 10; to: 100; stepSize: 5
                     value: Math.round(root.seriesStyle.pointSize * 10)
@@ -130,32 +130,32 @@ ColumnLayout {
                     onValueModified: root.change({pointSize: value / 10})
                 }
                 ComboBox {
-                    Kirigami.FormData.label: "Linia:"
+                    Kirigami.FormData.label: I18n.i18n("Line:")
                     Layout.fillWidth: true
-                    model: [{id:"solid",name:"Ciągła"}, {id:"dashed",name:"Przerywana"}, {id:"dotted",name:"Kropkowana"}]
+                    model: [{id:"solid",name:I18n.i18n("Solid")}, {id:"dashed",name:I18n.i18n("Dashed")}, {id:"dotted",name:I18n.i18n("Dotted")}]
                     textRole: "name"
                     currentIndex: model.findIndex(item => item.id === root.seriesStyle.lineStyle)
                     onActivated: index => root.change({lineStyle: model[index].id})
                 }
-                SpinBox { Kirigami.FormData.label: "Krycie:"; from: 0; to: 100; stepSize: 5; value: Math.round(root.seriesStyle.opacity * 100); textFromValue: value => value + "%"; onValueModified: root.change({opacity: value / 100}) }
-                SpinBox { Kirigami.FormData.label: "Kolejność w warstwie:"; from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: "Wyższa wartość rysuje serię później w jej warstwie; wypełnienia pozostają pod liniami"; ToolTip.visible: hovered }
+                SpinBox { Kirigami.FormData.label: I18n.i18n("Opacity:"); from: 0; to: 100; stepSize: 5; value: Math.round(root.seriesStyle.opacity * 100); textFromValue: value => value + "%"; onValueModified: root.change({opacity: value / 100}) }
+                SpinBox { Kirigami.FormData.label: I18n.i18n("Layer order:"); from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: I18n.i18n("Higher values draw a series later within its layer; fills stay below lines"); ToolTip.visible: hovered }
                 CheckBox {
                     visible: root.seriesStyle.key === "pcpttl_aver" || root.seriesStyle.key === "pcpttl_max"
-                    text: "Koloruj według rodzaju opadu"
+                    text: I18n.i18n("Color by precipitation type")
                     checked: root.seriesStyle.precipitationColors
                     onToggled: root.change({precipitationColors: checked})
                 }
                 CheckBox {
                     visible: ["storm", "flash"].indexOf(root.seriesStyle.render) >= 0
-                    text: "Kolory według liczby wyładowań"
+                    text: I18n.i18n("Color by lightning count")
                     checked: root.seriesStyle.eventColors
                     onToggled: root.change({eventColors: checked})
                 }
                 ComboBox {
-                    Kirigami.FormData.label: "Wypełnienie:"
+                    Kirigami.FormData.label: I18n.i18n("Fill:")
                     visible: root.seriesStyle.render === "area"
                     Layout.fillWidth: true
-                    model: [{id:"solid",name:"Kolor serii"}, {id:"pressure",name:"Paleta ciśnienia ICM"}, {id:"wind",name:"Paleta wiatru ICM"}]
+                    model: [{id:"solid",name:I18n.i18n("Series color")}, {id:"pressure",name:I18n.i18n("ICM pressure palette")}, {id:"wind",name:I18n.i18n("ICM wind palette")}]
                     textRole: "name"
                     currentIndex: model.findIndex(item => item.id === root.seriesStyle.fill)
                     onActivated: index => root.change({fill: model[index].id})

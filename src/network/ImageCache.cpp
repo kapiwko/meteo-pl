@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "ImageCache.hpp"
 #include <QBuffer>
 #include <QCoreApplication>
@@ -43,7 +44,7 @@ void ImageCache::request(const QUrl &url, Completion completion)
 {
     const auto key = url.toString(QUrl::FullyEncoded);
     if (url.scheme() != "https" && url.scheme() != "http") {
-        completion({}, QStringLiteral("Nieprawidłowy adres obrazu mapy."));
+        completion({}, Meteo::i18n("Invalid map image URL."));
         return;
     }
     if (auto *entry = m_images.object(key); entry && entry->expires > QDateTime::currentDateTimeUtc()) {
@@ -106,7 +107,7 @@ void ImageCache::request(const QUrl &url, Completion completion)
                 const auto size = reader.size();
                 if (size.isValid() && qint64(size.width()) * size.height() <= 16 * 1024 * 1024)
                     image = reader.read();
-                if (image.isNull()) failure = QStringLiteral("Nie udało się odczytać obrazu mapy.");
+                if (image.isNull()) failure = Meteo::i18n("Could not read the map image.");
             }
             QMetaObject::invokeMethod(this, [this, key, image, failure, expiry, cacheable, fallback, bytes, generation] {
                 if (!image.isNull() && cacheable && generation == m_generation) {

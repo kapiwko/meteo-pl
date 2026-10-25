@@ -1,3 +1,4 @@
+#include "core/Localization.hpp"
 #include "LegacyMeteogramModel.hpp"
 #include <QNetworkReply>
 #include <QUrlQuery>
@@ -38,7 +39,7 @@ void LegacyMeteogramModel::reload()
         const auto row = coordinates.queryItemValue("row").toInt(&rowValid);
         const auto column = coordinates.queryItemValue("col").toInt(&columnValid);
         if (reply->error() != QNetworkReply::NoError || !rowValid || !columnValid || row < 0 || column < 0 || row > 2000 || column > 2000) {
-            m_error = QStringLiteral("Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji.");
+            m_error = Meteo::i18n("Could not find the original ICM meteogram for this location.");
         } else {
             auto source = m_endpoint.resolved(QUrl(QStringLiteral("/um/metco/mgram_pict.php")));
             QUrlQuery query;
