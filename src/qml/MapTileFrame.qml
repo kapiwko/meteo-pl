@@ -3,7 +3,8 @@ import QtQuick
 
 Item {
     id: frame
-    required property TileMap viewport
+    // A strong TileMap reference creates a recursive QML type dependency on Qt 6.8.
+    required property var viewport
     required property var tiles
     required property int level
     required property int firstX

@@ -89,10 +89,11 @@ Popup {
             implicitWidth: 0
             visible: root.allParameters
             currentIndex: Math.max(0, root.categories.findIndex(entry => entry.key === root.category))
-            TabButton { text: "Wszystkie"; width: implicitWidth; onClicked: root.category = "" }
+            TabButton { baselineOffset: height / 2; text: "Wszystkie"; width: implicitWidth; onClicked: root.category = "" }
             Repeater {
                 model: root.categories.slice(1)
                 delegate: TabButton {
+                    baselineOffset: height / 2
                     required property var modelData
                     width: implicitWidth
                     text: modelData.name
