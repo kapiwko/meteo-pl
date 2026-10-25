@@ -33,6 +33,12 @@ ImageCache *ImageCache::shared()
         + QStringLiteral("/meteo-pl/maps/") + QCoreApplication::applicationName().replace('/', '_'), qApp);
     return cache;
 }
+void ImageCache::clear()
+{
+    ++m_generation;
+    m_images.clear();
+    m_disk->clear();
+}
 void ImageCache::request(const QUrl &url, Completion completion)
 {
     const auto key = url.toString(QUrl::FullyEncoded);
@@ -46,6 +52,7 @@ void ImageCache::request(const QUrl &url, Completion completion)
     }
     if (m_pending.contains(key)) { m_pending[key].append(std::move(completion)); return; }
     m_pending.insert(key, {std::move(completion)});
+    const auto generation = m_generation;
     QNetworkRequest request(url);
     request.setTransferTimeout(20000);
     const auto stored = m_disk->metaData(url);
@@ -61,7 +68,8 @@ void ImageCache::request(const QUrl &url, Completion completion)
     });
     // A total deadline also covers replies that trickle bytes without finishing.
     QTimer::singleShot(25000, reply, [reply] { if (!reply->isFinished()) reply->abort(); });
-    connect(reply, &QNetworkReply::finished, this, [this, reply, key] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, key, generation] {
+        if (generation != m_generation) m_disk->remove(reply->url());
         const auto bytes = reply->readAll();
         const auto error = reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
         const auto now = QDateTime::currentDateTimeUtc();
@@ -87,7 +95,7 @@ void ImageCache::request(const QUrl &url, Completion completion)
         }
         reply->deleteLater();
         // PNG decompression must not block input or the map's current frame.
-        m_decoder.start(QRunnable::create([this, bytes, error, key, expiry, cacheable, fallback] {
+        m_decoder.start(QRunnable::create([this, bytes, error, key, expiry, cacheable, fallback, generation] {
             QImage image;
             QString failure = error;
             if (failure.isEmpty()) {
@@ -100,8 +108,8 @@ void ImageCache::request(const QUrl &url, Completion completion)
                     image = reader.read();
                 if (image.isNull()) failure = QStringLiteral("Nie udało się odczytać obrazu mapy.");
             }
-            QMetaObject::invokeMethod(this, [this, key, image, failure, expiry, cacheable, fallback, bytes] {
-                if (!image.isNull() && cacheable) {
+            QMetaObject::invokeMethod(this, [this, key, image, failure, expiry, cacheable, fallback, bytes, generation] {
+                if (!image.isNull() && cacheable && generation == m_generation) {
                     if (fallback.isValid()) {
                         if (auto *device = m_disk->prepare(fallback)) {
                             if (device->write(bytes) == bytes.size()) m_disk->insert(device);

@@ -1,6 +1,7 @@
 #include "PlaceSearchModel.hpp"
 #include "WeatherLayersModel.hpp"
 #include "EditorialModel.hpp"
+#include "CacheStorage.hpp"
 #include "LegacyMeteogramModel.hpp"
 #include "UserPreferences.hpp"
 #include "ReadingsExporter.hpp"
@@ -218,6 +219,42 @@ private slots:
         QVERIFY(model.notice().isEmpty());
         QVERIFY(model.error().isEmpty());
         QVERIFY(model.commentHtml().contains("Comment"));
+    }
+    void cacheStorageCountsFilesAndClearsOnlyCache()
+    {
+        // This test process has a private XDG_CACHE_HOME, never the user's data.
+        CacheStorage cache;
+        cache.clear();
+        QTRY_VERIFY(!cache.busy());
+        const auto root=CacheStorage::directory();
+        const auto write=[](const QString &path,int bytes) {
+            if (!QDir().mkpath(QFileInfo(path).absolutePath())) return false;
+            QFile file(path);
+            return file.open(QIODevice::WriteOnly) && file.write(QByteArray(bytes,'x'))==bytes;
+        };
+        QVERIFY(write(root+"/forecast.json",100));
+        QVERIFY(write(root+"/editorial/article.json",200));
+        QVERIFY(write(root+"/maps/test/data/tile",300));
+        const auto outside=m_config.filePath("keep-profile.ini");
+        QVERIFY(write(outside,400));
+#ifndef Q_OS_WIN
+        QVERIFY(QFile::link(m_config.path(),root+"/outside-link"));
+#endif
+        cache.refresh();
+        QTRY_VERIFY(!cache.busy());
+        QCOMPARE(cache.size(),600);
+        QVERIFY(!cache.sizeText().isEmpty());
+        QSignalSpy cleared(&cache,&CacheStorage::cleared);
+        cache.clear();
+        QTRY_VERIFY(!cache.busy());
+        QCOMPARE(cleared.size(),1);
+        QCOMPARE(cache.size(),0);
+        QVERIFY(cache.error().isEmpty());
+        QVERIFY(QFile::exists(outside));
+        QCOMPARE(QFileInfo(outside).size(),400);
+        QVERIFY(!QFile::exists(root+"/forecast.json"));
+        QVERIFY(!QFile::exists(root+"/editorial/article.json"));
+        QVERIFY(!QFile::exists(root+"/maps/test/data/tile"));
     }
     void originalMeteogramUsesCoordinatesReturnedByTheOfficialSelector()
     {

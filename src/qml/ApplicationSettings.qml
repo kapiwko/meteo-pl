@@ -5,7 +5,12 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
+    id: root
     objectName: "applicationSettings"
+    property bool cacheCleared: false
+    onVisibleChanged: if (visible) CacheStorage.refresh()
+    Component.onCompleted: if (visible) CacheStorage.refresh()
+    Connections { target: CacheStorage; function onCleared() { root.cacheCleared = true; } }
     spacing: Kirigami.Units.largeSpacing
     GroupBox {
         padding: Kirigami.Units.largeSpacing
@@ -50,6 +55,40 @@ ColumnLayout {
             }
             CheckBox { text: "Pokazuj czas UTC"; checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
             Label { text: "Domyślnie używana jest strefa systemowa."; Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Kirigami.Theme.disabledTextColor }
+        }
+    }
+    GroupBox {
+        title: "Pamięć podręczna"
+        padding: Kirigami.Units.largeSpacing
+        Layout.fillWidth: true
+        contentItem: Kirigami.FormLayout {
+            Label { Kirigami.FormData.label: "Prognozy:"; text: CacheStorage.forecastSize }
+            Label { Kirigami.FormData.label: "Artykuły i komentarze:"; text: CacheStorage.editorialSize }
+            Label { Kirigami.FormData.label: "Obrazy i mapy:"; text: CacheStorage.imageSize }
+            RowLayout {
+                Kirigami.FormData.label: "Razem na dysku:"
+                Label { text: CacheStorage.sizeText; font.bold: true }
+                BusyIndicator { running: CacheStorage.busy; visible: running; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
+            }
+            Button {
+                objectName: "clearCacheButton"
+                text: "Wyczyść pamięć podręczną"
+                icon.name: "edit-clear"
+                enabled: !CacheStorage.busy && CacheStorage.size > 0
+                onClicked: { root.cacheCleared = false; CacheStorage.clear(); }
+            }
+            Label {
+                Layout.fillWidth: true
+                text: "Dane zostaną pobrane ponownie, gdy będą potrzebne. Zapisane miejsca i profile pozostaną zachowane."
+                wrapMode: Text.WordWrap
+                color: Kirigami.Theme.disabledTextColor
+            }
+            Kirigami.InlineMessage {
+                Layout.fillWidth: true
+                visible: root.cacheCleared || CacheStorage.error.length > 0
+                type: CacheStorage.error.length > 0 ? Kirigami.MessageType.Warning : Kirigami.MessageType.Information
+                text: CacheStorage.error || "Pamięć podręczna została wyczyszczona."
+            }
         }
     }
     GroupBox {

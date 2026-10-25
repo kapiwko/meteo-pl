@@ -173,6 +173,9 @@ czasu ważności (m.in. mapom tematycznym) aplikacja nadaje 30 minut także na d
 Ponowne przygotowanie animacji i wznowienie po anulowaniu wykorzystują gotowe
 klatki; usunięcie obrazu z RAM nie powoduje jego ponownego pobrania z sieci.
 Cache map znajduje się w `$XDG_CACHE_HOME/meteo-pl/maps/<nazwa-procesu>`.
+W **Ustawienia → Aplikacja → Pamięć podręczna** widać zajęte miejsce na dysku
+z podziałem na prognozy, treści i obrazy. Przycisk czyszczenia usuwa cache dyskowy
+i obrazy z RAM; pozostawia zapisane miejsca, profile i aktualnie widoczne dane.
 Aplikacja i Plasma mają osobne katalogi cache HTTP, aby dwa procesy nie
 modyfikowały równocześnie magazynu `QNetworkDiskCache`.
 Ulubione i preferencje widoku są wspólne, w `~/.config/meteo-pl/desktop.ini`.
