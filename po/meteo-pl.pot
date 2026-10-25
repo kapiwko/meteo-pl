@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-25 23:54+0100\n"
+"POT-Creation-Date: 2026-10-25 23:59+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -461,7 +461,7 @@ msgstr ""
 msgid "Could not prepare the chart image."
 msgstr ""
 
-#: src/network/ImageCache.cpp:134
+#: src/network/ImageCache.cpp:210
 msgid "Could not read the map image."
 msgstr ""
 
@@ -839,7 +839,7 @@ msgstr ""
 msgid "Invalid forecast values."
 msgstr ""
 
-#: src/network/ImageCache.cpp:72
+#: src/network/ImageCache.cpp:73
 msgid "Invalid map image URL."
 msgstr ""
 
@@ -1668,7 +1668,8 @@ msgstr ""
 msgid "The renderer did not return a chart image."
 msgstr ""
 
-#: src/network/JsonRequest.cpp:96 src/network/MeteoClient.cpp:46
+#: src/network/ImageCache.cpp:174 src/network/JsonRequest.cpp:96
+#: src/network/MeteoClient.cpp:46
 msgid "The request timed out. Try again."
 msgstr ""
 
@@ -1724,6 +1725,10 @@ msgstr ""
 
 #: src/presentation/ReadingsExporter.cpp:26
 msgid "Timestamp"
+msgstr ""
+
+#: src/network/ImageCache.cpp:83
+msgid "Too many images are waiting to load. Try again."
 msgstr ""
 
 #: src/presentation/UserPreferences.cpp:244

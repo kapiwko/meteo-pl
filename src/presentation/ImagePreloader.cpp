@@ -13,6 +13,7 @@ void ImagePreloader::cancel()
     m_busy = m_ready = false;
     m_next = m_completed = m_inFlight = 0;
     m_urls.clear();
+    m_cache->cancelRequests(this);
     emit changed();
 }
 void ImagePreloader::start(const QVariantList &urls)
@@ -34,8 +35,7 @@ void ImagePreloader::start(const QVariantList &urls)
 void ImagePreloader::pump(quint64 generation)
 {
     if (generation != m_generation || !m_busy) return;
-    // Limit network/decode pressure; cancellation never cancels a request shared
-    // with the currently displayed map. The ImageCache itself stays bounded.
+    // The cache also limits complete download/decode jobs across all consumers.
     while (m_busy && generation == m_generation && m_inFlight < 4 && m_next < m_urls.size()) {
         const auto url = m_urls[m_next++];
         ++m_inFlight;
@@ -45,6 +45,7 @@ void ImagePreloader::pump(quint64 generation)
             if (!error.isEmpty()) {
                 self->m_busy = false;
                 self->m_error = Meteo::i18n("Could not prepare all animation frames. Try again or choose an earlier run.");
+                self->m_cache->cancelRequests(self);
                 emit self->changed(); emit self->failed(); return;
             }
             ++self->m_completed;
@@ -55,6 +56,6 @@ void ImagePreloader::pump(quint64 generation)
                 emit self->changed();
                 QTimer::singleShot(0, self, [self, generation] { if (self) self->pump(generation); });
             }
-        });
+        }, this, Meteo::ImageCache::Priority::Prefetch);
     }
 }

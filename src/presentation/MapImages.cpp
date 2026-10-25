@@ -6,27 +6,48 @@
 #include <QPointer>
 #include <QRegularExpression>
 #include <QTextDocumentFragment>
+#include <atomic>
 
 namespace {
 class Response : public QQuickImageResponse {
 public:
+    explicit Response(Meteo::ImageCache *cache) : m_cache(cache) {}
     QImage image;
     QString failure;
     QQuickTextureFactory *textureFactory() const override { return QQuickTextureFactory::textureFactoryForImage(image); }
     QString errorString() const override { return failure; }
-    void complete(const QImage &result, const QString &error) { image = result; failure = error; emit finished(); }
+    bool canceled() const { return m_canceled.load(); }
+    void cancel() override {
+        m_canceled.store(true);
+        if (!m_cache) return;
+        QMetaObject::invokeMethod(m_cache, [self=QPointer<Response>(this),cache=m_cache] {
+            if (!self || !cache) return;
+            cache->cancelRequests(self);
+            self->complete({},{});
+        }, Qt::QueuedConnection);
+    }
+    void complete(const QImage &result, const QString &error) {
+        if (m_finished.test_and_set()) return;
+        image = result; failure = error; emit finished();
+    }
+private:
+    QPointer<Meteo::ImageCache> m_cache;
+    std::atomic_bool m_canceled = false;
+    std::atomic_flag m_finished = ATOMIC_FLAG_INIT;
 };
 class Provider : public QQuickAsyncImageProvider {
 public:
     explicit Provider(Meteo::ImageCache *cache) : m_cache(cache) {}
     QQuickImageResponse *requestImageResponse(const QString &id, const QSize &size) override
     {
-        auto *response = new Response;
+        auto *response = new Response(m_cache);
         const auto url = QUrl::fromEncoded(QByteArray::fromBase64(id.toLatin1(), QByteArray::Base64UrlEncoding));
         QMetaObject::invokeMethod(m_cache, [cache = m_cache, response = QPointer<Response>(response), url, size] {
+            if (!response) return;
+            if (response->canceled()) { response->complete({},{}); return; }
             cache->request(url, [response, size](const QImage &image, const QString &error) {
                 if (response) response->complete(size.isValid() ? image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation) : image, error);
-            });
+            }, response);
         }, Qt::QueuedConnection);
         return response;
     }
@@ -46,7 +67,7 @@ QUrl MapImages::cached(const QUrl &url) const
 }
 void MapImages::prefetch(const QUrl &url) const
 {
-    if (!url.isEmpty()) Meteo::ImageCache::shared()->request(url, [](const QImage &, const QString &) {});
+    if (!url.isEmpty()) Meteo::ImageCache::shared()->request(url, [](const QImage &, const QString &) {}, nullptr, Meteo::ImageCache::Priority::Prefetch);
 }
 QString MapImages::cachedHtml(const QString &html, const QUrl &base) const
 {
