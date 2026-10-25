@@ -28,6 +28,7 @@ qt_add_qml_module(meteo_ui
         presentation/GpuPlot.cpp presentation/GpuPlot.hpp
         presentation/ResponsiveImages.cpp presentation/ResponsiveImages.hpp
         presentation/ImagePreloader.cpp presentation/ImagePreloader.hpp
+        presentation/CacheStorage.cpp presentation/CacheStorage.hpp
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/WeatherLayersModel.cpp presentation/WeatherLayersModel.hpp

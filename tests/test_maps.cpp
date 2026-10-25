@@ -152,6 +152,37 @@ private slots:
         QTest::newRow("no-cache") << QByteArray("No-Cache");
         QTest::newRow("expired") << QByteArray("max-age=0");
     }
+    void clearingImagesRemovesMemoryDiskAndObsoleteDownloads()
+    {
+        ImageServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        Meteo::ImageCache cache(m_cache.path()+"/clear-images");
+        int completed=0;
+        const auto receive=[&](const QImage &image,const QString &error) {
+            QVERIFY2(error.isEmpty(),qPrintable(error));
+            QVERIFY(!image.isNull());
+            ++completed;
+        };
+        const auto url=server.url("red");
+        cache.request(url,receive);
+        QTRY_COMPARE(completed,1);
+        cache.clear();
+        server.hold=true;
+        cache.request(url,receive);
+        QTRY_COMPARE(server.requests.size(),2);
+        cache.clear(); // The old response must not repopulate a cleared cache.
+        server.releaseAll();
+        QTRY_COMPARE(completed,2);
+        server.hold=false;
+        cache.request(url,receive);
+        QTRY_COMPARE(completed,3);
+        QCOMPARE(server.requests.size(),3);
+        cache.clearMemory();
+        server.close();
+        cache.request(url,receive);
+        QTRY_COMPARE(completed,4);
+        QCOMPARE(server.requests.size(),3); // New downloads are cached normally.
+    }
     void explicitCacheRestrictionsAreRespected()
     {
         QFETCH(QByteArray, cacheControl);

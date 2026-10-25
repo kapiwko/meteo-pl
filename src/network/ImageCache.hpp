@@ -17,6 +17,7 @@ public:
     explicit ImageCache(const QString &directory, QObject *parent = nullptr);
     void request(const QUrl &url, Completion completion);
     void clearMemory() { m_images.clear(); }
+    void clear();
     static ImageCache *shared();
 private:
     struct Entry { QImage image; QDateTime expires; };
@@ -24,6 +25,7 @@ private:
     QNetworkDiskCache *m_disk;
     QCache<QString, Entry> m_images{96 * 1024 * 1024};
     QHash<QString, QList<Completion>> m_pending;
+    quint64 m_generation = 0;
     QThreadPool m_decoder;
 };
 }
