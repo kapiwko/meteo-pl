@@ -346,8 +346,10 @@ double WeatherModel::displayScale(const QString &key, double baseScale) const
 
 QString WeatherModel::formatTime(double timestamp, const QString &pattern) const
 {
-    const auto time = QDateTime::fromSecsSinceEpoch(qint64(timestamp));
-    return QLocale().toString(m_utc ? time.toUTC() : time.toLocalTime(), pattern);
+    // Use the same zone as calendarDays/solarTimes, including Qt's fallback
+    // when the operating system has no configured /etc/localtime.
+    const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
+    return QLocale().toString(QDateTime::fromSecsSinceEpoch(qint64(timestamp), zone), pattern);
 }
 
 double WeatherModel::nearestTimestamp(double timestamp) const
