@@ -14,6 +14,8 @@ public:
     QList<QUrl> requests;
     bool hold = false;
     QSize imageSize{256,256};
+    QByteArray cacheControl = "public, max-age=86400";
+    QByteArray lastModified;
     ImageServer()
     {
         connect(this, &QTcpServer::newConnection, this, [this] {
@@ -44,7 +46,10 @@ public:
         image.save(&buffer, "PNG");
         const auto body = failure ? QByteArray("missing") : buffer.data();
         request.socket->write(QByteArray(failure ? "HTTP/1.1 404 Not Found" : "HTTP/1.1 200 OK")
-            + "\r\nContent-Type: image/png\r\nCache-Control: public, max-age=86400\r\nConnection: close\r\nContent-Length: "
+            + "\r\nContent-Type: image/png\r\n"
+            + (cacheControl.isEmpty() ? QByteArray() : "Cache-Control: " + cacheControl + "\r\n")
+            + (lastModified.isEmpty() ? QByteArray() : "Last-Modified: " + lastModified + "\r\n")
+            + "Connection: close\r\nContent-Length: "
             + QByteArray::number(body.size()) + "\r\n\r\n" + body);
         request.socket->disconnectFromHost();
     }
