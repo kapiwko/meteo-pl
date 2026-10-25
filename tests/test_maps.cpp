@@ -102,12 +102,21 @@ private slots:
         QVERIFY2(failure.isEmpty(), qPrintable(failure));
         QCOMPARE(server.requests.size(), 1);
     }
+    void animationWaitsForEveryImageAndThenReplaysWithoutNetwork_data()
+    {
+        QTest::addColumn<QByteArray>("cacheControl");
+        QTest::newRow("explicit-expiry") << QByteArray("public, max-age=86400");
+        QTest::newRow("meteo-without-expiry") << QByteArray();
+    }
     void animationWaitsForEveryImageAndThenReplaysWithoutNetwork()
     {
+        QFETCH(QByteArray, cacheControl);
         ImageServer server;
+        server.cacheControl=cacheControl;
+        server.lastModified=QDateTime::currentDateTimeUtc().addSecs(-3600).toString(Qt::RFC2822Date).toLatin1();
         QVERIFY(server.listen(QHostAddress::LocalHost));
         server.hold=true;
-        Meteo::ImageCache cache(m_cache.path()+"/preload");
+        Meteo::ImageCache cache(m_cache.path()+"/preload-"+QString::fromLatin1(QTest::currentDataTag()));
         ImagePreloader loader(nullptr,&cache);
         QVariantList urls;
         for (int i=0;i<9;++i) urls.append(server.url("red/"+QString::number(i)).toString());
@@ -124,12 +133,66 @@ private slots:
         QTRY_VERIFY(loader.ready());
         QCOMPARE(loader.completed(),9);
         QCOMPARE(server.requests.size(),9);
-        server.close();
         cache.clearMemory(); // Even evicted frames must remain in the disk cache.
         loader.start(urls);
         QTRY_VERIFY(loader.ready());
         QCOMPARE(server.requests.size(),9);
         QVERIFY(loader.error().isEmpty());
+        server.close();
+        cache.clearMemory();
+        loader.cancel();
+        loader.start(urls);
+        QTRY_VERIFY(loader.ready());
+        QCOMPARE(server.requests.size(),9);
+    }
+    void explicitCacheRestrictionsAreRespected_data()
+    {
+        QTest::addColumn<QByteArray>("cacheControl");
+        QTest::newRow("no-store") << QByteArray("No-Store");
+        QTest::newRow("no-cache") << QByteArray("No-Cache");
+        QTest::newRow("expired") << QByteArray("max-age=0");
+    }
+    void explicitCacheRestrictionsAreRespected()
+    {
+        QFETCH(QByteArray, cacheControl);
+        ImageServer server;
+        server.cacheControl=cacheControl;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        Meteo::ImageCache cache(m_cache.path()+"/restricted-"+QString::fromLatin1(QTest::currentDataTag()));
+        int completed=0;
+        const auto receive=[&](const QImage &image,const QString &error) {
+            QVERIFY2(error.isEmpty(),qPrintable(error));
+            QVERIFY(!image.isNull());
+            ++completed;
+        };
+        for (int i=1;i<=3;++i) {
+            if (i==3) cache.clearMemory();
+            cache.request(server.url("red"),receive);
+            QTRY_COMPARE(completed,i);
+            QCOMPARE(server.requests.size(),i);
+        }
+    }
+    void cancelledAnimationReusesFinishedAndPendingFrames()
+    {
+        ImageServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.hold=true;
+        Meteo::ImageCache cache(m_cache.path()+"/resume-preload");
+        ImagePreloader loader(nullptr,&cache);
+        QVariantList urls;
+        for (int i=0;i<9;++i) urls.append(server.url("red/"+QString::number(i)));
+        loader.start(urls);
+        QTRY_COMPARE(server.held.size(),4);
+        server.releaseOne();
+        QTRY_COMPARE(loader.completed(),1);
+        loader.cancel();
+        loader.start(urls);
+        QTRY_VERIFY(server.held.size()>=3);
+        server.hold=false;
+        server.releaseAll();
+        QTRY_VERIFY(loader.ready());
+        QCOMPARE(loader.completed(),9);
+        QCOMPARE(server.requests.size(),9);
     }
     void cancellingAnimationPreloadIgnoresObsoleteCompletions()
     {

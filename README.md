@@ -164,7 +164,10 @@ widoczna pozostaje zapisana prognoza z datą pobrania i komunikatem.
 Mapy mają dodatkowy cache: do 96 MiB zdekodowanych obrazów w RAM i do 256 MiB
 cache HTTP na dysku. Powtórne żądania tego samego obrazu w procesie są łączone.
 Klucz zawiera pełny URL, w tym warstwę, start, krok i współrzędne kafelka;
-ważność odpowiedzi dyskowych wynika z nagłówków serwera.
+ważność odpowiedzi dyskowych wynika z nagłówków serwera. Obrazom bez jawnego
+czasu ważności (m.in. mapom tematycznym) aplikacja nadaje 30 minut także na dysku.
+Ponowne przygotowanie animacji i wznowienie po anulowaniu wykorzystują gotowe
+klatki; usunięcie obrazu z RAM nie powoduje jego ponownego pobrania z sieci.
 Cache map znajduje się w `$XDG_CACHE_HOME/meteo-pl/maps/<nazwa-procesu>`.
 Aplikacja i Plasma mają osobne katalogi cache HTTP, aby dwa procesy nie
 modyfikowały równocześnie magazynu `QNetworkDiskCache`.
