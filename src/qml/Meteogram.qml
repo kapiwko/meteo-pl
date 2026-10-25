@@ -46,6 +46,12 @@ ColumnLayout {
     readonly property var bounds: calculateBounds()
     readonly property var rightBounds: calculateBounds(true)
     readonly property real windScale: weather.windUnit === "km/h" ? 3.6 : weather.windUnit === "kt" ? 1.943844492 : 1
+    readonly property string exportRevision: JSON.stringify({
+        data: weather.dataRevision, start: startTime, end: endTime, hidden: hiddenKeys,
+        legend: legendVisible, title: title, height: chartHeight, nights: nights,
+        colors: [String(textColor), String(gridColor), String(backgroundColor)], configuration: exportStyle(chartConfiguration),
+        fields: fields.map(field => exportStyle(field))
+    })
     signal probeMoved(real timestamp, point position)
     signal probeLeft()
     signal pinRequested(real timestamp, point position)
@@ -54,6 +60,11 @@ ColumnLayout {
     objectName: "chart-" + groupKey
 
     function valid(value) { return value !== null && value !== undefined && isFinite(value); }
+    function exportStyle(configuration) {
+        const style = Object.assign({}, configuration);
+        delete style.points; delete style.lowerPoints; delete style.fields;
+        return style;
+    }
     function shown(field) { return hiddenKeys.indexOf(field.key) < 0; }
     function seriesColor(field) { return darkPalette && field.darkColor ? field.darkColor : field.color; }
     function isRightField(field) { return field.axis !== undefined ? field.axis === "right" : field.kind === "right" || field.kind === "rightBars"; }

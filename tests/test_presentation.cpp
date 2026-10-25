@@ -621,6 +621,40 @@ private slots:
         QVERIFY(!object->property("exportingReadings").toBool());
         QVERIFY(object->property("exportMessage").toString().contains("reading"));
     }
+    void exportCancelsWhenAChartChangesWithoutResizing()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            Item {
+                width:200; height:100
+                property bool exportMode:false
+                property string exportRevision:"original range and series"
+                Rectangle { anchors.fill:parent; color:"red" }
+            }
+        )",{});
+        QScopedPointer<QObject> first(component.create()), second(component.create());
+        QVERIFY(first); QVERIFY(second);
+        QQuickWindow window; window.resize(220,220);
+        qobject_cast<QQuickItem *>(first.data())->setParentItem(window.contentItem());
+        qobject_cast<QQuickItem *>(second.data())->setParentItem(window.contentItem());
+        window.show();
+        QTemporaryDir directory;
+        const auto path = directory.filePath("unchanged.png");
+        QFile existing(path); QVERIFY(existing.open(QIODevice::WriteOnly)); existing.write("original"); existing.close();
+        ChartExporter exporter;
+        QSignalSpy failed(&exporter,&ChartExporter::failed), saved(&exporter,&ChartExporter::saved);
+        const QVariantList items{QVariant::fromValue(first.data()),QVariant::fromValue(second.data())};
+        QVERIFY(exporter.savePng(QUrl::fromLocalFile(path),items,{}));
+        QTimer::singleShot(0,second.data(),[&] { second->setProperty("exportRevision","different range or hidden series"); });
+        QTRY_COMPARE(failed.count(),1);
+        QCOMPARE(saved.count(),0);
+        QVERIFY(!exporter.busy());
+        QVERIFY(!first->property("exportMode").toBool());
+        QVERIFY(!second->property("exportMode").toBool());
+        QVERIFY(existing.open(QIODevice::ReadOnly)); QCOMPARE(existing.readAll(),QByteArray("original"));
+    }
     void exportFailurePreservesFileAndCanBeRetried()
     {
         QQuickWindow window;window.resize(200,200);window.show();

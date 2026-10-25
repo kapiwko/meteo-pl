@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "ChartExporter.hpp"
+#include <QMetaProperty>
 #include <QDir>
 #include <QFileInfo>
 #include <QFontMetrics>
@@ -52,7 +53,7 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
             fail(Meteo::i18n("The chart is not ready to export. Open the meteogram and try again.")); return false;
         }
         const QSize size(qCeil(item->width()), qCeil(item->height()));
-        m_items.append({item, size, item->property("exportMode")});
+        m_items.append({item, size, item->property("exportMode"), item->property("exportRevision")});
         contentWidth = std::max(contentWidth, size.width());
         contentHeight += size.height();
     }
@@ -102,6 +103,13 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
         m_connections.append(connect(capture.item, &QObject::destroyed, this, changed));
         m_connections.append(connect(capture.item, &QQuickItem::widthChanged, this, changed));
         m_connections.append(connect(capture.item, &QQuickItem::heightChanged, this, changed));
+        const auto index = capture.item->metaObject()->indexOfProperty("exportRevision");
+        if (index >= 0) {
+            const auto property = capture.item->metaObject()->property(index);
+            if (property.hasNotifySignal())
+                m_connections.append(connect(capture.item, property.notifySignal(), this,
+                    metaObject()->method(metaObject()->indexOfSlot("viewChanged()"))));
+        }
     }
     m_deadline.start();
     emit stateChanged();
@@ -112,6 +120,9 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
 void ChartExporter::captureNext()
 {
     if (!m_busy) return;
+    for (const auto &capture : std::as_const(m_items)) {
+        if (!capture.item || capture.item->property("exportRevision") != capture.revision) { viewChanged(); return; }
+    }
     if (m_index == m_items.size()) {
         QSaveFile file(m_file.toLocalFile());
         if (!file.open(QIODevice::WriteOnly)) { fail(Meteo::i18n("Could not save PNG: ") + file.errorString()); return; }
@@ -132,6 +143,9 @@ void ChartExporter::captureNext()
     const auto generation = m_generation;
     connect(m_grab.data(), &QQuickItemGrabResult::ready, this, [this, generation] {
         if (!m_busy || generation != m_generation) return;
+        for (const auto &capture : std::as_const(m_items)) {
+            if (!capture.item || capture.item->property("exportRevision") != capture.revision) { viewChanged(); return; }
+        }
         const auto grab = m_grab;
         const auto image = grab->image();
         if (image.isNull()) { fail(Meteo::i18n("The renderer did not return a chart image.")); return; }
@@ -161,3 +175,7 @@ void ChartExporter::fail(const QString &message)
     emit stateChanged(); emit failed(message);
 }
 void ChartExporter::cancel() { if (m_busy) fail(Meteo::i18n("Export cancelled.")); }
+void ChartExporter::viewChanged()
+{
+    if (m_busy) fail(Meteo::i18n("The view changed during export. Try again."));
+}

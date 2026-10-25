@@ -110,6 +110,10 @@ Popup {
             Rectangle {
                 id: readingsBackground
                 objectName: "inspectorReadings"
+                readonly property string exportRevision: JSON.stringify({
+                    time: root.timestamp, details: root.visibleDetails, highlighted: root.highlightedKeys,
+                    columns: readings.columns, background: String(color)
+                })
                 width: inspectorScroll.availableWidth
                 implicitHeight: readings.implicitHeight
                 color: Kirigami.Theme.backgroundColor

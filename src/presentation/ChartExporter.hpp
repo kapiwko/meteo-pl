@@ -26,8 +26,10 @@ signals:
     void stateChanged();
     void saved(const QUrl &file, const QString &path);
     void failed(const QString &message);
+private slots:
+    void viewChanged();
 private:
-    struct Capture { QPointer<QQuickItem> item; QSize size; QVariant exportMode; };
+    struct Capture { QPointer<QQuickItem> item; QSize size; QVariant exportMode, revision; };
     void captureNext();
     void fail(const QString &message);
     void restore();
