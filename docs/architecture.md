@@ -46,21 +46,43 @@ Zmiana lokalizacji anuluje poprzednie żądanie i usuwa poprzednie podsumowanie,
 zanim rozpocznie się nowe pobranie. Licznik generacji odrzuca spóźnione odpowiedzi.
 Jedna instancja `WeatherModel` obsługuje wszystkie wykresy danego widoku.
 
-`ForecastFields` definiuje serie, palety i katalog wykresów. `UserPreferences`
-przechowuje nazwane profile z uporządkowaną listą wykresów i wybranymi seriami.
-`ForecastPanel` składa widok według profilu; kolejność malowania danych w
-`Meteogram` jest od niego niezależna. Tła i zakresy min–max poprzedzają linie
+`ForecastFields` definiuje dane i katalog serii. `ChartConfiguration` buduje
+gotowe konfiguracje oraz normalizuje zapisy użytkownika. Każdy wykres ma nazwę,
+listę dowolnych serii, przypisania do osi, opcjonalne granice osi oraz style
+kolorów, linii, punktów i wypełnień. `UserPreferences` przechowuje pełną
+konfigurację w nazwanych profilach; stare listy kluczy są migrowane przy odczycie.
+`WeatherModel::configuredCharts` wiąże konfigurację z dostępnymi seriami,
+przelicza jednostki i ustala automatyczne przypisanie do dwóch osi.
+`ForecastPanel` składa widok według profilu. `Meteogram` używa rodzajów rysowania
+i skal z konfiguracji, a `MeteogramStyle.js` zawiera skale i palety ICM.
+`SeriesLegend` pokazuje tę samą próbkę w legendzie i w edytorze wyglądu.
+`MeteogramStyle.paintChart` emituje wspólne polecenia rysowania. Domyślny
+`GpuPlot` zamienia je na trójkąty `QSGGeometryNode` z kolorami wierzchołków
+i przekazuje do RHI Qt Quick; etykiety są elementami `Text`, a warstwa ma
+MSAA 4×. W tej ścieżce nie powstaje obraz wykresu na CPU. Alternatywny
+`Canvas.Image` jest wybierany w preferencjach lub automatycznie, gdy scena
+Qt Quick używa backendu programowego. Zmiana renderera działa bez restartu.
+Wskaźniki kursora mają osobną geometrię; ruch myszy nie przebudowuje serii,
+siatki ani etykiet. Test na rzeczywistym RHI sprawdza również ten warunek.
+Edytory wykresów i serii są tworzone dopiero po rozwinięciu.
+Import i eksport korzystają z lokalnych plików JSON w formacie
+`pl.meteo.chart-profiles`, wersja 1. Zapis jest atomowy (`QSaveFile`). Import
+sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe
+identyfikatory i rozróżnia powtarzające się nazwy. Jeden plik może zawierać
+do 100 profili i mieć do 16 MiB. Plik ustawień jest wskazany w edytorze;
+domyślnie to `~/.config/meteo-pl/desktop.ini`.
+Tła i zakresy min–max poprzedzają linie
 i znaczniki, mgła jest ponad pokryciem chmur, siatka ponad wypełnieniami,
 a odczyt kursora na wierzchu. Ukrycie serii przez legendę nie przelicza osi.
+Temperatura przy gruncie jest przedstawiana pionowymi kreskami min–max
+dla wspólnych znaczników czasu obu serii, ponad liniami temperatury powietrza.
 Tło temperatur poniżej zera jest ograniczone położeniem 0°C, także przy
 całkowicie ujemnym lub dodatnim zakresie.
 
-`LegacyMeteogramModel` przekazuje współrzędne i start modelu do selektora
-`old.meteo.pl`, sprawdza przekierowanie i buduje adres oryginalnego obrazu UM.
-Indeksy starej siatki nie są wyliczane z indeksów nowego API. `OriginalMeteogram`
-wyświetla obraz przez wspólny cache i umożliwia otwarcie legendy. Pola opadu
-konwekcyjnego nie ma w obecnym dokumencie liczbowym; jego występowanie jest
-dostępne w oznaczeniach oryginalnego obrazu, bez heurystyk w adapterze.
+Pola opadu konwekcyjnego nie ma w obecnym dokumencie liczbowym. Przekroczenie
+skali przez maksimum opadu lub poryw ma osobny czerwony znacznik.
+Opcjonalne serie GFS przesłane jako `null` są pomijane; ich brak nie odrzuca
+pozostałej prognozy. Brak temperatury głównej nadal jest błędem dokumentu.
 
 Cache prognoz jest wspólny dla procesów i zawiera model, współrzędne, żądany
 start, czas pobrania oraz oryginalny dokument. Klucz to SHA-256 modelu

@@ -38,24 +38,48 @@ Brakujące wartości pozostają lukami. Dostępność parametrów zależy od mod
 Domyślny profil **Klasyczny ICM** zawiera osiem wykresów: temperaturę, opady
 z wilgotnością, szansę opadu i burze, ciśnienie, prędkość wiatru, kierunek
 wiatru, pionowy zasięg chmur z widzialnością oraz zachmurzenie z mgłą.
-Temperatury mają półprzezroczyste zakresy min–max; błękitne tło wyróżnia
-obszar poniżej 0°C. Kolory linii odpowiadają palecie klienta Meteo.
+Temperatura powietrza i odczuwalna mają półprzezroczyste zakresy min–max.
+Zakres temperatury przy gruncie przedstawiają pionowe kreski od minimum do
+maksimum dla każdej godziny prognozy. Błękitne tło wyróżnia obszar poniżej 0°C.
+Kolory linii odpowiadają palecie klienta Meteo.
 Siatka pozostaje widoczna nad wypełnieniami, a mgła nad chmurami.
+Linie siatki są delikatne. Etykiety czasu na wąskich wykresach pomijają minuty
+i w razie potrzeby pojawiają się rzadziej, bez nakładania się godzin i dat.
+
+Domyślny renderer **GPU** przekazuje geometrię wykresów bezpośrednio do sceny
+Qt Quick (RHI), z wygładzaniem MSAA. W ustawieniach **Wygląd → Rysowanie
+wykresów** można od razu przełączyć na **CPU · Canvas**. Oba renderery używają
+tych samych obliczeń, kolorów, warstw i obsługi kursora. Bez akceleracji sceny
+Qt Quick aplikacja automatycznie korzysta z CPU.
 
 W ustawieniach widoku można tworzyć, nazywać i usuwać własne profile,
-wybierać wykresy i ich serie oraz zmieniać kolejność wykresów.
+tworzyć i usuwać wykresy, zmieniać ich nazwy oraz kolejność. Każdy wykres może
+łączyć dowolne serie z całego katalogu, np. temperaturę z opadem na prawej osi.
+Przy każdej serii jest próbka legendy i edytor wyglądu: sposób rysowania,
+kolory dla jasnego i ciemnego motywu, grubość i wzór linii, rozmiar punktów,
+krycie oraz przypisanie do osi. Kolor można wybrać z palety lub wpisać kod.
+Wygląd i opcjonalne granice obu osi zapisują się oddzielnie w każdym profilu.
+Domyślne wykresy są gotową konfiguracją używającą tego samego renderera.
+Przyciski **Importuj…**, **Eksportuj profil…** i **Eksportuj zapisane…**
+przenoszą profile w pliku JSON, razem z wyglądem serii i zakresami osi.
+Import dodaje nowe profile; zbieżne nazwy otrzymują numer, a istniejące
+profile pozostają zachowane. Eksport zapisanych obejmuje nazwane własne
+profile i zmodyfikowany „Własny układ”. Ulubione lokalizacje i ustawienia
+globalne, takie jak jednostka wiatru i UTC, nie są częścią pliku profili.
+Dotyczy to również wyboru renderera, wspólnego dla aplikacji i plasmoidu.
 Można też wybrać jednostkę wiatru i cieniowanie nocy. Legenda przełącza serie
 bez zmiany skali osi. Ctrl + kółko myszy przybliża czas; przyciski i suwak
-pozwalają przesuwać zakres. Lista startów modelu udostępnia krótkoterminowe
-archiwum publikowane przez serwer.
+pozwalają przesuwać zakres. Wybory na pasku są opisane jako **Profil wykresów**,
+**Zakres czasu** i **Start modelu**. Przyciski **Więcej godzin** / **Mniej godzin**
+zmieniają długość widocznego przedziału, a **Wcześniej** / **Później** go przesuwają.
+Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
 
-Dla UM dostępny jest także przycisk **Pokaż oryginalny meteogram ICM**
-z opcjonalną pełną legendą. Punkt i start są przekazywane do selektora starego
-serwisu, który ustala właściwe pole siatki. Ten widok zachowuje oznaczenia
-oryginalnego obrazu, w tym występowania opadu konwekcyjnego.
 Obecny interfejs danych liczbowych nie udostępnia osobnego pola opadu
 konwekcyjnego. Opad średni, maksymalny, prawdopodobieństwo opadu i wskaźniki
-burz są w wykresach natywnych prezentowane zgodnie z ich znaczeniem.
+burz są prezentowane zgodnie z ich znaczeniem. Czerwona kropka przy górnej
+krawędzi oznacza przekroczenie skali przez opad maksymalny lub poryw wiatru;
+nie jest oznaczeniem konwekcji. Szczegóły porównania wykresów z klientem webowym:
+[docs/chart-parity.md](docs/chart-parity.md).
 
 Zakładka **Mapy** zawiera interaktywne warstwy UM4/GFS i 19 map tematycznych
 UM/WAM. Można zmieniać warstwę, start, godzinę i animować prognozę, a z mapy
@@ -83,6 +107,7 @@ Cache map znajduje się w `$XDG_CACHE_HOME/meteo-pl/maps/<nazwa-procesu>`.
 Aplikacja i Plasma mają osobne katalogi cache HTTP, aby dwa procesy nie
 modyfikowały równocześnie magazynu `QNetworkDiskCache`.
 Ulubione i preferencje widoku są wspólne, w `~/.config/meteo-pl/desktop.ini`.
+Ścieżka jest też widoczna na dole ustawień wyglądu; respektuje `XDG_CONFIG_HOME`.
 
 ## Instalacja
 
@@ -134,7 +159,3 @@ Repozytorium zawiera wyłącznie syntetyczne dane testowe, a interfejs podaje ź
 Nie jest to jeszcze pełna zgodność funkcji z Androidem: brak radaru obserwacyjnego,
 FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
 i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
-
-Natywny renderer Qt Quick przetwarza polecenia rysowania na geometrię sceny, z osobną warstwą kursora i wygładzaniem MSAA.
-
-Wykresy są konfiguracją dowolnych serii, stylów i osi. Edytor profili obsługuje import/eksport JSON, a renderer GPU jest domyślny z opcją CPU.

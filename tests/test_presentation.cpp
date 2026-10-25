@@ -444,7 +444,48 @@ private slots:
         chart->setProperty("fields", QVariantList{negative});
         QTRY_COMPARE(window.grabWindow().pixelColor(pixelFor(-4.7)), QColor("#87ceeb"));
     }
-
+    void articleImagesFitAndKeepTheirAspectRatioAfterResizing()
+    {
+        QTemporaryDir files;
+        QVERIFY(files.isValid());
+        QImage image(1800,600,QImage::Format_RGB32);
+        image.fill(QColor("#239876"));
+        const auto path=files.filePath("large.png");
+        QVERIFY(image.save(path));
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import QtQuick.Controls
+            import pl.meteo.desktop
+            TextArea {
+                id: body
+                readOnly: true
+                textFormat: TextEdit.RichText
+                wrapMode: TextEdit.Wrap
+                ResponsiveImages { document: body.textDocument; maximumWidth: body.width - body.leftPadding - body.rightPadding }
+            })", QUrl());
+        QVERIFY2(component.isReady(),qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"text", "<p>Before</p><img src='"+QUrl::fromLocalFile(path).toString()+"' width='1800' height='600'><p>After</p>"}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *item=qobject_cast<QQuickItem *>(object.data());
+        auto *document=qvariant_cast<QQuickTextDocument *>(object->property("textDocument"))->textDocument();
+        const auto imageFormat=[document] {
+            for (auto block=document->begin();block.isValid();block=block.next()) for (auto it=block.begin();!it.atEnd();++it)
+                if (it.fragment().charFormat().isImageFormat()) return it.fragment().charFormat().toImageFormat();
+            return QTextImageFormat();
+        };
+        for (const int width : {600,300,800}) {
+            item->setWidth(width);
+            const auto available=width-object->property("leftPadding").toDouble()-object->property("rightPadding").toDouble();
+            QTRY_VERIFY(qAbs(imageFormat().width()-available)<1);
+            QVERIFY(qAbs(imageFormat().width()/imageFormat().height()-3)<0.001);
+        }
+        object->setProperty("text", "<p>Without explicit dimensions</p><img src='"+QUrl::fromLocalFile(path).toString()+"'>");
+        const auto available=item->width()-object->property("leftPadding").toDouble()-object->property("rightPadding").toDouble();
+        QTRY_VERIFY(qAbs(imageFormat().width()-available)<1);
+        QVERIFY(qAbs(imageFormat().width()/imageFormat().height()-3)<0.001);
+    }
     void calendarBoundariesAreMidnightsInTheSelectedTimeZone()
     {
         WeatherModel model;

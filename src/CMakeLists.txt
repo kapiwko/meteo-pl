@@ -48,6 +48,8 @@ qt_add_qml_module(meteo_ui
         presentation/MapImages.hpp
         presentation/PlaceSearchModel.cpp
         presentation/PlaceSearchModel.hpp
+        presentation/ResponsiveImages.cpp
+        presentation/ResponsiveImages.hpp
         presentation/UserPreferences.cpp
         presentation/UserPreferences.hpp
         presentation/WeatherLayersModel.cpp

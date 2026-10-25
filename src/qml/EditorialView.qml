@@ -49,20 +49,24 @@ ColumnLayout {
         Layout.fillHeight: true
         contentWidth: availableWidth
         clip: true
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
         ColumnLayout {
             width: readerScroll.availableWidth
             spacing: 16
             Label { visible: root.selectedArticle !== null; text: root.selectedArticle ? root.selectedArticle.title : ""; font.bold: true; font.pixelSize: 20; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             TextArea {
+                id: articleBody
                 visible: root.commentary || root.selectedArticle !== null
                 Layout.fillWidth: true
                 readOnly: true
                 selectByMouse: true
-                wrapMode: TextEdit.WordWrap
+                wrapMode: TextEdit.Wrap
+                clip: true
                 textFormat: TextEdit.RichText
                 text: root.commentary ? feed.commentHtml : root.selectedArticle ? root.selectedArticle.html : ""
                 font.pixelSize: 15
                 background: null
+                ResponsiveImages { document: articleBody.textDocument; maximumWidth: articleBody.width - articleBody.leftPadding - articleBody.rightPadding }
                 onLinkActivated: link => { if (link.startsWith("https://") || link.startsWith("http://")) Qt.openUrlExternally(link); }
             }
             Repeater {
