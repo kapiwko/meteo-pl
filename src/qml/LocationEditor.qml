@@ -150,6 +150,9 @@ ColumnLayout {
         sourceComponent: TileMap {
             latitude: root.latitude; longitude: root.longitude
             markerLatitude: root.latitude; markerLongitude: root.longitude
+            markerName: root.locationName
+            places: UserPreferences.places
+            onPlaceSelected: (name, latitude, longitude) => root.selectPlace({name: name, latitude: latitude, longitude: longitude})
             onCoordinateSelected: (latitude, longitude) => root.selectPlace({name: "Punkt na mapie", latitude: Number(latitude.toFixed(6)), longitude: Number(longitude.toFixed(6))})
         }
     }

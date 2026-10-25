@@ -10,6 +10,7 @@
 #include <QQuickWindow>
 #include <QWheelEvent>
 #include <QTemporaryDir>
+#include <QSignalSpy>
 #include <QTest>
 
 class MapTest : public QObject {
@@ -23,6 +24,53 @@ private slots:
         QQuickStyle::setStyle("org.kde.desktop");
         qputenv("XDG_CACHE_HOME", m_cache.path().toUtf8());
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot assign|Unable to assign).*"));
+    }
+    void namedPlacesTrackProjectionAndClicksDoNotSelectAnotherPoint()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "TileMap");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        const QVariantList places{QVariantMap{{"name", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}},
+            QVariantMap{{"name", "Kielce"}, {"latitude", 50.8661}, {"longitude", 20.6286}}};
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"latitude", 52.2297}, {"longitude", 21.0122},
+            {"markerLatitude", 52.2297}, {"markerLongitude", 21.0122}, {"zoom", 6}, {"active", false}, {"places", places}}));
+        QVERIFY(object);
+        auto *map = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(640, 400);
+        map->setParentItem(window.contentItem()); map->setSize({640, 400}); window.show();
+        const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
+            if (parent->objectName() == name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        auto *current = find(find, map, "map-place-label-0");
+        auto *other = find(find, map, "map-place-label-1");
+        QVERIFY(current); QVERIFY(other);
+        QTRY_VERIFY(current->width() > 0);
+        QVERIFY(current->isVisible()); QVERIFY(other->isVisible());
+        QVERIFY(current->property("highlighted").toBool());
+        QVERIFY(!other->property("highlighted").toBool());
+        QSignalSpy selected(object.data(), SIGNAL(placeSelected(QString,double,double)));
+        QSignalSpy coordinate(object.data(), SIGNAL(coordinateSelected(double,double)));
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, other->mapToScene({other->width()/2, other->height()/2}).toPoint());
+        QCOMPARE(selected.count(), 1);
+        QCOMPARE(selected.first()[0].toString(), "Kielce");
+        QCOMPARE(selected.first()[1].toDouble(), 50.8661);
+        QCOMPARE(selected.first()[2].toDouble(), 20.6286);
+        QCOMPARE(coordinate.count(), 0);
+        const auto before = other->property("coordinatePosition").toPointF();
+        object->setProperty("longitude", 22.0122);
+        QTRY_VERIFY(other->property("coordinatePosition").toPointF().x() < before.x());
+        QVERIFY(qAbs(before.x()-other->property("coordinatePosition").toPointF().x()-256*64/360.0) < 0.01);
+        object->setProperty("places", QVariantList{QVariantMap{{"name", "Za południkiem 180°"}, {"latitude", 0}, {"longitude", 179}}});
+        object->setProperty("latitude", 0);
+        object->setProperty("longitude", -179);
+        current = find(find, map, "map-place-label-0");
+        QVERIFY(current);
+        QTRY_VERIFY(current->isVisible());
+        QVERIFY(current->property("coordinatePosition").toPointF().x() > 0);
+        QVERIFY(current->property("coordinatePosition").toPointF().x() < 320);
     }
     void cacheDeduplicatesRequestsAndSurvivesRestart()
     {

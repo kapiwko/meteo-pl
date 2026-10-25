@@ -33,6 +33,8 @@ Listą zarządzasz w oknie lokalizacji; usunięcie wybranego miejsca przełącza
 widok na następne, a usunięcie ostatniego pokazuje wybór nowej lokalizacji.
 Aplikacja i każdy widget zachowują własny wybór z tej wspólnej listy.
 Dotychczasowe ulubione i ostatnie miejsca są zachowane przy aktualizacji.
+Mapa interaktywna oraz mapa w formularzu pokazują zapisane miejsca z etykietami.
+Wybrane miejsce jest wyróżnione; kliknięcie etykiety wybiera jego prognozę.
 Dostępne modele: UM4 60 h, UM4 120 h i GFS 240 h.
 UM4 obejmuje obszar 44,5–66,482°N i 8,21–30,176°E; GFS jest globalny.
 Współrzędne przyjmują kropkę lub przecinek dziesiętny.

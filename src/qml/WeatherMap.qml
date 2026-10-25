@@ -64,13 +64,17 @@ ColumnLayout {
         longitude: root.weather.longitude
         markerLatitude: root.picked ? root.picked.latitude : root.weather.latitude
         markerLongitude: root.picked ? root.picked.longitude : root.weather.longitude
+        markerName: root.picked ? "Punkt na mapie" : root.weather.locationName
+        places: UserPreferences.places
         zoom: 6
         weatherLayer: layers
         active: !root.thematic
+        onPlaceSelected: (name, latitude, longitude) => { root.picked = null; root.locationSelected(name, latitude, longitude); }
         onCoordinateSelected: (latitude, longitude) => root.picked = {latitude: latitude, longitude: longitude}
         onFrameCommitted: if (play.checked) { root.prepareAnimation(); if (animationCache.ready) prefetchStep(root.nextStep()); }
         onErrorChanged: if (error.length) play.checked = false
         Column {
+            z: 3
             anchors.centerIn: parent
             spacing: 8
             BusyIndicator { anchors.horizontalCenter: parent.horizontalCenter; running: layers.busy || map.loading || animationCache.busy; visible: running }
