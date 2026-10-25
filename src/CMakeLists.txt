@@ -7,3 +7,32 @@ add_library(meteo_core STATIC
 target_include_directories(meteo_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network)
 target_compile_options(meteo_core PRIVATE -Wall -Wextra -Wpedantic)
+
+set_source_files_properties(qml/ForecastPanel.qml PROPERTIES QT_RESOURCE_ALIAS ForecastPanel.qml)
+set_source_files_properties(qml/LocationEditor.qml PROPERTIES QT_RESOURCE_ALIAS LocationEditor.qml)
+set_source_files_properties(qml/Meteogram.qml PROPERTIES QT_RESOURCE_ALIAS Meteogram.qml)
+qt_add_qml_module(meteo_ui
+    SHARED
+    URI pl.meteo.desktop
+    VERSION 1.0
+    NO_PLUGIN_OPTIONAL
+    SOURCES
+        presentation/WeatherModel.cpp
+        presentation/WeatherModel.hpp
+    QML_FILES
+        qml/ForecastPanel.qml
+        qml/LocationEditor.qml
+        qml/Meteogram.qml
+)
+target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2)
+target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
+target_compile_options(meteo_ui PRIVATE -Wall -Wextra -Wpedantic)
+
+set(METEO_QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml/pl/meteo/desktop" CACHE PATH "QML module installation directory")
+set_target_properties(meteo_ui meteo_uiplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
+install(TARGETS meteo_ui meteo_uiplugin LIBRARY DESTINATION "${METEO_QML_INSTALL_DIR}")
+install(FILES
+    "${QT_QML_OUTPUT_DIRECTORY}/pl/meteo/desktop/qmldir"
+    "${QT_QML_OUTPUT_DIRECTORY}/pl/meteo/desktop/meteo_ui.qmltypes"
+    DESTINATION "${METEO_QML_INSTALL_DIR}"
+)

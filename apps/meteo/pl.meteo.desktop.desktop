@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Meteo
+GenericName=Meteogramy ICM
+Comment=Prognoza pogody z meteo.pl
+Exec=meteo-pl
+Icon=weather-few-clouds
+Terminal=false
+Categories=Qt;KDE;Education;Science;Geography;
+Keywords=pogoda;meteogram;ICM;meteo;weather;
+StartupNotify=true
