@@ -1,5 +1,6 @@
 #include "PlaceSearchModel.hpp"
 #include "WeatherLayersModel.hpp"
+#include "ThematicMapsModel.hpp"
 #include "EditorialModel.hpp"
 #include "CacheStorage.hpp"
 #include "LegacyMeteogramModel.hpp"
@@ -224,6 +225,54 @@ private slots:
         QVERIFY(source.tileUrl("test",run,8,0,4,2).isEmpty());
         QVERIFY(!MeteoMapSource::parseRuns(QJsonDocument::fromJson("{}"),"gfs"));
         QVERIFY(!MeteoMapSource::parseRuns(QJsonDocument::fromJson(R"({"dates":[]})"),"unknown"));
+    }
+    void thematicMapsUseUtcPublicationRulesAndOnlyRewindForMissingImages()
+    {
+        qint64 now=QDateTime(QDate(2026,10,25),QTime(13,5),QTimeZone::UTC).toSecsSinceEpoch();
+        ThematicMapsModel model(nullptr,QUrl("https://maps.example.test"),[&] { return now; });
+        const auto latest=QDateTime(QDate(2026,10,25),QTime(12,0),QTimeZone::UTC).toSecsSinceEpoch();
+        QCOMPARE(model.run(),double(latest));
+        QCOMPARE(model.catalog().size(),19);
+        QCOMPARE(model.animationUrls().size(),60);
+        QVERIFY(model.imageUrl().toEncoded().contains("2026102512"));
+        QCOMPARE(model.imageUrl().host(),"maps.example.test");
+        model.setLayerIndex(1);
+        QVERIFY(model.imageUrl().toEncoded().contains("T%2BWH"));
+        model.imageFailed(model.imageUrl(),"connection failed",0);
+        QCOMPARE(model.run(),double(latest));
+        QCOMPARE(model.attempts(),0);
+        QCOMPARE(model.error(),"connection failed");
+        model.imageReady(model.imageUrl());
+        QVERIFY(model.error().isEmpty());
+        model.imageFailed(model.imageUrl(),"unavailable",503);
+        QCOMPARE(model.run(),double(latest));
+        QCOMPARE(model.error(),"unavailable");
+        QSignalSpy retry(&model,&ThematicMapsModel::reloadRequested);
+        model.latest();
+        QCOMPARE(retry.count(),1);
+        QVERIFY(model.error().isEmpty());
+        const auto obsolete=model.imageUrl();
+        for (int i=0;i<4;++i) model.imageFailed(model.imageUrl(),"missing",404);
+        QCOMPARE(model.attempts(),4);
+        QCOMPARE(model.run(),double(latest-24*3600));
+        model.imageFailed(model.imageUrl(),"missing",404);
+        QVERIFY(!model.error().isEmpty());
+        const auto previous=model.run();
+        model.imageFailed(obsolete,"late response",404);
+        QCOMPARE(model.run(),previous);
+        model.latest(); model.earlier();
+        QVERIFY(model.canGoLater());
+        model.later(); QCOMPARE(model.run(),double(latest));
+        QVERIFY(!model.canGoLater());
+        model.setLayerIndex(16);
+        QCOMPARE(model.stepHours(),3);
+        QCOMPARE(model.animationUrls().size(),24);
+        model.setStep(5); QCOMPARE(model.step(),3);
+        QCOMPARE(model.nextStep(),6);
+        model.setStep(72); QCOMPARE(model.nextStep(),3);
+        now=QDateTime(QDate(2026,10,26),QTime(1,0),QTimeZone::UTC).toSecsSinceEpoch();
+        model.latest();
+        QVERIFY(model.imageUrl().toEncoded().contains("2026102600"));
     }
     void editorialRetriesTheLastFailedPageAndRejectsMalformedContent()
     {

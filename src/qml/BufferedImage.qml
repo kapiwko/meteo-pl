@@ -18,6 +18,7 @@ Item {
     signal frameCommitted()
     signal failed()
     onSourceChanged: requestDelay.restart()
+    function reload() { requestDelay.restart(); }
     function load() {
         if (pending) { pending.destroy(); pending = null; }
         error = "";

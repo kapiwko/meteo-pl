@@ -13,6 +13,7 @@ public:
     QList<Request> held;
     QList<QUrl> requests;
     bool hold = false;
+    int statusCode = 200;
     QSize imageSize{256,256};
     QByteArray cacheControl = "public, max-age=86400";
     QByteArray lastModified;
@@ -36,7 +37,8 @@ public:
     void respond(const Request &request)
     {
         if (!request.socket) return;
-        const bool failure = request.url.path().contains("error");
+        const bool failure = statusCode != 200 || request.url.path().contains("error");
+        const int code = failure ? (statusCode == 200 ? 404 : statusCode) : 200;
         const QColor color = request.url.path().contains("blue") ? Qt::blue
             : request.url.path().contains("green") ? Qt::green : Qt::red;
         QImage image(imageSize, QImage::Format_ARGB32);
@@ -45,7 +47,7 @@ public:
         buffer.open(QIODevice::WriteOnly);
         image.save(&buffer, "PNG");
         const auto body = failure ? QByteArray("missing") : buffer.data();
-        request.socket->write(QByteArray(failure ? "HTTP/1.1 404 Not Found" : "HTTP/1.1 200 OK")
+        request.socket->write("HTTP/1.1 " + QByteArray::number(code) + " Response"
             + "\r\nContent-Type: image/png\r\n"
             + (cacheControl.isEmpty() ? QByteArray() : "Cache-Control: " + cacheControl + "\r\n")
             + (lastModified.isEmpty() ? QByteArray() : "Last-Modified: " + lastModified + "\r\n")

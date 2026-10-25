@@ -7,58 +7,39 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     required property WeatherModel weather
-    property int layerIndex: 0
-    property int step: 12
-    property real run: 0
+    property alias layerIndex: thematic.layerIndex
+    property alias step: thematic.step
+    property alias run: thematic.run
     property real imageScale: 1
-    property int attempts: 0
-    readonly property var catalog: [
-        {name: I18n.i18n("UM4 · pressure"), id: "SLPH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · temperature and streamlines"), id: "T+WH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · surface temperature"), id: "GT_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · precipitation"), id: "RS_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · storms"), id: "FLSH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · surface wind"), id: "W__H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · maximum gusts"), id: "WGSH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · visibility"), id: "VISH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · fog"), id: "F__H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · humidity over ice"), id: "RHiH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · humidity over water"), id: "RHwH_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · very low clouds"), id: "CV_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · low clouds"), id: "CL_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · medium clouds"), id: "CM_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · high clouds"), id: "CH_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("UM4 · total cloud cover"), id: "CT_H_0000.0_0U", model: "um"},
-        {name: I18n.i18n("WAM · significant wave height"), id: "wavehgt_0W", model: "wamcoamps"},
-        {name: I18n.i18n("WAM · mean wave period"), id: "m_period_0W", model: "wamcoamps"},
-        {name: I18n.i18n("WAM · peak wave period"), id: "p_period_0W", model: "wamcoamps"}
-    ]
-    readonly property bool wave: catalog[layerIndex].model !== "um"
-    readonly property int intervalHours: wave ? 3 : 1
-    readonly property string runKey: Qt.formatDateTime(new Date(run * 1000), "yyyyMMddhh")
-    readonly property string imageUrl: urlForStep(step)
+    readonly property var catalog: thematic.catalog
+    readonly property bool wave: thematic.wave
+    readonly property int intervalHours: thematic.stepHours
+    readonly property url imageUrl: thematic.imageUrl
+    ThematicMapsModel { id: thematic; objectName: "thematicMapsModel" }
+    Connections {
+        target: MapImages
+        function onImageFailed(url, message, status) { thematic.imageFailed(url,message,status); }
+    }
+    Connections {
+        target: thematic
+        function onChanged() { if (thematic.error.length) animate.checked=false; }
+        function onReloadRequested() { picture.reload(); }
+    }
     readonly property string requestedLabel: catalog[layerIndex].name + I18n.i18n(" · run: ") + weather.formatTime(run, "ddd d MMM, HH:mm t") + " · +" + step + " h"
     readonly property string animationKey: layerIndex + ":" + run
     readonly property real fitScale: picture.implicitWidth > 0 && picture.implicitHeight > 0 ? Math.min(imageScroll.availableWidth / picture.implicitWidth, imageScroll.availableHeight / picture.implicitHeight) : 1
     onAnimationKeyChanged: { animationCache.cancel(); if (animate.checked) prepareAnimation(); }
     function prepareAnimation() {
         if (!animate.checked || !run || picture.loading || !picture.displayedSource.toString().length || animationCache.busy || animationCache.ready) return;
-        const urls = [];
-        for (let hour = intervalHours; hour <= (wave ? 72 : 60); hour += intervalHours) urls.push(urlForStep(hour));
-        animationCache.start(urls);
+        animationCache.start(thematic.animationUrls());
     }
     ImagePreloader {
         id: animationCache
         onFinished: MapImages.prefetch(root.urlForStep(root.nextStep()))
         onFailed: animate.checked = false
     }
-    function urlForStep(hour) {
-        if (!run) return "";
-        const date = new Date(run * 1000);
-        const stamp = String(date.getUTCFullYear()) + String(date.getUTCMonth()+1).padStart(2,"0") + String(date.getUTCDate()).padStart(2,"0") + String(date.getUTCHours()).padStart(2,"0");
-        return "https://old.meteo.pl/" + catalog[layerIndex].model + "/pict/" + stamp + "/" + encodeURIComponent(catalog[layerIndex].id) + "_" + stamp + "_" + String(hour).padStart(3,"0") + "-00.png";
-    }
-    function nextStep() { return step >= (wave ? 72 : 60) ? intervalHours : step + intervalHours; }
+    function urlForStep(hour) { return thematic.urlForStep(hour).toString(); }
+    function nextStep() { return thematic.nextStep(); }
     function zoomImage(factor, x, y) {
         const flickable = imageScroll.contentItem as Flickable;
         if (!flickable) return;
@@ -70,26 +51,24 @@ ColumnLayout {
             flickable.contentY = Math.max(0, Math.min(picture.height - imageScroll.availableHeight, vertical * picture.height + picture.y - y));
         });
     }
-    function latest() { attempts = 0; run = Math.floor(Date.now() / 1000 / ((wave ? 12 : 6) * 3600)) * ((wave ? 12 : 6) * 3600); }
-    Component.onCompleted: latest()
-    onWaveChanged: { step = wave ? 12 : 12; latest(); }
-    ComboBox { Layout.fillWidth: true; model: root.catalog; textRole: "name"; currentIndex: root.layerIndex; onActivated: index => { animate.checked = false; root.layerIndex = index; root.attempts = 0; root.imageScale = 1; } }
+    function latest() { thematic.latest(); }
+    ComboBox { Layout.fillWidth: true; model: root.catalog; textRole: "name"; currentIndex: root.layerIndex; onActivated: index => { animate.checked = false; root.layerIndex = index; root.imageScale = 1; } }
     RowLayout {
         Layout.fillWidth: true
-        Button { text: "‹"; onClicked: { root.run -= (root.wave ? 12 : 6) * 3600; root.attempts = 4; } }
+        Button { text: "‹"; onClicked: { thematic.earlier(); } }
         Label { Layout.fillWidth: true; text: picture.displayedLabel || root.requestedLabel; wrapMode: Text.WordWrap }
         Button { text: I18n.i18n("Latest"); onClicked: root.latest() }
-        Button { text: "›"; enabled: root.run + (root.wave ? 12 : 6) * 3600 < Date.now() / 1000; onClicked: { root.run += (root.wave ? 12 : 6) * 3600; root.attempts = 4; } }
+        Button { text: "›"; enabled: thematic.canGoLater; onClicked: { thematic.later(); } }
     }
     RowLayout {
         Layout.fillWidth: true
         Button { id: animate; text: checked ? animationCache.ready ? I18n.i18n("Pause") : I18n.i18n("Cancel loading") : I18n.i18n("Animate"); checkable: true; enabled: root.run > 0 && picture.displayedSource.toString().length > 0; onCheckedChanged: { if (checked) root.prepareAnimation(); else animationCache.cancel(); } }
-        Slider { Layout.fillWidth: true; from: root.intervalHours; to: root.wave ? 72 : 60; stepSize: root.intervalHours; value: root.step; onMoved: root.step = Math.round(value) }
+        Slider { Layout.fillWidth: true; from: root.intervalHours; to: thematic.lastStep; stepSize: root.intervalHours; value: root.step; onMoved: root.step = Math.round(value) }
         ToolButton { icon.name: "zoom-in"; onClicked: root.zoomImage(1.25, imageScroll.availableWidth / 2, imageScroll.availableHeight / 2) }
         ToolButton { icon.name: "zoom-out"; onClicked: root.zoomImage(0.8, imageScroll.availableWidth / 2, imageScroll.availableHeight / 2) }
         ToolButton { icon.name: "zoom-fit-best"; text: I18n.i18n("Fit"); display: AbstractButton.IconOnly; onClicked: root.imageScale = 1; ToolTip.text: I18n.i18n("Fit the entire map to the view"); ToolTip.visible: hovered }
     }
-    Kirigami.InlineMessage { Layout.fillWidth: true; visible: picture.error.length > 0 && root.attempts >= 4; type: Kirigami.MessageType.Warning; text: I18n.i18n("No map is available for this run and step. Choose an earlier run or another hour.") }
+    Kirigami.InlineMessage { Layout.fillWidth: true; visible: thematic.error.length > 0; type: Kirigami.MessageType.Warning; text: thematic.error }
     Kirigami.InlineMessage { Layout.fillWidth: true; visible: animationCache.error.length > 0; type: Kirigami.MessageType.Warning; text: animationCache.error }
     Item {
         objectName: "thematicViewport"
@@ -110,12 +89,9 @@ ColumnLayout {
                 y: Math.max(0, (imageScroll.availableHeight - height) / 2)
                 width: implicitWidth > 0 ? implicitWidth * root.fitScale * root.imageScale : imageScroll.availableWidth
                 height: implicitHeight > 0 ? implicitHeight * root.fitScale * root.imageScale : imageScroll.availableHeight
-                onFrameCommitted: if (animate.checked) { root.prepareAnimation(); if (animationCache.ready) MapImages.prefetch(root.urlForStep(root.nextStep())); }
-                onFailed: {
-                    if (root.attempts < 4) {
-                        root.attempts++;
-                        root.run -= (root.wave ? 12 : 6) * 3600;
-                    } else animate.checked = false;
+                onFrameCommitted: {
+                    thematic.imageReady(displayedSource);
+                    if (animate.checked) { root.prepareAnimation(); if (animationCache.ready) MapImages.prefetch(root.urlForStep(root.nextStep())); }
                 }
             }
         }

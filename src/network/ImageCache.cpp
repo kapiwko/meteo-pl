@@ -68,19 +68,25 @@ void ImageCache::clear()
 }
 void ImageCache::request(const QUrl &url, Completion completion, QObject *consumer, Priority priority)
 {
+    requestDetailed(url,[completion=std::move(completion)](const QImage &image,const QString &error,int) {
+        completion(image,error);
+    },consumer,priority);
+}
+void ImageCache::requestDetailed(const QUrl &url, DetailedCompletion completion, QObject *consumer, Priority priority)
+{
     const auto key = url.toString(QUrl::FullyEncoded);
     if (url.scheme() != "https" && url.scheme() != "http") {
-        completion({}, Meteo::i18n("Invalid map image URL."));
+        completion({}, Meteo::i18n("Invalid map image URL."),0);
         return;
     }
     if (auto *entry = m_images.object(key); entry && entry->expires > QDateTime::currentDateTimeUtc()) {
-        completion(entry->image, {});
+        completion(entry->image, {},200);
         return;
     }
     int consumers = 0;
     for (const auto &pending : std::as_const(m_pending)) consumers += pending.subscribers.size();
     if ((!m_pending.contains(key) && m_pending.size() >= maximumPendingJobs) || consumers >= maximumSubscribers) {
-        completion({}, Meteo::i18n("Too many images are waiting to load. Try again."));
+        completion({}, Meteo::i18n("Too many images are waiting to load. Try again."),0);
         return;
     }
     if (consumer && !m_contexts.contains(consumer)) {
@@ -154,14 +160,14 @@ void ImageCache::pump()
         startJob(job.first, job.second);
     }
 }
-void ImageCache::completeJob(const QString &key, quint64 token, const QImage &image, const QString &error)
+void ImageCache::completeJob(const QString &key, quint64 token, const QImage &image, const QString &error, int status)
 {
     QList<Subscriber> subscribers;
     const auto pending = m_pending.constFind(key);
     if (pending != m_pending.cend() && pending->token == token) subscribers = m_pending.take(key).subscribers;
     --m_activeJobs;
     for (const auto &subscriber : subscribers)
-        if (!subscriber.identity || subscriber.context) subscriber.complete(image,error);
+        if (!subscriber.identity || subscriber.context) subscriber.complete(image,error,status);
     pump();
 }
 void ImageCache::startJob(const QString &key, quint64 token)
@@ -187,6 +193,7 @@ void ImageCache::startJob(const QString &key, quint64 token)
         const auto bytes = reply->isOpen() ? reply->readAll() : QByteArray();
         const auto error = RequestPolicy::deadlineExceeded(reply) ? Meteo::i18n("The request timed out. Try again.")
             : reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
+        const auto status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const auto now = QDateTime::currentDateTimeUtc();
         const auto metadata = m_disk ? m_disk->metaData(reply->url()) : QNetworkCacheMetaData();
         const auto cacheControl = reply->rawHeader("Cache-Control").toLower();
@@ -208,9 +215,9 @@ void ImageCache::startJob(const QString &key, quint64 token)
                 {QNetworkRequest::HttpReasonPhraseAttribute, reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute)}});
         }
         reply->deleteLater();
-        if (!error.isEmpty()) { completeJob(key,token,{},error); return; }
+        if (!error.isEmpty()) { completeJob(key,token,{},error,status); return; }
         // PNG decompression must not block input or the map's current frame.
-        m_decoder.start(QRunnable::create([this, bytes, error, key, token, expiry, cacheable, fallback, generation] {
+        m_decoder.start(QRunnable::create([this, bytes, error, status, key, token, expiry, cacheable, fallback, generation] {
             QImage image;
             QString failure = error;
             if (failure.isEmpty()) {
@@ -223,7 +230,7 @@ void ImageCache::startJob(const QString &key, quint64 token)
                     image = reader.read();
                 if (image.isNull()) failure = Meteo::i18n("Could not read the map image.");
             }
-            QMetaObject::invokeMethod(this, [this, key, token, image, failure, expiry, cacheable, fallback, bytes, generation] {
+            QMetaObject::invokeMethod(this, [this, key, token, image, failure, status, expiry, cacheable, fallback, bytes, generation] {
                 if (!image.isNull() && cacheable && generation == m_generation) {
                     if (m_disk && fallback.isValid()) {
                         if (auto *device = m_disk->prepare(fallback)) {
@@ -233,7 +240,7 @@ void ImageCache::startJob(const QString &key, quint64 token)
                     }
                     m_images.insert(key, new Entry{image, expiry}, int(image.sizeInBytes()));
                 }
-                completeJob(key,token,image,failure);
+                completeJob(key,token,image,failure,status);
             }, Qt::QueuedConnection);
         }));
     });

@@ -37,15 +37,17 @@ private:
 };
 class Provider : public QQuickAsyncImageProvider {
 public:
-    explicit Provider(Meteo::ImageCache *cache) : m_cache(cache) {}
+    explicit Provider(Meteo::ImageCache *cache,MapImages *events) : m_cache(cache),m_events(events) {}
     QQuickImageResponse *requestImageResponse(const QString &id, const QSize &size) override
     {
         auto *response = new Response(m_cache);
         const auto url = QUrl::fromEncoded(QByteArray::fromBase64(id.toLatin1(), QByteArray::Base64UrlEncoding));
-        QMetaObject::invokeMethod(m_cache, [cache = m_cache, response = QPointer<Response>(response), url, size] {
+        QMetaObject::invokeMethod(m_cache, [cache = m_cache, events=m_events, response = QPointer<Response>(response), url, size] {
             if (!response) return;
             if (response->canceled()) { response->complete({},{}); return; }
-            cache->request(url, [response, size](const QImage &image, const QString &error) {
+            cache->requestDetailed(url, [response, events, url, size](const QImage &image, const QString &error,int status) {
+                if (!response) return;
+                if (!error.isEmpty() && events) emit events->imageFailed(url,error,status);
                 if (response) response->complete(size.isValid() ? image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation) : image, error);
             }, response);
         }, Qt::QueuedConnection);
@@ -53,12 +55,14 @@ public:
     }
 private:
     Meteo::ImageCache *m_cache;
+    QPointer<MapImages> m_events;
 };
 }
 MapImages *MapImages::create(QQmlEngine *engine, QJSEngine *)
 {
-    engine->addImageProvider(QStringLiteral("meteo-map"), new Provider(Meteo::ImageCache::shared()));
-    return new MapImages;
+    auto *events=new MapImages;
+    engine->addImageProvider(QStringLiteral("meteo-map"), new Provider(Meteo::ImageCache::shared(),events));
+    return events;
 }
 QUrl MapImages::cached(const QUrl &url) const
 {

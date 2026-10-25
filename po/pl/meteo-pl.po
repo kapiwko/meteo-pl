@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 00:24+0100\n"
+"POT-Creation-Date: 2026-10-26 00:50+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -43,7 +43,7 @@ msgstr " · obliczenia: "
 msgid " · parameter reading · "
 msgstr " · odczyt parametrów · "
 
-#: src/qml/ThematicMaps.qml:40
+#: src/qml/ThematicMaps.qml:28
 msgid " · run: "
 msgstr " · start: "
 
@@ -130,7 +130,7 @@ msgstr ""
 "Przedział obejmuje północ. Opad jest dzielony między dni proporcjonalnie do "
 "czasu trwania."
 
-#: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
+#: src/qml/ThematicMaps.qml:65 src/qml/WeatherMap.qml:46
 msgid "Animate"
 msgstr "Animuj"
 
@@ -205,7 +205,7 @@ msgstr "Dane CSV (*.csv)"
 msgid "Cache"
 msgstr "Pamięć podręczna"
 
-#: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
+#: src/qml/ThematicMaps.qml:65 src/qml/WeatherMap.qml:46
 msgid "Cancel loading"
 msgstr "Anuluj ładowanie"
 
@@ -389,8 +389,8 @@ msgstr "Chmury"
 msgid "Clouds %"
 msgstr "Chmury %"
 
-#: src/presentation/WeatherLayersModel.cpp:40
-#: src/presentation/WeatherLayersModel.cpp:47
+#: src/presentation/WeatherLayersModel.cpp:38
+#: src/presentation/WeatherLayersModel.cpp:45
 msgid "Clouds and precipitation"
 msgstr "Chmury i opady"
 
@@ -452,7 +452,7 @@ msgstr "Nie udało się pobrać danych (HTTP %1). %2"
 msgid "Could not download the forecast from meteo.pl (HTTP %1). %2"
 msgstr "Nie udało się pobrać prognozy z meteo.pl (HTTP %1). %2"
 
-#: src/qml/BufferedImage.qml:39
+#: src/qml/BufferedImage.qml:40
 msgid "Could not download the map. Keeping the previous image visible."
 msgstr "Nie udało się pobrać mapy. Poprzedni obraz pozostaje widoczny."
 
@@ -476,7 +476,7 @@ msgstr ""
 msgid "Could not prepare the chart image."
 msgstr "Nie udało się przygotować obrazu wykresu."
 
-#: src/network/ImageCache.cpp:224
+#: src/network/ImageCache.cpp:231
 msgid "Could not read the map image."
 msgstr "Nie udało się odczytać obrazu mapy."
 
@@ -707,11 +707,11 @@ msgstr ""
 msgid "Find a place"
 msgstr "Znajdź miejsce"
 
-#: src/qml/ThematicMaps.qml:90
+#: src/qml/ThematicMaps.qml:69
 msgid "Fit"
 msgstr "Dopasuj"
 
-#: src/qml/ThematicMaps.qml:90
+#: src/qml/ThematicMaps.qml:69
 msgid "Fit the entire map to the view"
 msgstr "Dopasuj całą mapę do widoku"
 
@@ -759,8 +759,8 @@ msgstr "GPU · scena Qt Quick (domyślnie)"
 msgid "Ground min–max"
 msgstr "Grunt min–max"
 
-#: src/presentation/WeatherLayersModel.cpp:38
-#: src/presentation/WeatherLayersModel.cpp:43
+#: src/presentation/WeatherLayersModel.cpp:36
+#: src/presentation/WeatherLayersModel.cpp:41
 msgid "Ground temperature"
 msgstr "Temperatura gruntu"
 
@@ -807,7 +807,7 @@ msgstr "Godzinowo"
 msgid "Humidity and fog"
 msgstr "Wilgotność i mgła"
 
-#: src/qml/ThematicMaps.qml:134
+#: src/qml/ThematicMaps.qml:110
 msgid "ICM UW / meteo.pl thematic maps · selected run and forecast step"
 msgstr "Mapy tematyczne ICM UW / meteo.pl · wskazany start i krok prognozy"
 
@@ -863,11 +863,13 @@ msgstr "Niepoprawna oś czasu prognozy."
 msgid "Invalid forecast values."
 msgstr "Niepoprawne wartości prognozy."
 
-#: src/network/ImageCache.cpp:73
+#: src/network/ImageCache.cpp:79
 msgid "Invalid map image URL."
 msgstr "Nieprawidłowy adres obrazu mapy."
 
-#: src/core/Forecast.cpp:82 src/presentation/EditorialModel.cpp:22
+#: src/core/Forecast.cpp:82 src/network/JsonRequest.cpp:108
+#: src/presentation/EditorialModel.cpp:22
+#: src/presentation/WeatherLayersModel.cpp:14
 msgid "Invalid meteo.pl response format."
 msgstr "Niepoprawny format odpowiedzi meteo.pl."
 
@@ -890,7 +892,7 @@ msgstr "Ostatnie pobranie: "
 msgid "Later interval"
 msgstr "Późniejszy przedział"
 
-#: src/qml/EditorialView.qml:40 src/qml/ThematicMaps.qml:81
+#: src/qml/EditorialView.qml:40 src/qml/ThematicMaps.qml:60
 msgid "Latest"
 msgstr "Najnowszy"
 
@@ -1161,7 +1163,7 @@ msgstr "Brak prognozy na bieżącą godzinę"
 msgid "No forecast has been downloaded yet."
 msgstr "Nie pobrano jeszcze prognozy."
 
-#: src/qml/ThematicMaps.qml:92
+#: src/presentation/ThematicMapsModel.cpp:106
 msgid ""
 "No map is available for this run and step. Choose an earlier run or another "
 "hour."
@@ -1169,7 +1171,7 @@ msgstr ""
 "Mapa dla tego uruchomienia i kroku nie jest dostępna. Wybierz wcześniejszy "
 "start lub inną godzinę."
 
-#: src/presentation/WeatherLayersModel.cpp:29
+#: src/presentation/WeatherLayersModel.cpp:27
 msgid "No maps have been published for this model."
 msgstr "Brak opublikowanych map wybranego modelu."
 
@@ -1261,7 +1263,7 @@ msgstr "Parametry wskazanego wykresu"
 msgid "Partly cloudy"
 msgstr "Częściowe zachmurzenie"
 
-#: src/qml/ThematicMaps.qml:86 src/qml/WeatherMap.qml:46
+#: src/qml/ThematicMaps.qml:65 src/qml/WeatherMap.qml:46
 msgid "Pause"
 msgstr "Pauza"
 
@@ -1322,12 +1324,12 @@ msgstr "Rodzaj opadu"
 msgid "Precipitation: "
 msgstr "Opad: "
 
-#: src/qml/ThematicMaps.qml:126 src/qml/WeatherMap.qml:81
+#: src/qml/ThematicMaps.qml:102 src/qml/WeatherMap.qml:81
 msgid "Preparing animation: "
 msgstr "Przygotowywanie animacji: "
 
-#: src/presentation/WeatherLayersModel.cpp:39
-#: src/presentation/WeatherLayersModel.cpp:44
+#: src/presentation/WeatherLayersModel.cpp:37
+#: src/presentation/WeatherLayersModel.cpp:42
 msgid "Pressure"
 msgstr "Ciśnienie"
 
@@ -1632,11 +1634,11 @@ msgstr "Temp."
 msgid "Temperature"
 msgstr "Temperatura"
 
-#: src/presentation/WeatherLayersModel.cpp:42
+#: src/presentation/WeatherLayersModel.cpp:40
 msgid "Temperature at 1.5 m"
 msgstr "Temperatura na 1,5 m"
 
-#: src/presentation/WeatherLayersModel.cpp:37
+#: src/presentation/WeatherLayersModel.cpp:35
 msgid "Temperature at 2 m"
 msgstr "Temperatura na 2 m"
 
@@ -1708,7 +1710,7 @@ msgstr "Plik profili jest zbyt duży (maksymalnie 16 MiB)."
 msgid "The renderer did not return a chart image."
 msgstr "Renderer nie zwrócił obrazu wykresu."
 
-#: src/network/ImageCache.cpp:188 src/network/JsonRequest.cpp:93
+#: src/network/ImageCache.cpp:194 src/network/JsonRequest.cpp:93
 #: src/network/MeteoClient.cpp:46
 msgid "The request timed out. Try again."
 msgstr "Upłynął limit czasu żądania. Spróbuj ponownie."
@@ -1772,7 +1774,7 @@ msgstr "Zakres czasu:"
 msgid "Timestamp"
 msgstr "Czas"
 
-#: src/network/ImageCache.cpp:83
+#: src/network/ImageCache.cpp:89
 msgid "Too many images are waiting to load. Try again."
 msgstr "Zbyt wiele obrazów czeka na pobranie. Spróbuj ponownie."
 
@@ -1812,67 +1814,67 @@ msgstr "UM4 · 120 godzin"
 msgid "UM4 · 60 hours"
 msgstr "UM4 · 60 godzin"
 
-#: src/qml/ThematicMaps.qml:24
+#: src/network/ThematicMapSource.cpp:21
 msgid "UM4 · fog"
 msgstr "UM4 · mgła"
 
-#: src/qml/ThematicMaps.qml:30
+#: src/network/ThematicMapSource.cpp:27
 msgid "UM4 · high clouds"
 msgstr "UM4 · chmury wysokie"
 
-#: src/qml/ThematicMaps.qml:25
+#: src/network/ThematicMapSource.cpp:22
 msgid "UM4 · humidity over ice"
 msgstr "UM4 · wilgotność względem lodu"
 
-#: src/qml/ThematicMaps.qml:26
+#: src/network/ThematicMapSource.cpp:23
 msgid "UM4 · humidity over water"
 msgstr "UM4 · wilgotność względem wody"
 
-#: src/qml/ThematicMaps.qml:28
+#: src/network/ThematicMapSource.cpp:25
 msgid "UM4 · low clouds"
 msgstr "UM4 · chmury niskie"
 
-#: src/qml/ThematicMaps.qml:22
+#: src/network/ThematicMapSource.cpp:19
 msgid "UM4 · maximum gusts"
 msgstr "UM4 · maksymalne porywy"
 
-#: src/qml/ThematicMaps.qml:29
+#: src/network/ThematicMapSource.cpp:26
 msgid "UM4 · medium clouds"
 msgstr "UM4 · chmury średnie"
 
-#: src/qml/ThematicMaps.qml:19
+#: src/network/ThematicMapSource.cpp:16
 msgid "UM4 · precipitation"
 msgstr "UM4 · opady"
 
-#: src/qml/ThematicMaps.qml:16
+#: src/network/ThematicMapSource.cpp:13
 msgid "UM4 · pressure"
 msgstr "UM4 · ciśnienie"
 
-#: src/qml/ThematicMaps.qml:20
+#: src/network/ThematicMapSource.cpp:17
 msgid "UM4 · storms"
 msgstr "UM4 · burze"
 
-#: src/qml/ThematicMaps.qml:18
+#: src/network/ThematicMapSource.cpp:15
 msgid "UM4 · surface temperature"
 msgstr "UM4 · temperatura powierzchni"
 
-#: src/qml/ThematicMaps.qml:21
+#: src/network/ThematicMapSource.cpp:18
 msgid "UM4 · surface wind"
 msgstr "UM4 · wiatr przy powierzchni"
 
-#: src/qml/ThematicMaps.qml:17
+#: src/network/ThematicMapSource.cpp:14
 msgid "UM4 · temperature and streamlines"
 msgstr "UM4 · temperatura i linie prądu"
 
-#: src/qml/ThematicMaps.qml:31
+#: src/network/ThematicMapSource.cpp:28
 msgid "UM4 · total cloud cover"
 msgstr "UM4 · zachmurzenie całkowite"
 
-#: src/qml/ThematicMaps.qml:27
+#: src/network/ThematicMapSource.cpp:24
 msgid "UM4 · very low clouds"
 msgstr "UM4 · chmury bardzo niskie"
 
-#: src/qml/ThematicMaps.qml:23
+#: src/network/ThematicMapSource.cpp:20
 msgid "UM4 · visibility"
 msgstr "UM4 · widzialność"
 
@@ -1920,15 +1922,15 @@ msgstr "Chmury bardzo niskie"
 msgid "Visible interval · "
 msgstr "Widoczny przedział · "
 
-#: src/qml/ThematicMaps.qml:33
+#: src/network/ThematicMapSource.cpp:30
 msgid "WAM · mean wave period"
 msgstr "WAM · średni okres fali"
 
-#: src/qml/ThematicMaps.qml:34
+#: src/network/ThematicMapSource.cpp:31
 msgid "WAM · peak wave period"
 msgstr "WAM · okres szczytowy fali"
 
-#: src/qml/ThematicMaps.qml:32
+#: src/network/ThematicMapSource.cpp:29
 msgid "WAM · significant wave height"
 msgstr "WAM · wysokość fali znacznej"
 
@@ -1961,12 +1963,12 @@ msgstr "Wiatr"
 msgid "Wind "
 msgstr "Wiatr "
 
-#: src/presentation/WeatherLayersModel.cpp:46
+#: src/presentation/WeatherLayersModel.cpp:44
 msgid "Wind and gusts"
 msgstr "Wiatr i porywy"
 
 #: src/presentation/ForecastFields.cpp:22
-#: src/presentation/WeatherLayersModel.cpp:45
+#: src/presentation/WeatherLayersModel.cpp:43
 msgid "Wind at 10 m"
 msgstr "Wiatr na 10 m"
 

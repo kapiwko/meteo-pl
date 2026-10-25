@@ -3,6 +3,7 @@
 #include "ImagePreloader.hpp"
 #include "ImageServer.hpp"
 #include "MapImages.hpp"
+#include "ThematicMapsModel.hpp"
 #include <QQuickTextDocument>
 #include <QTextDocument>
 #include <QTextBlock>
@@ -300,6 +301,64 @@ private slots:
         loader.start({server.url("error")});
         QTRY_VERIFY(!loader.busy());
         QVERIFY(!loader.ready());QVERIFY(!loader.error().isEmpty());
+    }
+    void imageProviderReportsHttpStatusWithoutGuessingFromText()
+    {
+        ImageServer server; server.statusCode=503;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        QQmlEngine engine;
+        auto *images=engine.singletonInstance<MapImages *>("pl.meteo.desktop","MapImages");
+        QVERIFY(images);
+        QSignalSpy failed(images,&MapImages::imageFailed);
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop","BufferedImage");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"source",server.url("unavailable")}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *item=qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(200,200); item->setParentItem(window.contentItem()); item->setSize({200,200}); window.show();
+        QTRY_COMPARE(failed.count(),1);
+        QCOMPARE(failed[0][0].toUrl(),server.url("unavailable"));
+        QCOMPARE(failed[0][2].toInt(),503);
+        server.statusCode=404;
+        object->setProperty("source",server.url("missing"));
+        QTRY_COMPARE(failed.count(),2);
+        QCOMPARE(failed[1][2].toInt(),404);
+    }
+    void thematicViewKeepsItsRunOnNetworkFailureAndRetriesOnlyMissingRuns()
+    {
+        ImageServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        WeatherModel weather; weather.setAutoRefresh(false);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop","ThematicMaps");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather",QVariant::fromValue(&weather)}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *controller=object->findChild<ThematicMapsModel *>("thematicMapsModel");
+        auto *picture=object->findChild<QQuickItem *>("thematicPicture");
+        QVERIFY(controller); QVERIFY(picture);
+        controller->setEndpoint(server.url(""));
+        auto *item=qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(640,600); item->setParentItem(window.contentItem()); item->setSize({640,600}); window.show();
+        const auto run=controller->run();
+        const auto original=controller->imageUrl();
+        QTRY_COMPARE(picture->property("displayedSource").toUrl(),original);
+        server.statusCode=503;
+        controller->setStep(13);
+        QTRY_VERIFY(!controller->error().isEmpty());
+        QCOMPARE(controller->run(),run);
+        QCOMPARE(controller->attempts(),0);
+        QCOMPARE(picture->property("displayedSource").toUrl(),original);
+        server.statusCode=404;
+        controller->latest();
+        QTRY_COMPARE(controller->attempts(),4);
+        QTRY_VERIFY(!controller->error().isEmpty());
+        QCOMPARE(controller->run(),run-24*3600);
+        QCOMPARE(picture->property("displayedSource").toUrl(),original);
+        server.statusCode=200;
+        controller->setRun(run);
+        QTRY_COMPARE(picture->property("displayedSource").toUrl(),controller->imageUrl());
+        QVERIFY(controller->error().isEmpty());
     }
     void thematicImageFitsBothDimensionsUntilUserZooms()
     {

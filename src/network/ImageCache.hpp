@@ -20,9 +20,11 @@ namespace Meteo {
 class METEO_UI_EXPORT ImageCache : public QObject {
 public:
     using Completion = std::function<void(const QImage &, const QString &)>;
+    using DetailedCompletion = std::function<void(const QImage &, const QString &, int)>;
     enum class Priority { Visible, Prefetch };
     explicit ImageCache(const QString &directory, QObject *parent = nullptr);
     void request(const QUrl &url, Completion completion, QObject *consumer = nullptr, Priority priority = Priority::Visible);
+    void requestDetailed(const QUrl &url, DetailedCompletion completion, QObject *consumer = nullptr, Priority priority = Priority::Visible);
     void cancelRequests(QObject *consumer);
     void clearMemory() { m_images.clear(); }
     void clear();
@@ -34,7 +36,7 @@ private:
     static constexpr int maximumPendingJobs = 4096;
     static constexpr int maximumSubscribers = 16384;
     struct Entry { QImage image; QDateTime expires; };
-    struct Subscriber { Completion complete; QObject *identity; QPointer<QObject> context; };
+    struct Subscriber { DetailedCompletion complete; QObject *identity; QPointer<QObject> context; };
     struct Pending {
         QList<Subscriber> subscribers;
         QPointer<QNetworkReply> reply;
@@ -44,7 +46,7 @@ private:
     };
     void pump();
     void startJob(const QString &key, quint64 token);
-    void completeJob(const QString &key, quint64 token, const QImage &image, const QString &error);
+    void completeJob(const QString &key, quint64 token, const QImage &image, const QString &error, int status);
     std::unique_ptr<QLockFile> m_diskLock;
     QNetworkAccessManager m_network;
     QNetworkDiskCache *m_disk = nullptr;

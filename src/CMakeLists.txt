@@ -9,6 +9,7 @@ add_library(meteo_core STATIC
     network/JsonRequest.cpp network/JsonRequest.hpp
     network/DiskCacheBudget.cpp network/DiskCacheBudget.hpp
     network/MeteoMapSource.cpp network/MeteoMapSource.hpp
+    network/ThematicMapSource.cpp network/ThematicMapSource.hpp
 )
 target_include_directories(meteo_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network KF6::I18n)
@@ -59,6 +60,7 @@ qt_add_qml_module(meteo_ui
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/WeatherLayersModel.cpp presentation/WeatherLayersModel.hpp
+        presentation/ThematicMapsModel.cpp presentation/ThematicMapsModel.hpp
         presentation/EditorialModel.cpp presentation/EditorialModel.hpp
         presentation/MapImages.cpp presentation/MapImages.hpp
         presentation/LegacyMeteogramModel.cpp presentation/LegacyMeteogramModel.hpp
