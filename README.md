@@ -33,6 +33,11 @@ Współrzędne przyjmują kropkę lub przecinek dziesiętny.
 **Ustawienia → O aplikacji** pokazuje autorstwo Kamila Piwowarskiego,
 źródła danych i informacje o aktualnie pobranej prognozie.
 
+Nagłówek grupuje lokalizację i prognozę na oznaczoną godzinę, temperaturę,
+wiatr i ciśnienie oraz parę godzin wschodu i zachodu słońca z ikonami.
+Godziny słońca dotyczą bieżącego dnia prognozy, a przy archiwum — oznaczonej daty.
+Współrzędne i rozwijane szczegóły nie zajmują miejsca nad wykresami;
+model i czas obliczeń są w ustawieniach i informacjach o aplikacji.
 Podsumowanie pokazuje prognozę na oznaczoną godzinę, a nie pomiar stacji.
 Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przerywany.
 Domyślnie wykresy nie pokazują odczytu pod kursorem. Próbnik (ikona pipety)

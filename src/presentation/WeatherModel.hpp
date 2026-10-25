@@ -42,6 +42,7 @@ class WeatherModel : public QObject {
     Q_PROPERTY(bool utc READ utc WRITE setUtc NOTIFY stateChanged)
     Q_PROPERTY(QUrl originalLookupUrl READ originalLookupUrl NOTIFY stateChanged)
     Q_PROPERTY(QString sunTimes READ sunTimes NOTIFY stateChanged)
+    Q_PROPERTY(QVariantMap solarTimes READ solarTimes NOTIFY stateChanged)
 public:
     explicit WeatherModel(QObject *parent = nullptr);
     double latitude() const { return m_latitude; }
@@ -76,6 +77,7 @@ public:
     bool utc() const { return m_utc; }
     QUrl originalLookupUrl() const;
     QString sunTimes() const;
+    QVariantMap solarTimes() const;
     void setRequestedRun(double value);
     void setWindUnit(const QString &value);
     void setUtc(bool value);

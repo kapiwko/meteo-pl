@@ -890,6 +890,43 @@ private slots:
             QCOMPARE(day["end"].toLongLong()-day["start"].toLongLong(),24*3600);
         }
     }
+    void sunSummaryUsesTheCurrentForecastDayAndSelectedTimeZone()
+    {
+        const auto hash = QCryptographicHash::hash("um4_60:52.229700:21.012200", QCryptographicHash::Sha256).toHex();
+        const auto path = m_cache.path() + "/meteo-pl/" + hash + ".json";
+        QFile input(path); QVERIFY(input.open(QIODevice::ReadOnly));
+        const auto original = input.readAll(); input.close();
+        const auto restore = qScopeGuard([&] { QFile file(path); if (file.open(QIODevice::WriteOnly)) file.write(original); });
+        auto envelope = QJsonDocument::fromJson(original).object();
+        auto payload = QJsonDocument::fromJson(envelope["payload"].toString().toUtf8()).object();
+        auto fields = payload["data"].toObject();
+        const auto first = QDateTime::currentSecsSinceEpoch() - 25*3600;
+        for (auto it = fields.begin(); it != fields.end(); ++it) {
+            auto field = it.value().toObject();
+            field["first_timestamp"] = QString::number(first);
+            it.value() = field;
+        }
+        payload["data"] = fields;
+        envelope["payload"] = QString::fromUtf8(QJsonDocument(payload).toJson());
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(QJsonDocument(envelope).toJson()); file.close();
+        WeatherModel model; model.setAutoRefresh(false); model.refresh(false);
+        QVERIFY(model.hasData());
+        QVERIFY(QDateTime::fromSecsSinceEpoch(first).date() < QDate::currentDate());
+        auto solar = model.solarTimes();
+        QVERIFY(solar["today"].toBool());
+        QCOMPARE(solar["date"].toString(), QDate::currentDate().toString(Qt::ISODate));
+        QVERIFY(solar["sunrise"].toLongLong() > 0);
+        QVERIFY(solar["sunset"].toLongLong() > solar["sunrise"].toLongLong());
+        QCOMPARE(solar["sunriseText"].toString(), model.formatTime(solar["sunrise"].toDouble(), "HH:mm"));
+        QCOMPARE(solar["sunsetText"].toString(), model.formatTime(solar["sunset"].toDouble(), "HH:mm"));
+        model.setUtc(true);
+        solar = model.solarTimes();
+        QCOMPARE(solar["date"].toString(), QDateTime::currentDateTimeUtc().date().toString(Qt::ISODate));
+        QCOMPARE(solar["sunriseText"].toString(), model.formatTime(solar["sunrise"].toDouble(), "HH:mm"));
+        QCOMPARE(solar["sunsetText"].toString(), model.formatTime(solar["sunset"].toDouble(), "HH:mm"));
+        QVERIFY(solar["status"].toString().isEmpty());
+    }
     void detailsAndUnitsUseMatchingTimestamps()
     {
         WeatherModel model;
