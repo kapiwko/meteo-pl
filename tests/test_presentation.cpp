@@ -215,6 +215,15 @@ private slots:
         settings->setProperty("section", 3);
         QTRY_VERIFY(applicationSettings->isVisible());
         QVERIFY(!profileSettings->isVisible()); QVERIFY(!readingSettings->isVisible());
+        auto *settingsPath = applicationSettings->findChild<QQuickItem *>("settingsFilePath");
+        QVERIFY(settingsPath);
+        QTRY_VERIFY(settingsPath->width() > 200 && settingsPath->height() < 100);
+        item->setWidth(450);
+        window.resize(450, 1000);
+        QTRY_VERIFY(settingsPath->width() > 200 && settingsPath->height() < 100);
+        QTRY_VERIFY(settingsPath->mapToScene({settingsPath->width(), 0}).x() <= window.width());
+        item->setWidth(780);
+        window.resize(780, 1000);
         QVERIFY(QMetaObject::invokeMethod(settings,"close"));
         QTRY_VERIFY(!settings->property("visible").toBool());
         auto *chart = plot->parentItem();

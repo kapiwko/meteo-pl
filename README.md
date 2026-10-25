@@ -99,6 +99,9 @@ Przycisk **Ustawienia** w górnym pasku otwiera wspólne okno. Zakładka
 **Profile** zawiera edytor wykresów i serii oraz import i eksport profili,
 **Odczyt** — zakres parametrów próbnika i domyślną widoczność legendy,
 a **Aplikacja** — renderer, jednostki, strefę czasu i ogólną wysokość wykresów.
+Formularze korzystają z `Kirigami.FormLayout`, standardowych grup opcji i kontrolek Qt Quick.
+Padding jest wewnątrz kart; pasek kart dochodzi do krawędzi okna. Działania profili
+korzystają z `Kirigami.ActionToolBar`, który przy małej szerokości pokazuje menu nadmiarowe.
 Zakres i start dotyczą bieżącego widoku; wybór profilu jest zapamiętywany.
 Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
 
