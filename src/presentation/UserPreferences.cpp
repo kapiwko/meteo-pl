@@ -320,6 +320,21 @@ QString UserPreferences::createProfile(const QString &name)
     m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
     m_settings.setValue("display/profile", id); m_settings.sync(); emit displayChanged(); return id;
 }
+QString UserPreferences::duplicateProfile()
+{
+    QString base;
+    QStringList names;
+    for (const auto &value : profiles()) {
+        const auto entry = value.toMap();
+        names.append(entry["name"].toString());
+        if (entry["id"] == profile()) base = entry["name"].toString();
+    }
+    base = base.left(60) + QStringLiteral(" — kopia");
+    auto name = base;
+    for (int number = 2; names.contains(name, Qt::CaseInsensitive); ++number)
+        name = base + QStringLiteral(" (%1)").arg(number);
+    return createProfile(name);
+}
 void UserPreferences::renameProfile(const QString &name)
 {
     if (!profile().startsWith("user:") || name.trimmed().isEmpty()) return;
@@ -330,6 +345,12 @@ void UserPreferences::renameProfile(const QString &name)
 }
 void UserPreferences::deleteProfile()
 {
+    if (profile() == "custom") {
+        m_settings.remove("display/customLayout");
+        m_settings.remove("display/customChartHeight");
+        m_settings.setValue("display/profile", "classic"); m_settings.sync(); emit displayChanged();
+        return;
+    }
     if (!profile().startsWith("user:")) return;
     auto saved = savedProfiles();
     saved.removeIf([this](const QVariant &item) { return item.toMap()["id"] == profile(); });

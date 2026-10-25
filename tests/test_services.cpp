@@ -236,6 +236,43 @@ private slots:
         QCOMPARE(reopened.profile(), "classic");
         QVERIFY(!reopened.profiles().last().toMap()["id"].toString().startsWith("user:"));
     }
+    void duplicatesKeepLayoutsAndDeletingScratchRestoresDefaults()
+    {
+        UserPreferences preferences;
+        const auto defaults = preferences.chartLayout();
+        preferences.setChartEnabled("probability", false);
+        preferences.setProfileChartHeight(240);
+        QCOMPARE(preferences.profile(), "custom");
+        const auto modified = preferences.chartLayout();
+        const auto copy = preferences.duplicateProfile();
+        QVERIFY(copy.startsWith("user:"));
+        QCOMPARE(preferences.chartLayout(), modified);
+        QCOMPARE(preferences.profileChartHeight(), 240);
+        const auto firstName = preferences.profiles().last().toMap()["name"].toString();
+        preferences.setProfile("custom");
+        const auto next = preferences.duplicateProfile();
+        QVERIFY(next != copy);
+        QVERIFY(preferences.profiles().last().toMap()["name"].toString() != firstName);
+        preferences.deleteProfile();
+        QCOMPARE(preferences.profile(), "classic");
+        preferences.setProfile(copy);
+        preferences.setChartEnabled("temperature", false);
+        preferences.setProfile("custom");
+        QCOMPARE(preferences.chartLayout(), modified); // Copies are independent.
+        preferences.deleteProfile();
+        QCOMPARE(preferences.profile(), "classic");
+        preferences.setProfile("custom");
+        QCOMPARE(preferences.chartLayout(), defaults);
+        QCOMPARE(preferences.profileChartHeight(), 0);
+        preferences.setProfile(copy);
+        QVERIFY(!preferences.chartLayout().first().toMap()["enabled"].toBool());
+        UserPreferences reopened;
+        QCOMPARE(reopened.profile(), copy);
+        reopened.deleteProfile();
+        QCOMPARE(reopened.profiles().size(), 6);
+        reopened.deleteProfile(); // Built-in profiles remain available.
+        QCOMPARE(reopened.profiles().size(), 6);
+    }
     void arbitraryChartSeriesAndAppearancePersistPerProfile()
     {
         QTemporaryDir config;
