@@ -13,6 +13,7 @@ public:
     QList<Request> held;
     QList<QUrl> requests;
     bool hold = false;
+    QSize imageSize{256,256};
     ImageServer()
     {
         connect(this, &QTcpServer::newConnection, this, [this] {
@@ -36,7 +37,7 @@ public:
         const bool failure = request.url.path().contains("error");
         const QColor color = request.url.path().contains("blue") ? Qt::blue
             : request.url.path().contains("green") ? Qt::green : Qt::red;
-        QImage image(256, 256, QImage::Format_ARGB32);
+        QImage image(imageSize, QImage::Format_ARGB32);
         image.fill(color);
         QBuffer buffer;
         buffer.open(QIODevice::WriteOnly);

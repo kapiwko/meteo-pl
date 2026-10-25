@@ -1,5 +1,6 @@
 #include "network/ImageCache.hpp"
 #include "WeatherModel.hpp"
+#include "ImagePreloader.hpp"
 #include "ImageServer.hpp"
 #include <QQmlComponent>
 #include <QQmlEngine>
@@ -52,6 +53,89 @@ private slots:
         QTRY_COMPARE(completed, 4);
         QVERIFY2(failure.isEmpty(), qPrintable(failure));
         QCOMPARE(server.requests.size(), 1);
+    }
+    void animationWaitsForEveryImageAndThenReplaysWithoutNetwork()
+    {
+        ImageServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.hold=true;
+        Meteo::ImageCache cache(m_cache.path()+"/preload");
+        ImagePreloader loader(nullptr,&cache);
+        QVariantList urls;
+        for (int i=0;i<9;++i) urls.append(server.url("red/"+QString::number(i)).toString());
+        urls.append(urls.first()); // Duplicate background tiles must count once.
+        loader.start(urls);
+        QTRY_COMPARE(server.held.size(),4);
+        QCOMPARE(loader.total(),9);
+        QVERIFY(loader.busy());
+        QVERIFY(!loader.ready());
+        server.releaseOne();
+        QTRY_COMPARE(loader.completed(),1);
+        QVERIFY(!loader.ready());
+        server.hold=false;server.releaseAll();
+        QTRY_VERIFY(loader.ready());
+        QCOMPARE(loader.completed(),9);
+        QCOMPARE(server.requests.size(),9);
+        server.close();
+        cache.clearMemory(); // Even evicted frames must remain in the disk cache.
+        loader.start(urls);
+        QTRY_VERIFY(loader.ready());
+        QCOMPARE(server.requests.size(),9);
+        QVERIFY(loader.error().isEmpty());
+    }
+    void cancellingAnimationPreloadIgnoresObsoleteCompletions()
+    {
+        ImageServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.hold=true;
+        Meteo::ImageCache cache(m_cache.path()+"/cancel-preload");
+        ImagePreloader loader(nullptr,&cache);
+        loader.start({server.url("red/old-1"),server.url("red/old-2")});
+        QTRY_COMPARE(server.held.size(),2);
+        loader.cancel();
+        QVERIFY(!loader.busy());QVERIFY(!loader.ready());
+        loader.start({server.url("blue/new")});
+        QTRY_COMPARE(server.held.size(),3);
+        server.releaseOne();server.releaseOne();
+        QTest::qWait(60);
+        QCOMPARE(loader.completed(),0);
+        QVERIFY(!loader.ready());
+        server.releaseAll();
+        QTRY_VERIFY(loader.ready());
+        QCOMPARE(loader.total(),1);
+        server.hold=false;
+        loader.start({server.url("error")});
+        QTRY_VERIFY(!loader.busy());
+        QVERIFY(!loader.ready());QVERIFY(!loader.error().isEmpty());
+    }
+    void thematicImageFitsBothDimensionsUntilUserZooms()
+    {
+        ImageServer server;
+        server.imageSize={1600,900};
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        WeatherModel weather;weather.setAutoRefresh(false);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop","ThematicMaps");
+        QVERIFY2(component.isReady(),qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather",QVariant::fromValue(&weather)}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        object->setProperty("run",0);
+        auto *item=qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window;window.resize(640,600);item->setParentItem(window.contentItem());item->setSize({640,600});window.show();
+        auto *picture=object->findChild<QQuickItem *>("thematicPicture");
+        QVERIFY(picture);
+        picture->setProperty("source",server.url("red"));
+        QTRY_COMPARE(picture->property("displayedSource").toUrl(),server.url("red"));
+        const auto fits=[&] { auto *viewport=object->findChild<QQuickItem *>("thematicViewport");return viewport && picture->width()<=viewport->width()+1 && picture->height()<=viewport->height()+1; };
+        QTRY_VERIFY(fits());
+        QVERIFY(qAbs(picture->width()/picture->height()-1600./900)<0.01);
+        object->setProperty("imageScale",2);
+        QTRY_VERIFY(!fits());
+        object->setProperty("imageScale",1);
+        QTRY_VERIFY(fits());
+        window.resize(400,800);item->setSize({400,800});
+        QTRY_VERIFY(fits());
     }
     void coordinatesRoundTripAndDraggingStaysNearTheLocation()
     {

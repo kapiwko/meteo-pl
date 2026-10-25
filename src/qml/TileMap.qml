@@ -102,6 +102,17 @@ Item {
             MapImages.prefetch(weatherLayer.tileUrlAtStep(x, tile.y, front.level, step));
         }
     }
+    function animationUrls(firstStep, lastStep, stride) {
+        const urls = [];
+        if (!weatherLayer || !front) return urls;
+        const count = Math.pow(2, front.level);
+        for (let step = firstStep; step <= lastStep; step += stride)
+            for (const tile of front.tiles) {
+                const x = ((tile.x % count) + count) % count;
+                urls.push(weatherLayer.tileUrlAtStep(x, tile.y, front.level, step).toString());
+            }
+        return urls;
+    }
     Timer { id: requestDelay; interval: 90; onTriggered: root.loadFrame() }
     Component { id: frameComponent; MapTileFrame {} }
 
