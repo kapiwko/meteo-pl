@@ -213,6 +213,20 @@ private slots:
         auto *gpu = qobject_cast<GpuPlot *>(findItem(findItem, item, "gpu-base-temperature"));
         const auto baseFrames = gpu ? gpu->frameCount() : 0;
         const auto cursorPoint = plot->mapToScene(QPointF(plot->width() / 2, plot->height() / 2)).toPoint();
+        QVERIFY(!object->property("identificationEnabled").toBool());
+        auto *identification = findItem(findItem, item, "identificationButton");
+        QVERIFY(identification);
+        QTest::mouseMove(&window, cursorPoint);
+        QTest::qWait(250);
+        QCOMPARE(object->property("selectedTime").toDouble(), 0.0);
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, cursorPoint);
+        QVERIFY(!object->property("pinned").toBool());
+        const auto toggleIdentification = [&] {
+            QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier,
+                identification->mapToScene({identification->width()/2, identification->height()/2}).toPoint());
+        };
+        toggleIdentification();
+        QVERIFY(object->property("identificationEnabled").toBool());
         QTest::mouseMove(&window, cursorPoint);
         QTRY_VERIFY(object->property("selectedTime").toDouble() > 0);
         auto *inspector = object->findChild<QObject *>("forecastInspector");
@@ -237,17 +251,18 @@ private slots:
         QVERIFY(preferences);
         const auto previousProbe = preferences->probeMode();
         const auto restoreProbe = qScopeGuard([&] { preferences->setProbeMode(previousProbe); });
-        preferences->setProbeMode("off");
+        toggleIdentification();
+        QVERIFY(!object->property("identificationEnabled").toBool());
         QTest::mouseMove(&window, {10, 10});
         QTest::mouseMove(&window, cursorPoint);
         QTest::qWait(250);
         QVERIFY(!inspector->property("visible").toBool());
         QCOMPARE(object->property("selectedTime").toDouble(), 0.0);
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, cursorPoint);
-        QTRY_VERIFY(inspector->property("visible").toBool());
-        QVERIFY(object->property("pinned").toBool());
-        QTest::keyClick(&window, Qt::Key_Escape);
-        QTRY_VERIFY(!inspector->property("visible").toBool());
+        QVERIFY(!inspector->property("visible").toBool());
+        QVERIFY(!object->property("pinned").toBool());
+        toggleIdentification();
+        QVERIFY(object->property("identificationEnabled").toBool());
         preferences->setProbeMode("all");
         item->setWidth(1100);
         window.resize(1100, 1000);
@@ -268,8 +283,9 @@ private slots:
         window.resize(450, 1000);
         QTRY_COMPARE(inspector->property("columns").toInt(), 1);
         inspector->setProperty("category", "");
-        QTest::keyClick(&window, Qt::Key_Escape);
+        object->setProperty("identificationEnabled", false);
         QTRY_VERIFY(!inspector->property("visible").toBool());
+        QVERIFY(!object->property("pinned").toBool());
         preferences->setProbeMode("chart");
         item->setWidth(780);
         window.resize(780, 1000);
@@ -445,6 +461,8 @@ private slots:
         QVERIFY(image.height() > readings->height());
         QVERIFY(image.height() > window.height() + 150);
         QVERIFY(image.text("Title").contains("Wszystkie"));
+        const auto background = readings->property("color").value<QColor>();
+        QCOMPARE(image.pixelColor(image.width()/2, image.height()/2), background);
         int finalReadingPixels = 0;
         for (int y = image.height()*3/4; y < image.height(); ++y)
             for (int x = 0; x < image.width()/2; ++x)
