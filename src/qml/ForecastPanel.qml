@@ -192,7 +192,7 @@ Item {
     }
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
+        spacing: 0
         Kirigami.NavigationTabBar {
             id: navigation
             objectName: "forecastNavigation"
@@ -237,7 +237,10 @@ Item {
     }
     Component {
         id: forecastComponent
-        ColumnLayout {
+        Pane {
+            padding: Kirigami.Units.largeSpacing
+            background: null
+            contentItem: ColumnLayout {
             spacing: 10
             ForecastHeader { Layout.fillWidth: true; weather: root.weather }
             Kirigami.InlineMessage { visible: root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
@@ -403,6 +406,7 @@ Item {
                 onLinkActivated: link => Qt.openUrlExternally(link)
             }
         }
+        }
     }
     Component {
         id: chartsComponent
@@ -518,8 +522,8 @@ Item {
             }
         }
     }
-    Component { id: mapsComponent; WeatherMap { weather: root.weather; onLocationSelected: (name, latitude, longitude) => { root.locationSelected(name, latitude, longitude); root.viewMode = 0; } } }
-    Component { id: contentComponent; EditorialView { commentary: root.viewMode === 4 } }
+    Component { id: mapsComponent; Pane { padding: Kirigami.Units.largeSpacing; background: null; contentItem: WeatherMap { weather: root.weather; onLocationSelected: (name, latitude, longitude) => { root.locationSelected(name, latitude, longitude); root.viewMode = 0; } } } }
+    Component { id: contentComponent; Pane { padding: Kirigami.Units.largeSpacing; background: null; contentItem: EditorialView { commentary: root.viewMode === 4 } } }
     Timer { id: closeProbe; interval: 220; onTriggered: if (!root.pinned && !inspectorHover.hovered) inspector.close() }
     Popup {
         id: inspector
