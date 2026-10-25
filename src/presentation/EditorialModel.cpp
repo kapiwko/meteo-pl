@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "EditorialModel.hpp"
+#include "core/EditorialContent.hpp"
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDate>
@@ -14,9 +15,10 @@ EditorialModel::EditorialModel(QObject *parent, QUrl endpoint) : QObject(parent)
 {
     connect(&m_request, &Meteo::JsonRequest::received, this, [this](const QJsonDocument &document) {
         m_busy = false;
-        applyDocument(document);
-        m_cached = false;
-        saveCache(document);
+        if (applyDocument(document)) {
+            m_cached = false;
+            saveCache(document);
+        } else m_error = Meteo::i18n("Invalid meteo.pl response format.");
         emit changed();
     });
     connect(&m_request, &Meteo::JsonRequest::failed, this, [this](const QString &error) {
@@ -30,7 +32,7 @@ EditorialModel::EditorialModel(QObject *parent, QUrl endpoint) : QObject(parent)
         emit changed();
     });
 }
-void EditorialModel::setCommentary(bool value) { if (m_commentary == value) return; m_commentary = value; m_request.cancel(); m_busy = false; m_error.clear(); m_notice.clear(); m_articles.clear(); m_pages.clear(); m_commentHtml.clear(); m_publishedDate.clear(); m_cached = false; emit changed(); }
+void EditorialModel::setCommentary(bool value) { if (m_commentary == value) return; m_commentary = value; m_request.cancel(); m_busy = false; m_error.clear(); m_notice.clear(); m_articles.clear(); m_pages.clear(); m_page = 0; m_commentHtml.clear(); m_publishedDate.clear(); m_cached = false; emit changed(); }
 void EditorialModel::setDate(const QString &value)
 {
     if (m_date == value) return;
@@ -46,7 +48,7 @@ void EditorialModel::more() { if (!m_busy && !m_commentary) load(m_page + 1); }
 void EditorialModel::load(int page, bool force)
 {
     m_request.cancel();
-    m_page = page; m_busy = true; m_error.clear(); m_notice.clear();
+    m_requestedPage = page; m_busy = true; m_error.clear(); m_notice.clear();
     const auto path = m_commentary ? QStringLiteral("synoptic-comment/") + (m_date.isEmpty() ? QString() : m_date + '/') + QStringLiteral("pl")
                                   : QStringLiteral("articles/pl?page=%1").arg(page);
     m_url = m_endpoint.resolved(QUrl(QStringLiteral("/api/v1/") + path));
@@ -59,24 +61,28 @@ void EditorialModel::load(int page, bool force)
     emit changed();
     m_request.get(m_url);
 }
-void EditorialModel::applyDocument(const QJsonDocument &document)
+bool EditorialModel::applyDocument(const QJsonDocument &document)
 {
     if (m_commentary) {
-        m_commentHtml = document.object().value("content").toString();
-        m_publishedDate = document.object().value("published_date").toString();
-        return;
+        const auto comment = Meteo::parseCommentary(document);
+        if (!comment) return false;
+        m_commentHtml = comment->html;
+        m_publishedDate = comment->publishedDate;
+        return true;
     }
-    if (m_page == 1) m_pages.clear();
+    const auto page = Meteo::parseArticlePage(document);
+    if (!page) return false;
     QVariantList entries;
-    for (const auto &entry : document.array()) {
-        const auto object = entry.toObject();
-        entries.append(QVariantMap{{"title", object.value("title").toString()}, {"html", object.value("content").toString()},
-            {"url", object.value("link").toString()}, {"date", object.value("date_gmt").toString().left(10)},
-            {"image", object.value("featured_media_urls").toObject().value("medium").toString()}});
+    for (const auto &article : page->articles) {
+        entries.append(QVariantMap{{"title", article.title}, {"html", article.html},
+            {"url", article.url}, {"date", article.date}, {"image", article.image}});
     }
+    m_page = m_requestedPage;
+    if (m_page == 1) m_pages.clear();
     m_pages[m_page] = entries;
     m_articles.clear();
     for (const auto &entries : std::as_const(m_pages)) m_articles.append(entries);
+    return true;
 }
 QString EditorialModel::cachePath() const
 {
@@ -94,8 +100,8 @@ bool EditorialModel::loadCache()
     if (envelope.value("url").toString() != m_url.toString(QUrl::FullyEncoded)
         || !savedAt.isValid() || savedAt > QDateTime::currentDateTimeUtc()
         || (m_commentary ? !value.isObject() || !value.toObject().value("content").isString() : !value.isArray())) return false;
+    if (!applyDocument(m_commentary ? QJsonDocument(value.toObject()) : QJsonDocument(value.toArray()))) return false;
     m_savedAt = savedAt;
-    applyDocument(m_commentary ? QJsonDocument(value.toObject()) : QJsonDocument(value.toArray()));
     return true;
 }
 void EditorialModel::saveCache(const QJsonDocument &document) const

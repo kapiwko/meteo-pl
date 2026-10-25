@@ -178,6 +178,52 @@ private slots:
         QTRY_VERIFY(!reopened.busy());
         QCOMPARE(server.requests.size(),2);
     }
+    void editorialRetriesTheLastFailedPageAndRejectsMalformedContent()
+    {
+        ServiceFixture server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [](const QUrl &url) {
+            return QUrlQuery(url).queryItemValue("page") == "1"
+                ? QByteArray(R"([{"title":"First","content":"first"}])")
+                : QByteArray(R"([{"title":"Second","content":"second"}])");
+        };
+        EditorialModel model(nullptr, server.endpoint());
+        model.setCommentary(false);
+        model.reload(false);
+        QTRY_VERIFY(!model.busy());
+        QCOMPARE(model.articles().size(), 1);
+        server.status = 503;
+        model.more();
+        QTRY_VERIFY(!model.busy());
+        QCOMPARE(model.articles().size(), 1);
+        QVERIFY(!model.error().isEmpty());
+        server.status = 200;
+        model.more();
+        QTRY_VERIFY(!model.busy());
+        QCOMPARE(model.articles().size(), 2);
+        QStringList pages;
+        for (const auto &request : server.requests) pages << QUrlQuery(request).queryItemValue("page");
+        QCOMPARE(pages, QStringList({"1", "2", "2"}));
+        server.response = [](const QUrl &) { return QByteArray(R"({"error":"unexpected object"})"); };
+        model.reload();
+        QTRY_VERIFY(!model.busy());
+        QVERIFY(!model.error().isEmpty());
+        QCOMPARE(model.articles().size(), 1); // Valid cached page one survives the bad response.
+        QCOMPARE(model.articles().first().toMap()["title"].toString(), "First");
+        EditorialModel reopened(nullptr, server.endpoint());
+        reopened.setCommentary(false);
+        reopened.reload(false);
+        QVERIFY(!reopened.busy());
+        QCOMPARE(reopened.articles().first().toMap()["title"].toString(), "First");
+        server.response = [](const QUrl &) { return QByteArray(R"([{"title":42,"content":"wrong"}])"); };
+        reopened.more();
+        QTRY_VERIFY(!reopened.busy());
+        QCOMPARE(reopened.articles().size(), 2); // Cached second page is valid and remains available.
+        reopened.more();
+        QTRY_VERIFY(!reopened.busy());
+        QCOMPARE(reopened.articles().size(), 2);
+        QVERIFY(!reopened.error().isEmpty());
+    }
     void editorialSupportsArchivesAndPagination()
     {
         ServiceFixture server;

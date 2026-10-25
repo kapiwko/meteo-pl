@@ -33,13 +33,13 @@ public:
     Q_INVOKABLE void more();
 private:
     void load(int page, bool force = false);
-    void applyDocument(const QJsonDocument &document);
+    bool applyDocument(const QJsonDocument &document);
     QString cachePath() const;
     bool loadCache();
     void saveCache(const QJsonDocument &document) const;
     Meteo::JsonRequest m_request;
     bool m_commentary = true, m_busy = false;
-    int m_page = 1;
+    int m_page = 0, m_requestedPage = 1;
     QString m_date, m_error, m_notice, m_commentHtml, m_publishedDate;
     QVariantList m_articles;
     QMap<int, QVariantList> m_pages;
