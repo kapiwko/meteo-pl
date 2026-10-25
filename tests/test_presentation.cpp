@@ -72,7 +72,27 @@ private slots:
         if (!screenshotPath.isEmpty())
             QVERIFY(screenshot.save(screenshotPath));
     }
-
+    void plasmaConfigurationUpdatesInBothDirections()
+    {
+        QQmlEngine engine;
+        const auto path = QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configGeneral.qml");
+        QQmlComponent component(&engine, QUrl::fromLocalFile(path));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> editor(component.create());
+        QVERIFY2(editor, qPrintable(component.errorString()));
+        editor->setProperty("cfg_locationName", "Kielce");
+        editor->setProperty("cfg_latitude", 50.8661);
+        editor->setProperty("cfg_longitude", 20.6286);
+        QCOMPARE(editor->property("locationName").toString(), "Kielce");
+        QCOMPARE(editor->property("latitude").toDouble(), 50.8661);
+        QVERIFY(editor->property("isSaveAllowed").toBool());
+        editor->setProperty("latitude", 40.7);
+        QCOMPARE(editor->property("cfg_latitude").toDouble(), 40.7);
+        QVERIFY(!editor->property("isSaveAllowed").toBool());
+        editor->setProperty("model", "gfs");
+        QVERIFY(editor->property("isSaveAllowed").toBool());
+        QCOMPARE(editor->property("cfg_model").toString(), "gfs");
+    }
 };
 QTEST_MAIN(PresentationTest)
 #include "test_presentation.moc"

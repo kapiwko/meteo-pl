@@ -1,0 +1,16 @@
+{
+  "KPlugin": {
+    "Id": "pl.meteo.desktop",
+    "Name": "Meteo · meteogram ICM",
+    "Description": "Meteogramy meteo.pl: temperatura, opady, wiatr i ciśnienie",
+    "Icon": "weather-few-clouds",
+    "Version": "0.1.0",
+    "Category": "Environment",
+    "Authors": [{ "Name": "Meteo Desktop contributors" }],
+    "Website": "https://app.meteo.pl/meteogram"
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0",
+  "X-Plasma-NotificationArea": true,
+  "X-Plasma-NotificationAreaCategory": "ApplicationStatus"
+}

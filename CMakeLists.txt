@@ -9,7 +9,7 @@ include(GNUInstallDirs)
 include(CTest)
 
 option(METEO_BUILD_APP "Build the desktop application" ON)
-option(METEO_BUILD_PLASMOID "Install the Plasma 6 widget" OFF)
+option(METEO_BUILD_PLASMOID "Install the Plasma 6 widget" ON)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network Qml Quick QuickControls2)
 qt_standard_project_setup(REQUIRES 6.5)
