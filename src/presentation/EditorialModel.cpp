@@ -2,35 +2,34 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDate>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QFile>
+#include <QSaveFile>
+#include <QStandardPaths>
+#include <utility>
 
 EditorialModel::EditorialModel(QObject *parent, QUrl endpoint) : QObject(parent), m_endpoint(std::move(endpoint))
 {
     connect(&m_request, &Meteo::JsonRequest::received, this, [this](const QJsonDocument &document) {
         m_busy = false;
-        if (m_commentary) {
-            m_commentHtml = document.object().value("content").toString();
-            m_publishedDate = document.object().value("published_date").toString();
-        } else {
-            if (m_page == 1) m_articles.clear();
-            for (const auto &entry : document.array()) {
-                const auto object = entry.toObject();
-                m_articles.append(QVariantMap{{"title", object.value("title").toString()}, {"html", object.value("content").toString()},
-                                              {"url", object.value("link").toString()}, {"date", object.value("date_gmt").toString().left(10)},
-                                              {"image", object.value("featured_media_urls").toObject().value("medium").toString()}});
-            }
-        }
+        applyDocument(document);
+        m_cached = false;
+        saveCache(document);
         emit changed();
     });
     connect(&m_request, &Meteo::JsonRequest::failed, this, [this](const QString &error) {
         m_busy = false;
-        if (m_commentary && m_request.statusCode() == 404) {
+        if (m_cached) {
+            m_notice = QStringLiteral("Nie udało się odświeżyć. Wyświetlana jest treść zapisana w pamięci podręcznej.");
+        } else if (m_commentary && m_request.statusCode() == 404) {
             m_notice = m_date.isEmpty() ? QStringLiteral("Komentarz synoptyka nie został jeszcze opublikowany. Spróbuj później.")
                 : QStringLiteral("Brak komentarza synoptyka z %1. Wybierz inny dzień lub najnowszy komentarz.").arg(m_date);
         } else m_error = error;
         emit changed();
     });
 }
-void EditorialModel::setCommentary(bool value) { if (m_commentary == value) return; m_commentary = value; m_request.cancel(); m_busy = false; m_error.clear(); m_notice.clear(); m_articles.clear(); m_commentHtml.clear(); emit changed(); }
+void EditorialModel::setCommentary(bool value) { if (m_commentary == value) return; m_commentary = value; m_request.cancel(); m_busy = false; m_error.clear(); m_notice.clear(); m_articles.clear(); m_pages.clear(); m_commentHtml.clear(); m_publishedDate.clear(); m_cached = false; emit changed(); }
 void EditorialModel::setDate(const QString &value)
 {
     if (m_date == value) return;
@@ -39,16 +38,75 @@ void EditorialModel::setDate(const QString &value)
         if (!date.isValid()) { m_notice = QStringLiteral("Podaj poprawną datę w formacie rrrr-mm-dd."); emit changed(); return; }
         if (date > QDate::currentDate()) { m_notice = QStringLiteral("Komentarze z przyszłych dni nie są jeszcze dostępne."); emit changed(); return; }
     }
-    m_date = value; reload();
+    m_date = value; m_commentHtml.clear(); m_publishedDate.clear(); reload(false);
 }
-void EditorialModel::reload() { load(1); }
+void EditorialModel::reload(bool force) { load(1, force); }
 void EditorialModel::more() { if (!m_busy && !m_commentary) load(m_page + 1); }
-void EditorialModel::load(int page)
+void EditorialModel::load(int page, bool force)
 {
+    m_request.cancel();
     m_page = page; m_busy = true; m_error.clear(); m_notice.clear();
-    if (m_commentary) m_commentHtml.clear();
-    emit changed();
     const auto path = m_commentary ? QStringLiteral("synoptic-comment/") + (m_date.isEmpty() ? QString() : m_date + '/') + QStringLiteral("pl")
                                   : QStringLiteral("articles/pl?page=%1").arg(page);
-    m_request.get(m_endpoint.resolved(QUrl(QStringLiteral("/api/v1/") + path)));
+    m_url = m_endpoint.resolved(QUrl(QStringLiteral("/api/v1/") + path));
+    m_cached = loadCache();
+    if (!force && m_cached && m_savedAt.secsTo(QDateTime::currentDateTimeUtc()) < 1800) {
+        m_busy = false;
+        emit changed();
+        return;
+    }
+    emit changed();
+    m_request.get(m_url);
+}
+void EditorialModel::applyDocument(const QJsonDocument &document)
+{
+    if (m_commentary) {
+        m_commentHtml = document.object().value("content").toString();
+        m_publishedDate = document.object().value("published_date").toString();
+        return;
+    }
+    if (m_page == 1) m_pages.clear();
+    QVariantList entries;
+    for (const auto &entry : document.array()) {
+        const auto object = entry.toObject();
+        entries.append(QVariantMap{{"title", object.value("title").toString()}, {"html", object.value("content").toString()},
+            {"url", object.value("link").toString()}, {"date", object.value("date_gmt").toString().left(10)},
+            {"image", object.value("featured_media_urls").toObject().value("medium").toString()}});
+    }
+    m_pages[m_page] = entries;
+    m_articles.clear();
+    for (const auto &entries : std::as_const(m_pages)) m_articles.append(entries);
+}
+QString EditorialModel::cachePath() const
+{
+    const auto hash = QCryptographicHash::hash(m_url.toEncoded(), QCryptographicHash::Sha256).toHex();
+    return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
+        + QStringLiteral("/meteo-pl/editorial/") + QString::fromLatin1(hash) + QStringLiteral(".json");
+}
+bool EditorialModel::loadCache()
+{
+    QFile file(cachePath());
+    if (!file.open(QIODevice::ReadOnly) || file.size() > 5 * 1024 * 1024) return false;
+    const auto envelope = QJsonDocument::fromJson(file.readAll()).object();
+    const auto savedAt = QDateTime::fromString(envelope.value("savedAt").toString(), Qt::ISODate);
+    const auto value = envelope.value("document");
+    if (envelope.value("url").toString() != m_url.toString(QUrl::FullyEncoded)
+        || !savedAt.isValid() || savedAt > QDateTime::currentDateTimeUtc()
+        || (m_commentary ? !value.isObject() || !value.toObject().value("content").isString() : !value.isArray())) return false;
+    m_savedAt = savedAt;
+    applyDocument(m_commentary ? QJsonDocument(value.toObject()) : QJsonDocument(value.toArray()));
+    return true;
+}
+void EditorialModel::saveCache(const QJsonDocument &document) const
+{
+    if (m_commentary ? !document.isObject() || !document.object().value("content").isString() : !document.isArray()) return;
+    const auto path = cachePath();
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) return;
+    const QJsonObject envelope{{"url", m_url.toString(QUrl::FullyEncoded)},
+        {"savedAt", QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {"document", m_commentary ? QJsonValue(document.object()) : QJsonValue(document.array())}};
+    file.write(QJsonDocument(envelope).toJson(QJsonDocument::Compact));
+    file.commit();
 }
