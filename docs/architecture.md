@@ -65,6 +65,11 @@ Qt Quick używa backendu programowego. Zmiana renderera działa bez restartu.
 Wskaźniki kursora mają osobną geometrię; ruch myszy nie przebudowuje serii,
 siatki ani etykiet. Test na rzeczywistym RHI sprawdza również ten warunek.
 Edytory wykresów i serii są tworzone dopiero po rozwinięciu.
+Wysokość wykresu dziedziczy ustawienie profilu, a następnie wartość ogólną.
+Globalna preferencja legendy określa stan początkowy; przycisk przy tytule
+przełącza ją lokalnie bez zapisywania w profilu. Dolny pasek `ForecastPanel`
+obsługuje zakres i powiększenie z minimalnym przedziałem 24 godzin.
+Selektory profilu, okresu i uruchomienia modelu są w osobnym panelu opcji widoku.
 Import i eksport korzystają z lokalnych plików JSON w formacie
 `pl.meteo.chart-profiles`, wersja 1. Zapis jest atomowy (`QSaveFile`). Import
 sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe
@@ -112,11 +117,24 @@ silniku QML. `ImageCache` współdzieli trwające pobrania i cache LRU obrazów
 dla aplikacji oraz Plasma. Odpowiedzi mają deadline 25 s, limit 8 MiB i limit
 16 megapikseli; dekodowanie odbywa się w puli dwóch wątków. Prefetch kolejnej
 klatki używa tego samego magazynu i nie zmienia kroku aktualnie wyświetlanego.
+`ImagePreloader` przed animacją przygotowuje całą pętlę, z limitem czterech
+równoległych żądań. Licznik generacji odrzuca zakończenia anulowanego zadania;
+zmiana warstwy, startu lub obszaru wymaga przygotowania nowej pętli.
+Postęp i anulowanie są dostępne na mapie. Mapy tematyczne mają skalę bazową
+dopasowaną do obu wymiarów widoku, niezależnie od proporcji obrazu.
 
 `EditorialModel` pobiera komentarz synoptyka (także według daty) i stronicowane
 artykuły. Daty przyszłe nie powodują żądania; HTTP 404 dla komentarza jest
 prezentowane jako brak publikacji. Adaptery są oddzielone od QML, a ich adresy
 można wstrzyknąć w testach.
+Grafiki artykułów są skalowane przez `ResponsiveImages` do szerokości dokumentu,
+z zachowaniem proporcji także po zmianie rozmiaru okna.
+
+Plasmoid po rozwinięciu ładuje `CompactForecast` z podsumowaniem i równymi
+kolumnami dni. Pełny `ForecastPanel` jest tworzony po przejściu do meteogramu.
+Ikona panelu odpowiada pogodzie; własna ikona SVG służy jako ikona aplikacji
+i zastępnik przy braku danych. Skrypt rejestracji wersji developerskiej zapisuje
+wpis desktop i ikonę użytkownika wskazujące na plik wykonywalny z katalogu budowy.
 
 ## Weryfikacja
 
@@ -131,7 +149,8 @@ osobnego sprawdzenia w sesji Plasma.
 Testy map używają lokalnego serwera PNG z kontrolowanym opóźnieniem. Sprawdzają
 zachowanie starej klatki do załadowania wszystkich kafelków, błędy i spóźnione
 odpowiedzi, cache po restarcie bez serwera, przeliczanie współrzędnych w obu
-półkulach oraz rzeczywiste przeciąganie i zoom pod kursorem.
+półkulach oraz rzeczywiste przeciąganie i zoom pod kursorem. Obejmują też
+przygotowanie animacji, anulowanie oraz dopasowanie szerokich map tematycznych.
 Testy renderowania sprawdzają także stykanie się słupków opadu, widoczność mgły
 nad chmurami i tło poniżej 0°C. Testy profili obejmują wybór serii, kolejność,
 zapis i odczyt; selektor oryginalnego meteogramu jest testowany lokalnie.
