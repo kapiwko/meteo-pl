@@ -67,11 +67,20 @@ profile pozostają zachowane. Eksport zapisanych obejmuje nazwane własne
 profile i zmodyfikowany „Własny układ”. Ulubione lokalizacje i ustawienia
 globalne, takie jak jednostka wiatru i UTC, nie są częścią pliku profili.
 Dotyczy to również wyboru renderera, wspólnego dla aplikacji i plasmoidu.
+Wysokość można ustawić ogólnie, nadpisać w profilu i osobno dla wykresu.
+Obowiązuje pierwsza ustawiona wartość: wykres → profil → ustawienie ogólne.
+Wysokości profilu i wykresów są zawarte w eksporcie. Przycisk **ⓘ** bezpośrednio
+przy tytule pokazuje lub ukrywa legendę tego wykresu; globalna opcja
+**Domyślnie pokazuj legendę** określa stan początkowy.
 Można też wybrać jednostkę wiatru i cieniowanie nocy. Legenda przełącza serie
-bez zmiany skali osi. Ctrl + kółko myszy przybliża czas; przyciski i suwak
-pozwalają przesuwać zakres. Wybory na pasku są opisane jako **Profil wykresów**,
-**Zakres czasu** i **Start modelu**. Przyciski **Więcej godzin** / **Mniej godzin**
-zmieniają długość widocznego przedziału, a **Wcześniej** / **Później** go przesuwają.
+bez zmiany skali osi. Dolny pasek statusu pokazuje widoczny przedział czasu,
+strzałki przesuwania, suwak powiększenia i przycisk dopasowania całej prognozy.
+Powiększanie zatrzymuje się na 24 godzinach, a dla krótszej prognozy na jej
+pełnym zakresie. Ctrl + kółko myszy również zmienia powiększenie. Podczas
+oglądania fragmentu pojawia się drugi suwak do przesuwania czasu.
+Przycisk **Widok** w pasku statusu otwiera **Profil wykresów**, **Zakres czasu**
+i **Start modelu**, a także odnośnik do edycji profili i ustawień wyglądu.
+Zakres i start dotyczą bieżącego widoku; wybór profilu jest zapamiętywany.
 Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
 
 Obecny interfejs danych liczbowych nie udostępnia osobnego pola opadu
@@ -87,11 +96,17 @@ otworzyć meteogram wskazanego punktu. Mapy UM4 korzystają z publikacji UM4
 serwisu mapowego, niezależnej od listy startów meteogramów.
 
 Podczas ładowania pozostaje poprzednia kompletna klatka, również przy błędzie
-sieci. Animacja czeka na kolejną klatkę i pobiera następną z wyprzedzeniem.
+sieci. Przed odtwarzaniem animacja przygotowuje cały zestaw klatek w cache,
+z postępem na mapie i możliwością anulowania. Pobieranie jest ograniczone do
+czterech równoległych zadań i respektuje limity pamięci cache. Zmiana obszaru,
+warstwy lub startu unieważnia poprzednie przygotowanie. W trakcie odtwarzania
+następna klatka jest dodatkowo przygotowywana w pamięci RAM.
 Kafelki zachowują współrzędne podczas przesuwania i skalowania; nowa klatka
 pojawia się jednocześnie po przygotowaniu wszystkich jej kafelków.
 Kółko myszy i przewijanie touchpadem przybliżają mapę pod kursorem.
 Wskaźnik ładowania jest nakładany na mapę.
+Mapy tematyczne domyślnie mieszczą się w obu wymiarach widoku; **Dopasuj**
+przywraca pełny obraz po ręcznym powiększeniu.
 
 Prognoza odświeża się co godzinę. Aplikacja i widget korzystają ze wspólnego
 cache w `$XDG_CACHE_HOME/meteo-pl` (domyślnie `~/.cache/meteo-pl`).
@@ -110,6 +125,11 @@ Ulubione i preferencje widoku są wspólne, w `~/.config/meteo-pl/desktop.ini`.
 Ścieżka jest też widoczna na dole ustawień wyglądu; respektuje `XDG_CONFIG_HOME`.
 
 ## Instalacja
+
+Do uruchamiania wersji z `build/dev` można zarejestrować wpis aplikacji i ikonę:
+`python3 scripts/register-dev-desktop.py`. Wpis użytkownika wskazuje bezpośrednio
+na zbudowany program i umożliwia rozpoznawanie aplikacji przez portal KDE.
+Skrypt nie zastępuje istniejącego wpisu zwykłej instalacji.
 
 Preset `dev` instaluje do `build/stage`, aby umożliwić sprawdzenie pakietu:
 
@@ -130,6 +150,9 @@ sudo cmake --install build/release
 Następnie dodaj **Meteo · meteogram ICM** w oknie „Dodaj elementy interfejsu”
 Plasma. Nowa sesja Plasma zapewni wykrycie nowego modułu QML.
 Ustawienia widgetu są niezależne dla każdej instancji.
+Widok po rozwinięciu pokazuje zwartą prognozę na dni, temperaturę i wiatr;
+**Pokaż meteogram** otwiera pełny widok w tym samym plasmoidzie. Ikona panelu
+odzwierciedla pogodę; przy braku danych używana jest własna ikona Meteo.
 Samo `kpackagetool6 -i integrations/plasma/package` nie instaluje biblioteki C++;
 potrzebna jest także instalacja modułu `pl.meteo.desktop` przez CMake.
 Ścieżkę modułu można ustawić przez `METEO_QML_INSTALL_DIR`, np. dla dystrybucji
@@ -159,13 +182,3 @@ Repozytorium zawiera wyłącznie syntetyczne dane testowe, a interfejs podaje ź
 Nie jest to jeszcze pełna zgodność funkcji z Androidem: brak radaru obserwacyjnego,
 FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
 i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
-
-Animacja przygotowuje cały cykl w cache przed odtwarzaniem; postęp i anulowanie są na mapie. Mapy tematyczne domyślnie dopasowują się do okna.
-
-Wysokość wykresu dziedziczy ustawienie profilu i wartość ogólną. Domyślną widoczność legendy można ustawić globalnie i przełączać przy tytule.
-
-Zwarty nagłówek łączy temperaturę z ikoną pogody. Karty prognozy dziennej mają równe szerokości, stałe pola i ikony warunków.
-
-Plasmoid otwiera zwartą prognozę z przejściem do meteogramu. Aplikacja ma własną ikonę; skrypt developerski rejestruje wpis desktop i ikonę użytkownika.
-
-Pasek statusu pod wykresami zawiera zakres dat, przesuwanie czasu i suwak powiększenia z limitem 24 godzin. Selektory profilu, okresu i startu są w opcjach widoku.
