@@ -1,4 +1,5 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QQuickItem>
 #include <QColor>
 #include <QFont>
@@ -9,7 +10,7 @@
 
 // Records chart primitives on the GUI thread and submits colored triangles to
 // Qt Quick's render thread. No intermediate chart image or QPainter is used.
-class GpuPlot : public QQuickItem {
+class METEO_UI_EXPORT GpuPlot : public QQuickItem {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QColor fillStyle MEMBER m_fill)

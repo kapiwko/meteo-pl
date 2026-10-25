@@ -1,4 +1,5 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QObject>
 #include <QSettings>
 #include <QFileSystemWatcher>
@@ -7,7 +8,7 @@
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
-class UserPreferences : public QObject {
+class METEO_UI_EXPORT UserPreferences : public QObject {
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON

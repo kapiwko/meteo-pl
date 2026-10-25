@@ -1,11 +1,12 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QObject>
 #include <QUrl>
 #include <QtQml/qqmlregistration.h>
 class QQmlEngine;
 class QJSEngine;
 
-class MapImages : public QObject {
+class METEO_UI_EXPORT MapImages : public QObject {
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON

@@ -1,10 +1,11 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include "network/JsonRequest.hpp"
 #include <QTimer>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
-class PlaceSearchModel : public QObject {
+class METEO_UI_EXPORT PlaceSearchModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QString query READ query WRITE setQuery NOTIFY queryChanged)

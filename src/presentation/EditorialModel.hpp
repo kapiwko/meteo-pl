@@ -1,9 +1,10 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include "network/JsonRequest.hpp"
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
-class EditorialModel : public QObject {
+class METEO_UI_EXPORT EditorialModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(bool commentary READ commentary WRITE setCommentary NOTIFY changed)

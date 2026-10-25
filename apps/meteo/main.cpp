@@ -4,9 +4,18 @@
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QTimer>
+#ifdef METEO_BUNDLED_ICONS
+#include <KIconTheme>
+#endif
 
+#ifdef Q_OS_ANDROID
+Q_DECL_EXPORT
+#endif
 int main(int argc, char *argv[])
 {
+#ifdef METEO_BUNDLED_ICONS
+    KIconTheme::initTheme();
+#endif
     // KDE's native file and color dialogs require QApplication, including
     // when the application itself uses only Qt Quick controls.
     QApplication app(argc, argv);
@@ -16,7 +25,13 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName(QStringLiteral("meteo-pl"));
     QGuiApplication::setApplicationDisplayName(QStringLiteral("Meteo · meteogramy ICM"));
     QGuiApplication::setDesktopFileName(QStringLiteral("pl.meteo.desktop"));
-    QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
+    if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
+#ifdef Q_OS_ANDROID
+        QQuickStyle::setStyle(QStringLiteral("org.kde.breeze"));
+#else
+        QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
+#endif
+    }
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Meteogramy meteo.pl dla pulpitu KDE"));

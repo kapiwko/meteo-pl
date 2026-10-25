@@ -10,7 +10,7 @@ Kirigami.ApplicationWindow {
     property bool smokeTest: false
     width: 860
     height: 900
-    minimumWidth: 400
+    minimumWidth: Kirigami.Settings.isMobile ? 320 : 400
     minimumHeight: 440
     visible: true
     title: forecastModel.locationName + " · Meteo"

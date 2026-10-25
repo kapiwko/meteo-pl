@@ -1,4 +1,5 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 
 #include "core/Forecast.hpp"
 #include "network/MeteoClient.hpp"
@@ -7,7 +8,7 @@
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
-class WeatherModel : public QObject {
+class METEO_UI_EXPORT WeatherModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(double latitude READ latitude WRITE setLatitude NOTIFY locationChanged)

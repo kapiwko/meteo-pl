@@ -1,10 +1,11 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QObject>
 #include <QPointer>
 #include <QQuickTextDocument>
 #include <QtQml/qqmlregistration.h>
 
-class ResponsiveImages : public QObject {
+class METEO_UI_EXPORT ResponsiveImages : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QQuickTextDocument *document READ document WRITE setDocument NOTIFY documentChanged)

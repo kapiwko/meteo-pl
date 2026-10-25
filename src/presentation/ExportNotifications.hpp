@@ -1,9 +1,10 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QObject>
 #include <QUrl>
 #include <QtQml/qqmlregistration.h>
 
-class ExportNotifications : public QObject {
+class METEO_UI_EXPORT ExportNotifications : public QObject {
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
