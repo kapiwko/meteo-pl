@@ -377,6 +377,7 @@ ColumnLayout {
         Component {
             id: cpuComponent
             Canvas {
+                objectName: "cpu-base-" + root.groupKey
                 renderTarget: Canvas.Image
                 onPaint: Style.paintChart(root, plot, getContext("2d"))
             }

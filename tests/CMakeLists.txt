@@ -42,3 +42,13 @@ if(METEO_BUILD_PLASMOID)
         )
     endif()
 endif()
+
+qt_add_executable(test_renderers test_renderers.cpp)
+target_link_libraries(test_renderers PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)
+add_test(NAME renderer_parity COMMAND test_renderers)
+set_tests_properties(renderer_parity PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 120
+    LABELS "gpu;visual"
+)
+
