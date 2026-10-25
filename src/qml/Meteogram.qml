@@ -429,6 +429,10 @@ ColumnLayout {
         opacity: 0.65
     }
     Connections {
+        target: root.weather
+        function onStateChanged() { root.nowTime = Date.now() / 1000; }
+    }
+    Connections {
         target: root
         function onFieldsChanged() { plot.requestPaint(); }
         function onChartConfigurationChanged() { plot.requestPaint(); }

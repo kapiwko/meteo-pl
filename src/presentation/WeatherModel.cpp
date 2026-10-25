@@ -48,7 +48,7 @@ WeatherModel::WeatherModel(QObject *parent) : QObject(parent)
     connect(&m_refreshTimer, &QTimer::timeout, this, [this] { refresh(false); });
     m_refreshTimer.start();
     m_clockTimer.setInterval(60000);
-    connect(&m_clockTimer, &QTimer::timeout, this, &WeatherModel::stateChanged);
+    connect(&m_clockTimer, &QTimer::timeout, this, &WeatherModel::updateCurrentTime);
     m_clockTimer.start();
     connect(&m_client, &Meteo::MeteoClient::runsReceived, this, [this](const QList<qint64> &runs) {
         m_runs.clear();
@@ -158,7 +158,9 @@ void WeatherModel::resetLocation()
     m_error.clear();
     m_updated = {};
     m_usingCache = false;
+    ++m_dataRevision;
     emit locationChanged();
+    emit dataChanged();
     emit stateChanged();
     if (m_autoRefresh)
         m_debounce.start();
@@ -188,6 +190,8 @@ void WeatherModel::apply(const Meteo::Forecast &forecast)
     QHash<QString, double> scales;
     for (const auto &field : forecastFields()) scales.insert(field.key, displayScale(field.key, field.scale));
     m_series = buildChartSeries(forecast, scales);
+    ++m_dataRevision;
+    emit dataChanged();
 }
 
 QString WeatherModel::cachePath() const
@@ -316,6 +320,7 @@ void WeatherModel::setWindUnit(const QString &value)
     if (m_windUnit == value || !QStringList{"m/s", "km/h", "kt"}.contains(value)) return;
     m_windUnit = value;
     if (m_forecast) apply(*m_forecast);
+    else { ++m_dataRevision; emit dataChanged(); }
     emit stateChanged();
 }
 
@@ -323,6 +328,8 @@ void WeatherModel::setUtc(bool value)
 {
     if (m_utc == value) return;
     m_utc = value;
+    ++m_dataRevision;
+    emit dataChanged();
     emit stateChanged();
 }
 

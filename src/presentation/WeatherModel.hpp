@@ -11,41 +11,43 @@
 class METEO_UI_EXPORT WeatherModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(quint64 dataRevision READ dataRevision NOTIFY dataChanged)
     Q_PROPERTY(double latitude READ latitude WRITE setLatitude NOTIFY locationChanged)
     Q_PROPERTY(double longitude READ longitude WRITE setLongitude NOTIFY locationChanged)
     Q_PROPERTY(QString locationName READ locationName WRITE setLocationName NOTIFY locationChanged)
     Q_PROPERTY(QString model READ model WRITE setModel NOTIFY locationChanged)
     Q_PROPERTY(bool autoRefresh READ autoRefresh WRITE setAutoRefresh NOTIFY autoRefreshChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY stateChanged)
-    Q_PROPERTY(bool hasData READ hasData NOTIFY stateChanged)
+    Q_PROPERTY(bool hasData READ hasData NOTIFY dataChanged)
     Q_PROPERTY(bool usingCache READ usingCache NOTIFY stateChanged)
     Q_PROPERTY(bool stale READ stale NOTIFY stateChanged)
     Q_PROPERTY(QString error READ error NOTIFY stateChanged)
     Q_PROPERTY(QString modelName READ modelName NOTIFY locationChanged)
-    Q_PROPERTY(QString runText READ runText NOTIFY stateChanged)
+    Q_PROPERTY(QString runText READ runText NOTIFY dataChanged)
     Q_PROPERTY(QString updatedText READ updatedText NOTIFY stateChanged)
     Q_PROPERTY(QString temperatureText READ temperatureText NOTIFY stateChanged)
     Q_PROPERTY(QString windText READ windText NOTIFY stateChanged)
     Q_PROPERTY(QString pressureText READ pressureText NOTIFY stateChanged)
     Q_PROPERTY(QString summaryTime READ summaryTime NOTIFY stateChanged)
     Q_PROPERTY(QString weatherIcon READ weatherIcon NOTIFY stateChanged)
-    Q_PROPERTY(QVariantMap series READ series NOTIFY stateChanged)
-    Q_PROPERTY(double firstTimestamp READ firstTimestamp NOTIFY stateChanged)
-    Q_PROPERTY(double lastTimestamp READ lastTimestamp NOTIFY stateChanged)
-    Q_PROPERTY(QVariantList chartGroups READ chartGroups NOTIFY stateChanged)
-    Q_PROPERTY(QVariantList dailyForecast READ dailyForecast NOTIFY stateChanged)
-    Q_PROPERTY(QVariantList hourlyForecast READ hourlyForecast NOTIFY stateChanged)
-    Q_PROPERTY(QVariantList nightIntervals READ nightIntervals NOTIFY stateChanged)
+    Q_PROPERTY(QVariantMap series READ series NOTIFY dataChanged)
+    Q_PROPERTY(double firstTimestamp READ firstTimestamp NOTIFY dataChanged)
+    Q_PROPERTY(double lastTimestamp READ lastTimestamp NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList chartGroups READ chartGroups NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList dailyForecast READ dailyForecast NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList hourlyForecast READ hourlyForecast NOTIFY dataChanged)
+    Q_PROPERTY(QVariantList nightIntervals READ nightIntervals NOTIFY dataChanged)
     Q_PROPERTY(QVariantList availableRuns READ availableRuns NOTIFY runsChanged)
     Q_PROPERTY(double requestedRun READ requestedRun WRITE setRequestedRun NOTIFY runsChanged)
     Q_PROPERTY(bool archive READ archive NOTIFY stateChanged)
-    Q_PROPERTY(QString windUnit READ windUnit WRITE setWindUnit NOTIFY stateChanged)
-    Q_PROPERTY(bool utc READ utc WRITE setUtc NOTIFY stateChanged)
-    Q_PROPERTY(QUrl originalLookupUrl READ originalLookupUrl NOTIFY stateChanged)
+    Q_PROPERTY(QString windUnit READ windUnit WRITE setWindUnit NOTIFY dataChanged)
+    Q_PROPERTY(bool utc READ utc WRITE setUtc NOTIFY dataChanged)
+    Q_PROPERTY(QUrl originalLookupUrl READ originalLookupUrl NOTIFY dataChanged)
     Q_PROPERTY(QString sunTimes READ sunTimes NOTIFY stateChanged)
     Q_PROPERTY(QVariantMap solarTimes READ solarTimes NOTIFY stateChanged)
 public:
     explicit WeatherModel(QObject *parent = nullptr);
+    quint64 dataRevision() const { return m_dataRevision; }
     double latitude() const { return m_latitude; }
     double longitude() const { return m_longitude; }
     QString locationName() const { return m_locationName; }
@@ -99,8 +101,11 @@ signals:
     void locationChanged();
     void autoRefreshChanged();
     void stateChanged();
+    void dataChanged();
     void runsChanged();
 
+private slots:
+    void updateCurrentTime() { emit stateChanged(); }
 private:
     void resetLocation();
     void apply(const Meteo::Forecast &forecast);
@@ -127,6 +132,7 @@ private:
     QDateTime m_updated;
     std::optional<Meteo::Forecast> m_forecast;
     QVariantMap m_series;
+    quint64 m_dataRevision = 0;
     QVariantList m_runs;
     qint64 m_requestedRun = 0;
     QString m_windUnit = QStringLiteral("m/s");

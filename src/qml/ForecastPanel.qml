@@ -39,10 +39,13 @@ Item {
         if (selectedChart) for (const field of selectedChart.fields) { keys.push(field.key); if (field.lowerKey) keys.push(field.lowerKey); }
         return keys;
     }
-    readonly property var allDetails: selectedTime > 0 ? weather.detailsAt(selectedTime).map(detail => {
+    readonly property var allDetails: {
+        const revision = weather.dataRevision;
+        return selectedTime > 0 ? weather.detailsAt(selectedTime).map(detail => {
         const style = selectedChart ? selectedChart.fields.find(field => field.key === detail.key || field.lowerKey === detail.key) : null;
         return style ? Object.assign({}, detail, {color: style.color, darkColor: style.darkColor}) : detail;
-    }) : []
+        }) : [];
+    }
     readonly property bool allProbeParameters: UserPreferences.probeMode === "all" || selectedGroup === ""
     readonly property var inspectorDetails: allProbeParameters ? allDetails : allDetails.filter(detail => selectedFieldKeys.indexOf(detail.key) >= 0)
     readonly property var visibleCharts: {

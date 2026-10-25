@@ -1169,6 +1169,43 @@ private slots:
         QVERIFY(text.contains('"'+iso(first+10800)+"\";\"\";\"\";\"instant\""));
         QVERIFY(text.contains('"'+iso(first)+"\";\""+iso(first)+"\";\""+iso(first+10800)+"\";\"intervalTotal\""));
     }
+    void clockUpdatesKeepChartDataStableAndUnitsDoNotRewriteTheCache()
+    {
+        WeatherModel model;
+        model.setAutoRefresh(false); model.refresh(false);
+        QVERIFY(model.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQml
+            import pl.meteo.desktop
+            QtObject {
+                required property WeatherModel weather
+                property int updates: 0
+                property var points: weather.series
+                onPointsChanged: updates++
+            }
+        )",{});
+        QScopedPointer<QObject> binding(component.createWithInitialProperties({{"weather",QVariant::fromValue(&model)}}));
+        QVERIFY2(binding,qPrintable(component.errorString()));
+        const auto updates = binding->property("updates").toInt();
+        const auto revision = model.dataRevision();
+        QSignalSpy changed(&model,&WeatherModel::dataChanged);
+        for (int i=0;i<10;++i) QVERIFY(QMetaObject::invokeMethod(&model,"updateCurrentTime"));
+        QCOMPARE(changed.count(),0);
+        QCOMPARE(model.dataRevision(),revision);
+        QCOMPARE(binding->property("updates").toInt(),updates);
+        const auto hash = QCryptographicHash::hash("um4_60:52.229700:21.012200",QCryptographicHash::Sha256).toHex();
+        const auto path = m_cache.path()+"/meteo-pl/"+hash+".json";
+        const auto modified = QFileInfo(path).lastModified();
+        model.setWindUnit("km/h");
+        QCOMPARE(changed.count(),1);
+        QVERIFY(model.dataRevision()>revision);
+        QVERIFY(binding->property("updates").toInt()>updates);
+        QCOMPARE(QFileInfo(path).lastModified(),modified);
+        QVERIFY(!model.busy());
+        QVERIFY(model.usingCache());
+    }
     void detailsAndUnitsUseMatchingTimestamps()
     {
         WeatherModel model;
