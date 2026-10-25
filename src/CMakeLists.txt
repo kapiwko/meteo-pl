@@ -21,6 +21,7 @@ qt_add_qml_module(meteo_ui
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp
+        presentation/ReadingsExporter.cpp presentation/ReadingsExporter.hpp
         presentation/ExportNotifications.cpp presentation/ExportNotifications.hpp
         presentation/GpuPlot.cpp presentation/GpuPlot.hpp
         presentation/ResponsiveImages.cpp presentation/ResponsiveImages.hpp

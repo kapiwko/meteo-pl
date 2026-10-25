@@ -390,6 +390,70 @@ private slots:
         QVERIFY(reds(filtered)<reds(single)/4);
         for(const auto &chart:charts) QVERIFY(!chart.value<QQuickItem *>()->property("exportMode").toBool());
     }
+    void exportsFilteredReadingsAndRowsOutsideInspectorViewport()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        WeatherModel model; model.setAutoRefresh(false); model.refresh(false);
+        QVERIFY(model.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastPanel");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)}}));
+        QVERIFY(object);
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(540, 450);
+        item->setParentItem(window.contentItem()); item->setSize({540, 450}); window.show();
+        QTest::qWait(100);
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "showProbe", Q_ARG(QVariant, model.firstTimestamp()),
+            Q_ARG(QVariant, QPointF(400, 100)), Q_ARG(QVariant, QString()), Q_ARG(QVariant, true)));
+        object->setProperty("pinned", true);
+        auto *inspector = object->findChild<QObject *>("forecastInspector");
+        QVERIFY(inspector);
+        QTRY_VERIFY(inspector->property("opened").toBool());
+        inspector->setProperty("category", "wind");
+        QTemporaryDir files;
+        QVERIFY(files.isValid());
+        const auto directory = qEnvironmentVariable("METEO_EXPORT_DIR", files.path());
+        const auto csvPath = QDir(directory).filePath("meteo-reading-wind.csv");
+        QVariant accepted;
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "exportReadingsToFile", Q_RETURN_ARG(QVariant, accepted),
+            Q_ARG(QVariant, QUrl::fromLocalFile(csvPath)), Q_ARG(QVariant, QStringLiteral("csv"))));
+        QVERIFY(accepted.toBool());
+        QFile csv(csvPath); QVERIFY(csv.open(QIODevice::ReadOnly));
+        const auto csvText = QString::fromUtf8(csv.readAll());
+        QCOMPARE(csvText.count("\r\n"), 4); // Header plus the three wind parameters.
+        QVERIFY(csvText.contains("wind10_sd_true_prev_point"));
+        QVERIFY(!csvText.contains("airtmp_point"));
+        QVERIFY(!object->property("exportFailed").toBool());
+        auto *notice = object->findChild<QObject *>("exportNotice");
+        QVERIFY(notice); QVERIFY(notice->property("visible").toBool());
+        inspector->setProperty("category", "");
+        auto *readings = inspector->findChild<QQuickItem *>("inspectorReadings");
+        QVERIFY(readings);
+        QTRY_VERIFY(readings->height() > window.height());
+        auto *exporter = object->findChild<ChartExporter *>("chartExporter");
+        QVERIFY(exporter);
+        QSignalSpy saved(exporter, &ChartExporter::saved), failed(exporter, &ChartExporter::failed);
+        const auto pngPath = QDir(directory).filePath("meteo-reading-all.png");
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "exportReadingsToFile", Q_RETURN_ARG(QVariant, accepted),
+            Q_ARG(QVariant, QUrl::fromLocalFile(pngPath)), Q_ARG(QVariant, QStringLiteral("png"))));
+        QVERIFY(accepted.toBool());
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count(), 1, 5000);
+        QCOMPARE(failed.count(), 0);
+        QImage image(pngPath); QVERIFY(!image.isNull());
+        QVERIFY(image.height() > readings->height());
+        QVERIFY(image.height() > window.height() + 150);
+        QVERIFY(image.text("Title").contains("Wszystkie"));
+        int finalReadingPixels = 0;
+        for (int y = image.height()*3/4; y < image.height(); ++y)
+            for (int x = 0; x < image.width()/2; ++x)
+                if (image.pixelColor(x,y) == QColor("#f44336")) ++finalReadingPixels;
+        QVERIFY(finalReadingPixels > 10); // The last parameter's swatch is below the scroll viewport.
+        QVERIFY(object->property("pinned").toBool());
+        QVERIFY(!object->property("exportingReadings").toBool());
+        QVERIFY(object->property("exportMessage").toString().contains("odczyt"));
+    }
     void exportFailurePreservesFileAndCanBeRetried()
     {
         QQuickWindow window;window.resize(200,200);window.show();

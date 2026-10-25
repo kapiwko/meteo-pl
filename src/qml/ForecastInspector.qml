@@ -10,12 +10,13 @@ Popup {
     required property WeatherModel weather
     property real timestamp: 0
     property bool pinned: false
+    property bool exportBusy: false
     property bool allParameters: false
     property var details: []
     property var highlightedKeys: []
     property string category: ""
     readonly property bool hovered: inspectorHover.hovered
-    readonly property alias readingsItem: readings
+    readonly property alias readingsItem: readingsBackground
     readonly property int columns: readings.columns
     readonly property var categories: [{key: "", name: "Wszystkie"},
         {key: "temperature", name: "Temperatura"}, {key: "precipitation", name: "Opady"},
@@ -25,6 +26,7 @@ Popup {
     readonly property var visibleDetails: details.filter(detail => !allParameters || !category || categoryFor(detail.group) === category)
     signal pinToggled()
     signal pointerLeft()
+    signal exportRequested(string format)
     function categoryFor(group) {
         if (group === "ground") return "temperature";
         if (group === "cloudHeights") return "clouds";
@@ -59,6 +61,19 @@ Popup {
                 ToolTip.visible: hovered
                 Accessible.name: ToolTip.text
             }
+            ToolButton {
+                icon.name: "document-export"
+                enabled: !root.exportBusy && root.visibleDetails.length > 0
+                onClicked: { if (!root.pinned) root.pinToggled(); readingExportMenu.popup(); }
+                ToolTip.text: "Eksportuj widoczne parametry"
+                ToolTip.visible: hovered
+                Accessible.name: ToolTip.text
+                Menu {
+                    id: readingExportMenu
+                    MenuItem { text: "Zapisz odczyt jako PNG…"; icon.name: "image-png"; onTriggered: root.exportRequested("png") }
+                    MenuItem { text: "Zapisz odczyt jako CSV…"; icon.name: "text-csv"; onTriggered: root.exportRequested("csv") }
+                }
+            }
             ToolButton { icon.name: "dialog-close"; onClicked: root.close(); Accessible.name: "Zamknij odczyt" }
         }
         Label {
@@ -91,32 +106,39 @@ Popup {
             Layout.preferredHeight: Math.max(40, Math.min(readings.implicitHeight, root.parent ? root.parent.height - (root.allParameters ? 220 : 160) : 440, 530))
             contentWidth: availableWidth
             clip: true
-            GridLayout {
-                id: readings
+            Rectangle {
+                id: readingsBackground
+                objectName: "inspectorReadings"
                 width: inspectorScroll.availableWidth
-                columns: width >= 560 ? 2 : 1
-                rowSpacing: 2
-                columnSpacing: 12
-                Repeater {
-                    model: root.visibleDetails
-                    delegate: Rectangle {
-                        id: reading
-                        required property var modelData
-                        Layout.preferredWidth: Math.max(1, (readings.width - readings.columnSpacing * (readings.columns - 1)) / readings.columns)
-                        Layout.minimumWidth: 0
-                        Layout.fillHeight: true
-                        implicitHeight: Math.max(nameLabel.implicitHeight, valueLabel.implicitHeight) + 12
-                        color: root.highlightedKeys.indexOf(modelData.key) >= 0 ? Kirigami.Theme.alternateBackgroundColor : "transparent"
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 5
-                            Rectangle {
-                                Layout.preferredWidth: 4
-                                Layout.preferredHeight: 15
-                                color: Kirigami.Theme.backgroundColor.hslLightness < 0.5 ? reading.modelData.darkColor : reading.modelData.color
+                implicitHeight: readings.implicitHeight
+                color: Kirigami.Theme.backgroundColor
+                GridLayout {
+                    id: readings
+                    width: parent.width
+                    columns: width >= 560 ? 2 : 1
+                    rowSpacing: 2
+                    columnSpacing: 12
+                    Repeater {
+                        model: root.visibleDetails
+                        delegate: Rectangle {
+                            id: reading
+                            required property var modelData
+                            Layout.preferredWidth: Math.max(1, (readings.width - readings.columnSpacing * (readings.columns - 1)) / readings.columns)
+                            Layout.minimumWidth: 0
+                            Layout.fillHeight: true
+                            implicitHeight: Math.max(nameLabel.implicitHeight, valueLabel.implicitHeight) + 12
+                            color: root.highlightedKeys.indexOf(modelData.key) >= 0 ? Kirigami.Theme.alternateBackgroundColor : "transparent"
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                Rectangle {
+                                    Layout.preferredWidth: 4
+                                    Layout.preferredHeight: 15
+                                    color: Kirigami.Theme.backgroundColor.hslLightness < 0.5 ? reading.modelData.darkColor : reading.modelData.color
+                                }
+                                Label { id: nameLabel; text: reading.modelData.label; Layout.fillWidth: true; Layout.minimumWidth: 0; wrapMode: Text.WordWrap; font.pixelSize: 11 }
+                                Label { id: valueLabel; text: reading.modelData.value; font.bold: true; font.pixelSize: 11 }
                             }
-                            Label { id: nameLabel; text: reading.modelData.label; Layout.fillWidth: true; Layout.minimumWidth: 0; wrapMode: Text.WordWrap; font.pixelSize: 11 }
-                            Label { id: valueLabel; text: reading.modelData.value; font.bold: true; font.pixelSize: 11 }
                         }
                     }
                 }
