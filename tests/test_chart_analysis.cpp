@@ -1,12 +1,60 @@
 #include "ChartAnalysis.hpp"
 #include "ChartConfiguration.hpp"
 #include <QTest>
+#include <QFile>
+#include <QJSEngine>
 #include <cmath>
 #include <limits>
 
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void signedBarsHaveTheirExpectedGeometry()
+    {
+        QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");
+        QVERIFY(source.open(QIODevice::ReadOnly));
+        QJSEngine engine;
+        auto script = QString::fromUtf8(source.readAll());
+        script.remove(0, script.indexOf('\n') + 1); // QML's .pragma is not JavaScript.
+        const auto loaded = engine.evaluate(script);
+        QVERIFY2(!loaded.isError(), qPrintable(loaded.toString()));
+        for (bool right : {false, true}) for (double shift : {-100.0, 0.0, 100.0}) for (double value : {-5.0, 0.0, 5.0}) {
+            engine.globalObject().setProperty("testRight", right);
+            engine.globalObject().setProperty("testShift", shift);
+            engine.globalObject().setProperty("testValue", value);
+            const auto geometry = engine.evaluate(QStringLiteral(R"JS(
+                (function() {
+                    const rectangles = [], ctx = {};
+                    for (const name of ["reset", "save", "restore", "beginPath", "rect", "clip", "setLineDash", "stroke", "fillText"])
+                        ctx[name] = function() {};
+                    ctx.fillRect = function(x,y,width,height) {
+                        if (this.fillStyle === "#123456") rectangles.push({x:x,y:y,width:width,height:height});
+                    };
+                    const root = {
+                        leftMargin:0, rightMargin:0, topMargin:0, bottomMargin:0, directionBandHeight:0,
+                        darkPalette:false, scaleKind:"linear", directionOnly:false, hasRightAxis:false,
+                        startTime:0, endTime:3600, weather:{firstTimestamp:0}, nights:[],
+                        fields:[{key:"airtmp_point",kind:"bars",color:"#123456",axis:testRight?"right":"left",
+                                 points:[{time:0,value:testValue},{time:3600,value:null}]}],
+                        ticks:function(){return [];}, axisUnit:function(){return "";},
+                        timeAxisLabels:function(){return {labels:[],days:[],midnights:[]};},
+                        valid:function(v){return v!==null && isFinite(v);}, shown:function(){return true;},
+                        layerOrder:function(){return 0;}, seriesColor:function(f){return f.color;},
+                        isRightField:function(f){return f.axis==="right";}, drawGrid:function(){},
+                        px:function(t){return t/3600*50;}, py:function(v,right){return 50+testShift-v*(right?4:2);}
+                    };
+                    paintChart(root,{width:120,height:100},ctx,false);
+                    return rectangles;
+                })()
+            )JS"));
+            QVERIFY2(!geometry.isError(), qPrintable(geometry.toString()));
+            QCOMPARE(geometry.property("length").toInt(), 1);
+            const auto rectangle = geometry.property(0);
+            const double zero = 50 + shift, y = zero - value * (right ? 4 : 2);
+            QCOMPARE(rectangle.property("y").toNumber(), std::min(y, zero));
+            QCOMPARE(rectangle.property("height").toNumber(), std::abs(zero-y));
+        }
+    }
     void preservesOrdinaryTicks()
     {
         const auto axis = ChartMath::niceAxis(-10, 10);

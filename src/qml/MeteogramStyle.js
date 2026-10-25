@@ -284,7 +284,8 @@ function paintChart(root, plot, ctx, withCursor) {
                 } else {
                     const from = field.key === "pcpttl_aver" ? Math.floor(root.px(point.time)) : x - barWidth / 2;
                     const to = field.key === "pcpttl_aver" ? Math.ceil(root.px(point.time + step)) : from + barWidth;
-                    ctx.fillRect(from, y, to - from, Math.max(0, root.py(0, isRight) - y));
+                    const zero = root.py(0, isRight);
+                    ctx.fillRect(from, Math.min(y, zero), to - from, Math.abs(zero - y));
                 }
             } else {
                 if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
