@@ -1,8 +1,56 @@
 #include "JsonRequest.hpp"
 #include <QNetworkReply>
 #include <QJsonArray>
+#include <QJsonObject>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QFile>
+#include <QSaveFile>
+#include <QStandardPaths>
+#include <QTimer>
+#include <QDateTime>
 
 namespace Meteo {
+namespace {
+QString cachePath(const QUrl &url)
+{
+    return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
+        + QStringLiteral("/meteo-pl/metadata/")
+        + QString::fromLatin1(QCryptographicHash::hash(url.toEncoded(), QCryptographicHash::Sha256).toHex())
+        + QStringLiteral(".json");
+}
+QJsonDocument readCache(const QUrl &url, int seconds)
+{
+    QFile file(cachePath(url));
+    if (!file.open(QIODevice::ReadOnly) || file.size()>5*1024*1024) return {};
+    const auto entry=QJsonDocument::fromJson(file.readAll()).object();
+    const auto saved=QDateTime::fromString(entry.value("savedAt").toString(),Qt::ISODate);
+    const auto age=saved.secsTo(QDateTime::currentDateTimeUtc());
+    if (entry.value("url").toString()!=url.toString(QUrl::FullyEncoded) || !saved.isValid() || age<0 || age>=seconds) return {};
+    const auto value=entry.value("document");
+    return value.isObject()?QJsonDocument(value.toObject()):value.isArray()?QJsonDocument(value.toArray()):QJsonDocument();
+}
+void writeCache(const QUrl &url,const QJsonDocument &document)
+{
+    const auto path=cachePath(url);
+    QDir directory(QFileInfo(path).absolutePath());
+    if (!directory.mkpath(QStringLiteral("."))) return;
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) return;
+    const QJsonObject entry{{"url",url.toString(QUrl::FullyEncoded)},
+        {"savedAt",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {"document",document.isObject()?QJsonValue(document.object()):QJsonValue(document.array())}};
+    file.write(QJsonDocument(entry).toJson(QJsonDocument::Compact));
+    if (!file.commit()) return;
+    // Search prefixes must not grow the cache without a bound.
+    const auto files=directory.entryInfoList({QStringLiteral("*.json")},QDir::Files,QDir::Time);
+    qint64 bytes=0;
+    for (qsizetype i=0;i<files.size();++i) {
+        bytes+=files[i].size();
+        if (i>=512 || bytes>32*1024*1024) QFile::remove(files[i].absoluteFilePath());
+    }
+}
+}
 JsonRequest::JsonRequest(QObject *parent) : QObject(parent) {}
 void JsonRequest::cancel()
 {
@@ -13,10 +61,22 @@ void JsonRequest::cancel()
         m_reply = nullptr;
     }
 }
-void JsonRequest::get(const QUrl &url)
+void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force)
 {
     cancel();
     m_statusCode = 0;
+    if (cacheSeconds>0 && !force) {
+        const auto document=readCache(url,cacheSeconds);
+        if (!document.isNull()) {
+            const auto generation=m_generation;
+            QTimer::singleShot(0,this,[this,generation,document] {
+                if (generation!=m_generation) return;
+                m_statusCode=200;
+                emit received(document);
+            });
+            return;
+        }
+    }
     QNetworkRequest request(url);
     request.setTransferTimeout(15000);
     request.setRawHeader("User-Agent", "MeteoDesktop/0.2 (Qt desktop client)");
@@ -28,7 +88,7 @@ void JsonRequest::get(const QUrl &url)
     connect(reply, &QIODevice::readyRead, this, [reply] {
         if (reply->bytesAvailable() > 4 * 1024 * 1024) reply->abort();
     });
-    connect(reply, &QNetworkReply::finished, this, [this, reply, generation] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, generation, url, cacheSeconds] {
         reply->deleteLater();
         if (generation != m_generation) return;
         m_reply = nullptr;
@@ -45,6 +105,8 @@ void JsonRequest::get(const QUrl &url)
             emit failed(QStringLiteral("Serwer zwrócił niepoprawny dokument JSON."));
             return;
         }
+        const auto policy=reply->rawHeader("Cache-Control").toLower();
+        if (cacheSeconds>0 && !policy.contains("no-store") && !policy.contains("no-cache")) writeCache(url,document);
         emit received(document);
     });
 }

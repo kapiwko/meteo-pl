@@ -59,5 +59,5 @@ void PlaceSearchModel::search()
     url.setQuery(query);
     m_busy = true;
     emit stateChanged();
-    m_request.get(url);
+    m_request.get(url, 24 * 3600);
 }

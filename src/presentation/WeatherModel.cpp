@@ -389,7 +389,7 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
 
 void WeatherModel::loadRuns()
 {
-    m_runsRequest.get(QUrl(QStringLiteral("https://devmgramapi.meteo.pl/meteorograms/available")));
+    m_runsRequest.get(QUrl(QStringLiteral("https://devmgramapi.meteo.pl/meteorograms/available")), 300);
 }
 
 QUrl WeatherModel::originalLookupUrl() const

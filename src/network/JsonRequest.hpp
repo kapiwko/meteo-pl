@@ -10,7 +10,7 @@ class JsonRequest : public QObject {
     Q_OBJECT
 public:
     explicit JsonRequest(QObject *parent = nullptr);
-    void get(const QUrl &url);
+    void get(const QUrl &url, int cacheSeconds = 0, bool force = false);
     void cancel();
     int statusCode() const { return m_statusCode; }
 signals:
