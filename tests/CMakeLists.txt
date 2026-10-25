@@ -37,17 +37,17 @@ qt_add_executable(test_presentation test_presentation.cpp)
 target_link_libraries(test_presentation PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)
 target_compile_definitions(test_presentation PRIVATE METEO_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 add_test(NAME presentation COMMAND test_presentation)
-set_tests_properties(presentation PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QSG_RHI_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
+set_tests_properties(presentation PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
 
 qt_add_executable(test_maps test_maps.cpp)
 target_link_libraries(test_maps PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)
 add_test(NAME maps COMMAND test_maps)
-set_tests_properties(maps PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QSG_RHI_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
+set_tests_properties(maps PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
 
 if(METEO_BUILD_APP)
     add_test(NAME app_smoke COMMAND meteo-pl --smoke-test)
     set_tests_properties(app_smoke PROPERTIES
-        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QSG_RHI_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY};XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/config"
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY};XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/config"
         TIMEOUT 15
         FAIL_REGULAR_EXPRESSION "TypeError;ReferenceError;Binding loop;failed to load component"
     )
@@ -59,7 +59,7 @@ if(METEO_BUILD_PLASMOID)
         find_package(Python3 REQUIRED COMPONENTS Interpreter)
         add_test(NAME plasma_smoke COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/scripts/plasma-smoke.py" --program "${PLASMAWINDOWED_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/integrations/plasma/package")
         set_tests_properties(plasma_smoke PROPERTIES
-            ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QSG_RHI_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY};XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-cache"
+            ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY};XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-cache"
             TIMEOUT 15
             FAIL_REGULAR_EXPRESSION "TypeError;ReferenceError;Binding loop;Error loading QML file;failed to load component"
         )
@@ -75,8 +75,19 @@ set_tests_properties(renderer_parity PROPERTIES
     LABELS "gpu;visual"
 )
 
+add_test(NAME gpu_geometry COMMAND test_presentation nativeGpuRendererDrawsClippedGeometry)
+set_tests_properties(gpu_geometry PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 30
+    LABELS "gpu;geometry"
+)
+
 find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
 add_test(NAME release_archives COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_release.py")
 set_tests_properties(release_archives PROPERTIES TIMEOUT 15)
 add_test(NAME portable_packaging COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_portable.py")
 set_tests_properties(portable_packaging PROPERTIES TIMEOUT 15)
+
+# Qt may otherwise send diagnostics only to journald when stdout is captured.
+get_property(meteo_tests DIRECTORY PROPERTY TESTS)
+set_tests_properties(${meteo_tests} PROPERTIES ENVIRONMENT_MODIFICATION "QT_FORCE_STDERR_LOGGING=set:1")
