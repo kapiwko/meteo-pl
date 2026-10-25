@@ -1,6 +1,7 @@
 #pragma once
 #include <QQuickItem>
 #include <QColor>
+#include <QFont>
 #include <QTransform>
 #include <QVariantList>
 #include <QVector>
@@ -19,10 +20,19 @@ class GpuPlot : public QQuickItem {
     Q_PROPERTY(QString textAlign MEMBER m_textAlign)
     Q_PROPERTY(QString textBaseline MEMBER m_textBaseline)
     Q_PROPERTY(QVariantList textLabels READ textLabels NOTIFY textLabelsChanged)
+    Q_PROPERTY(QFont labelFont READ labelFont CONSTANT)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
 public:
     explicit GpuPlot(QQuickItem *parent = nullptr);
     QVariantList textLabels() const { return m_labels; }
+    QFont labelFont() const {
+        QFont result("sans-serif");
+        result.setPixelSize(10);
+        // Labels share Canvas's grayscale antialiasing. LCD subpixels leave
+        // colored fringes when composited through a transparent MSAA layer.
+        result.setStyleStrategy(QFont::NoSubpixelAntialias);
+        return result;
+    }
     int frameCount() const { return m_frameCount; }
     Q_INVOKABLE QObject *getContext(const QString &) { return this; }
     Q_INVOKABLE void requestPaint();
