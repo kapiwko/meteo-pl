@@ -13,6 +13,7 @@ ColumnLayout {
     required property var fields
     property var chartConfiguration: ({})
     property int legendOverride: -1
+    property bool exportMode: false
     readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
     readonly property string rightScale: chartConfiguration.rightScale || (scaleKind === "clouds" ? "fraction" : scaleKind === "cloudHeights" ? "visibility" : scaleKind === "precipitation" ? "humidity" : "linked")
@@ -227,6 +228,8 @@ ColumnLayout {
         Label { text: root.title; font.bold: true; Layout.maximumWidth: Math.max(0, parent.width - 40); elide: Text.ElideRight }
         AbstractButton {
             id: legendToggle
+            opacity: root.exportMode ? 0 : 1
+            enabled: !root.exportMode
             text: root.legendVisible ? "Ukryj legendę" : "Pokaż legendę"
             implicitWidth: 22
             implicitHeight: 22
@@ -272,8 +275,8 @@ ColumnLayout {
                 onClicked: root.toggle(modelData.key)
                 background: Rectangle {
                     radius: 4
-                    color: legend.hovered || legend.down ? Kirigami.Theme.alternateBackgroundColor : "transparent"
-                    border.width: legend.visualFocus ? 1 : 0
+                    color: !root.exportMode && (legend.hovered || legend.down) ? Kirigami.Theme.alternateBackgroundColor : "transparent"
+                    border.width: !root.exportMode && legend.visualFocus ? 1 : 0
                     border.color: Kirigami.Theme.highlightColor
                 }
                 contentItem: RowLayout {
@@ -378,6 +381,7 @@ ColumnLayout {
 
         MouseArea {
             anchors.fill: parent
+            enabled: !root.exportMode
             hoverEnabled: true
             cursorShape: Qt.CrossCursor
             onPositionChanged: mouse => {
@@ -411,6 +415,7 @@ ColumnLayout {
         function onHiddenKeysChanged() { plot.requestPaint(); }
         function onBoundsChanged() { plot.requestPaint(); }
         function onSelectedTimeChanged() { plot.requestCursorPaint(); }
+        function onExportModeChanged() { plot.requestCursorPaint(); }
         function onStartTimeChanged() { plot.requestPaint(); }
         function onEndTimeChanged() { plot.requestPaint(); }
         function onTextColorChanged() { plot.requestPaint(); }

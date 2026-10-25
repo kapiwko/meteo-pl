@@ -89,6 +89,13 @@ a **Wykresy i aplikacja** edytor profili i ustawienia wyglądu oraz jednostek.
 Zakres i start dotyczą bieżącego widoku; wybór profilu jest zapamiętywany.
 Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
 
+**Eksportuj…** w pasku statusu otwiera wybór wykresów: jeden, kilka lub cały
+meteogram można zapisać jako wspólny PNG. Obraz zawiera także wykresy poniżej
+widocznej części okna. Zachowuje bieżący zakres czasu, ukryte serie, legendy,
+kolory i wysokości. Podpis podaje lokalizację, model, daty i źródło danych.
+Plik wybiera się w systemowym oknie zapisu. Po zapisie można otworzyć obraz
+przyciskiem w komunikacie. Eksport działa z rendererem GPU i CPU.
+
 Obecny interfejs danych liczbowych nie udostępnia osobnego pola opadu
 konwekcyjnego. Opad średni, maksymalny, prawdopodobieństwo opadu i wskaźniki
 burz są prezentowane zgodnie z ich znaczeniem. Czerwona kropka przy górnej

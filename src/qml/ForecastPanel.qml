@@ -2,6 +2,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs as Dialogs
+import QtCore
 import org.kde.kirigami as Kirigami
 
 Item {
@@ -15,6 +17,15 @@ Item {
     property real selectedTime: 0
     property string selectedGroup: ""
     property bool pinned: false
+    property Repeater chartRepeater: null
+    property var exportItems: []
+    property var exportCandidates: []
+    property var exportSelectedKeys: []
+    property bool exportSelectionInitialized: false
+    property string exportTitle: ""
+    property string exportMessage: ""
+    property bool exportFailed: false
+    property url exportedFile
     readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
     signal configureRequested()
     signal locationSelected(string name, real latitude, real longitude)
@@ -34,6 +45,112 @@ Item {
     }
 
     function openSettings() { settingsDialog.open(); }
+    function chooseExport() {
+        if (chartExporter.busy || !chartRepeater) return;
+        const items = [];
+        for (let i = 0; i < chartRepeater.count; ++i) {
+            const item = chartRepeater.itemAt(i);
+            if (item) items.push({key: item.groupKey, title: item.title, item: item});
+        }
+        if (!items.length) return;
+        exportCandidates = items;
+        if (!exportSelectionInitialized) { exportSelectedKeys = items.map(item => item.key); exportSelectionInitialized = true; }
+        else exportSelectedKeys = exportSelectedKeys.filter(key => items.some(item => item.key === key));
+        exportSelection.open();
+    }
+    function saveSelectedCharts() {
+        exportItems = exportCandidates.filter(entry => exportSelectedKeys.indexOf(entry.key) >= 0).map(entry => entry.item);
+        if (!exportItems.length) return;
+        exportTitle = exportItems.length === 1 ? exportItems[0].title : "Meteogram";
+        chartFileDialog.title = "Zapisz wybrane wykresy";
+        chartFileDialog.selectedFile = chartExporter.suggestedFile(weather.locationName, exportItems.length === 1 ? exportTitle : "", weather.formatTime(viewportStart, "yyyyMMdd-HHmm"));
+        chartFileDialog.open();
+    }
+    function exportToFile(file, items, title) {
+        return chartExporter.savePng(file, items, {
+            title: weather.locationName + " · " + title,
+            details: weather.modelName + " · obliczenia: " + weather.runText + "\n"
+                + weather.formatTime(viewportStart, "d MMM yyyy HH:mm") + " – " + weather.formatTime(viewportEnd, "d MMM yyyy HH:mm")
+                + (weather.utc ? " UTC" : " · czas lokalny") + "\n"
+                + weather.latitude.toFixed(4) + "°, " + weather.longitude.toFixed(4) + "°",
+            source: "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · pobrano: " + weather.updatedText,
+            background: Kirigami.Theme.backgroundColor, foreground: Kirigami.Theme.textColor
+        });
+    }
+    ChartExporter {
+        id: chartExporter
+        objectName: "chartExporter"
+        onSaved: (file, path) => { root.exportFailed = false; root.exportedFile = file; root.exportMessage = "Zapisano: " + path; root.exportItems = []; }
+        onFailed: message => { root.exportFailed = true; root.exportMessage = message; root.exportItems = []; }
+    }
+    Dialogs.FileDialog {
+        id: chartFileDialog
+        objectName: "chartExportDialog"
+        fileMode: Dialogs.FileDialog.SaveFile
+        nameFilters: ["Obraz PNG (*.png)"]
+        defaultSuffix: "png"
+        currentFolder: StandardPaths.writableLocation(StandardPaths.PicturesLocation)
+        onAccepted: root.exportToFile(selectedFile, root.exportItems, root.exportTitle)
+        onRejected: root.exportItems = []
+    }
+    Dialog {
+        id: exportSelection
+        objectName: "chartExportSelection"
+        title: "Eksport wykresów"
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(460, parent ? parent.width - 24 : 460)
+        height: Math.min(540, parent ? parent.height - 24 : 540)
+        padding: 16
+        modal: true
+        standardButtons: Dialog.Save | Dialog.Cancel
+        onOpened: {
+            standardButton(Dialog.Save).text = "Zapisz PNG…";
+            standardButton(Dialog.Save).enabled = Qt.binding(() => root.exportSelectedKeys.length > 0);
+        }
+        onAccepted: root.saveSelectedCharts()
+        contentItem: ColumnLayout {
+            spacing: 10
+            Label { text: "Wybierz wykresy do wspólnego obrazu PNG."; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            Label {
+                text: root.weather.formatTime(root.viewportStart, "d MMM HH:mm") + " – " + root.weather.formatTime(root.viewportEnd, "d MMM HH:mm") + (root.weather.utc ? " UTC" : " · czas lokalny")
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+                font.pixelSize: 11
+            }
+            RowLayout {
+                Button { text: "Wszystkie"; onClicked: root.exportSelectedKeys = root.exportCandidates.map(entry => entry.key) }
+                Button { text: "Żaden"; onClicked: root.exportSelectedKeys = [] }
+                Label { text: "Wybrano: " + root.exportSelectedKeys.length; opacity: 0.7; font.pixelSize: 11 }
+            }
+            ScrollView {
+                id: exportScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
+                ColumnLayout {
+                    width: exportScroll.availableWidth
+                    Repeater {
+                        model: root.exportCandidates
+                        delegate: CheckBox {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            text: modelData.title
+                            checked: root.exportSelectedKeys.indexOf(modelData.key) >= 0
+                            onToggled: {
+                                const keys = root.exportSelectedKeys.filter(key => key !== modelData.key);
+                                if (checked) keys.push(modelData.key);
+                                root.exportSelectedKeys = keys;
+                            }
+                        }
+                    }
+                }
+            }
+            Label { text: "Zachowany zostanie wygląd wykresów, widoczność serii i legend."; Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: 0.7; font.pixelSize: 11 }
+        }
+    }
     function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
     function resetRange() { viewportStart = weather.firstTimestamp; viewportEnd = weather.lastTimestamp; }
     function setHours(hours) {
@@ -228,7 +345,14 @@ Item {
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
                                 onClicked: root.resetRange()
                             }
-
+                            ToolButton {
+                                text: chartExporter.busy ? "Eksportuję…" : "Eksportuj…"
+                                icon.name: "document-export"
+                                enabled: !chartExporter.busy && root.visibleCharts.length > 0
+                                Accessible.name: "Eksportuj wybrane wykresy do PNG"
+                                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+                                onClicked: root.chooseExport()
+                            }
                         }
                     }
                     Slider {
@@ -241,6 +365,22 @@ Item {
                         value: root.viewportStart
                         Accessible.name: "Przesuń widoczny przedział czasu"
                         onMoved: { const span = chartStatus.span; root.viewportStart = value; root.viewportEnd = value + span; }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: root.exportMessage.length > 0
+                        Label {
+                            Layout.fillWidth: true
+                            text: root.exportMessage
+                            color: root.exportFailed ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
+                            font.pixelSize: 11
+                            elide: Text.ElideMiddle
+                            Accessible.role: Accessible.AlertMessage
+                            ToolTip.text: text; ToolTip.visible: exportHover.hovered
+                            HoverHandler { id: exportHover }
+                        }
+                        ToolButton { text: "Otwórz obraz"; icon.name: "document-open"; display: AbstractButton.IconOnly; visible: !root.exportFailed; onClicked: Qt.openUrlExternally(root.exportedFile); ToolTip.text: text; ToolTip.visible: hovered }
+                        ToolButton { text: "Zamknij komunikat"; icon.name: "dialog-close"; display: AbstractButton.IconOnly; onClicked: root.exportMessage = ""; ToolTip.text: text; ToolTip.visible: hovered }
                     }
                 }
             }
@@ -266,6 +406,8 @@ Item {
                 width: chartsScroll.availableWidth
                 spacing: 22
                 Repeater {
+                    id: charts
+                    Component.onCompleted: root.chartRepeater = charts
                     model: root.weather.hasData ? root.visibleCharts : []
                     delegate: Meteogram {
                         required property var modelData

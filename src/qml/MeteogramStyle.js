@@ -373,7 +373,7 @@ function paintCursor(root, plot, ctx, reset) {
         ctx.strokeStyle = root.textColor; ctx.globalAlpha = 0.4; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
         ctx.beginPath(); ctx.moveTo(root.px(root.nowTime), top); ctx.lineTo(root.px(root.nowTime), bottom); ctx.stroke(); ctx.setLineDash([]);
     }
-    if (root.selectedTime >= root.startTime && root.selectedTime <= root.endTime) {
+    if (!root.exportMode && root.selectedTime >= root.startTime && root.selectedTime <= root.endTime) {
         const x = root.px(root.selectedTime);
         ctx.strokeStyle = root.textColor; ctx.globalAlpha = 0.65; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
