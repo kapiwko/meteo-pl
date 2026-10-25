@@ -38,7 +38,11 @@ Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przery
 Domyślnie najechanie pokazuje parametry wskazanego wykresu. W ustawieniach
 można wybrać wszystkie parametry lub wyłączyć odczyt po najechaniu.
 Kliknięcie zawsze otwiera i przypina odczyt, a Escape go zamyka.
-Wszystkie parametry mają karty kategorii; przy szerokim oknie odczyt używa dwóch kolumn. Wykresy mają zakresy min/max, temperaturę
+Wszystkie parametry mają karty kategorii; przy szerokim oknie odczyt używa dwóch kolumn.
+Przycisk eksportu w odczycie zapisuje aktualną kategorię (lub wszystkie parametry)
+do PNG albo CSV, także wiersze poza widocznym obszarem przewijania.
+CSV zawiera czas ze strefą, lokalizację, model, klucze, wartości liczbowe i jednostki;
+separator to średnik, liczby używają kropki, a brakujące wartości pozostają puste. Wykresy mają zakresy min/max, temperaturę
 odczuwalną, rodzaj i prawdopodobieństwo opadów, kierunki i porywy wiatru,
 warstwy oraz podstawy chmur, wilgotność, mgłę, widzialność i wskaźniki burz.
 Brakujące wartości pozostają lukami. Dostępność parametrów zależy od modelu.

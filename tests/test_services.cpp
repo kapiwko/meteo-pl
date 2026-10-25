@@ -3,6 +3,7 @@
 #include "EditorialModel.hpp"
 #include "LegacyMeteogramModel.hpp"
 #include "UserPreferences.hpp"
+#include "ReadingsExporter.hpp"
 #include "ChartConfiguration.hpp"
 #include "core/Locations.hpp"
 #include <QJsonObject>
@@ -32,6 +33,35 @@ private slots:
         QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
         settings.clear();
         settings.sync();
+    }
+    void readingCsvPreservesUnitsMissingValuesAndQuotedPolishText()
+    {
+        QTemporaryDir files;
+        QVERIFY(files.isValid());
+        ReadingsExporter exporter;
+        const auto target = QUrl::fromLocalFile(files.filePath("odczyt"));
+        const QVariantList readings{
+            QVariantMap{{"key", "wind"}, {"label", "Wiatr; \"średni\"\nna 10 m"}, {"group", "wind"}, {"number", 10.8}, {"unit", "km/h"}, {"value", "10,8 km/h"}},
+            QVariantMap{{"key", "missing"}, {"label", "Brak"}, {"group", "temperature"}, {"number", QVariant()}, {"unit", "°C"}, {"value", "—"}}
+        };
+        const QVariantMap metadata{{"timestamp", 1761397200.0}, {"utc", true}, {"location", "Łódź"}, {"model", "UM4"}, {"run", "run"}, {"scope", "Wszystkie"}, {"source", "ICM UW / meteo.pl"}};
+        const auto result = exporter.saveCsv(target, readings, metadata);
+        QVERIFY2(result["ok"].toBool(), qPrintable(result["error"].toString()));
+        QFile file(result["path"].toString());
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const auto original = file.readAll();
+        QVERIFY(original.startsWith("\xef\xbb\xbf"));
+        const auto text = QString::fromUtf8(original);
+        QVERIFY(text.contains("\"Łódź\""));
+        QVERIFY(text.contains("\"Wiatr; \"\"średni\"\"\nna 10 m\""));
+        QVERIFY(text.contains("\"10.8\";\"km/h\";\"10,8 km/h\""));
+        QVERIFY(text.contains("\"Brak\";\"\";\"°C\";\"—\""));
+        QVERIFY(text.contains("+00:00") || text.contains("Z\";"));
+        QVERIFY(!exporter.saveCsv(result["file"].toUrl(), {}, metadata)["ok"].toBool());
+        file.seek(0);
+        QCOMPARE(file.readAll(), original);
+        QVERIFY(!exporter.saveCsv(QUrl("https://example.org/out.csv"), readings, metadata)["ok"].toBool());
+        QVERIFY(!exporter.saveCsv(QUrl::fromLocalFile(files.filePath("missing/out.csv")), readings, metadata)["ok"].toBool());
     }
     void parsesVillagesAndDisambiguatesRegions()
     {

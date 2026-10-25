@@ -380,7 +380,7 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
                 : QStringLiteral("Kod %1").arg(code);
         }
         details.append(QVariantMap{{"key", field.key}, {"label", field.label}, {"value", text}, {"group", field.group},
-                                   {"number", value ? QVariant(*value * scale) : QVariant()}, {"color", field.color}, {"darkColor", forecastDarkColor(field.color, field.key)}});
+                                   {"number", value ? QVariant(*value * scale) : QVariant()}, {"unit", unit}, {"color", field.color}, {"darkColor", forecastDarkColor(field.color, field.key)}});
     }
     return details;
 }

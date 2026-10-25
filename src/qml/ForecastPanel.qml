@@ -25,6 +25,7 @@ Item {
     property string exportTitle: ""
     property string exportMessage: ""
     property bool exportFailed: false
+    property bool exportingReadings: false
     property url exportedFile
     readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
     signal configureRequested()
@@ -70,6 +71,7 @@ Item {
         chartFileDialog.open();
     }
     function exportToFile(file, items, title) {
+        exportingReadings = false;
         return chartExporter.savePng(file, items, {
             title: weather.locationName + " · " + title,
             details: weather.modelName + " · obliczenia: " + weather.runText + "\n"
@@ -80,11 +82,67 @@ Item {
             background: Kirigami.Theme.backgroundColor, foreground: Kirigami.Theme.textColor
         });
     }
+    function reportExport(file, error, readings) {
+        exportFailed = error.length > 0;
+        if (!exportFailed) exportedFile = file;
+        exportMessage = exportFailed ? error : readings ? "Zapisano odczyt parametrów." : "Zapisano wybrane wykresy.";
+        exportItems = [];
+        exportingReadings = false;
+        exportReported();
+        if (!exportFailed) ExportNotifications.saved(file, readings ? "Wyeksportowano odczyt" : "Wyeksportowano wykresy");
+    }
+    function chooseReadingExport(format) {
+        if (chartExporter.busy || selectedTime <= 0 || !inspector.visibleDetails.length) return;
+        pinned = true;
+        closeProbe.stop();
+        readingFileDialog.format = format;
+        const file = chartExporter.suggestedFile(weather.locationName, "odczyt", weather.formatTime(selectedTime, "yyyyMMdd-HHmm"));
+        readingFileDialog.selectedFile = format === "csv" ? file.toString().replace(/\.png$/i, ".csv") : file;
+        readingFileDialog.open();
+    }
+    function exportReadingsToFile(file, format) {
+        if (chartExporter.busy) return false;
+        if (selectedTime <= 0 || !inspector.visibleDetails.length || !inspector.opened) {
+            reportExport(file, "Otwórz odczyt parametrów i spróbuj ponownie.", true);
+            return false;
+        }
+        pinned = true;
+        closeProbe.stop();
+        const scope = allProbeParameters ? (inspector.categories.find(entry => entry.key === inspector.category) || {name: "Wszystkie"}).name : selectedChart ? selectedChart.title : "Parametry";
+        const source = "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office";
+        if (format === "csv") {
+            const result = readingsExporter.saveCsv(file, inspector.visibleDetails, {
+                timestamp: selectedTime, utc: weather.utc, location: weather.locationName,
+                model: weather.modelName, run: weather.runText, scope: scope, source: source
+            });
+            reportExport(result.ok ? result.file : file, result.ok ? "" : result.error, true);
+            return result.ok;
+        }
+        if (format !== "png") return false;
+        exportingReadings = true;
+        return chartExporter.savePng(file, [inspector.readingsItem], {
+            title: weather.locationName + " · odczyt parametrów · " + scope,
+            details: weather.formatTime(selectedTime, "ddd d MMM yyyy · HH:mm t") + "\n" + weather.modelName + " · obliczenia: " + weather.runText,
+            source: source, background: Kirigami.Theme.backgroundColor, foreground: Kirigami.Theme.textColor
+        });
+    }
+    ReadingsExporter { id: readingsExporter }
+    Dialogs.FileDialog {
+        id: readingFileDialog
+        objectName: "readingExportDialog"
+        property string format: "png"
+        title: format === "csv" ? "Zapisz odczyt parametrów jako CSV" : "Zapisz odczyt parametrów jako PNG"
+        fileMode: Dialogs.FileDialog.SaveFile
+        nameFilters: format === "csv" ? ["Dane CSV (*.csv)"] : ["Obraz PNG (*.png)"]
+        defaultSuffix: format
+        currentFolder: StandardPaths.writableLocation(format === "csv" ? StandardPaths.DocumentsLocation : StandardPaths.PicturesLocation)
+        onAccepted: root.exportReadingsToFile(selectedFile, format)
+    }
     ChartExporter {
         id: chartExporter
         objectName: "chartExporter"
-        onSaved: (file, path) => { root.exportFailed = false; root.exportedFile = file; root.exportMessage = "Zapisano wybrane wykresy."; root.exportItems = []; root.exportReported(); ExportNotifications.saved(file, "Wyeksportowano wykresy"); }
-        onFailed: message => { root.exportFailed = true; root.exportMessage = message; root.exportItems = []; root.exportReported(); }
+        onSaved: (file, path) => root.reportExport(file, "", root.exportingReadings)
+        onFailed: message => root.reportExport(root.exportedFile, message, root.exportingReadings)
     }
     Dialogs.FileDialog {
         id: chartFileDialog
@@ -538,6 +596,8 @@ Item {
         allParameters: root.allProbeParameters
         details: root.inspectorDetails
         highlightedKeys: root.selectedFieldKeys
+        exportBusy: chartExporter.busy
+        onExportRequested: format => root.chooseReadingExport(format)
         onPinToggled: root.pinned = !root.pinned
         onPointerLeft: closeProbe.restart()
         onClosed: { root.selectedTime = 0; root.pinned = false; }
