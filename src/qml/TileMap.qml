@@ -9,6 +9,8 @@ Item {
     property real longitude: 21.0122
     property real markerLatitude: latitude
     property real markerLongitude: longitude
+    property string markerName: ""
+    property var places: []
     property int zoom: 7
     property var weatherLayer: null
     property bool active: true
@@ -22,6 +24,7 @@ Item {
     readonly property bool hasFrame: front !== null
     readonly property int layerRevision: weatherLayer ? weatherLayer.revision : 0
     signal coordinateSelected(real latitude, real longitude)
+    signal placeSelected(string name, real latitude, real longitude)
     signal frameCommitted()
     readonly property real worldSize: 256 * Math.pow(2, zoom)
     readonly property real centerX: (longitude + 180) / 360 * worldSize
@@ -30,6 +33,18 @@ Item {
     readonly property int rows: Math.max(1, Math.ceil((centerY + height / 2) / 256) - firstY)
     readonly property int firstX: Math.floor((centerX - width / 2) / 256)
     readonly property int firstY: Math.floor((centerY - height / 2) / 256)
+    readonly property var namedPlaces: {
+        const result = places.filter(place => place.name && Number.isFinite(Number(place.latitude)) && Number.isFinite(Number(place.longitude)));
+        if (markerName.length && !result.some(place => sameCoordinates(place.latitude, place.longitude, markerLatitude, markerLongitude)))
+            result.push({name: markerName, latitude: markerLatitude, longitude: markerLongitude});
+        return result;
+    }
+    function sameCoordinates(lat1, lon1, lat2, lon2) { return Math.abs(lat1-lat2) < 0.000001 && Math.abs(lon1-lon2) < 0.000001; }
+    function positionFor(lat, lon) {
+        const rawX = (lon + 180) / 360 * worldSize - centerX;
+        const dx = ((rawX + worldSize/2) % worldSize + worldSize) % worldSize - worldSize/2;
+        return Qt.point(width/2 + dx, height/2 + projectY(lat) - centerY);
+    }
     property real dragX: 0
     property real dragY: 0
     clip: true
@@ -138,13 +153,64 @@ Item {
     }
     Rectangle { anchors.fill: parent; color: Kirigami.Theme.alternateBackgroundColor }
     Item { id: frameContainer; anchors.fill: parent }
+    Item {
+        anchors.fill: parent
+        TapHandler {
+            onTapped: eventPoint => {
+                const coordinate = root.atPoint(eventPoint.position.x, eventPoint.position.y);
+                root.coordinateSelected(coordinate.latitude, coordinate.longitude);
+            }
+        }
+    }
     Rectangle {
-        x: (root.markerLongitude + 180) / 360 * root.worldSize - root.centerX + root.width / 2 - width / 2
-        y: root.projectY(root.markerLatitude) - root.centerY + root.height / 2 - height / 2
+        readonly property point position: root.positionFor(root.markerLatitude, root.markerLongitude)
+        x: position.x - width/2
+        y: position.y - height/2
+        visible: !root.namedPlaces.some(place => root.sameCoordinates(place.latitude, place.longitude, root.markerLatitude, root.markerLongitude))
         width: 18; height: 18; radius: 9
         color: Kirigami.Theme.highlightColor
         border.color: "white"
         border.width: 3
+    }
+    Item {
+        anchors.fill: parent
+        z: 1
+        Repeater {
+            model: root.namedPlaces
+            delegate: Item {
+                id: placeMarker
+                required property var modelData
+                required property int index
+                readonly property point position: root.positionFor(Number(modelData.latitude), Number(modelData.longitude))
+                readonly property bool current: root.sameCoordinates(modelData.latitude, modelData.longitude, root.markerLatitude, root.markerLongitude)
+                anchors.fill: parent
+                z: current ? 1 : 0
+                visible: position.x >= 0 && position.x <= root.width && position.y >= 0 && position.y <= root.height
+                Rectangle {
+                    x: placeMarker.position.x - width/2
+                    y: placeMarker.position.y - height/2
+                    width: 12; height: 12; radius: 6
+                    color: placeMarker.current ? Kirigami.Theme.highlightColor : Kirigami.Theme.neutralTextColor
+                    border.color: Kirigami.Theme.backgroundColor
+                    border.width: 2
+                }
+                Button {
+                    objectName: "map-place-label-" + placeMarker.index
+                    readonly property point coordinatePosition: placeMarker.position
+                    text: placeMarker.modelData.name
+                    width: Math.min(implicitWidth, 180, Math.max(1, root.width - 16))
+                    x: Math.max(4, Math.min(root.width - width - 4, placeMarker.position.x + width + 14 <= root.width ? placeMarker.position.x + 10 : placeMarker.position.x - width - 10))
+                    y: Math.max(4, Math.min(root.height - height - 4, placeMarker.position.y - height/2))
+                    highlighted: placeMarker.current
+                    font.bold: placeMarker.current
+                    onClicked: root.placeSelected(placeMarker.modelData.name, Number(placeMarker.modelData.latitude), Number(placeMarker.modelData.longitude))
+                    ToolTip.text: "Pokaż prognozę: " + text
+                    ToolTip.visible: hovered
+                    Accessible.name: ToolTip.text
+                    Accessible.description: placeMarker.current ? "Wybrana lokalizacja" : ""
+                }
+            }
+        }
     }
     DragHandler {
         target: null
@@ -157,14 +223,9 @@ Item {
             root.dragY = translation.y;
         }
     }
-    TapHandler {
-        onTapped: eventPoint => {
-            const coordinate = root.atPoint(eventPoint.position.x, eventPoint.position.y);
-            root.coordinateSelected(coordinate.latitude, coordinate.longitude);
-        }
-    }
     MapWheelHandler { onZoomRequested: (steps, position) => root.zoomAt(steps, position.x, position.y) }
     Column {
+        z: 2
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 8
@@ -172,6 +233,7 @@ Item {
         Button { text: "−"; width: 36; onClicked: root.zoomAt(-1, root.width / 2, root.height / 2) }
     }
     Rectangle {
+        z: 2
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         width: copyright.implicitWidth + 12
