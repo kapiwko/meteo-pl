@@ -15,15 +15,14 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         spacing: 24
         Label { text: root.weather.temperatureText; font.pointSize: 24; font.bold: true }
-        Kirigami.Icon { source: root.weather.weatherIcon; Layout.preferredWidth: 64; Layout.preferredHeight: 64 }
+        WeatherSymbol { id: weatherSymbol; weather: root.weather; Layout.preferredWidth: 64; Layout.preferredHeight: 64 }
         ColumnLayout {
             Label { text: "Wiatr"; opacity: 0.65; font.pointSize: 9 }
             Label { text: root.weather.windText }
         }
     }
-    Label { Layout.fillWidth: true; text: root.weather.summaryTime; horizontalAlignment: Text.AlignHCenter; opacity: 0.65; font.pointSize: 9 }
+    Label { Layout.fillWidth: true; text: weatherSymbol.loading ? "Pobieranie prognozy…" : root.weather.summaryTime; horizontalAlignment: Text.AlignHCenter; opacity: 0.65; font.pointSize: 9 }
     Kirigami.InlineMessage { Layout.fillWidth: true; text: root.weather.error; visible: text.length > 0; type: Kirigami.MessageType.Warning }
-    BusyIndicator { Layout.alignment: Qt.AlignHCenter; running: root.weather.busy && !root.weather.hasData; visible: running }
     GridLayout {
         id: forecastGrid
         Layout.fillWidth: true

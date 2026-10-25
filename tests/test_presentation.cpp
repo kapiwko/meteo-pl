@@ -73,6 +73,42 @@ private slots:
         QVERIFY(model.series().isEmpty());
         QCOMPARE(model.temperatureText(), QStringLiteral("—"));
     }
+    void changingLocationShowsLoadingBeforeTheRequestStarts()
+    {
+        WeatherModel model;
+        model.setAutoRefresh(false);
+        model.refresh(false);
+        QVERIFY(model.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastHeader");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> header(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)}}));
+        QVERIFY(header);
+        auto *symbol = header->findChild<QObject *>("headerWeatherSymbol");
+        QVERIFY(symbol);
+        auto *indicator = symbol->findChild<QObject *>("forecastLoadingIndicator");
+        auto *icon = symbol->findChild<QObject *>("forecastWeatherIcon");
+        auto *time = header->findChild<QObject *>("forecastSummaryTime");
+        QVERIFY(indicator); QVERIFY(icon); QVERIFY(time);
+        QVERIFY(!header->property("loading").toBool());
+        QVERIFY(!indicator->property("running").toBool());
+        QVERIFY(!icon->property("source").toString().isEmpty());
+        model.setAutoRefresh(true);
+        QVERIFY(!header->property("loading").toBool()); // Background refresh keeps the weather icon.
+        model.setLocationName("Kielce"); model.setLatitude(50.8661); model.setLongitude(20.6286);
+        // Do not process events: the deferred request has not started, and there must be no placeholder flash.
+        QVERIFY(!model.busy());
+        QVERIFY(!model.hasData());
+        QVERIFY(header->property("loading").toBool());
+        QVERIFY(indicator->property("running").toBool());
+        QVERIFY(icon->property("source").toString().isEmpty());
+        QCOMPARE(time->property("text").toString(), "Pobieranie prognozy…");
+        model.setAutoRefresh(false); // Cancel the deferred request; this regression test stays offline.
+        QVERIFY(!header->property("loading").toBool());
+        model.setLocationName("");
+        QVERIFY(!indicator->property("running").toBool());
+    }
     void nativeGpuRendererDrawsClippedGeometry()
     {
         if (!qEnvironmentVariableIsSet("METEO_REQUIRE_GPU")) QSKIP("Separate GPU run checks native scene graph rendering");

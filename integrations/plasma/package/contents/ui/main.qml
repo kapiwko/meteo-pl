@@ -48,7 +48,12 @@ PlasmoidItem {
             id: compactRow
             anchors.centerIn: parent
             spacing: 3
-            Kirigami.Icon { source: forecastModel.hasData ? forecastModel.weatherIcon : Qt.resolvedUrl("../images/meteo.svg"); Layout.preferredWidth: 22; Layout.preferredHeight: 22 }
+            Item {
+                Layout.preferredWidth: 22
+                Layout.preferredHeight: 22
+                WeatherSymbol { id: panelSymbol; anchors.fill: parent; weather: forecastModel }
+                Kirigami.Icon { anchors.fill: parent; visible: !forecastModel.hasData && !panelSymbol.loading; source: Qt.resolvedUrl("../images/meteo.svg") }
+            }
             Label { text: forecastModel.temperatureText }
         }
     }

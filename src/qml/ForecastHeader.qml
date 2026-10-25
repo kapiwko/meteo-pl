@@ -9,6 +9,7 @@ GridLayout {
     objectName: "forecastHeader"
     required property WeatherModel weather
     signal locationSelected(string name, real latitude, real longitude)
+    readonly property bool loading: weatherSymbol.loading
     readonly property var solar: weather.solarTimes
     readonly property bool wide: width >= 660
     columns: wide ? 2 : 1
@@ -26,11 +27,12 @@ GridLayout {
             visible: root.weather.locationName.length > 0
             Layout.fillWidth: true
             spacing: Kirigami.Units.largeSpacing
-            Kirigami.Icon {
-                source: root.weather.weatherIcon
+            WeatherSymbol {
+                id: weatherSymbol
+                objectName: "headerWeatherSymbol"
+                weather: root.weather
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
-                Accessible.ignored: true
             }
             Label {
                 text: root.weather.temperatureText
@@ -43,7 +45,8 @@ GridLayout {
                 spacing: Kirigami.Units.smallSpacing / 2
                 Label {
                     Layout.fillWidth: true
-                    text: root.weather.summaryTime + (root.weather.hasData && root.weather.utc ? " UTC" : "")
+                    objectName: "forecastSummaryTime"
+                    text: root.loading ? "Pobieranie prognozy…" : root.weather.summaryTime + (root.weather.hasData && root.weather.utc ? " UTC" : "")
                     wrapMode: Text.WordWrap
                 }
                 Label {

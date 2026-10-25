@@ -309,6 +309,7 @@ Item {
             contentItem: ColumnLayout {
             spacing: 10
             ForecastHeader {
+                id: forecastHeader
                 Layout.fillWidth: true
                 weather: root.weather
                 onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
@@ -316,11 +317,10 @@ Item {
             Kirigami.InlineMessage { visible: root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.archive; text: "Archiwalne uruchomienie modelu. Daty i godziny wykresu odnoszą się do wybranej prognozy."; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.stale; text: "Prognoza może być nieaktualna. Ostatnie pobranie: " + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
-            BusyIndicator { Layout.alignment: Qt.AlignHCenter; running: root.weather.busy; visible: running && !root.weather.hasData }
             Kirigami.PlaceholderMessage {
                 Layout.fillWidth: true
-                visible: !root.weather.hasData && !root.weather.busy
-                icon.name: "weather-none-available"
+                visible: !root.weather.hasData && !forecastHeader.loading
+                icon.name: "mark-location"
                 text: "Brak prognozy"
                 explanation: "Wybierz miejscowość i pobierz meteogram."
                 helpfulAction: Kirigami.Action { text: "Wybierz lokalizację"; onTriggered: root.configureRequested() }
