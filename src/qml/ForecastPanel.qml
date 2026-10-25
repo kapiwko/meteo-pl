@@ -81,12 +81,27 @@ Item {
             Layout.fillWidth: true
             currentIndex: root.viewMode
             onCurrentIndexChanged: root.viewMode = currentIndex
-            TabButton { width: Math.max(90, root.width / 6); text: "Meteogram" }
-            TabButton { width: Math.max(90, root.width / 6); text: "Godzinowo" }
-            TabButton { width: Math.max(90, root.width / 6); text: "Dni" }
-            TabButton { width: Math.max(90, root.width / 6); text: "Mapy" }
-            TabButton { width: Math.max(90, root.width / 6); text: "Synoptyk" }
-            TabButton { width: Math.max(90, root.width / 6); text: "Artykuły" }
+            Repeater {
+                model: [
+                    {label: "Meteogram", icon: "office-chart-line"},
+                    {label: "Godzinowo", icon: "chronometer"},
+                    {label: "Dni", icon: "view-calendar"},
+                    {label: "Mapy", icon: "globe"},
+                    {label: "Synoptyk", icon: "dialog-messages"},
+                    {label: "Artykuły", icon: "view-list-text"}
+                ]
+                delegate: TabButton {
+                    required property var modelData
+                    width: root.width / 6
+                    text: modelData.label
+                    icon.name: modelData.icon
+                    icon.width: 16; icon.height: 16
+                    display: root.width < 720 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
+                    Accessible.name: text
+                    ToolTip.text: text
+                    ToolTip.visible: hovered
+                }
+            }
         }
         Loader {
             Layout.fillWidth: true

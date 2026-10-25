@@ -25,8 +25,8 @@ Dialog {
         TabBar {
             id: sections
             Layout.fillWidth: true
-            TabButton { text: "Prognoza" }
-            TabButton { text: "Wykresy i aplikacja" }
+            TabButton { text: "Prognoza"; icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
+            TabButton { text: "Wykresy i aplikacja"; icon.name: "configure"; icon.width: 16; icon.height: 16 }
         }
         StackLayout {
             Layout.fillWidth: true

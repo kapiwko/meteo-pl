@@ -3,6 +3,7 @@
 Aplikacja Qt 6 / Kirigami oraz plasmoid Plasma 6 do przeglądania prognoz
 ICM UW z meteo.pl. Wspólny interfejs oferuje rozbudowane meteogramy, prognozę
 godzinową i dzienną, mapy oraz komentarz synoptyka i artykuły.
+Karty nawigacji mają ikony; w wąskim widoku pozostają same ikony z podpowiedziami.
 
 ## Uruchomienie
 
