@@ -168,17 +168,31 @@ QSGNode *GpuPlot::updatePaintNode(QSGNode *old,UpdatePaintNodeData *)
         if (!m_softwareReported) { m_softwareReported=true; QMetaObject::invokeMethod(this,[this]{emit softwareBackend();},Qt::QueuedConnection); }
         return nullptr;
     }
-    auto *node=static_cast<QSGGeometryNode *>(old);
-    if (!node) {
-        node=new QSGGeometryNode;
-        auto *geometry=new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(),0);
-        geometry->setDrawingMode(QSGGeometry::DrawTriangles);
-        node->setGeometry(geometry);node->setFlag(QSGNode::OwnsGeometry);
-        node->setMaterial(new QSGVertexColorMaterial);node->setFlag(QSGNode::OwnsMaterial);
+    // Qt Quick batches geometry with 16-bit indices. A dense chart can exceed
+    // that limit even without an index buffer of its own (e.g. cloud circles).
+    // Keep each node below the limit and split only at triangle boundaries.
+    constexpr qsizetype chunkSize = 60000;
+    auto *root = old ? old : new QSGNode;
+    auto *child = root->firstChild();
+    for (qsizetype first=0; first<m_vertices.size(); first+=chunkSize) {
+        auto *node=static_cast<QSGGeometryNode *>(child);
+        if (!node) {
+            node=new QSGGeometryNode;
+            auto *geometry=new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(),0);
+            geometry->setDrawingMode(QSGGeometry::DrawTriangles);
+            node->setGeometry(geometry);node->setFlag(QSGNode::OwnsGeometry);
+            node->setMaterial(new QSGVertexColorMaterial);node->setFlag(QSGNode::OwnsMaterial);
+            root->appendChildNode(node);
+        }
+        const auto count=std::min(chunkSize,m_vertices.size()-first);
+        auto *geometry=node->geometry();geometry->allocate(count);
+        auto *vertices=geometry->vertexDataAsColoredPoint2D();
+        for (qsizetype i=0;i<count;++i) { const auto &v=m_vertices[first+i];vertices[i].set(v.x,v.y,v.r,v.g,v.b,v.a); }
+        node->markDirty(QSGNode::DirtyGeometry);
+        child=node->nextSibling();
     }
-    auto *geometry=node->geometry();geometry->allocate(m_vertices.size());
-    auto *vertices=geometry->vertexDataAsColoredPoint2D();
-    for (qsizetype i=0;i<m_vertices.size();++i) { const auto &v=m_vertices[i];vertices[i].set(v.x,v.y,v.r,v.g,v.b,v.a); }
-    node->markDirty(QSGNode::DirtyGeometry);
-    return node;
+    while (child) {
+        auto *next=child->nextSibling();root->removeChildNode(child);delete child;child=next;
+    }
+    return root;
 }
