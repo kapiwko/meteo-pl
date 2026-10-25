@@ -2,6 +2,9 @@
 #include "ImageCache.hpp"
 #include <QBuffer>
 #include <QCoreApplication>
+#include <QCryptographicHash>
+#include <QDir>
+#include <QFileInfo>
 #include <QImageReader>
 #include <QNetworkReply>
 #include <QRunnable>
@@ -19,13 +22,35 @@ bool allowsReuse(const QByteArray &header)
     return !control.contains("no-store") && !control.contains("no-cache")
         && !immediatelyStale.match(QString::fromLatin1(control)).hasMatch();
 }
+QDateTime expirationFor(const QNetworkReply *reply, const QNetworkCacheMetaData &metadata, const QDateTime &now)
+{
+    if (metadata.expirationDate().isValid()) return metadata.expirationDate();
+    static const QRegularExpression maxAge(QStringLiteral(R"((?:^|,)\s*max-age\s*=\s*"?(\d+))"));
+    const auto match = maxAge.match(QString::fromLatin1(reply->rawHeader("Cache-Control").toLower()));
+    if (match.hasMatch()) {
+        bool ok = false;
+        const auto seconds = match.captured(1).toLongLong(&ok);
+        if (ok) return now.addSecs(std::min<qint64>(seconds, 7*86400));
+    }
+    const auto expires = QDateTime::fromString(QString::fromLatin1(reply->rawHeader("Expires")), Qt::RFC2822Date);
+    return expires.isValid() ? expires : now.addSecs(1800);
+}
 }
 ImageCache::ImageCache(const QString &directory, QObject *parent)
-    : QObject(parent), m_disk(new QNetworkDiskCache(&m_network))
+    : QObject(parent)
 {
-    m_disk->setCacheDirectory(directory);
-    m_disk->setMaximumCacheSize(256 * 1024 * 1024);
-    m_network.setCache(m_disk);
+    const auto locks = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation) + QStringLiteral("/meteo-pl-locks");
+    if (QDir().mkpath(directory) && QDir().mkpath(locks)) {
+        const auto identity = QFileInfo(directory).canonicalFilePath().toUtf8();
+        m_diskLock = std::make_unique<QLockFile>(locks + '/' + QCryptographicHash::hash(identity, QCryptographicHash::Sha256).toHex() + ".lock");
+        m_diskLock->setStaleLockTime(0);
+        if (m_diskLock->tryLock(0)) {
+            m_disk = new QNetworkDiskCache(&m_network);
+            m_disk->setCacheDirectory(directory);
+            m_disk->setMaximumCacheSize(256 * 1024 * 1024);
+            m_network.setCache(m_disk);
+        }
+    }
     m_decoder.setMaxThreadCount(2);
 }
 ImageCache *ImageCache::shared()
@@ -38,7 +63,7 @@ void ImageCache::clear()
 {
     ++m_generation;
     m_images.clear();
-    m_disk->clear();
+    if (m_disk) m_disk->clear();
 }
 void ImageCache::request(const QUrl &url, Completion completion)
 {
@@ -56,7 +81,7 @@ void ImageCache::request(const QUrl &url, Completion completion)
     const auto generation = m_generation;
     QNetworkRequest request(url);
     request.setTransferTimeout(20000);
-    const auto stored = m_disk->metaData(url);
+    const auto stored = m_disk ? m_disk->metaData(url) : QNetworkCacheMetaData();
     bool fresh = stored.isValid() && stored.expirationDate() > QDateTime::currentDateTimeUtc();
     for (const auto &header : stored.rawHeaders())
         if (header.first.compare("Cache-Control", Qt::CaseInsensitive) == 0 && !allowsReuse(header.second)) fresh = false;
@@ -70,16 +95,15 @@ void ImageCache::request(const QUrl &url, Completion completion)
     // A total deadline also covers replies that trickle bytes without finishing.
     QTimer::singleShot(25000, reply, [reply] { if (!reply->isFinished()) reply->abort(); });
     connect(reply, &QNetworkReply::finished, this, [this, reply, key, generation] {
-        if (generation != m_generation) m_disk->remove(reply->url());
+        if (generation != m_generation && m_disk) m_disk->remove(reply->url());
         const auto bytes = reply->readAll();
         const auto error = reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
         const auto now = QDateTime::currentDateTimeUtc();
-        const auto metadata = m_disk->metaData(reply->url());
+        const auto metadata = m_disk ? m_disk->metaData(reply->url()) : QNetworkCacheMetaData();
         const auto cacheControl = reply->rawHeader("Cache-Control").toLower();
         const bool cacheable = allowsReuse(cacheControl);
         const bool needsExpiry = cacheable && !reply->hasRawHeader("Expires") && !cacheControl.contains("max-age");
-        const auto expiry = needsExpiry ? now.addSecs(1800)
-            : metadata.expirationDate().isValid() ? metadata.expirationDate() : now;
+        const auto expiry = expirationFor(reply, metadata, now);
         QNetworkCacheMetaData fallback;
         if (needsExpiry) {
             // old.meteo.pl supplies Last-Modified but no freshness lifetime.
@@ -111,7 +135,7 @@ void ImageCache::request(const QUrl &url, Completion completion)
             }
             QMetaObject::invokeMethod(this, [this, key, image, failure, expiry, cacheable, fallback, bytes, generation] {
                 if (!image.isNull() && cacheable && generation == m_generation) {
-                    if (fallback.isValid()) {
+                    if (m_disk && fallback.isValid()) {
                         if (auto *device = m_disk->prepare(fallback)) {
                             if (device->write(bytes) == bytes.size()) m_disk->insert(device);
                             else delete device;
