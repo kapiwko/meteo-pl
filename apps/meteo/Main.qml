@@ -34,6 +34,7 @@ Kirigami.ApplicationWindow {
         utc: UserPreferences.utc
     }
     pageStack.initialPage: Kirigami.Page {
+        padding: 0
         title: "Meteogram"
         actions: [
             Kirigami.Action { text: "Lokalizacja"; icon.name: "mark-location"; onTriggered: locationDialog.open() },
