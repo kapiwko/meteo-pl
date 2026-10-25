@@ -87,3 +87,5 @@ miejscowości, GPS, archiwum i profile parametrów meteogramu.
 Modele QML udostępniają wyszukiwanie nazw miejscowości, regiony, ulubione, ostatnie miejsca oraz zapisywane profile wykresów.
 
 Model prezentacji udostępnia archiwalne starty, dane godzinowe i dzienne, inspektor parametrów oraz pory wschodu i zachodu słońca.
+
+Mapy UM4/GFS i obrazy tematyczne mają buforowane klatki, cache obrazów, przeciąganie oraz powiększanie kółkiem myszy.
