@@ -61,15 +61,19 @@ ColumnLayout {
         title: "Pamięć podręczna"
         padding: Kirigami.Units.largeSpacing
         Layout.fillWidth: true
-        contentItem: Kirigami.FormLayout {
-            Label { Kirigami.FormData.label: "Prognozy:"; text: CacheStorage.forecastSize }
-            Label { Kirigami.FormData.label: "Artykuły i komentarze:"; text: CacheStorage.editorialSize }
-            Label { Kirigami.FormData.label: "Obrazy i mapy:"; text: CacheStorage.imageSize }
-            Label { Kirigami.FormData.label: "Wyszukiwanie i modele:"; text: CacheStorage.lookupSize }
-            RowLayout {
-                Kirigami.FormData.label: "Razem na dysku:"
-                Label { text: CacheStorage.sizeText; font.bold: true }
-                BusyIndicator { running: CacheStorage.busy; visible: running; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.largeSpacing
+            Kirigami.FormLayout {
+                Layout.fillWidth: true
+                Label { Kirigami.FormData.label: "Prognozy:"; text: CacheStorage.forecastSize }
+                Label { Kirigami.FormData.label: "Artykuły i komentarze:"; text: CacheStorage.editorialSize }
+                Label { Kirigami.FormData.label: "Obrazy i mapy:"; text: CacheStorage.imageSize }
+                Label { Kirigami.FormData.label: "Wyszukiwanie i modele:"; text: CacheStorage.lookupSize }
+                RowLayout {
+                    Kirigami.FormData.label: "Razem na dysku:"
+                    Label { text: CacheStorage.sizeText; font.bold: true }
+                    BusyIndicator { running: CacheStorage.busy; visible: running; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
+                }
             }
             Button {
                 objectName: "clearCacheButton"
