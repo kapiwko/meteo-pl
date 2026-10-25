@@ -24,6 +24,16 @@ private slots:
         QVERIFY(result);
         QVERIFY(!result->series["airtmp_point"].values[1]);
         QVERIFY(!result->series["airtmp_point"].values[2]);
+        auto object = QJsonDocument::fromJson(forecastFixture()).object();
+        auto data = object["data"].toObject();
+        auto cloud = data["cldbse25"].toObject();
+        cloud["data"] = QJsonArray{-327276480.0, 1000.0};
+        data["cldbse25"] = cloud;
+        object["data"] = data;
+        const auto heights = Meteo::parseForecast(QJsonDocument(object).toJson());
+        QVERIFY(heights);
+        QVERIFY(!heights->series["cldbse25"].values[0]);
+        QCOMPARE(heights->series["cldbse25"].values[1].value(), 1000.0);
     }
     void rejectsBrokenDocuments()
     {

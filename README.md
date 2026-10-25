@@ -85,3 +85,5 @@ Poza zakresem tej wersji: radar, mapa lokalizacji, wyszukiwanie wszystkich
 miejscowości, GPS, archiwum i profile parametrów meteogramu.
 
 Modele QML udostępniają wyszukiwanie nazw miejscowości, regiony, ulubione, ostatnie miejsca oraz zapisywane profile wykresów.
+
+Model prezentacji udostępnia archiwalne starty, dane godzinowe i dzienne, inspektor parametrów oraz pory wschodu i zachodu słońca.

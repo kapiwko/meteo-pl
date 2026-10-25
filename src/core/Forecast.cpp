@@ -96,7 +96,11 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
             if (value.isNull()) {
                 series.values.append(std::nullopt);
             } else if (value.isDouble() && std::isfinite(value.toDouble())) {
-                series.values.append(value.toDouble());
+                // Missing cloud heights are also encoded as large negative
+                // sentinels, rather than JSON null, in the current service.
+                if ((it.key().startsWith("cldbse") || it.key() == "cldtop") && value.toDouble() < -1000)
+                    series.values.append(std::nullopt);
+                else series.values.append(value.toDouble());
             } else {
                 return fail(QStringLiteral("Niepoprawne wartości prognozy."));
             }

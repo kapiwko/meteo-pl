@@ -2,6 +2,7 @@
 
 #include "core/Forecast.hpp"
 #include "network/MeteoClient.hpp"
+#include "network/JsonRequest.hpp"
 #include <QTimer>
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
@@ -30,6 +31,17 @@ class WeatherModel : public QObject {
     Q_PROPERTY(QVariantMap series READ series NOTIFY stateChanged)
     Q_PROPERTY(double firstTimestamp READ firstTimestamp NOTIFY stateChanged)
     Q_PROPERTY(double lastTimestamp READ lastTimestamp NOTIFY stateChanged)
+    Q_PROPERTY(QVariantList chartGroups READ chartGroups NOTIFY stateChanged)
+    Q_PROPERTY(QVariantList dailyForecast READ dailyForecast NOTIFY stateChanged)
+    Q_PROPERTY(QVariantList hourlyForecast READ hourlyForecast NOTIFY stateChanged)
+    Q_PROPERTY(QVariantList nightIntervals READ nightIntervals NOTIFY stateChanged)
+    Q_PROPERTY(QVariantList availableRuns READ availableRuns NOTIFY runsChanged)
+    Q_PROPERTY(double requestedRun READ requestedRun WRITE setRequestedRun NOTIFY runsChanged)
+    Q_PROPERTY(bool archive READ archive NOTIFY stateChanged)
+    Q_PROPERTY(QString windUnit READ windUnit WRITE setWindUnit NOTIFY stateChanged)
+    Q_PROPERTY(bool utc READ utc WRITE setUtc NOTIFY stateChanged)
+    Q_PROPERTY(QUrl originalLookupUrl READ originalLookupUrl NOTIFY stateChanged)
+    Q_PROPERTY(QString sunTimes READ sunTimes NOTIFY stateChanged)
 public:
     explicit WeatherModel(QObject *parent = nullptr);
     double latitude() const { return m_latitude; }
@@ -53,6 +65,24 @@ public:
     QVariantMap series() const { return m_series; }
     double firstTimestamp() const { return m_forecast ? m_forecast->firstTimestamp() : 0; }
     double lastTimestamp() const { return m_forecast ? m_forecast->lastTimestamp() : 0; }
+    QVariantList chartGroups() const;
+    QVariantList dailyForecast() const;
+    QVariantList hourlyForecast() const;
+    QVariantList nightIntervals() const;
+    QVariantList availableRuns() const { return m_runs; }
+    double requestedRun() const { return m_requestedRun; }
+    bool archive() const { return m_requestedRun > 0; }
+    QString windUnit() const { return m_windUnit; }
+    bool utc() const { return m_utc; }
+    QUrl originalLookupUrl() const;
+    QString sunTimes() const;
+    void setRequestedRun(double value);
+    void setWindUnit(const QString &value);
+    void setUtc(bool value);
+    Q_INVOKABLE QVariantList detailsAt(double timestamp) const;
+    Q_INVOKABLE double nearestTimestamp(double timestamp) const;
+    Q_INVOKABLE QString formatTime(double timestamp, const QString &pattern = QStringLiteral("ddd d MMM, HH:mm")) const;
+    Q_INVOKABLE void loadRuns();
     void setLatitude(double value);
     void setLongitude(double value);
     void setLocationName(const QString &value);
@@ -64,6 +94,7 @@ signals:
     void locationChanged();
     void autoRefreshChanged();
     void stateChanged();
+    void runsChanged();
 
 private:
     void resetLocation();
@@ -73,8 +104,10 @@ private:
     void saveCache(const QByteArray &json) const;
     qint64 summaryTimestamp() const;
     QString valueText(const QString &key, const QString &suffix, double scale = 1) const;
+    double displayScale(const QString &key, double baseScale) const;
 
     Meteo::MeteoClient m_client;
+    Meteo::JsonRequest m_runsRequest;
     QTimer m_debounce;
     QTimer m_refreshTimer;
     QTimer m_clockTimer;
@@ -89,4 +122,8 @@ private:
     QDateTime m_updated;
     std::optional<Meteo::Forecast> m_forecast;
     QVariantMap m_series;
+    QVariantList m_runs;
+    qint64 m_requestedRun = 0;
+    QString m_windUnit = QStringLiteral("m/s");
+    bool m_utc = false;
 };

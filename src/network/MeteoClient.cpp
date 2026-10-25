@@ -5,6 +5,8 @@
 #include <QJsonObject>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QJsonArray>
+#include <algorithm>
 
 namespace Meteo {
 namespace {
@@ -59,7 +61,7 @@ void MeteoClient::readReply(QNetworkReply *reply, quint64 generation, const std:
     });
 }
 
-void MeteoClient::fetch(double latitude, double longitude, const QString &model)
+void MeteoClient::fetch(double latitude, double longitude, const QString &model, qint64 requestedRun)
 {
     cancel();
     if (!validLocation(latitude, longitude, model)) {
@@ -68,8 +70,16 @@ void MeteoClient::fetch(double latitude, double longitude, const QString &model)
     }
     const auto generation = m_generation;
     auto request = requestFor(m_endpoint.resolved(QUrl(QStringLiteral("/meteorograms/available"))));
-    readReply(m_network.get(request), generation, [this, latitude, longitude, model, generation](const QByteArray &body) {
-        const auto run = latestRun(body, model);
+    readReply(m_network.get(request), generation, [this, latitude, longitude, model, generation, requestedRun](const QByteArray &body) {
+        QList<qint64> runs;
+        for (const auto &value : QJsonDocument::fromJson(body).object().value(model).toArray()) {
+            const auto timestamp = value.isString() ? value.toString().toLongLong() : value.toInteger();
+            if (timestamp > 0 && !runs.contains(timestamp)) runs.append(timestamp);
+        }
+        std::sort(runs.begin(), runs.end(), std::greater<>());
+        emit runsReceived(runs);
+        const auto run = requestedRun > 0 && runs.contains(requestedRun) ? std::optional<qint64>(requestedRun)
+            : requestedRun > 0 ? std::nullopt : latestRun(body, model);
         if (!run) {
             emit failed(QStringLiteral("Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."));
             return;
