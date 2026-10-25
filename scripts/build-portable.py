@@ -60,6 +60,17 @@ def configure_craft(craft_root, cache_url=None):
     with path.open("w", encoding="utf-8") as output: settings.write(output)
 
 
+def build_environment(target):
+    environment = os.environ.copy()
+    if target != "android":
+        # GitHub's desktop runners also ship an Android SDK. Craft treats the
+        # presence of its variables as an explicit cross-compilation request.
+        for key in list(environment):
+            if key.startswith("ANDROID_"): environment.pop(key)
+    environment["METEO_SOURCE_DIR"] = str(ROOT)
+    return environment
+
+
 def sign_android(apk, dist):
     sdk = Path(os.environ.get("ANDROID_SDK_ROOT", os.environ.get("ANDROID_HOME", "")))
     version = os.environ.get("ANDROID_BUILD_TOOLS_REVISION")
@@ -120,8 +131,7 @@ def build(args):
     work.mkdir(parents=True, exist_ok=True); dist.mkdir(parents=True, exist_ok=True)
     bootstrap = work / "craft-bootstrap"
     checkout("https://github.com/KDE/craft.git", CRAFT_REVISION, bootstrap)
-    environment = os.environ.copy()
-    environment["METEO_SOURCE_DIR"] = str(ROOT)
+    environment = build_environment(args.target)
     # Craft's CA bundle is installed during bootstrap, so the first download
     # must use an existing trust store. Keep certificate verification enabled.
     certificates = ssl.get_default_verify_paths().cafile

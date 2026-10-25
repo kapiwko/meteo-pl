@@ -14,6 +14,17 @@ spec.loader.exec_module(portable)
 
 
 class PortablePackagingTest(unittest.TestCase):
+    def test_desktop_build_ignores_preinstalled_android_sdk(self):
+        sdk={"ANDROID_SDK_ROOT":"/sdk","ANDROID_NDK":"/ndk","ANDROID_HOME":"/sdk","PATH":"/native/bin"}
+        with patch.dict(portable.os.environ,sdk,clear=True):
+            for target in ("macos","windows"):
+                environment=portable.build_environment(target)
+                self.assertFalse(any(key.startswith("ANDROID_") for key in environment))
+                self.assertEqual(environment["PATH"],"/native/bin")
+            environment=portable.build_environment("android")
+            self.assertEqual(environment["ANDROID_NDK"],"/ndk")
+            self.assertEqual(portable.os.environ["ANDROID_NDK"],"/ndk")
+
     def test_craft_keeps_existing_paths_and_adds_local_blueprints_once(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary); (root/"etc").mkdir()
