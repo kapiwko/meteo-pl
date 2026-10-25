@@ -1,4 +1,6 @@
 #include "WeatherModel.hpp"
+#include "GpuPlot.hpp"
+#include <QSGRendererInterface>
 #include "Fixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
@@ -60,6 +62,37 @@ private slots:
         QVERIFY(!model.hasData());
         QVERIFY(model.series().isEmpty());
         QCOMPARE(model.temperatureText(), QStringLiteral("—"));
+    }
+    void nativeGpuRendererDrawsClippedGeometry()
+    {
+        if (!qEnvironmentVariableIsSet("METEO_REQUIRE_GPU")) QSKIP("Separate GPU run checks native scene graph rendering");
+        QQuickWindow window;
+        window.setColor(Qt::white);
+        window.resize(300, 200);
+        GpuPlot plot(window.contentItem());
+        plot.setSize({300, 200});
+        connect(&plot, &GpuPlot::paint, &plot, [&] {
+            plot.reset();
+            plot.setProperty("fillStyle", QColor("#00aa00"));
+            plot.fillRect(20,20,80,60);
+            plot.save();
+            plot.beginPath(); plot.rect(150,20,50,50); plot.clip();
+            plot.setProperty("fillStyle", QColor("#1539c0"));
+            plot.fillRect(100,0,200,100);
+            plot.restore();
+            plot.setProperty("strokeStyle", QColor("#f44336"));
+            plot.setProperty("lineWidth", 4);
+            plot.beginPath();plot.moveTo(20,150);plot.lineTo(250,150);plot.stroke();
+        });
+        window.show();
+        plot.requestPaint();
+        QTRY_VERIFY(window.rendererInterface()->graphicsApi() != QSGRendererInterface::Unknown);
+        QVERIFY2(window.rendererInterface()->graphicsApi() != QSGRendererInterface::Software, "GPU test must use the RHI scene graph");
+        QTRY_COMPARE(window.grabWindow().pixelColor(50,50), QColor("#00aa00"));
+        const auto frame=window.grabWindow();
+        QCOMPARE(frame.pixelColor(175,40),QColor("#1539c0"));
+        QCOMPARE(frame.pixelColor(120,40),QColor(Qt::white));
+        QCOMPARE(frame.pixelColor(100,150),QColor("#f44336"));
     }
     void rendersAllCharts()
     {

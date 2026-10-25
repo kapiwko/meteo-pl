@@ -34,6 +34,8 @@ qt_add_qml_module(meteo_ui
         presentation/EditorialModel.hpp
         presentation/ForecastFields.cpp
         presentation/ForecastFields.hpp
+        presentation/GpuPlot.cpp
+        presentation/GpuPlot.hpp
         presentation/LegacyMeteogramModel.cpp
         presentation/LegacyMeteogramModel.hpp
         presentation/MapImages.cpp
