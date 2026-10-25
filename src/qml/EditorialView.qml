@@ -78,7 +78,7 @@ ColumnLayout {
                     onClicked: root.selectedArticle = modelData
                     contentItem: RowLayout {
                         spacing: 16
-                        Image { source: MapImages.cached(article.modelData.image); asynchronous: true; fillMode: Image.PreserveAspectCrop; Layout.preferredWidth: 100; Layout.preferredHeight: 70; visible: source.toString().length > 0 }
+                        Image { source: MapImages.cached(article.modelData.image); cache: false; asynchronous: true; fillMode: Image.PreserveAspectCrop; Layout.preferredWidth: 100; Layout.preferredHeight: 70; visible: source.toString().length > 0 }
                         ColumnLayout {
                             Layout.fillWidth: true
                             Label { text: article.modelData.title; textFormat: Text.RichText; font.bold: true; wrapMode: Text.WordWrap; Layout.fillWidth: true }
