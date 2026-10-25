@@ -164,6 +164,15 @@ private slots:
         QCOMPARE(preferences.profile(), "classic");
         QVERIFY(preferences.showLegend());
         preferences.setShowLegend(false);
+        QCOMPARE(preferences.probeMode(), "chart");
+        preferences.setProbeMode("all");
+        UserPreferences probeReload;
+        QCOMPARE(probeReload.probeMode(), "all");
+        probeReload.setProbeMode("invalid");
+        QCOMPARE(probeReload.probeMode(), "all");
+        probeReload.setProbeMode("off");
+        QCOMPARE(preferences.probeMode(), "off");
+        probeReload.setProbeMode("chart");
         QCOMPARE(preferences.renderer(), "gpu");
         preferences.setRenderer("cpu");
         UserPreferences rendererReload;

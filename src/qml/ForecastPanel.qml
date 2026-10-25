@@ -40,6 +40,8 @@ Item {
         const style = selectedChart ? selectedChart.fields.find(field => field.key === detail.key || field.lowerKey === detail.key) : null;
         return style ? Object.assign({}, detail, {color: style.color, darkColor: style.darkColor}) : detail;
     }) : []
+    readonly property bool allProbeParameters: UserPreferences.probeMode === "all" || selectedGroup === ""
+    readonly property var inspectorDetails: allProbeParameters ? allDetails : allDetails.filter(detail => selectedFieldKeys.indexOf(detail.key) >= 0)
     readonly property var visibleCharts: {
         if (!weather.hasData || !Object.keys(weather.series).length) return [];
         return weather.configuredCharts(UserPreferences.chartLayout);
@@ -171,14 +173,17 @@ Item {
         viewportStart = Math.max(weather.firstTimestamp, Math.min(weather.lastTimestamp - span, viewportStart + delta * span / 2));
         viewportEnd = viewportStart + span;
     }
-    function showProbe(time, position, group) {
-        if (pinned) return;
+    function showProbe(time, position, group, force) {
+        if (pinned || (!force && UserPreferences.probeMode === "off")) return;
         closeProbe.stop(); selectedTime = time; selectedGroup = group;
         if (inspector.parent) {
             const fitsRight = inspector.parent.width - position.x >= inspector.width + 24;
             const idealX = fitsRight ? position.x + 16 : position.x - inspector.width - 16;
             inspector.x = Math.max(8, Math.min(inspector.parent.width - inspector.width - 8, idealX));
-            inspector.y = Math.max(8, Math.min(inspector.parent.height - inspector.height - 8, position.y - 40));
+            let idealY = position.y - 40;
+            if (position.x >= inspector.x && position.x <= inspector.x + inspector.width)
+                idealY = inspector.parent.height - position.y >= inspector.height + 24 ? position.y + 16 : position.y - inspector.height - 16;
+            inspector.y = Math.max(8, Math.min(inspector.parent.height - inspector.height - 8, idealY));
         }
         if (!inspector.opened) inspector.open();
     }
@@ -428,7 +433,10 @@ Item {
                         nights: UserPreferences.showNight ? root.weather.nightIntervals : []
                         onProbeMoved: (timestamp, position) => root.showProbe(timestamp, position, groupKey)
                         onProbeLeft: closeProbe.restart()
-                        onPinRequested: root.pinned = !root.pinned
+                        onPinRequested: (timestamp, position) => {
+                            if (root.pinned) root.pinned = false;
+                            else { root.showProbe(timestamp, position, groupKey, true); root.pinned = true; }
+                        }
                         onZoomRequested: (factor, center) => root.zoom(factor, center)
                     }
                 }
@@ -457,7 +465,7 @@ Item {
                         required property int index
                         width: parent.width
                         implicitHeight: 38
-                        onClicked: { root.pinned = false; root.showProbe(modelData.time, mapToItem(null, width/2, 0), ""); root.pinned = true; }
+                        onClicked: { root.pinned = false; root.showProbe(modelData.time, mapToItem(null, width/2, 0), "", true); root.pinned = true; }
                         background: Rectangle { color: hourRow.index % 2 ? Kirigami.Theme.alternateBackgroundColor : "transparent" }
                         contentItem: Row {
                             Label { width: 110; text: root.weather.formatTime(hourRow.modelData.time, "ddd HH:mm"); font.bold: true }
@@ -516,57 +524,23 @@ Item {
     }
     Component { id: mapsComponent; Pane { padding: Kirigami.Units.largeSpacing; background: null; contentItem: WeatherMap { weather: root.weather; onLocationSelected: (name, latitude, longitude) => { root.locationSelected(name, latitude, longitude); root.viewMode = 0; } } } }
     Component { id: contentComponent; Pane { padding: Kirigami.Units.largeSpacing; background: null; contentItem: EditorialView { commentary: root.viewMode === 4 } } }
-    Timer { id: closeProbe; interval: 220; onTriggered: if (!root.pinned && !inspectorHover.hovered) inspector.close() }
-    Popup {
+    Connections {
+        target: UserPreferences
+        function onDisplayChanged() { if (UserPreferences.probeMode === "off" && !root.pinned) inspector.close(); }
+    }
+    onViewModeChanged: inspector.close()
+    Timer { id: closeProbe; interval: 220; onTriggered: if (!root.pinned && !inspector.hovered) inspector.close() }
+    ForecastInspector {
         id: inspector
-        objectName: "forecastInspector"
-        parent: Overlay.overlay
-        width: Math.min(370, parent ? parent.width - 24 : 370)
-        padding: 14
-        modal: false
-        focus: true
-        dim: false
-        closePolicy: Popup.CloseOnEscape
-        onHeightChanged: if (parent && opened) y = Math.max(8, Math.min(y, parent.height - height - 8))
+        weather: root.weather
+        timestamp: root.selectedTime
+        pinned: root.pinned
+        allParameters: root.allProbeParameters
+        details: root.inspectorDetails
+        highlightedKeys: root.selectedFieldKeys
+        onPinToggled: root.pinned = !root.pinned
+        onPointerLeft: closeProbe.restart()
         onClosed: { root.selectedTime = 0; root.pinned = false; }
-        HoverHandler { id: inspectorHover; onHoveredChanged: if (!hovered) closeProbe.restart() }
-        contentItem: ColumnLayout {
-            RowLayout {
-                Label { text: root.weather.formatTime(root.selectedTime, "ddd d MMM · HH:mm t"); font.bold: true; Layout.fillWidth: true }
-                ToolButton { icon.name: root.pinned ? "pin" : "window-pin"; checkable: true; checked: root.pinned; onClicked: root.pinned = checked; ToolTip.text: "Przypnij odczyt"; ToolTip.visible: hovered }
-                ToolButton { icon.name: "dialog-close"; onClicked: inspector.close() }
-            }
-            Label { text: root.pinned ? "Odczyt przypięty · kliknij ponownie wykres, aby odpiąć" : "Kliknij wykres, aby przypiąć odczyt"; opacity: 0.6; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            ScrollView {
-                id: inspectorScroll
-                Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(readings.implicitHeight, inspector.parent ? inspector.parent.height - 150 : 440, 530)
-                contentWidth: availableWidth
-                clip: true
-                ColumnLayout {
-                    id: readings
-                    width: inspectorScroll.availableWidth
-                    spacing: 2
-                    Repeater {
-                        model: root.allDetails
-                        delegate: Rectangle {
-                            id: reading
-                            required property var modelData
-                            Layout.fillWidth: true
-                            implicitHeight: Math.max(nameLabel.implicitHeight, valueLabel.implicitHeight) + 12
-                            color: root.selectedFieldKeys.indexOf(modelData.key) >= 0 ? Kirigami.Theme.alternateBackgroundColor : "transparent"
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 5
-                                Rectangle { Layout.preferredWidth: 4; Layout.preferredHeight: 15; color: Kirigami.Theme.backgroundColor.hslLightness < 0.5 ? reading.modelData.darkColor : reading.modelData.color }
-                                Label { id: nameLabel; text: reading.modelData.label; Layout.fillWidth: true; wrapMode: Text.WordWrap; font.pixelSize: 11 }
-                                Label { id: valueLabel; text: reading.modelData.value; font.bold: true; font.pixelSize: 11 }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
     MeteoSettings {
         id: settingsDialog

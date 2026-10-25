@@ -73,6 +73,16 @@ void UserPreferences::setProfileChartHeight(int value)
     }
     m_settings.sync();emit displayChanged();
 }
+QString UserPreferences::probeMode() const
+{
+    const auto mode = m_settings.value("display/probeMode", "chart").toString();
+    return QStringList{"chart", "all", "off"}.contains(mode) ? mode : QStringLiteral("chart");
+}
+void UserPreferences::setProbeMode(const QString &value)
+{
+    if (!QStringList{"chart", "all", "off"}.contains(value) || value == probeMode()) return;
+    m_settings.setValue("display/probeMode", value); m_settings.sync(); emit displayChanged();
+}
 QString UserPreferences::renderer() const { return m_settings.value("display/renderer", "gpu").toString() == "cpu" ? "cpu" : "gpu"; }
 void UserPreferences::setRenderer(const QString &value)
 {
