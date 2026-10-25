@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import org.kde.kirigami as Kirigami
 
 Dialog {
     id: root
@@ -15,9 +16,9 @@ Dialog {
     title: "Ustawienia"
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: Math.min(650, parent ? parent.width - 32 : 650)
-    height: Math.min(section === 1 ? 740 : section === 3 ? 620 : 480, parent ? parent.height - 32 : 740)
-    padding: 16
+    width: Math.min(700, parent ? parent.width - 24 : 700)
+    height: Math.min(720, parent ? parent.height - 24 : 720)
+    padding: 0
     modal: true
     standardButtons: Dialog.Close
     footer: DialogButtonBox {
@@ -31,8 +32,20 @@ Dialog {
         }
     }
     MeteoAbout { id: aboutDialog; weather: root.weather }
+    component SettingsPage: ScrollView {
+        id: page
+        property alias pageContent: pagePane.contentItem
+        contentWidth: availableWidth
+        clip: true
+        Pane {
+            id: pagePane
+            width: page.availableWidth
+            padding: Kirigami.Units.largeSpacing
+            background: null
+        }
+    }
     contentItem: ColumnLayout {
-        spacing: 12
+        spacing: 0
         TabBar {
             id: sections
             objectName: "settingsSections"
@@ -46,83 +59,18 @@ Dialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             currentIndex: sections.currentIndex
-            ScrollView {
-                id: forecastScroll
-                contentWidth: availableWidth
-                clip: true
-                ColumnLayout {
-                    width: forecastScroll.availableWidth
-                    spacing: 12
-                    Label { text: "Profil wykresów"; font.bold: true }
-                    ComboBox {
-                        Layout.fillWidth: true
-                        Accessible.name: "Profil wykresów"
-                        model: UserPreferences.profiles
-                        textRole: "name"
-                        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
-                        onActivated: index => UserPreferences.profile = model[index].id
-                    }
-                    Label { text: "Zakres czasu"; font.bold: true; visible: root.showTimeRange }
-                    ComboBox {
-                        objectName: "settingsTimeRange"
-                        visible: root.showTimeRange
-                        Layout.fillWidth: true
-                        Accessible.name: "Zakres czasu na wykresach"
-                        model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny", "Własny zakres"]
-                        currentIndex: {
-                            const hours = (root.endTime - root.startTime) / 3600;
-                            if (Math.abs(root.startTime - root.weather.firstTimestamp) < 1 && Math.abs(root.endTime - root.weather.lastTimestamp) < 1) return 0;
-                            const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
-                            return index < 0 ? 4 : index + 1;
-                        }
-                        onActivated: index => { if (index < 4) root.hoursSelected([0,24,48,72][index]); }
-                    }
-                    Label { text: "Start modelu"; font.bold: true }
-                    ComboBox {
-                        Layout.fillWidth: true
-                        Accessible.name: "Start obliczeń modelu, także archiwalny"
-                        model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowszy dostępny"}]
-                        textRole: "label"
-                        onDownChanged: if (down) root.weather.loadRuns()
-                        currentIndex: {
-                            const index = root.weather.availableRuns.findIndex(entry => entry.timestamp === root.weather.requestedRun);
-                            return Math.max(0, index);
-                        }
-                        onActivated: index => {
-                            if (!root.weather.availableRuns.length) root.weather.refresh();
-                            else root.weather.requestedRun = root.weather.availableRuns[index].timestamp;
-                        }
-                    }
-                    Label {
-                        Layout.fillWidth: true
-                        text: "Zakres czasu i start modelu dotyczą bieżącej prognozy. Wybrany profil jest zapamiętywany. Profile i ustawienia aplikacji edytujesz w zakładkach „Profile”, „Odczyt” i „Aplikacja”."
-                        opacity: 0.7
-                        wrapMode: Text.WordWrap
-                    }
+            SettingsPage {
+                pageContent: ForecastSettings {
+                    weather: root.weather
+                    showTimeRange: root.showTimeRange
+                    startTime: root.startTime
+                    endTime: root.endTime
+                    onHoursSelected: hours => root.hoursSelected(hours)
                 }
             }
-            ScrollView {
-                id: displayScroll
-                contentWidth: availableWidth
-                clip: true
-                DisplaySettings { width: displayScroll.availableWidth; weather: root.weather }
-            }
-            ScrollView {
-                id: readingScroll
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                contentWidth: availableWidth
-                clip: true
-                ReadingSettings { width: readingScroll.availableWidth }
-            }
-            ScrollView {
-                id: applicationScroll
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                contentWidth: availableWidth
-                clip: true
-                ApplicationSettings { width: applicationScroll.availableWidth }
-            }
+            SettingsPage { pageContent: DisplaySettings { weather: root.weather } }
+            SettingsPage { pageContent: ReadingSettings {} }
+            SettingsPage { pageContent: ApplicationSettings {} }
         }
     }
 }

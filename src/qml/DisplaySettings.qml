@@ -9,7 +9,7 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     objectName: "meteogramDisplaySettings"
-    spacing: 12
+    spacing: Kirigami.Units.largeSpacing
     property string expandedChart: ""
     property string expandedSeries: ""
     property WeatherModel weather: null
@@ -43,35 +43,67 @@ ColumnLayout {
             if (result.ok) ExportNotifications.saved(selectedFile, "Wyeksportowano profile");
         }
     }
-    Label { text: "Układ wykresów i wygląd serii"; font.bold: true }
-    ComboBox {
+    GroupBox {
+        padding: Kirigami.Units.largeSpacing
+        title: "Profil wykresów"
         Layout.fillWidth: true
-        model: UserPreferences.profiles
-        textRole: "name"
-        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
-        onActivated: index => UserPreferences.profile = model[index].id
-    }
-    RowLayout {
-        Layout.fillWidth: true
-        TextField { id: profileName; Layout.fillWidth: true; placeholderText: "Nazwa profilu…"; maximumLength: 80 }
-        Button { text: "Zapisz jako nowy"; enabled: profileName.text.trim().length > 0; onClicked: { UserPreferences.createProfile(profileName.text); profileName.clear(); } }
-    }
-    RowLayout {
-        visible: UserPreferences.profile.startsWith("user:")
-        Button { text: "Zmień nazwę"; enabled: profileName.text.trim().length > 0; onClicked: { UserPreferences.renameProfile(profileName.text); profileName.clear(); } }
-        Button { text: "Usuń profil"; icon.name: "edit-delete"; onClicked: UserPreferences.deleteProfile() }
-    }
-    RowLayout {
-        Layout.fillWidth: true
-        CheckBox { Layout.fillWidth: true; text: "Własna wysokość wykresów w profilu"; checked: UserPreferences.profileChartHeight > 0; onToggled: UserPreferences.profileChartHeight = checked ? UserPreferences.chartHeight : 0 }
-        SpinBox { from: 64; to: 800; stepSize: 10; enabled: UserPreferences.profileChartHeight > 0; value: UserPreferences.profileChartHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.profileChartHeight = value }
-    }
-    Flow {
-        Layout.fillWidth: true
-        spacing: 8
-        Button { text: "Importuj…"; icon.name: "document-import"; onClicked: importDialog.open() }
-        Button { text: "Eksportuj profil…"; icon.name: "document-export"; onClicked: { exportDialog.allSaved = false; exportDialog.open(); } }
-        Button { text: "Eksportuj zapisane…"; icon.name: "document-save-all"; onClicked: { exportDialog.allSaved = true; exportDialog.open(); } ToolTip.text: "Eksportuj wszystkie własne profile i Własny układ"; ToolTip.visible: hovered }
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.largeSpacing
+            Kirigami.FormLayout {
+                Layout.fillWidth: true
+                ComboBox {
+                    Kirigami.FormData.label: "Edytowany profil:"
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 20
+                    model: UserPreferences.profiles
+                    textRole: "name"
+                    currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
+                    onActivated: index => UserPreferences.profile = model[index].id
+                }
+                TextField {
+                    id: profileName
+                    Kirigami.FormData.label: "Nazwa:"
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 20
+                    placeholderText: "Nazwa nowego profilu lub kopii…"
+                    maximumLength: 80
+                }
+                RowLayout {
+                    Kirigami.FormData.label: "Wysokość wykresów:"
+                    CheckBox {
+                        text: "Własna"
+                        checked: UserPreferences.profileChartHeight > 0
+                        onToggled: UserPreferences.profileChartHeight = checked ? UserPreferences.chartHeight : 0
+                    }
+                    SpinBox {
+                        from: 64; to: 800; stepSize: 10
+                        enabled: UserPreferences.profileChartHeight > 0
+                        value: UserPreferences.profileChartHeight || UserPreferences.chartHeight
+                        textFromValue: value => value + " px"
+                        onValueModified: UserPreferences.profileChartHeight = value
+                        Accessible.name: "Wysokość wykresów w profilu"
+                    }
+                }
+            }
+            Kirigami.ActionToolBar {
+                Layout.fillWidth: true
+                actions: [
+                    Kirigami.Action { text: "Zapisz kopię"; icon.name: "document-save-as"; enabled: profileName.text.trim().length > 0; onTriggered: { UserPreferences.createProfile(profileName.text); profileName.clear(); } },
+                    Kirigami.Action { text: "Zmień nazwę"; icon.name: "edit-rename"; visible: UserPreferences.profile.startsWith("user:"); enabled: profileName.text.trim().length > 0; onTriggered: { UserPreferences.renameProfile(profileName.text); profileName.clear(); } },
+                    Kirigami.Action { text: "Usuń profil"; icon.name: "edit-delete"; visible: UserPreferences.profile.startsWith("user:"); onTriggered: UserPreferences.deleteProfile() },
+                    Kirigami.Action { text: "Importuj…"; icon.name: "document-import"; onTriggered: importDialog.open() },
+                    Kirigami.Action {
+                        text: "Eksportuj"; icon.name: "document-export"
+                        children: [
+                            Kirigami.Action { text: "Bieżący profil…"; onTriggered: { exportDialog.allSaved = false; exportDialog.open(); } },
+                            Kirigami.Action { text: "Wszystkie zapisane profile…"; onTriggered: { exportDialog.allSaved = true; exportDialog.open(); } }
+                        ]
+                    }
+                ]
+            }
+        }
     }
     Kirigami.InlineMessage {
         id: transferNotice
@@ -83,9 +115,14 @@ ColumnLayout {
     }
     Label {
         Layout.fillWidth: true
-        text: "Każdy wykres może łączyć dowolne serie. Próbka przy serii pokazuje jej wygląd. Ustaw kolory, rodzaj rysowania i oś w „Wygląd”. Zmiany zapisują się w wybranym profilu; zmiana gotowego profilu tworzy „Własny układ”."
+        text: "Zmiany zapisują się automatycznie. Edycja gotowego profilu tworzy „Własny układ”."
         wrapMode: Text.WordWrap
-        opacity: 0.7
+        color: Kirigami.Theme.disabledTextColor
+    }
+    RowLayout {
+        Layout.fillWidth: true
+        Kirigami.Heading { text: "Wykresy w profilu"; level: 3; Layout.fillWidth: true }
+        ToolButton { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
     }
     Repeater {
         model: UserPreferences.chartLayout
@@ -95,9 +132,9 @@ ColumnLayout {
             required property var modelData
             required property int index
             Layout.fillWidth: true
-            padding: 8
-            ColumnLayout {
-                anchors.fill: parent
+            padding: Kirigami.Units.smallSpacing
+            contentItem: ColumnLayout {
+                spacing: Kirigami.Units.smallSpacing
                 RowLayout {
                     Layout.fillWidth: true
                     CheckBox {
@@ -106,7 +143,7 @@ ColumnLayout {
                         onToggled: UserPreferences.setChartEnabled(chart.modelData.key, checked)
                     }
                     Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chart.modelData.title; wrapMode: Text.WordWrap }
-                    ToolButton { text: "Serie"; checkable: true; checked: root.expandedChart === chart.modelData.key; onClicked: root.expandedChart = checked ? chart.modelData.key : "" }
+                    ToolButton { text: "Serie"; icon.name: root.expandedChart === chart.modelData.key ? "arrow-up" : "arrow-down"; checkable: true; checked: root.expandedChart === chart.modelData.key; onClicked: root.expandedChart = checked ? chart.modelData.key : "" }
                     ToolButton { icon.name: "go-up"; enabled: chart.index > 0; onClicked: UserPreferences.moveChart(chart.index, -1); ToolTip.text: "Przenieś wykres wyżej"; ToolTip.visible: hovered }
                     ToolButton { icon.name: "go-down"; enabled: chart.index < UserPreferences.chartLayout.length - 1; onClicked: UserPreferences.moveChart(chart.index, 1); ToolTip.text: "Przenieś wykres niżej"; ToolTip.visible: hovered }
                     ToolButton { icon.name: "edit-delete"; onClicked: UserPreferences.deleteChart(chart.modelData.key); ToolTip.text: "Usuń wykres z tego profilu"; ToolTip.visible: hovered }
@@ -195,5 +232,4 @@ ColumnLayout {
             }
         }
     }
-    Button { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
 }

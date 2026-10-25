@@ -35,7 +35,7 @@ ColumnLayout {
         title: "Kolor serii"
         onAccepted: { const options = {}; options[option] = selectedColor.toString(); root.change(options); }
     }
-    spacing: 4
+    spacing: Kirigami.Units.smallSpacing
     RowLayout {
         Layout.fillWidth: true
         CheckBox {
@@ -48,6 +48,11 @@ ColumnLayout {
         Label { text: root.available ? root.seriesStyle.unit : "brak danych"; opacity: 0.65; font.pixelSize: 11 }
         ToolButton {
             text: "Wygląd"
+            icon.name: "configure"
+            display: root.width < 520 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
+            ToolTip.text: "Wygląd serii"
+            ToolTip.visible: hovered
+            Accessible.name: ToolTip.text
             checkable: true
             checked: root.expanded
             onClicked: root.toggleAppearance()
@@ -66,95 +71,88 @@ ColumnLayout {
         active: root.expanded
         visible: active
         sourceComponent: Component {
-            GridLayout {
+            Kirigami.FormLayout {
                 Layout.fillWidth: true
-                columns: 2
-                columnSpacing: 12
-                Label { text: "Sposób rysowania" }
                 ComboBox {
+                    Kirigami.FormData.label: "Rysowanie:"
                     Layout.fillWidth: true
                     model: root.renderers
                     textRole: "name"
                     currentIndex: model.findIndex(item => item.id === root.seriesStyle.render)
                     onActivated: index => root.change({render: model[index].id})
                 }
-                Label { text: "Oś wartości" }
                 ComboBox {
+                    Kirigami.FormData.label: "Oś wartości:"
                     Layout.fillWidth: true
                     model: [{id:"auto",name:"Automatycznie według jednostki"}, {id:"left",name:"Lewa oś"}, {id:"right",name:"Prawa oś"}]
                     textRole: "name"
                     currentIndex: model.findIndex(item => item.id === root.seriesStyle.axis)
                     onActivated: index => root.change({axis: model[index].id})
                 }
-                Label { text: "Kolor · jasny motyw" }
-                RowLayout {
-                    Rectangle { Layout.preferredWidth: 22; Layout.preferredHeight: 22; color: root.seriesStyle.color; border.color: Kirigami.Theme.disabledTextColor }
-                    ToolButton { icon.name: "color-picker"; text: "Wybierz kolor"; display: AbstractButton.IconOnly; onClicked: root.chooseColor("color"); ToolTip.text: text; ToolTip.visible: hovered }
-                    TextField {
+                Repeater {
+                    model: [{key: "color", label: "Jasny motyw:"}, {key: "darkColor", label: "Ciemny motyw:"}]
+                    delegate: RowLayout {
+                        id: colorRow
+                        required property var modelData
+                        Kirigami.FormData.label: modelData.label
                         Layout.fillWidth: true
-                        text: root.seriesStyle.color
-                        maximumLength: 7
-                        validator: RegularExpressionValidator { regularExpression: /^#[0-9a-fA-F]{6}$/ }
-                        onEditingFinished: if (acceptableInput) root.change({color: text})
-                        Accessible.name: "Kolor serii w jasnym motywie"
+                        Rectangle { Layout.preferredWidth: 22; Layout.preferredHeight: 22; color: root.seriesStyle[colorRow.modelData.key]; border.color: Kirigami.Theme.disabledTextColor }
+                        ToolButton {
+                            icon.name: "color-picker"
+                            onClicked: root.chooseColor(colorRow.modelData.key)
+                            ToolTip.text: "Wybierz kolor"
+                            ToolTip.visible: hovered
+                            Accessible.name: ToolTip.text
+                        }
+                        TextField {
+                            Layout.fillWidth: true
+                            text: root.seriesStyle[colorRow.modelData.key]
+                            maximumLength: 7
+                            validator: RegularExpressionValidator { regularExpression: /^#[0-9a-fA-F]{6}$/ }
+                            onEditingFinished: if (acceptableInput) { const patch = {}; patch[colorRow.modelData.key] = text; root.change(patch); }
+                            Accessible.name: colorRow.modelData.label
+                        }
                     }
                 }
-                Label { text: "Kolor · ciemny motyw" }
-                RowLayout {
-                    Rectangle { Layout.preferredWidth: 22; Layout.preferredHeight: 22; color: root.seriesStyle.darkColor; border.color: Kirigami.Theme.disabledTextColor }
-                    ToolButton { icon.name: "color-picker"; text: "Wybierz kolor"; display: AbstractButton.IconOnly; onClicked: root.chooseColor("darkColor"); ToolTip.text: text; ToolTip.visible: hovered }
-                    TextField {
-                        Layout.fillWidth: true
-                        text: root.seriesStyle.darkColor
-                        maximumLength: 7
-                        validator: RegularExpressionValidator { regularExpression: /^#[0-9a-fA-F]{6}$/ }
-                        onEditingFinished: if (acceptableInput) root.change({darkColor: text})
-                        Accessible.name: "Kolor serii w ciemnym motywie"
-                    }
-                }
-                Label { text: "Grubość linii" }
                 SpinBox {
+                    Kirigami.FormData.label: "Grubość linii:"
                     from: 5; to: 80; stepSize: 5
                     value: Math.round(root.seriesStyle.lineWidth * 10)
                     textFromValue: (value, locale) => Number(value / 10).toLocaleString(locale, 'f', 1) + " px"
                     onValueModified: root.change({lineWidth: value / 10})
                 }
-                Label { text: "Promień punktu"; visible: ["points", "cloudPoint", "storm", "flash"].indexOf(root.seriesStyle.render) >= 0 }
                 SpinBox {
+                    Kirigami.FormData.label: "Promień punktu:"
                     visible: ["points", "cloudPoint", "storm", "flash"].indexOf(root.seriesStyle.render) >= 0
                     from: 10; to: 100; stepSize: 5
                     value: Math.round(root.seriesStyle.pointSize * 10)
                     textFromValue: (value, locale) => Number(value / 10).toLocaleString(locale, 'f', 1) + " px"
                     onValueModified: root.change({pointSize: value / 10})
                 }
-                Label { text: "Linia" }
                 ComboBox {
+                    Kirigami.FormData.label: "Linia:"
                     Layout.fillWidth: true
                     model: [{id:"solid",name:"Ciągła"}, {id:"dashed",name:"Przerywana"}, {id:"dotted",name:"Kropkowana"}]
                     textRole: "name"
                     currentIndex: model.findIndex(item => item.id === root.seriesStyle.lineStyle)
                     onActivated: index => root.change({lineStyle: model[index].id})
                 }
-                Label { text: "Krycie" }
-                SpinBox { from: 0; to: 100; stepSize: 5; value: Math.round(root.seriesStyle.opacity * 100); textFromValue: value => value + "%"; onValueModified: root.change({opacity: value / 100}) }
-                Label { text: "Kolejność w warstwie" }
-                SpinBox { from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: "Wyższa wartość rysuje serię później w jej warstwie; wypełnienia pozostają pod liniami"; ToolTip.visible: hovered }
+                SpinBox { Kirigami.FormData.label: "Krycie:"; from: 0; to: 100; stepSize: 5; value: Math.round(root.seriesStyle.opacity * 100); textFromValue: value => value + "%"; onValueModified: root.change({opacity: value / 100}) }
+                SpinBox { Kirigami.FormData.label: "Kolejność w warstwie:"; from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: "Wyższa wartość rysuje serię później w jej warstwie; wypełnienia pozostają pod liniami"; ToolTip.visible: hovered }
                 CheckBox {
-                    Layout.columnSpan: 2
                     visible: root.seriesStyle.key === "pcpttl_aver" || root.seriesStyle.key === "pcpttl_max"
                     text: "Koloruj według rodzaju opadu"
                     checked: root.seriesStyle.precipitationColors
                     onToggled: root.change({precipitationColors: checked})
                 }
                 CheckBox {
-                    Layout.columnSpan: 2
                     visible: ["storm", "flash"].indexOf(root.seriesStyle.render) >= 0
                     text: "Kolory według liczby wyładowań"
                     checked: root.seriesStyle.eventColors
                     onToggled: root.change({eventColors: checked})
                 }
-                Label { text: "Wypełnienie"; visible: root.seriesStyle.render === "area" }
                 ComboBox {
+                    Kirigami.FormData.label: "Wypełnienie:"
                     visible: root.seriesStyle.render === "area"
                     Layout.fillWidth: true
                     model: [{id:"solid",name:"Kolor serii"}, {id:"pressure",name:"Paleta ciśnienia ICM"}, {id:"wind",name:"Paleta wiatru ICM"}]

@@ -8,7 +8,7 @@ target_include_directories(meteo_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network)
 target_compile_options(meteo_core PRIVATE -Wall -Wextra -Wpedantic)
 
-foreach(component Meteogram ForecastPanel ForecastInspector ForecastHeader CompactForecast LocationEditor TileMap MapTileFrame MapWheelHandler BufferedImage MeteoSettings MeteoAbout DisplaySettings ReadingSettings ApplicationSettings SeriesLegend SeriesSettings WeatherMap EditorialView ThematicMaps OriginalMeteogram)
+foreach(component Meteogram ForecastPanel ForecastInspector ForecastHeader CompactForecast LocationEditor TileMap MapTileFrame MapWheelHandler BufferedImage MeteoSettings ForecastSettings MeteoAbout DisplaySettings ReadingSettings ApplicationSettings SeriesLegend SeriesSettings WeatherMap EditorialView ThematicMaps OriginalMeteogram)
     set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)
 endforeach()
 set_source_files_properties(qml/MeteogramStyle.js PROPERTIES QT_RESOURCE_ALIAS MeteogramStyle.js)
@@ -34,7 +34,7 @@ qt_add_qml_module(meteo_ui
         presentation/LegacyMeteogramModel.cpp presentation/LegacyMeteogramModel.hpp
         network/ImageCache.cpp network/ImageCache.hpp
     QML_FILES qml/Meteogram.qml qml/ForecastPanel.qml qml/ForecastInspector.qml qml/ForecastHeader.qml qml/CompactForecast.qml qml/LocationEditor.qml qml/TileMap.qml
-        qml/MeteoSettings.qml qml/MeteoAbout.qml qml/DisplaySettings.qml qml/ReadingSettings.qml qml/ApplicationSettings.qml qml/WeatherMap.qml qml/EditorialView.qml qml/ThematicMaps.qml
+        qml/MeteoSettings.qml qml/ForecastSettings.qml qml/MeteoAbout.qml qml/DisplaySettings.qml qml/ReadingSettings.qml qml/ApplicationSettings.qml qml/WeatherMap.qml qml/EditorialView.qml qml/ThematicMaps.qml
         qml/MapTileFrame.qml qml/MapWheelHandler.qml qml/BufferedImage.qml
         qml/OriginalMeteogram.qml qml/MeteogramStyle.js qml/SeriesLegend.qml qml/SeriesSettings.qml
 )
