@@ -13,6 +13,7 @@ target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network)
 target_compile_options(meteo_core PRIVATE -Wall -Wextra -Wpedantic)
 
 set_source_files_properties(qml/BufferedImage.qml PROPERTIES QT_RESOURCE_ALIAS BufferedImage.qml)
+set_source_files_properties(qml/DisplaySettings.qml PROPERTIES QT_RESOURCE_ALIAS DisplaySettings.qml)
 set_source_files_properties(qml/EditorialView.qml PROPERTIES QT_RESOURCE_ALIAS EditorialView.qml)
 set_source_files_properties(qml/ForecastPanel.qml PROPERTIES QT_RESOURCE_ALIAS ForecastPanel.qml)
 set_source_files_properties(qml/LocationEditor.qml PROPERTIES QT_RESOURCE_ALIAS LocationEditor.qml)
@@ -49,6 +50,7 @@ qt_add_qml_module(meteo_ui
         network/ImageCache.hpp
     QML_FILES
         qml/BufferedImage.qml
+        qml/DisplaySettings.qml
         qml/EditorialView.qml
         qml/ForecastPanel.qml
         qml/LocationEditor.qml

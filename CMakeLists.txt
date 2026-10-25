@@ -12,6 +12,7 @@ option(METEO_BUILD_APP "Build the desktop application" ON)
 option(METEO_BUILD_PLASMOID "Install the Plasma 6 widget" ON)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Network Qml Quick QuickControls2)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Positioning)
 qt_standard_project_setup(REQUIRES 6.5)
 if(Qt6_VERSION VERSION_GREATER_EQUAL 6.8)
     qt_policy(SET QTP0004 NEW)

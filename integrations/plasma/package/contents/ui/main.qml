@@ -23,6 +23,8 @@ PlasmoidItem {
         longitude: root.weatherConfiguration.longitude
         locationName: root.weatherConfiguration.locationName
         model: root.weatherConfiguration.model
+        windUnit: UserPreferences.windUnit
+        utc: UserPreferences.utc
     }
     compactRepresentation: MouseArea {
         implicitWidth: compactRow.implicitWidth
@@ -57,6 +59,13 @@ PlasmoidItem {
             Layout.fillHeight: true
             weather: forecastModel
             onConfigureRequested: Plasmoid.internalAction("configure").trigger()
+            onLocationSelected: (name, latitude, longitude) => {
+                Plasmoid.configuration.locationName = name;
+                Plasmoid.configuration.latitude = latitude;
+                Plasmoid.configuration.longitude = longitude;
+                if (!(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)) Plasmoid.configuration.model = "gfs";
+                UserPreferences.rememberPlace(name, latitude, longitude);
+            }
         }
     }
 }

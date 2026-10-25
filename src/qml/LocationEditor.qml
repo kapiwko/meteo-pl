@@ -1,74 +1,178 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtPositioning
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
     id: root
-    property alias locationName: nameField.text
+    property string locationName: "Warszawa"
     property real latitude: 52.2297
     property real longitude: 21.0122
     property string model: "um4_60"
-    readonly property var cities: [
-        { name: "Warszawa", lat: 52.2297, lon: 21.0122 },
-        { name: "Kielce", lat: 50.8661, lon: 20.6286 },
-        { name: "Kraków", lat: 50.0647, lon: 19.9450 },
-        { name: "Gdańsk", lat: 54.3520, lon: 18.6466 },
-        { name: "Wrocław", lat: 51.1079, lon: 17.0385 },
-        { name: "Poznań", lat: 52.4064, lon: 16.9252 },
-        { name: "Łódź", lat: 51.7592, lon: 19.4560 },
-        { name: "Zakopane", lat: 49.2992, lon: 19.9496 }
-    ]
-    readonly property bool valid: nameField.text.trim().length > 0 && latField.acceptableInput && lonField.acceptableInput
+    property bool showMap: false
+    property string positionError: ""
+    property bool positionRequested: false
+    readonly property bool valid: locationName.trim().length > 0 && latField.acceptableInput && lonField.acceptableInput
         && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
         && (model === "gfs" || (latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176))
+    readonly property bool outsideModel: model !== "gfs" && !(latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176)
     spacing: Kirigami.Units.largeSpacing
 
-    function numberFrom(text) { return Number(text.trim().replace(",", ".")); }
+    function resetDraft(name, lat, lon, forecastModel) {
+        locationName = name; latitude = lat; longitude = lon; model = forecastModel;
+        searchField.text = ""; placeSearch.query = ""; positionError = "";
+    }
+    function selectPlace(place) {
+        locationName = place.name;
+        latitude = place.latitude; longitude = place.longitude;
+        searchField.text = place.name; placeSearch.query = "";
+        positionError = "";
+    }
+    PlaceSearchModel { id: placeSearch }
+    PositionSource {
+        id: positionSource
+        active: false
+        onPositionChanged: {
+            if (!position.coordinate.isValid) return;
+            root.selectPlace({name: "Moja pozycja", latitude: position.coordinate.latitude, longitude: position.coordinate.longitude});
+            root.positionRequested = false;
+        }
+        onSourceErrorChanged: if (root.positionRequested && sourceError !== PositionSource.NoError) root.positionError = sourceError === PositionSource.UpdateTimeoutError
+            ? "Upłynął czas ustalania pozycji. Możesz wybrać punkt z mapy."
+            : "Nie udało się ustalić pozycji. Sprawdź usługę lokalizacji lub wybierz punkt z mapy.";
+    }
 
-    Label { text: "Miasto" }
-    ComboBox {
+    Label { text: "Znajdź miejscowość"; font.bold: true }
+    RowLayout {
         Layout.fillWidth: true
-        model: root.cities
-        textRole: "name"
-        currentIndex: -1
-        displayText: currentIndex < 0 ? "Wybierz miasto…" : currentText
-        onActivated: index => {
-            const city = root.cities[index];
-            root.locationName = city.name;
-            root.latitude = city.lat;
-            root.longitude = city.lon;
+        TextField {
+            id: searchField
+            objectName: "placeSearchField"
+            Layout.fillWidth: true
+            placeholderText: "Wpisz nazwę miasta lub wsi…"
+            selectByMouse: true
+            onTextEdited: placeSearch.query = text
+            onAccepted: if (placeSearch.results.length) root.selectPlace(placeSearch.results[0]); else placeSearch.search();
+        }
+        BusyIndicator { running: placeSearch.busy; visible: running; Layout.preferredWidth: 30; Layout.preferredHeight: 30 }
+        ToolButton { icon.name: "edit-clear"; visible: searchField.text.length > 0; onClicked: { searchField.clear(); placeSearch.query = ""; searchField.forceActiveFocus(); } }
+    }
+    CheckBox { text: "Szukaj także poza Polską"; checked: !placeSearch.polandOnly; onToggled: placeSearch.polandOnly = !checked }
+    Pane {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.min(260, searchResults.contentHeight + padding * 2)
+        visible: placeSearch.results.length > 0
+        padding: 2
+        ListView {
+            id: searchResults
+            anchors.fill: parent
+            clip: true
+            model: placeSearch.results
+            ScrollBar.vertical: ScrollBar {}
+            delegate: ItemDelegate {
+                id: resultDelegate
+                required property var modelData
+                width: ListView.view.width
+                onClicked: root.selectPlace(modelData)
+                contentItem: ColumnLayout {
+                    spacing: 2
+                    Label { text: resultDelegate.modelData.name; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+                    Label { text: resultDelegate.modelData.description; opacity: 0.65; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                }
+            }
         }
     }
-    Label { text: "Nazwa lokalizacji" }
-    TextField { id: nameField; Layout.fillWidth: true; placeholderText: "Np. Dom, Kielce, szlak…"; maximumLength: 100 }
-    Label { text: "Szerokość geograficzna (°N)" }
-    TextField {
-        id: latField
+    Label { visible: placeSearch.query.length >= 2 && !placeSearch.busy && !placeSearch.results.length && !placeSearch.error; text: "Nie znaleziono miejscowości. Doprecyzuj nazwę lub wybierz punkt z mapy."; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+    Kirigami.InlineMessage { visible: placeSearch.error.length > 0; text: placeSearch.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
+    Flow {
         Layout.fillWidth: true
-        text: String(root.latitude)
-        validator: RegularExpressionValidator { regularExpression: /-?\d{1,2}([.,]\d{1,6})?/ }
-        onTextEdited: if (acceptableInput) root.latitude = root.numberFrom(text)
+        spacing: 4
+        Repeater {
+            model: UserPreferences.favorites.length ? UserPreferences.favorites : UserPreferences.recentPlaces
+            delegate: Button {
+                required property var modelData
+                text: modelData.name
+                icon.name: UserPreferences.favorites.length ? "rating" : "document-open-recent"
+                onClicked: root.selectPlace(modelData)
+            }
+        }
     }
-    Label { text: "Długość geograficzna (°E)" }
-    TextField {
-        id: lonField
+    Frame {
         Layout.fillWidth: true
-        text: String(root.longitude)
-        validator: RegularExpressionValidator { regularExpression: /-?\d{1,3}([.,]\d{1,6})?/ }
-        onTextEdited: if (acceptableInput) root.longitude = root.numberFrom(text)
+        padding: 12
+        RowLayout {
+            anchors.fill: parent
+            ColumnLayout {
+                Layout.fillWidth: true
+                Label { text: root.locationName; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+                Label { text: root.latitude.toFixed(4) + "°N, " + root.longitude.toFixed(4) + "°E"; opacity: 0.65 }
+            }
+            ToolButton {
+                text: "Ulubione"
+                icon.name: checked ? "rating" : "rating-unrated"
+                checkable: true
+                checked: { const places = UserPreferences.favorites; return UserPreferences.isFavorite(root.latitude, root.longitude); }
+                onClicked: UserPreferences.toggleFavorite(root.locationName, root.latitude, root.longitude)
+                ToolTip.text: checked ? "Usuń z ulubionych" : "Dodaj do ulubionych"
+                ToolTip.visible: hovered
+            }
+        }
     }
-    Label { text: "Model prognozy" }
+    RowLayout {
+        Layout.fillWidth: true
+        Button { text: "Wybierz na mapie"; icon.name: "map-globe"; checkable: true; checked: root.showMap; onToggled: root.showMap = checked }
+        Button { text: "Moja pozycja"; icon.name: "find-location"; onClicked: { root.positionError = ""; root.positionRequested = true; if (positionSource.valid) positionSource.update(15000); else root.positionError = "Usługa lokalizacji jest niedostępna. Wybierz miejscowość lub punkt z mapy."; } }
+    }
+    Kirigami.InlineMessage { visible: root.positionError.length > 0; text: root.positionError; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
+    Loader {
+        id: locationMap
+        Layout.fillWidth: true
+        Layout.preferredHeight: active ? 300 : 0
+        active: root.showMap
+        sourceComponent: TileMap {
+            latitude: root.latitude; longitude: root.longitude
+            markerLatitude: root.latitude; markerLongitude: root.longitude
+            onCoordinateSelected: (latitude, longitude) => root.selectPlace({name: "Punkt na mapie", latitude: Number(latitude.toFixed(6)), longitude: Number(longitude.toFixed(6))})
+        }
+    }
+    Connections {
+        target: root
+        function onLatitudeChanged() { const map = locationMap.item as TileMap; if (map) map.latitude = root.latitude; }
+        function onLongitudeChanged() { const map = locationMap.item as TileMap; if (map) map.longitude = root.longitude; }
+    }
+    CheckBox { id: manual; text: "Własna nazwa i współrzędne" }
+    GridLayout {
+        visible: manual.checked
+        Layout.fillWidth: true
+        columns: 2
+        columnSpacing: 12
+        Label { text: "Nazwa" }
+        TextField { Layout.fillWidth: true; text: root.locationName; maximumLength: 100; onTextEdited: root.locationName = text }
+        Label { text: "Szerokość (°N)" }
+        TextField {
+            id: latField
+            Layout.fillWidth: true
+            Binding on text { value: String(root.latitude); when: !latField.activeFocus; restoreMode: Binding.RestoreNone }
+            validator: RegularExpressionValidator { regularExpression: /-?\d{1,2}([.,]\d{1,6})?/ }
+            onTextEdited: if (acceptableInput) root.latitude = Number(text.replace(",", "."));
+        }
+        Label { text: "Długość (°E)" }
+        TextField {
+            id: lonField
+            Layout.fillWidth: true
+            Binding on text { value: String(root.longitude); when: !lonField.activeFocus; restoreMode: Binding.RestoreNone }
+            validator: RegularExpressionValidator { regularExpression: /-?\d{1,3}([.,]\d{1,6})?/ }
+            onTextEdited: if (acceptableInput) root.longitude = Number(text.replace(",", "."));
+        }
+    }
+    Label { text: "Model prognozy"; font.bold: true }
     ComboBox {
         Layout.fillWidth: true
-        model: ["UM4 · 60 godzin", "UM4 · 120 godzin", "GFS · 240 godzin"]
+        model: ["UM4 · 60 godzin · Europa Środkowa", "UM4 · 120 godzin · Europa Środkowa", "GFS · 240 godzin · cały świat"]
         currentIndex: ["um4_60", "um4_120", "gfs"].indexOf(root.model)
         onActivated: index => root.model = ["um4_60", "um4_120", "gfs"][index]
     }
-    Label {
-        Layout.fillWidth: true
-        text: root.valid ? "Możesz podać współrzędne dowolnego punktu. GFS obejmuje cały świat." : "Podaj nazwę i poprawne współrzędne. Dla lokalizacji poza obszarem UM4 wybierz GFS."
-        wrapMode: Text.WordWrap
-        opacity: 0.7
-    }
+    Kirigami.InlineMessage { Layout.fillWidth: true; visible: root.outsideModel; text: "Ten punkt leży poza obszarem UM4. Wybierz model GFS."; type: Kirigami.MessageType.Warning }
 }

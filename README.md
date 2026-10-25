@@ -1,13 +1,13 @@
 # Meteo Desktop
 
 Aplikacja Qt 6 / Kirigami oraz plasmoid Plasma 6 do przeglądania prognoz
-ICM UW z meteo.pl. Pierwsza wersja wyświetla natywne wykresy temperatury
-i punktu rosy, opadów, wiatru i porywów, ciśnienia oraz zachmurzenia.
+ICM UW z meteo.pl. Wspólny interfejs oferuje rozbudowane meteogramy, prognozę
+godzinową i dzienną, mapy oraz komentarz synoptyka i artykuły.
 
 ## Uruchomienie
 
 Wymagania: CMake ≥ 3.25, kompilator C++23, Ninja, Qt ≥ 6.5
-(Core, Network, Qml, Quick, QuickControls2, Test), Kirigami 6 i moduł
+(Core, Network, Qml, Quick, QuickControls2, Positioning, Test), Kirigami 6 i moduł
 QQC2 Desktop Style (`org.kde.desktop`).
 Plasmoid wymaga środowiska Plasma 6 i modułów QML Plasma.
 
@@ -18,21 +18,71 @@ ctest --preset dev
 ./build/dev/apps/meteo/meteo-pl
 ```
 
-Przycisk **Lokalizacja** pozwala wybrać jedno z kilku miast lub wpisać nazwę
-i współrzędne własnego punktu. Dostępne modele: UM4 60 h, UM4 120 h i GFS 240 h.
+Przycisk **Lokalizacja** otwiera wyszukiwarkę miast i wsi z opisem regionu,
+ulubione i ostatnio wybrane miejsca. Można także wskazać punkt na mapie,
+pobrać pozycję przez systemową usługę lokalizacji lub wpisać współrzędne.
+GPS wymaga dostępnego dostawcy Qt Positioning; bez niego można użyć wyszukiwarki
+lub mapy. Wyszukiwanie domyślnie obejmuje Polskę, opcjonalnie cały świat.
+Dostępne modele: UM4 60 h, UM4 120 h i GFS 240 h.
 UM4 obejmuje obszar 44,5–66,482°N i 8,21–30,176°E; GFS jest globalny.
 Współrzędne przyjmują kropkę lub przecinek dziesiętny.
 
 Podsumowanie pokazuje prognozę na oznaczoną godzinę, a nie pomiar stacji.
-Oś czasu używa strefy czasowej systemu. Wskaźnik czasu bieżącego jest przerywany,
-a wskazanie kursorem ujawnia wartości punktów. Brakujące wartości pozostają
-lukami na wykresach.
+Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przerywany.
+Najechanie pokazuje wspólny odczyt parametrów dla wybranej godziny; kliknięcie
+przypina odczyt, a Escape go zamyka. Wykresy mają zakresy min/max, temperaturę
+odczuwalną, rodzaj i prawdopodobieństwo opadów, kierunki i porywy wiatru,
+warstwy oraz podstawy chmur, wilgotność, mgłę, widzialność i wskaźniki burz.
+Brakujące wartości pozostają lukami. Dostępność parametrów zależy od modelu.
+
+Domyślny profil **Klasyczny ICM** zawiera osiem wykresów: temperaturę, opady
+z wilgotnością, szansę opadu i burze, ciśnienie, prędkość wiatru, kierunek
+wiatru, pionowy zasięg chmur z widzialnością oraz zachmurzenie z mgłą.
+Temperatury mają półprzezroczyste zakresy min–max; błękitne tło wyróżnia
+obszar poniżej 0°C. Kolory linii odpowiadają palecie klienta Meteo.
+Siatka pozostaje widoczna nad wypełnieniami, a mgła nad chmurami.
+
+W ustawieniach widoku można tworzyć, nazywać i usuwać własne profile,
+wybierać wykresy i ich serie oraz zmieniać kolejność wykresów.
+Można też wybrać jednostkę wiatru i cieniowanie nocy. Legenda przełącza serie
+bez zmiany skali osi. Ctrl + kółko myszy przybliża czas; przyciski i suwak
+pozwalają przesuwać zakres. Lista startów modelu udostępnia krótkoterminowe
+archiwum publikowane przez serwer.
+
+Dla UM dostępny jest także przycisk **Pokaż oryginalny meteogram ICM**
+z opcjonalną pełną legendą. Punkt i start są przekazywane do selektora starego
+serwisu, który ustala właściwe pole siatki. Ten widok zachowuje oznaczenia
+oryginalnego obrazu, w tym występowania opadu konwekcyjnego.
+Obecny interfejs danych liczbowych nie udostępnia osobnego pola opadu
+konwekcyjnego. Opad średni, maksymalny, prawdopodobieństwo opadu i wskaźniki
+burz są w wykresach natywnych prezentowane zgodnie z ich znaczeniem.
+
+Zakładka **Mapy** zawiera interaktywne warstwy UM4/GFS i 19 map tematycznych
+UM/WAM. Można zmieniać warstwę, start, godzinę i animować prognozę, a z mapy
+otworzyć meteogram wskazanego punktu. Mapy UM4 korzystają z publikacji UM4
+serwisu mapowego, niezależnej od listy startów meteogramów.
+
+Podczas ładowania pozostaje poprzednia kompletna klatka, również przy błędzie
+sieci. Animacja czeka na kolejną klatkę i pobiera następną z wyprzedzeniem.
+Kafelki zachowują współrzędne podczas przesuwania i skalowania; nowa klatka
+pojawia się jednocześnie po przygotowaniu wszystkich jej kafelków.
+Kółko myszy i przewijanie touchpadem przybliżają mapę pod kursorem.
+Wskaźnik ładowania jest nakładany na mapę.
 
 Prognoza odświeża się co godzinę. Aplikacja i widget korzystają ze wspólnego
 cache w `$XDG_CACHE_HOME/meteo-pl` (domyślnie `~/.cache/meteo-pl`).
 Niedawno zapisana prognoza ogranicza powtórne pobrania przy otwieraniu kolejnego
 widoku. Ręczne **Odśwież** zawsze pyta serwer. Gdy pobieranie się nie powiedzie,
 widoczna pozostaje zapisana prognoza z datą pobrania i komunikatem.
+
+Mapy mają dodatkowy cache: do 96 MiB zdekodowanych obrazów w RAM i do 256 MiB
+cache HTTP na dysku. Powtórne żądania tego samego obrazu w procesie są łączone.
+Klucz zawiera pełny URL, w tym warstwę, start, krok i współrzędne kafelka;
+ważność odpowiedzi dyskowych wynika z nagłówków serwera.
+Cache map znajduje się w `$XDG_CACHE_HOME/meteo-pl/maps/<nazwa-procesu>`.
+Aplikacja i Plasma mają osobne katalogi cache HTTP, aby dwa procesy nie
+modyfikowały równocześnie magazynu `QNetworkDiskCache`.
+Ulubione i preferencje widoku są wspólne, w `~/.config/meteo-pl/desktop.ini`.
 
 ## Instalacja
 
@@ -81,13 +131,6 @@ z kontem ani płatnym API. Zasady wykorzystania prognoz określa
 [regulamin meteo.pl](https://www.meteo.pl/regulamin-aplikacji-meteo-icm).
 Repozytorium zawiera wyłącznie syntetyczne dane testowe, a interfejs podaje źródło prognozy.
 
-Poza zakresem tej wersji: radar, mapa lokalizacji, wyszukiwanie wszystkich
-miejscowości, GPS, archiwum i profile parametrów meteogramu.
-
-Modele QML udostępniają wyszukiwanie nazw miejscowości, regiony, ulubione, ostatnie miejsca oraz zapisywane profile wykresów.
-
-Model prezentacji udostępnia archiwalne starty, dane godzinowe i dzienne, inspektor parametrów oraz pory wschodu i zachodu słońca.
-
-Mapy UM4/GFS i obrazy tematyczne mają buforowane klatki, cache obrazów, przeciąganie oraz powiększanie kółkiem myszy.
-
-Adapter treści redakcyjnych pobiera komentarze synoptyka, archiwum i kolejne strony artykułów. Brak publikacji nie jest błędem sieci.
+Nie jest to jeszcze pełna zgodność funkcji z Androidem: brak radaru obserwacyjnego,
+FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
+i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
