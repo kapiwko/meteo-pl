@@ -85,6 +85,8 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
     Forecast forecast;
     forecast.modelRun = QDateTime::fromString(root.value("fstart").toString(), Qt::ISODate);
     for (auto it = data.begin(); it != data.end(); ++it) {
+        // GFS includes null entries for parameters available only in UM.
+        if (it.value().isNull()) continue;
         const auto field = it.value().toObject();
         const auto values = field.value("data").toArray();
         const auto timestamp = timestampValue(field.value("first_timestamp"));

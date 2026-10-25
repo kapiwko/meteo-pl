@@ -51,10 +51,12 @@ PlasmoidItem {
             Layout.fillWidth: true
             Label { text: "Meteo · ICM"; font.bold: true; Layout.fillWidth: true }
             ToolButton { icon.name: "view-refresh"; text: "Odśwież"; display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
-            ToolButton { icon.name: "configure"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "configure"; text: "Wygląd"; display: AbstractButton.IconOnly; onClicked: forecastPanel.openDisplaySettings(); ToolTip.text: text; ToolTip.visible: hovered }
+            ToolButton { icon.name: "mark-location"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
             ToolButton { icon.name: "internet-web-browser"; text: "Otwórz meteo.pl"; display: AbstractButton.IconOnly; onClicked: Qt.openUrlExternally("https://app.meteo.pl/meteogram"); ToolTip.text: text; ToolTip.visible: hovered }
         }
         ForecastPanel {
+            id: forecastPanel
             Layout.fillWidth: true
             Layout.fillHeight: true
             weather: forecastModel

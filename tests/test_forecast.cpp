@@ -35,6 +35,24 @@ private slots:
         QVERIFY(!heights->series["cldbse25"].values[0]);
         QCOMPARE(heights->series["cldbse25"].values[1].value(), 1000.0);
     }
+    void acceptsUnavailableOptionalSeries()
+    {
+        auto object = QJsonDocument::fromJson(forecastFixture()).object();
+        auto data = object["data"].toObject();
+        data["airtmp_min"] = QJsonValue::Null;
+        data["airtmp_max"] = QJsonValue::Null;
+        data["cldbse25"] = QJsonValue::Null;
+        data["storm_max"] = QJsonValue::Null;
+        object["data"] = data;
+        const auto result = Meteo::parseForecast(QJsonDocument(object).toJson());
+        QVERIFY(result);
+        QVERIFY(!result->series.contains("airtmp_min"));
+        QVERIFY(!result->series.contains("cldbse25"));
+        QVERIFY(result->series.contains("pcpttl_aver"));
+        data["airtmp_point"] = QJsonValue::Null;
+        object["data"] = data;
+        QVERIFY(!Meteo::parseForecast(QJsonDocument(object).toJson()));
+    }
     void rejectsBrokenDocuments()
     {
         for (const QByteArray input : {QByteArray("{}"), QByteArray("<html>error</html>"), QByteArray("{\"data\":[]}")})

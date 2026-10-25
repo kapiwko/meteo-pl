@@ -15,22 +15,24 @@ Item {
     property real selectedTime: 0
     property string selectedGroup: ""
     property bool pinned: false
-    property bool originalView: false
     signal configureRequested()
     signal locationSelected(string name, real latitude, real longitude)
-    readonly property var allDetails: selectedTime > 0 ? weather.detailsAt(selectedTime) : []
+    readonly property var selectedChart: visibleCharts.find(chart => chart.key === selectedGroup)
+    readonly property var selectedFieldKeys: {
+        const keys = [];
+        if (selectedChart) for (const field of selectedChart.fields) { keys.push(field.key); if (field.lowerKey) keys.push(field.lowerKey); }
+        return keys;
+    }
+    readonly property var allDetails: selectedTime > 0 ? weather.detailsAt(selectedTime).map(detail => {
+        const style = selectedChart ? selectedChart.fields.find(field => field.key === detail.key || field.lowerKey === detail.key) : null;
+        return style ? Object.assign({}, detail, {color: style.color, darkColor: style.darkColor}) : detail;
+    }) : []
     readonly property var visibleCharts: {
-        const catalog = weather.chartGroups;
-        const result = [];
-        for (const config of UserPreferences.chartLayout) {
-            if (!config.enabled) continue;
-            const chart = catalog.find(group => group.key === config.key);
-            if (!chart) continue;
-            result.push({key: chart.key, title: chart.title, fields: chart.fields.filter(field => config.fields.indexOf(field.key) >= 0)});
-        }
-        return result;
+        if (!weather.hasData || !Object.keys(weather.series).length) return [];
+        return weather.configuredCharts(UserPreferences.chartLayout);
     }
 
+    function openDisplaySettings() { displayDialog.open(); }
     function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
     function resetRange() { viewportStart = weather.firstTimestamp; viewportEnd = weather.lastTimestamp; }
     function setHours(hours) {
@@ -95,58 +97,70 @@ Item {
         id: forecastComponent
         ColumnLayout {
             spacing: 10
-            RowLayout {
-                Layout.fillWidth: true
-                Kirigami.Icon { source: root.weather.weatherIcon; Layout.preferredWidth: 44; Layout.preferredHeight: 44 }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Kirigami.Heading { text: root.weather.locationName; level: 2; Layout.fillWidth: true; elide: Text.ElideRight }
-                    Label { text: root.weather.summaryTime; opacity: 0.65; font.pixelSize: 11 }
-                }
-                Kirigami.Heading { text: root.weather.temperatureText; level: 1 }
-                ToolButton { icon.name: "mark-location"; text: "Lokalizacja"; display: AbstractButton.IconOnly; onClicked: root.configureRequested(); ToolTip.text: text; ToolTip.visible: hovered }
-                ToolButton { icon.name: "configure"; text: "Wygląd meteogramu"; display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
-            }
-            Label { Layout.fillWidth: true; text: root.weather.modelName + " · " + root.weather.runText + " · " + (root.weather.utc ? "UTC" : "czas lokalny systemu"); opacity: 0.65; font.pixelSize: 11; wrapMode: Text.WordWrap }
-            Label { Layout.fillWidth: true; text: root.weather.latitude.toFixed(4) + "°N, " + root.weather.longitude.toFixed(4) + "°E · " + root.weather.sunTimes; visible: root.weather.hasData; opacity: 0.65; font.pixelSize: 11; wrapMode: Text.WordWrap }
+            ForecastHeader { Layout.fillWidth: true; weather: root.weather }
             Kirigami.InlineMessage { visible: root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.archive; text: "Archiwalne uruchomienie modelu. Daty i godziny wykresu odnoszą się do wybranej prognozy."; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.stale; text: "Prognoza może być nieaktualna. Ostatnie pobranie: " + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             GridLayout {
                 visible: root.viewMode === 0
                 Layout.fillWidth: true
-                columns: width < 600 ? 2 : 4
-                ComboBox {
+                columns: width < 600 ? 1 : 3
+                ColumnLayout {
                     Layout.fillWidth: true
-                    model: UserPreferences.profiles
-                    textRole: "name"
-                    currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
-                    onActivated: index => UserPreferences.profile = model[index].id
-                }
-                ComboBox {
-                    Layout.fillWidth: true
-                    model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny"]
-                    onActivated: index => root.setHours([0,24,48,72][index])
-                }
-                ComboBox {
-                    id: archiveCombo
-                    Layout.fillWidth: true
-                    model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowsza · archiwum ↻"}]
-                    textRole: "label"
-                    onDownChanged: if (down) root.weather.loadRuns()
-                    currentIndex: { const entries = root.weather.availableRuns; const index = entries.findIndex(e => e.timestamp === root.weather.requestedRun); return Math.max(0, index); }
-                    onActivated: index => {
-                        if (!root.weather.availableRuns.length) root.weather.refresh();
-                        else root.weather.requestedRun = root.weather.availableRuns[index].timestamp;
+                    Label { text: "Profil wykresów"; font.pixelSize: 11; opacity: 0.7 }
+                    ComboBox {
+                        Layout.fillWidth: true
+                        Accessible.name: "Profil wykresów"
+                        model: UserPreferences.profiles
+                        textRole: "name"
+                        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
+                        onActivated: index => UserPreferences.profile = model[index].id
                     }
                 }
-                RowLayout {
-                    Button { Layout.preferredWidth: 32; text: "‹"; ToolTip.text: "Wcześniejsze godziny"; ToolTip.visible: hovered; onClicked: root.moveRange(-1) }
-                    Button { Layout.preferredWidth: 32; text: "−"; onClicked: root.zoom(1.5, (root.viewportStart + root.viewportEnd)/2) }
-                    Button { Layout.preferredWidth: 32; text: "+"; onClicked: root.zoom(0.67, (root.viewportStart + root.viewportEnd)/2) }
-                    Button { Layout.preferredWidth: 32; text: "›"; ToolTip.text: "Późniejsze godziny"; ToolTip.visible: hovered; onClicked: root.moveRange(1) }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Label { text: "Zakres czasu"; font.pixelSize: 11; opacity: 0.7 }
+                    ComboBox {
+                        Layout.fillWidth: true
+                        Accessible.name: "Zakres czasu na wykresach"
+                        model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny", "Własny zakres"]
+                        currentIndex: {
+                            const hours = (root.viewportEnd - root.viewportStart) / 3600;
+                            if (Math.abs(root.viewportStart - root.weather.firstTimestamp) < 1 && Math.abs(root.viewportEnd - root.weather.lastTimestamp) < 1) return 0;
+                            const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
+                            return index < 0 ? 4 : index + 1;
+                        }
+                        onActivated: index => { if (index < 4) root.setHours([0,24,48,72][index]); }
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Label { text: "Start modelu"; font.pixelSize: 11; opacity: 0.7 }
+                    ComboBox {
+                        id: archiveCombo
+                        Layout.fillWidth: true
+                        Accessible.name: "Start obliczeń modelu, także archiwalny"
+                        model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowszy dostępny"}]
+                        textRole: "label"
+                        onDownChanged: if (down) root.weather.loadRuns()
+                        currentIndex: { const entries = root.weather.availableRuns; const index = entries.findIndex(e => e.timestamp === root.weather.requestedRun); return Math.max(0, index); }
+                        onActivated: index => {
+                            if (!root.weather.availableRuns.length) root.weather.refresh();
+                            else root.weather.requestedRun = root.weather.availableRuns[index].timestamp;
+                        }
+                    }
                 }
             }
+            Flow {
+                visible: root.viewMode === 0 && root.weather.hasData
+                Layout.fillWidth: true
+                spacing: 6
+                Button { text: "Wcześniej"; icon.name: "go-previous"; enabled: root.viewportStart > root.weather.firstTimestamp; ToolTip.text: "Przesuń widoczny przedział do wcześniejszych godzin"; ToolTip.visible: hovered; onClicked: root.moveRange(-1) }
+                Button { text: "Więcej godzin"; icon.name: "zoom-out"; enabled: root.viewportEnd - root.viewportStart < root.weather.lastTimestamp - root.weather.firstTimestamp; ToolTip.text: "Oddal wykres i pokaż dłuższy przedział czasu"; ToolTip.visible: hovered; onClicked: root.zoom(1.5, (root.viewportStart + root.viewportEnd)/2) }
+                Button { text: "Mniej godzin"; icon.name: "zoom-in"; ToolTip.text: "Przybliż wykres i pokaż krótszy przedział czasu"; ToolTip.visible: hovered; onClicked: root.zoom(0.67, (root.viewportStart + root.viewportEnd)/2) }
+                Button { text: "Później"; icon.name: "go-next"; enabled: root.viewportEnd < root.weather.lastTimestamp; ToolTip.text: "Przesuń widoczny przedział do późniejszych godzin"; ToolTip.visible: hovered; onClicked: root.moveRange(1) }
+            }
+            Label { visible: root.viewMode === 0 && root.weather.hasData; Layout.fillWidth: true; text: "Widoczny czas: " + root.weather.formatTime(root.viewportStart, "d MMM HH:mm") + " – " + root.weather.formatTime(root.viewportEnd, "d MMM HH:mm") + (root.weather.utc ? " UTC" : " · czas lokalny"); opacity: 0.7; font.pixelSize: 11; wrapMode: Text.WordWrap }
             Slider {
                 Layout.fillWidth: true
                 visible: root.viewMode === 0 && root.viewportEnd - root.viewportStart < root.weather.lastTimestamp - root.weather.firstTimestamp - 1
@@ -154,12 +168,6 @@ Item {
                 to: Math.max(from, root.weather.lastTimestamp - (root.viewportEnd - root.viewportStart))
                 value: root.viewportStart
                 onMoved: { const span = root.viewportEnd - root.viewportStart; root.viewportStart = value; root.viewportEnd = value + span; }
-            }
-            Button {
-                visible: root.viewMode === 0 && root.weather.model !== "gfs"
-                text: root.originalView ? "Wróć do wykresów interaktywnych" : "Pokaż oryginalny meteogram ICM"
-                icon.name: root.originalView ? "view-statistics" : "image-x-generic"
-                onClicked: root.originalView = !root.originalView
             }
             BusyIndicator { Layout.alignment: Qt.AlignHCenter; running: root.weather.busy; visible: running && !root.weather.hasData }
             Kirigami.PlaceholderMessage {
@@ -173,7 +181,7 @@ Item {
             Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                sourceComponent: root.viewMode === 0 ? (root.originalView && root.weather.model !== "gfs" ? originalComponent : chartsComponent) : root.viewMode === 1 ? hourlyComponent : dailyComponent
+                sourceComponent: root.viewMode === 0 ? chartsComponent : root.viewMode === 1 ? hourlyComponent : dailyComponent
             }
             Label {
                 Layout.fillWidth: true
@@ -205,6 +213,7 @@ Item {
                         title: modelData.title
                         groupKey: modelData.key
                         fields: modelData.fields
+                        chartConfiguration: modelData
                         startTime: root.viewportStart
                         endTime: root.viewportEnd
                         selectedTime: root.selectedTime
@@ -218,7 +227,6 @@ Item {
             }
         }
     }
-    Component { id: originalComponent; OriginalMeteogram { weather: root.weather } }
     Component {
         id: hourlyComponent
         ScrollView {
@@ -274,6 +282,8 @@ Item {
                         ColumnLayout {
                             anchors.fill: parent
                             Label { text: dayCard.modelData.day; font.bold: true }
+                            Kirigami.Icon { source: dayCard.modelData.icon; Layout.preferredWidth: 48; Layout.preferredHeight: 48; Accessible.name: dayCard.modelData.description }
+                            Label { Layout.fillWidth: true; text: dayCard.modelData.description; wrapMode: Text.WordWrap; opacity: 0.7 }
                             Kirigami.Heading { text: root.number(dayCard.modelData.maximum, 0) + "° / " + root.number(dayCard.modelData.minimum, 0) + "°"; level: 2 }
                             Label { text: "Opad: " + root.number(dayCard.modelData.rain, 1) + " mm" }
                             Label { text: "Porywy: " + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit }
@@ -323,7 +333,7 @@ Item {
                             required property var modelData
                             Layout.fillWidth: true
                             implicitHeight: Math.max(nameLabel.implicitHeight, valueLabel.implicitHeight) + 12
-                            color: modelData.group === root.selectedGroup ? Kirigami.Theme.alternateBackgroundColor : "transparent"
+                            color: root.selectedFieldKeys.indexOf(modelData.key) >= 0 ? Kirigami.Theme.alternateBackgroundColor : "transparent"
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.margins: 5
@@ -352,7 +362,7 @@ Item {
             id: settingsScroll
             contentWidth: availableWidth
             clip: true
-            DisplaySettings { width: settingsScroll.availableWidth }
+            DisplaySettings { width: settingsScroll.availableWidth; weather: root.weather }
         }
     }
 }

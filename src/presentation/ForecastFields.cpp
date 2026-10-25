@@ -6,14 +6,14 @@ const QVector<ForecastField> &forecastFields()
     static const QVector<ForecastField> fields{
         // Line colors from app.meteo.pl's light meteogram palette (25.10.2026).
         {"airtmp_point", "Temperatura powietrza", "°C", "temperature", "#f44336", "line"},
-        {"airtmp_min", "Temperatura minimalna", "°C", "temperature", "#edab88", "lower"},
-        {"airtmp_max", "Temperatura maksymalna", "°C", "temperature", "#edab88", "upper"},
+        {"airtmp_min", "Temperatura minimalna", "°C", "temperature", "#fadcdc", "lower"},
+        {"airtmp_max", "Temperatura maksymalna", "°C", "temperature", "#fadcdc", "upper"},
         {"dwptmp_point", "Punkt rosy", "°C", "temperature", "#6a5acd", "points"},
         {"wchill_point", "Temperatura odczuwalna", "°C", "temperature", "#00008b", "line"},
         {"wchill_min", "Odczuwalna minimalna", "°C", "temperature", "#b9dcff", "hidden"},
         {"wchill_max", "Odczuwalna maksymalna", "°C", "temperature", "#b9dcff", "hidden"},
-        {"grdtmp_min", "Przy gruncie · minimum", "°C", "ground", "#368f83", "line"},
-        {"grdtmp_max", "Przy gruncie · maksimum", "°C", "ground", "#368f83", "line"},
+        {"grdtmp_min", "Przy gruncie · minimum", "°C", "ground", "#795548", "line"},
+        {"grdtmp_max", "Przy gruncie · maksimum", "°C", "ground", "#795548", "line"},
         {"pcpttl_aver", "Opad średni w przedziale", "mm", "precipitation", "#00aa00", "bars"},
         {"pcpttl_max", "Opad maksymalny w przedziale", "mm", "precipitation", "#00aa00", "stems"},
         {"pcpttlprob_point", "Prawdopodobieństwo opadu", "%", "precipitation", "#00aa00", "right", 1, 0},
@@ -22,6 +22,7 @@ const QVector<ForecastField> &forecastFields()
         {"wind_gust_max", "Porywy wiatru", "m/s", "wind", "#f44336", "line"},
         {"wind10_dr_deg_true_prev_point", "Kierunek wiatru · skąd wieje", "°", "wind", "#111199", "direction", 1, 0},
         {"slpres_point", "Ciśnienie na poziomie morza", "hPa", "pressure", "#000000", "line", 0.01, 0},
+        {"trpres_point", "Ciśnienie na wysokości terenu", "hPa", "pressure", "#000000", "line", 0.01, 0},
         {"cldtot_aver", "Zachmurzenie całkowite", "%", "clouds", "#dc4614", "line", 100, 0},
         {"cldvlow_aver", "Chmury bardzo niskie", "%", "clouds", "#424242", "dashed", 100, 0},
         {"cldlow_aver", "Chmury niskie", "%", "clouds", "#5a5a5a", "line", 100, 0},
@@ -42,10 +43,12 @@ const QVector<ForecastField> &forecastFields()
     return fields;
 }
 
-QString forecastDarkColor(const QString &lightColor)
+QString forecastDarkColor(const QString &lightColor, const QString &fieldKey)
 {
+    if (fieldKey == "cldbse79") return lightColor;
+    if (fieldKey == "cldtot_aver") return lightColor;
     static const QHash<QString, QString> palette{
-        {"#f44336", "#ff6b6b"}, {"#edab88", "#bb8060"}, {"#368f83", "#63c6ad"}, {"#6a5acd", "#9f7aea"},
+        {"#f44336", "#ff6b6b"}, {"#fadcdc", "#4d2626"}, {"#6a5acd", "#9f7aea"},
         {"#00008b", "#4a90e2"}, {"#b9dcff", "#1a3a5c"}, {"#795548", "#8b6914"},
         {"#00aa00", "#4ade80"}, {"#111199", "#5b9cf6"}, {"#000000", "#ffffff"},
         {"#dc4614", "#ff8c42"}, {"#424242", "#373737"}, {"#ff9600", "#ff9e40"}

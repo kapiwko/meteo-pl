@@ -136,3 +136,5 @@ FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
 i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
 
 Natywny renderer Qt Quick przetwarza polecenia rysowania na geometrię sceny, z osobną warstwą kursora i wygładzaniem MSAA.
+
+Wykresy są konfiguracją dowolnych serii, stylów i osi. Edytor profili obsługuje import/eksport JSON, a renderer GPU jest domyślny z opcją CPU.

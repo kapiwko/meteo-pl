@@ -80,6 +80,8 @@ public:
     void setWindUnit(const QString &value);
     void setUtc(bool value);
     Q_INVOKABLE QVariantList detailsAt(double timestamp) const;
+    Q_INVOKABLE QVariantList configuredCharts(const QVariantList &layout) const;
+    Q_INVOKABLE QVariantList calendarDays(double from, double to) const;
     Q_INVOKABLE double nearestTimestamp(double timestamp) const;
     Q_INVOKABLE QString formatTime(double timestamp, const QString &pattern = QStringLiteral("ddd d MMM, HH:mm")) const;
     Q_INVOKABLE void loadRuns();

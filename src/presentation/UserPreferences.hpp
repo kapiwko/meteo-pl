@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QSettings>
+#include <QUrl>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
@@ -18,6 +19,9 @@ class UserPreferences : public QObject {
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartLayout READ chartLayout NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartCatalog READ chartCatalog CONSTANT)
+    Q_PROPERTY(QVariantList seriesCatalog READ seriesCatalog CONSTANT)
+    Q_PROPERTY(QString settingsFile READ settingsFile CONSTANT)
+    Q_PROPERTY(QString renderer READ renderer WRITE setRenderer NOTIFY displayChanged)
 public:
     explicit UserPreferences(QObject *parent = nullptr);
     QVariantList favorites() const;
@@ -30,6 +34,10 @@ public:
     QVariantList profiles() const;
     QVariantList chartLayout() const;
     QVariantList chartCatalog() const;
+    QVariantList seriesCatalog() const;
+    QString settingsFile() const;
+    QString renderer() const;
+    void setRenderer(const QString &value);
     void setProfile(const QString &value);
     void setVisibleGroups(const QStringList &value);
     void setWindUnit(const QString &value);
@@ -44,6 +52,13 @@ public:
     Q_INVOKABLE void setChartEnabled(const QString &key, bool enabled);
     Q_INVOKABLE void setChartField(const QString &chart, const QString &field, bool enabled);
     Q_INVOKABLE void moveChart(int index, int direction);
+    Q_INVOKABLE QString createChart(const QString &title);
+    Q_INVOKABLE void deleteChart(const QString &key);
+    Q_INVOKABLE void setChartOptions(const QString &key, const QVariantMap &options);
+    Q_INVOKABLE void setSeriesStyle(const QString &chart, const QString &field, const QVariantMap &options);
+    Q_INVOKABLE void removeSeries(const QString &chart, const QString &field);
+    Q_INVOKABLE QVariantMap exportProfiles(const QUrl &file, bool allSaved = false) const;
+    Q_INVOKABLE QVariantMap importProfiles(const QUrl &file);
 private:
     void saveLayout(const QVariantList &layout);
     QVariantList savedProfiles() const;

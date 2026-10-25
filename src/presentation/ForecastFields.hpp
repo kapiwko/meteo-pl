@@ -9,6 +9,6 @@ struct ForecastField {
     int decimals = 1;
 };
 const QVector<ForecastField> &forecastFields();
-QString forecastDarkColor(const QString &lightColor);
+QString forecastDarkColor(const QString &lightColor, const QString &fieldKey = {});
 struct ForecastChart { QString key, title; QStringList fields; };
 const QVector<ForecastChart> &forecastCharts();

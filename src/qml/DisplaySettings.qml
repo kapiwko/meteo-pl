@@ -2,13 +2,41 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
+import QtCore
+import org.kde.kirigami as Kirigami
 
 ColumnLayout {
     id: root
+    objectName: "meteogramDisplaySettings"
     spacing: 12
     property string expandedChart: ""
-    function definition(key) { return UserPreferences.chartCatalog.find(chart => chart.key === key); }
-    Label { text: "Układ wykresów"; font.bold: true }
+    property string expandedSeries: ""
+    property WeatherModel weather: null
+    property string transferMessage: ""
+    property bool transferFailed: false
+    function transferResult(result, importing) {
+        transferFailed = !result.ok;
+        transferMessage = result.ok ? (importing ? "Zaimportowano profili: " : "Wyeksportowano profili: ") + result.count + (result.path ? " · " + result.path : "") : result.error;
+    }
+    FileDialog {
+        id: importDialog
+        title: "Importuj profile meteogramu"
+        nameFilters: ["Profile meteogramu (*.json)"]
+        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        onAccepted: root.transferResult(UserPreferences.importProfiles(selectedFile), true)
+    }
+    FileDialog {
+        id: exportDialog
+        property bool allSaved: false
+        title: allSaved ? "Eksportuj zapisane profile" : "Eksportuj bieżący profil"
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "json"
+        nameFilters: ["Profile meteogramu (*.json)"]
+        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        onAccepted: root.transferResult(UserPreferences.exportProfiles(selectedFile, allSaved), false)
+    }
+    Label { text: "Układ wykresów i wygląd serii"; font.bold: true }
     ComboBox {
         Layout.fillWidth: true
         model: UserPreferences.profiles
@@ -26,9 +54,24 @@ ColumnLayout {
         Button { text: "Zmień nazwę"; enabled: profileName.text.trim().length > 0; onClicked: { UserPreferences.renameProfile(profileName.text); profileName.clear(); } }
         Button { text: "Usuń profil"; icon.name: "edit-delete"; onClicked: UserPreferences.deleteProfile() }
     }
+    Flow {
+        Layout.fillWidth: true
+        spacing: 8
+        Button { text: "Importuj…"; icon.name: "document-import"; onClicked: importDialog.open() }
+        Button { text: "Eksportuj profil…"; icon.name: "document-export"; onClicked: { exportDialog.allSaved = false; exportDialog.open(); } }
+        Button { text: "Eksportuj zapisane…"; icon.name: "document-save-all"; onClicked: { exportDialog.allSaved = true; exportDialog.open(); } ToolTip.text: "Eksportuj wszystkie własne profile i Własny układ"; ToolTip.visible: hovered }
+    }
     Label {
         Layout.fillWidth: true
-        text: "Wybierz wykresy, rozwiń ich serie i ustaw kolejność strzałkami. Zmiany zapisanego profilu są pamiętane automatycznie; zmiana gotowego układu tworzy „Własny układ”."
+        visible: root.transferMessage.length > 0
+        text: root.transferMessage
+        color: root.transferFailed ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
+        wrapMode: Text.WrapAnywhere
+        Accessible.role: Accessible.AlertMessage
+    }
+    Label {
+        Layout.fillWidth: true
+        text: "Każdy wykres może łączyć dowolne serie. Próbka przy serii pokazuje jej wygląd. Ustaw kolory, rodzaj rysowania i oś w „Wygląd”. Zmiany zapisują się w wybranym profilu; zmiana gotowego profilu tworzy „Własny układ”."
         wrapMode: Text.WordWrap
         opacity: 0.7
     }
@@ -36,9 +79,9 @@ ColumnLayout {
         model: UserPreferences.chartLayout
         delegate: Frame {
             id: chart
+            objectName: "chart-settings-" + modelData.key
             required property var modelData
             required property int index
-            readonly property var definition: root.definition(modelData.key)
             Layout.fillWidth: true
             padding: 8
             ColumnLayout {
@@ -46,34 +89,118 @@ ColumnLayout {
                 RowLayout {
                     Layout.fillWidth: true
                     CheckBox {
-                        Layout.fillWidth: true
-                        text: chart.definition ? chart.definition.title : chart.modelData.key
+                        Accessible.name: chart.modelData.title
                         checked: chart.modelData.enabled
                         onToggled: UserPreferences.setChartEnabled(chart.modelData.key, checked)
                     }
+                    Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chart.modelData.title; wrapMode: Text.WordWrap }
                     ToolButton { text: "Serie"; checkable: true; checked: root.expandedChart === chart.modelData.key; onClicked: root.expandedChart = checked ? chart.modelData.key : "" }
-                    ToolButton { icon.name: "go-up"; enabled: chart.index > 0; onClicked: UserPreferences.moveChart(chart.index, -1); ToolTip.text: "Przenieś wyżej"; ToolTip.visible: hovered }
-                    ToolButton { icon.name: "go-down"; enabled: chart.index < UserPreferences.chartLayout.length - 1; onClicked: UserPreferences.moveChart(chart.index, 1); ToolTip.text: "Przenieś niżej"; ToolTip.visible: hovered }
+                    ToolButton { icon.name: "go-up"; enabled: chart.index > 0; onClicked: UserPreferences.moveChart(chart.index, -1); ToolTip.text: "Przenieś wykres wyżej"; ToolTip.visible: hovered }
+                    ToolButton { icon.name: "go-down"; enabled: chart.index < UserPreferences.chartLayout.length - 1; onClicked: UserPreferences.moveChart(chart.index, 1); ToolTip.text: "Przenieś wykres niżej"; ToolTip.visible: hovered }
+                    ToolButton { icon.name: "edit-delete"; onClicked: UserPreferences.deleteChart(chart.modelData.key); ToolTip.text: "Usuń wykres z tego profilu"; ToolTip.visible: hovered }
                 }
-                Flow {
+                Loader {
                     Layout.fillWidth: true
-                    visible: root.expandedChart === chart.modelData.key
-                    Repeater {
-                        model: chart.definition ? chart.definition.fields : []
-                        delegate: CheckBox {
-                            required property var modelData
-                            text: modelData.label
-                            checked: chart.modelData.fields.indexOf(modelData.key) >= 0
-                            onToggled: UserPreferences.setChartField(chart.modelData.key, modelData.key, checked)
+                    active: root.expandedChart === chart.modelData.key
+                    visible: active
+                    sourceComponent: Component {
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            TextField {
+                                Layout.fillWidth: true
+                                text: chart.modelData.title
+                                placeholderText: "Nazwa wykresu"
+                                maximumLength: 80
+                                onEditingFinished: if (text.trim().length) UserPreferences.setChartOptions(chart.modelData.key, {title: text})
+                            }
+                            Repeater {
+                                model: chart.modelData.series
+                                delegate: SeriesSettings {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    chartKey: chart.modelData.key
+                                    seriesStyle: modelData
+                                    available: !root.weather || root.weather.series[modelData.key] !== undefined
+                                    expanded: root.expandedSeries === chartKey + "/" + modelData.key
+                                    onToggleAppearance: root.expandedSeries = expanded ? "" : chartKey + "/" + modelData.key
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                ComboBox {
+                                    id: addSeries
+                                    Layout.fillWidth: true
+                                    model: UserPreferences.seriesCatalog.filter(series => !chart.modelData.series.some(existing => existing.key === series.key))
+                                    textRole: "label"
+                                    displayText: currentIndex >= 0 ? currentText : "Wybierz serię…"
+                                }
+                                Button { text: "Dodaj serię"; enabled: addSeries.currentIndex >= 0; onClicked: UserPreferences.setChartField(chart.modelData.key, addSeries.model[addSeries.currentIndex].key, true) }
+                            }
+                            GridLayout {
+                                Layout.fillWidth: true
+                                columns: 3
+                                Label { text: "Zakres osi"; font.bold: true }
+                                Label { text: "Minimum" }
+                                Label { text: "Maksimum" }
+                                Repeater {
+                                    model: ["left", "right"]
+                                    delegate: RowLayout {
+                                        id: axis
+                                        required property string modelData
+                                        Layout.columnSpan: 3
+                                        Layout.fillWidth: true
+                                        Label { text: axis.modelData === "left" ? "Lewa" : "Prawa"; Layout.preferredWidth: 65 }
+                                        Repeater {
+                                            model: ["Min", "Max"]
+                                            delegate: TextField {
+                                                id: limit
+                                                required property string modelData
+                                                readonly property string option: axis.modelData + modelData
+                                                Layout.fillWidth: true
+                                                text: chart.modelData[option] === undefined ? "" : String(chart.modelData[option])
+                                                placeholderText: "Automatycznie"
+                                                validator: DoubleValidator { locale: "C" }
+                                                onEditingFinished: {
+                                                    if (!text.length || acceptableInput) {
+                                                        const patch = {}; patch[option] = text.length ? Number(text) : null;
+                                                        UserPreferences.setChartOptions(chart.modelData.key, patch);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            Label { Layout.fillWidth: true; text: "Przy łączeniu różnych jednostek przypisz serie do lewej lub prawej osi. Puste granice oznaczają skalę automatyczną."; wrapMode: Text.WordWrap; font.pixelSize: 11; opacity: 0.65 }
                         }
                     }
                 }
             }
         }
     }
+    Button { text: "Dodaj wykres"; icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart("Nowy wykres") }
+    Label { text: "Rysowanie wykresów"; font.bold: true }
+    ComboBox {
+        Layout.fillWidth: true
+        model: [{id:"gpu",name:"GPU · scena Qt Quick (domyślnie)"}, {id:"cpu",name:"CPU · Canvas"}]
+        textRole: "name"
+        currentIndex: model.findIndex(item => item.id === UserPreferences.renderer)
+        onActivated: index => UserPreferences.renderer = model[index].id
+    }
+    Label { Layout.fillWidth: true; text: "Zmiana działa od razu dla wszystkich profili. Gdy Qt Quick działa bez akceleracji, aplikacja użyje CPU."; wrapMode: Text.WordWrap; opacity: 0.7 }
     Label { text: "Jednostka wiatru"; font.bold: true }
     ComboBox { Layout.fillWidth: true; model: ["m/s", "km/h", "kt"]; currentIndex: model.indexOf(UserPreferences.windUnit); onActivated: UserPreferences.windUnit = currentText }
     CheckBox { text: "Czas UTC"; checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
     CheckBox { text: "Cieniuj noc dla wybranej lokalizacji"; checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
+    TextEdit {
+        Layout.fillWidth: true
+        text: "Plik konfiguracji: " + UserPreferences.settingsFile
+        readOnly: true
+        selectByMouse: true
+        wrapMode: TextEdit.WrapAnywhere
+        font.pixelSize: 11
+        color: Kirigami.Theme.textColor
+        opacity: 0.7
+    }
     Label { Layout.fillWidth: true; text: "Legenda ukrywa serie bez zmiany skali. Ctrl + kółko myszy przybliża czas. Kliknięcie wykresu przypina szczegółowy odczyt."; wrapMode: Text.WordWrap; opacity: 0.7 }
 }

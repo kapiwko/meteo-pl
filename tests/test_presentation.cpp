@@ -1,6 +1,6 @@
 #include "WeatherModel.hpp"
+#include "ChartConfiguration.hpp"
 #include "GpuPlot.hpp"
-#include <QSGRendererInterface>
 #include "Fixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
@@ -10,6 +10,12 @@
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QQuickStyle>
+#include <QSGRendererInterface>
+#include <QQuickTextDocument>
+#include <QTextBlock>
+#include <QTextImageFormat>
+#include <QTextDocument>
+#include <QTimeZone>
 #include <QTemporaryDir>
 #include <QTest>
 
@@ -99,8 +105,7 @@ private slots:
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|overridden).*")));
         WeatherModel model;
         model.setAutoRefresh(false);
-        model.refresh(false);
-        QVERIFY(model.hasData());
+        QVERIFY(!model.hasData());
         QQmlEngine engine;
         QQmlComponent component(&engine);
         component.loadFromModule("pl.meteo.desktop", "ForecastPanel");
@@ -114,6 +119,8 @@ private slots:
         item->setParentItem(window.contentItem());
         item->setSize(QSizeF(780, 1000));
         window.show();
+        model.refresh(false);
+        QVERIFY(model.hasData());
         QTest::qWait(300);
         const auto screenshot = window.grabWindow();
         QVERIFY(!screenshot.isNull());
@@ -126,6 +133,11 @@ private slots:
             QVERIFY(settings);
             QVERIFY(QMetaObject::invokeMethod(settings, "open"));
             QTest::qWait(300);
+            auto *editor = object->findChild<QObject *>("meteogramDisplaySettings");
+            QVERIFY(editor);
+            editor->setProperty("expandedChart", "temperature");
+            editor->setProperty("expandedSeries", "temperature/airtmp_point");
+            QTest::qWait(100);
             QVERIFY(window.grabWindow().save(settingsScreenshot));
             QVERIFY(QMetaObject::invokeMethod(settings, "close"));
         }
@@ -145,12 +157,19 @@ private slots:
         QCOMPARE(chart->property("bounds").value<QJSValue>().toVariant().toMap(), originalBounds);
         for (const auto &key : seriesToToggle)
             QVERIFY(QMetaObject::invokeMethod(chart, "toggle", Q_ARG(QVariant, key)));
+        QTest::qWait(50);
+        auto *gpu = qobject_cast<GpuPlot *>(findItem(findItem, item, "gpu-base-temperature"));
+        const auto baseFrames = gpu ? gpu->frameCount() : 0;
         const auto cursorPoint = plot->mapToScene(QPointF(plot->width() / 2, plot->height() / 2)).toPoint();
         QTest::mouseMove(&window, cursorPoint);
         QTRY_VERIFY(object->property("selectedTime").toDouble() > 0);
         auto *inspector = object->findChild<QObject *>("forecastInspector");
         QVERIFY(inspector);
         QTRY_VERIFY(inspector->property("visible").toBool());
+        if (gpu) {
+            QTest::qWait(50);
+            QCOMPARE(gpu->frameCount(), baseFrames); // Moving the cursor must not rebuild the chart geometry.
+        }
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, cursorPoint);
         QVERIFY(object->property("pinned").toBool());
         QTest::keyClick(&window, Qt::Key_Escape);
@@ -159,6 +178,152 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(object.data(), "zoom", Q_ARG(QVariant, 0.5), Q_ARG(QVariant, model.firstTimestamp() + fullSpan / 2)));
         QVERIFY(object->property("viewportEnd").toDouble() - object->property("viewportStart").toDouble() < fullSpan);
     }
+    void configuredChartsMixDifferentUnitsAndRespectProfileAxes()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        WeatherModel model;
+        model.setAutoRefresh(false);
+        model.refresh(false);
+        QVERIFY(model.hasData());
+        auto temperature = defaultSeriesStyle("airtmp_point");
+        temperature["color"] = "#123456";
+        temperature["lineWidth"] = 3.5;
+        auto rain = defaultSeriesStyle("pcpttl_aver");
+        rain["axis"] = "right";
+        const QVariantList layout{QVariantMap{{"key", "chart:mixed"}, {"title", "Temperatura i deszcz"}, {"enabled", true},
+            {"leftScale", "auto"}, {"rightScale", "auto"}, {"leftMin", -20}, {"leftMax", 40}, {"rightMax", 10},
+            {"series", QVariantList{temperature, rain}}}};
+        const auto charts = model.configuredCharts(layout);
+        QCOMPARE(charts.size(), 1);
+        const auto definition = charts.first().toMap();
+        QCOMPARE(definition["leftScale"].toString(), "temperature");
+        QCOMPARE(definition["rightScale"].toString(), "precipitation");
+        const auto fields = definition["fields"].toList();
+        QCOMPARE(fields.size(), 2);
+        QCOMPARE(fields.first().toMap()["axis"].toString(), "left");
+        QCOMPARE(fields.last().toMap()["axis"].toString(), "right");
+        QCOMPARE(fields.first().toMap()["color"].toString(), "#123456");
+        QCOMPARE(fields.first().toMap()["lineWidth"].toDouble(), 3.5);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "Meteogram");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)},
+            {"title", definition["title"]}, {"groupKey", definition["key"]}, {"fields", fields}, {"chartConfiguration", definition}}));
+        QVERIFY2(chart, qPrintable(component.errorString()));
+        auto bounds = chart->property("bounds").value<QJSValue>().toVariant().toMap();
+        auto right = chart->property("rightBounds").value<QJSValue>().toVariant().toMap();
+        QCOMPARE(bounds["low"].toDouble(), -20);
+        QCOMPARE(bounds["high"].toDouble(), 40);
+        QCOMPARE(right["low"].toDouble(), 0);
+        QCOMPARE(right["high"].toDouble(), 10);
+        QVariant leftUnit, rightUnit;
+        QVERIFY(QMetaObject::invokeMethod(chart.data(), "axisUnit", Q_RETURN_ARG(QVariant,leftUnit), Q_ARG(QVariant,false)));
+        QVERIFY(QMetaObject::invokeMethod(chart.data(), "axisUnit", Q_RETURN_ARG(QVariant,rightUnit), Q_ARG(QVariant,true)));
+        QCOMPARE(leftUnit.toString(),QStringLiteral("°C"));
+        QCOMPARE(rightUnit.toString(),QStringLiteral("mm"));
+        QQuickWindow window;
+        window.resize(780, 340);
+        auto *item = qobject_cast<QQuickItem *>(chart.data());
+        item->setParentItem(window.contentItem()); item->setSize({780, 340});
+        window.show();
+        QTest::qWait(100);
+        QVERIFY(!window.grabWindow().isNull());
+        QVERIFY(QMetaObject::invokeMethod(chart.data(), "toggle", Q_ARG(QVariant, "pcpttl_aver")));
+        QCOMPARE(chart->property("bounds").value<QJSValue>().toVariant().toMap(), bounds);
+        QCOMPARE(chart->property("rightBounds").value<QJSValue>().toVariant().toMap(), right);
+    }
+    void settingsReleaseSpaceAfterCollapsingChartsAndSeries()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "DisplaySettings");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QVERIFY(item);
+        QQuickWindow window;
+        window.resize(650, 1000);
+        item->setParentItem(window.contentItem());
+        item->setWidth(620);
+        window.show();
+        const auto findChart = [](auto &&self, QQuickItem *parent) -> QQuickItem * {
+            if (parent->objectName() == "chart-settings-temperature") return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child)) return found;
+            return nullptr;
+        };
+        auto *chart = findChart(findChart, item);
+        QVERIFY(chart);
+        QTRY_VERIFY(chart->height() > 0 && chart->height() < 100);
+        QTest::qWait(100); // Let wrapped labels and the Flow of file buttons finish layout.
+        const auto closedHeight = chart->height();
+        const auto closedTotal = item->implicitHeight();
+        for (int repeat = 0; repeat < 2; ++repeat) {
+            object->setProperty("expandedChart", "temperature");
+            QTRY_VERIFY(chart->height() > closedHeight + 250);
+            const auto openHeight = chart->height();
+            object->setProperty("expandedSeries", "temperature/airtmp_point");
+            QTRY_VERIFY(chart->height() > openHeight + 250);
+            object->setProperty("expandedSeries", "");
+            QTRY_VERIFY(qAbs(chart->height() - openHeight) < 2);
+            object->setProperty("expandedChart", "");
+            QTRY_VERIFY(qAbs(chart->height() - closedHeight) < 2);
+            QTRY_VERIFY(qAbs(item->implicitHeight() - closedTotal) < 2);
+        }
+    }
+    void timeLabelsFitNarrowChartsWithoutOverlapping()
+    {
+        WeatherModel model;
+        model.setAutoRefresh(false);
+        model.refresh(false);
+        const auto definition = model.chartGroups().first().toMap();
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "Meteogram");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)},
+            {"title", "Temperature"}, {"groupKey", "temperature"}, {"fields", definition["fields"]}}));
+        QVERIFY2(chart, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(chart.data());
+        QQuickWindow window;
+        item->setParentItem(window.contentItem());
+        window.resize(1100, 320);
+        window.show();
+        for (const int span : {60, 120, 240}) {
+            chart->setProperty("endTime", model.firstTimestamp() + span * 3600);
+            for (const int width : {1100, 780, 480, 260}) {
+                item->setSize({qreal(width), 320});
+                QTest::qWait(20);
+                QVariant result;
+                QVERIFY(QMetaObject::invokeMethod(chart.data(), "timeAxisLabels", Q_RETURN_ARG(QVariant, result)));
+                const auto axis = result.value<QJSValue>().toVariant().toMap();
+                const auto labels = axis["labels"].toList();
+                QVERIFY(labels.size() >= 2);
+                if (width <= 480) QCOMPARE(axis["format"].toString(), QStringLiteral("HH"));
+                if (width == 1100 && span == 60) QCOMPARE(axis["format"].toString(), QStringLiteral("HH:mm"));
+                for (const auto &key : {"labels", "days"}) {
+                    double previousRight = 0;
+                    for (const auto &entry : axis[key].toList()) {
+                        const auto label = entry.toMap();
+                        const auto left = label["x"].toDouble() - label["width"].toDouble() / 2;
+                        const auto right = label["x"].toDouble() + label["width"].toDouble() / 2;
+                        QVERIFY(left >= chart->property("leftMargin").toDouble() - 0.1);
+                        QVERIFY(right <= width - chart->property("rightMargin").toDouble() + 0.1);
+                        QVERIFY(left >= previousRight + 7.5);
+                        if (QByteArray(key) == "days") {
+                            const auto middle=(label["start"].toDouble()+label["end"].toDouble())/2;
+                            QVariant position;
+                            QVERIFY(QMetaObject::invokeMethod(chart.data(), "px", Q_RETURN_ARG(QVariant,position), Q_ARG(QVariant,middle)));
+                            QVERIFY(qAbs(label["x"].toDouble()-position.toDouble())<0.01);
+                        }
+                        previousRight = right;
+                    }
+                }
+            }
+        }
+    }
     void precipitationIntervalsTouchAndFogIsAboveCloudFill()
     {
         WeatherModel model;
@@ -166,7 +331,7 @@ private slots:
         model.setUtc(true);
         model.refresh(false);
         QVERIFY(model.hasData());
-        const auto first = static_cast<qint64>(model.firstTimestamp()) / 10800 * 10800;
+        const auto first = model.firstTimestamp();
         const auto points = [first](double value) {
             QVariantList result;
             for (int i = 0; i < 4; ++i) result.append(QVariantMap{{"time", first + i * 3600}, {"value", value}});
@@ -278,6 +443,30 @@ private slots:
                                         QVariantMap{{"time", first + 3600}, {"value", -2}}};
         chart->setProperty("fields", QVariantList{negative});
         QTRY_COMPARE(window.grabWindow().pixelColor(pixelFor(-4.7)), QColor("#87ceeb"));
+    }
+
+    void calendarBoundariesAreMidnightsInTheSelectedTimeZone()
+    {
+        WeatherModel model;
+        model.setAutoRefresh(false);
+        const auto zone=QTimeZone::systemTimeZone();
+        const auto first=QDate(2026,10,24).startOfDay(zone).toSecsSinceEpoch();
+        const auto end=QDate(2026,10,27).startOfDay(zone).toSecsSinceEpoch();
+        const auto days=model.calendarDays(first,end);
+        QCOMPARE(days.size(),3);
+        for (const auto &entry:days) {
+            const auto day=entry.toMap();
+            QCOMPARE(model.formatTime(day["start"].toDouble(),"HH:mm"),QStringLiteral("00:00"));
+            QCOMPARE(model.formatTime(day["end"].toDouble(),"HH:mm"),QStringLiteral("00:00"));
+        }
+        if (zone.id()=="Europe/Warsaw") QCOMPARE(days[1].toMap()["end"].toLongLong()-days[1].toMap()["start"].toLongLong(),25*3600);
+        model.setUtc(true);
+        const auto utc=model.calendarDays(first,end);
+        for (const auto &entry:utc) {
+            const auto day=entry.toMap();
+            QCOMPARE(model.formatTime(day["start"].toDouble(),"HH:mm"),QStringLiteral("00:00"));
+            QCOMPARE(day["end"].toLongLong()-day["start"].toLongLong(),24*3600);
+        }
     }
     void detailsAndUnitsUseMatchingTimestamps()
     {

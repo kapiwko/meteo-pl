@@ -15,12 +15,16 @@ target_compile_options(meteo_core PRIVATE -Wall -Wextra -Wpedantic)
 set_source_files_properties(qml/BufferedImage.qml PROPERTIES QT_RESOURCE_ALIAS BufferedImage.qml)
 set_source_files_properties(qml/DisplaySettings.qml PROPERTIES QT_RESOURCE_ALIAS DisplaySettings.qml)
 set_source_files_properties(qml/EditorialView.qml PROPERTIES QT_RESOURCE_ALIAS EditorialView.qml)
+set_source_files_properties(qml/ForecastHeader.qml PROPERTIES QT_RESOURCE_ALIAS ForecastHeader.qml)
 set_source_files_properties(qml/ForecastPanel.qml PROPERTIES QT_RESOURCE_ALIAS ForecastPanel.qml)
 set_source_files_properties(qml/LocationEditor.qml PROPERTIES QT_RESOURCE_ALIAS LocationEditor.qml)
 set_source_files_properties(qml/MapTileFrame.qml PROPERTIES QT_RESOURCE_ALIAS MapTileFrame.qml)
 set_source_files_properties(qml/MapWheelHandler.qml PROPERTIES QT_RESOURCE_ALIAS MapWheelHandler.qml)
 set_source_files_properties(qml/Meteogram.qml PROPERTIES QT_RESOURCE_ALIAS Meteogram.qml)
+set_source_files_properties(qml/MeteogramStyle.js PROPERTIES QT_RESOURCE_ALIAS MeteogramStyle.js)
 set_source_files_properties(qml/OriginalMeteogram.qml PROPERTIES QT_RESOURCE_ALIAS OriginalMeteogram.qml)
+set_source_files_properties(qml/SeriesLegend.qml PROPERTIES QT_RESOURCE_ALIAS SeriesLegend.qml)
+set_source_files_properties(qml/SeriesSettings.qml PROPERTIES QT_RESOURCE_ALIAS SeriesSettings.qml)
 set_source_files_properties(qml/ThematicMaps.qml PROPERTIES QT_RESOURCE_ALIAS ThematicMaps.qml)
 set_source_files_properties(qml/TileMap.qml PROPERTIES QT_RESOURCE_ALIAS TileMap.qml)
 set_source_files_properties(qml/WeatherMap.qml PROPERTIES QT_RESOURCE_ALIAS WeatherMap.qml)
@@ -30,6 +34,8 @@ qt_add_qml_module(meteo_ui
     VERSION 1.0
     NO_PLUGIN_OPTIONAL
     SOURCES
+        presentation/ChartConfiguration.cpp
+        presentation/ChartConfiguration.hpp
         presentation/EditorialModel.cpp
         presentation/EditorialModel.hpp
         presentation/ForecastFields.cpp
@@ -54,12 +60,16 @@ qt_add_qml_module(meteo_ui
         qml/BufferedImage.qml
         qml/DisplaySettings.qml
         qml/EditorialView.qml
+        qml/ForecastHeader.qml
         qml/ForecastPanel.qml
         qml/LocationEditor.qml
         qml/MapTileFrame.qml
         qml/MapWheelHandler.qml
         qml/Meteogram.qml
+        qml/MeteogramStyle.js
         qml/OriginalMeteogram.qml
+        qml/SeriesLegend.qml
+        qml/SeriesSettings.qml
         qml/ThematicMaps.qml
         qml/TileMap.qml
         qml/WeatherMap.qml

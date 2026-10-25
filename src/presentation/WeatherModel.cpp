@@ -1,4 +1,5 @@
 #include "WeatherModel.hpp"
+#include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 
 #include <QCryptographicHash>
@@ -379,7 +380,7 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
                 : QStringLiteral("Kod %1").arg(code);
         }
         details.append(QVariantMap{{"key", field.key}, {"label", field.label}, {"value", text}, {"group", field.group},
-                                   {"number", value ? QVariant(*value * scale) : QVariant()}, {"color", field.color}, {"darkColor", forecastDarkColor(field.color)}});
+                                   {"number", value ? QVariant(*value * scale) : QVariant()}, {"color", field.color}, {"darkColor", forecastDarkColor(field.color, field.key)}});
     }
     return details;
 }
@@ -402,31 +403,51 @@ QUrl WeatherModel::originalLookupUrl() const
 
 QVariantList WeatherModel::chartGroups() const
 {
+    return configuredCharts(defaultChartLayout("full"));
+}
+
+QVariantList WeatherModel::configuredCharts(const QVariantList &layout) const
+{
     QVariantList result;
-    for (const auto &group : forecastCharts()) {
+    for (const auto &entry : normalizeChartLayout(layout)) {
+        auto chart = entry.toMap();
+        if (!chart["enabled"].toBool()) continue;
         QVariantList fields;
-        for (const auto &key : group.fields) for (const auto &field : forecastFields()) {
-            if (field.key != key || !m_series.contains(key)) continue;
-            auto kind = field.kind;
-            if (group.key == "temperature" || group.key == "ground") {
-                if (key == "grdtmp_min") kind = "groundLow";
-                if (key == "grdtmp_max") kind = "groundHigh";
-                if (key == "wchill_min") kind = "feelLower";
-                if (key == "wchill_max") kind = "feelUpper";
-            }
-            if (group.key == "precipitation" && key == "realhum_aver") kind = "right";
-            if (group.key == "probability") kind = key == "pcpttlprob_point" ? "line" : key == "storm_max" ? "storm" : "flash";
-            if (group.key == "wind" && key == "wind_gust_max") kind = "gusts";
-            if (group.key == "cloudHeights" && key == "visibl_min") kind = "right";
-            else if (group.key == "cloudHeights") kind = "cloudPoint";
-            if (group.key == "clouds") {
-                if (key == "fog_max") kind = "rightBars";
-                else if (key != "cldtot_aver") kind = "cloudArea";
-            }
-            fields.append(QVariantMap{{"key", field.key}, {"label", field.label}, {"unit", field.unit == "m/s" ? m_windUnit : field.unit},
-                                      {"color", field.color}, {"darkColor", forecastDarkColor(field.color)}, {"kind", kind}, {"points", m_series.value(field.key)}});
+        QString leftUnit, leftScale, rightScale;
+        QStringList leftUnits, rightUnits;
+        const auto series = chart["series"].toList();
+        const auto unitFor = [this](const QVariantMap &style) { return style["unit"] == "m/s" ? m_windUnit : style["unit"].toString(); };
+        for (const auto &value : series) {
+            const auto style = value.toMap();
+            if (style["enabled"].toBool() && style["axis"] != "right" && m_series.contains(style["key"].toString()) && style["render"] != "type") { leftUnit = unitFor(style); break; }
         }
-        if (!fields.isEmpty()) result.append(QVariantMap{{"key", group.key}, {"title", group.title}, {"fields", fields}});
+        for (const auto &value : series) {
+            auto style = value.toMap();
+            const auto key = style["key"].toString();
+            if (!style["enabled"].toBool() || !m_series.contains(key)) continue;
+            const auto unit = unitFor(style);
+            const auto axis = style["axis"] == "auto" ? (unit == leftUnit || style["render"] == "type" ? "left" : "right") : style["axis"].toString();
+            style["axis"] = axis;
+            style["unit"] = unit;
+            style["kind"] = style["render"];
+            style["points"] = m_series.value(key);
+            if (style["render"] == "range" || style["render"] == "rangeStems") {
+                const auto lower = m_series.value(style["lowerKey"].toString()).toList();
+                if (lower.isEmpty()) style["kind"] = "line";
+                else style["lowerPoints"] = lower;
+            }
+            fields.append(style);
+            if (style["render"] == "type" || style["render"] == "direction" || style["render"] == "storm" || style["render"] == "flash") continue;
+            auto &units = axis == "right" ? rightUnits : leftUnits;
+            if (!unit.isEmpty() && !units.contains(unit)) units.append(unit);
+            auto &scale = axis == "right" ? rightScale : leftScale;
+            if (scale.isEmpty()) scale = seriesScale(key);
+        }
+        chart["fields"] = fields;
+        chart["leftScale"] = chart["leftScale"] == "auto" ? (leftScale.isEmpty() ? "linear" : leftScale) : chart["leftScale"];
+        chart["rightScale"] = chart["rightScale"] == "auto" ? (rightScale.isEmpty() ? "linked" : rightScale) : chart["rightScale"];
+        chart["leftUnit"] = leftUnits.join(" / "); chart["rightUnit"] = rightUnits.join(" / ");
+        if (!fields.isEmpty()) result.append(chart);
     }
     return result;
 }
@@ -460,7 +481,8 @@ QVariantList WeatherModel::dailyForecast() const
         if (m_utc) time = time.toUTC();
         const auto date = time.date();
         if (!days.contains(date)) days.insert(date, {{"time", timestamp}, {"day", QLocale().toString(date, QStringLiteral("ddd d MMM"))},
-                                                    {"minimum", QVariant()}, {"maximum", QVariant()}, {"rain", QVariant()}, {"wind", QVariant()}});
+                                                    {"minimum", QVariant()}, {"maximum", QVariant()}, {"rain", QVariant()}, {"wind", QVariant()},
+                                                    {"cloudSum", 0.0}, {"cloudCount", 0}, {"storm", false}, {"snow", false}, {"mixed", false}});
         auto &day = days[date];
         const auto low = row.value("airtmp_min").isNull() ? row.value("airtmp_point") : row.value("airtmp_min");
         const auto high = row.value("airtmp_max").isNull() ? row.value("airtmp_point") : row.value("airtmp_max");
@@ -468,8 +490,41 @@ QVariantList WeatherModel::dailyForecast() const
         if (!high.isNull()) day["maximum"] = day["maximum"].isNull() ? high.toDouble() : std::max(day["maximum"].toDouble(), high.toDouble());
         if (!row.value("pcpttl_aver").isNull()) day["rain"] = day["rain"].toDouble() + row["pcpttl_aver"].toDouble();
         if (!row.value("wind_gust_max").isNull()) day["wind"] = day["wind"].isNull() ? row["wind_gust_max"].toDouble() : std::max(day["wind"].toDouble(), row["wind_gust_max"].toDouble());
+        if (!row.value("cldtot_aver").isNull()) { day["cloudSum"] = day["cloudSum"].toDouble() + row["cldtot_aver"].toDouble(); day["cloudCount"] = day["cloudCount"].toInt() + 1; }
+        if (row["storm_max"].toDouble() > 0 || row["flash_max"].toDouble() > 0) day["storm"] = true;
+        if (row["pcpttl_aver"].toDouble() > 0 && row["pcpttl_type_max"].toInt() == 2) day["snow"] = true;
+        if (row["pcpttl_aver"].toDouble() > 0 && row["pcpttl_type_max"].toInt() == 3) day["mixed"] = true;
     }
-    for (const auto &day : days) result.append(day);
+    for (auto day : days) {
+        QString icon, description;
+        if (day["storm"].toBool()) { icon = "weather-storm"; description = "Możliwe burze"; }
+        else if (day["snow"].toBool()) { icon = "weather-snow"; description = "Opady śniegu"; }
+        else if (day["mixed"].toBool()) { icon = "weather-snow-rain"; description = "Deszcz ze śniegiem"; }
+        else if (day["rain"].toDouble() > 0.1) { icon = "weather-showers"; description = "Opady deszczu"; }
+        else if (!day["cloudCount"].toInt()) { icon = "weather-none-available"; description = "Brak danych o zachmurzeniu"; }
+        else {
+            const auto clouds = day["cloudSum"].toDouble() / day["cloudCount"].toInt();
+            icon = clouds > 80 ? "weather-overcast" : clouds > 25 ? "weather-clouds" : "weather-clear";
+            description = clouds > 80 ? "Pochmurno" : clouds > 25 ? "Częściowe zachmurzenie" : "Słonecznie";
+        }
+        day["icon"] = icon; day["description"] = description;
+        for (const auto &key : {"cloudSum", "cloudCount", "storm", "snow", "mixed"}) day.remove(key);
+        result.append(day);
+    }
+    return result;
+}
+
+QVariantList WeatherModel::calendarDays(double from, double to) const
+{
+    QVariantList result;
+    if (!std::isfinite(from) || !std::isfinite(to) || to <= from || to - from > 366 * 86400.0) return result;
+    const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
+    auto date = QDateTime::fromSecsSinceEpoch(qint64(from), zone).date();
+    const auto last = QDateTime::fromSecsSinceEpoch(qint64(to) - 1, zone).date();
+    for (; date <= last; date = date.addDays(1)) {
+        result.append(QVariantMap{{"start", date.startOfDay(zone).toSecsSinceEpoch()},
+            {"end", date.addDays(1).startOfDay(zone).toSecsSinceEpoch()}});
+    }
     return result;
 }
 
