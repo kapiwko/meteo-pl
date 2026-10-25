@@ -62,8 +62,8 @@ PlasmoidItem {
         readonly property ForecastPanel chartView: forecastView.item as ForecastPanel
         Layout.minimumWidth: Kirigami.Units.gridUnit * 20
         Layout.minimumHeight: Kirigami.Units.gridUnit * (root.showMeteogram ? 18 : 12)
-        Layout.preferredWidth: Kirigami.Units.gridUnit * (root.showMeteogram ? 34 : 24)
-        Layout.preferredHeight: root.showMeteogram ? Kirigami.Units.gridUnit * 38 : overviewContent.implicitHeight + Kirigami.Units.largeSpacing * 2
+        Layout.preferredWidth: Kirigami.Units.gridUnit * (root.showMeteogram ? 34 : root.weatherConfiguration.popupView === "charts" ? 30 : 24)
+        Layout.preferredHeight: root.showMeteogram ? Kirigami.Units.gridUnit * 38 : Math.min(Screen.height * 0.85, overviewContent.implicitHeight + Kirigami.Units.largeSpacing * 2)
         implicitHeight: Layout.preferredHeight
         ColumnLayout {
             id: overviewContent
@@ -75,17 +75,26 @@ PlasmoidItem {
                 ToolButton { icon.name: "go-previous"; text: I18n.i18n("Weather"); visible: root.showMeteogram; onClicked: root.showMeteogram = false }
                 Kirigami.Heading { text: "Meteo"; level: 3; Layout.fillWidth: true }
                 ToolButton { icon.name: "view-refresh"; text: I18n.i18n("Refresh"); display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
-                ToolButton { icon.name: "configure"; text: I18n.i18n("Settings"); display: AbstractButton.IconOnly; onClicked: displayDialog.open(); ToolTip.text: text; ToolTip.visible: hovered }
-                ToolButton { icon.name: "mark-location"; text: I18n.i18n("Location"); display: AbstractButton.IconOnly; onClicked: Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
+                ToolButton { icon.name: "configure"; text: root.showMeteogram ? I18n.i18n("Settings") : I18n.i18n("Widget settings"); display: AbstractButton.IconOnly; onClicked: root.showMeteogram ? displayDialog.open() : Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
             }
             Loader {
                 id: forecastView
                 Layout.fillWidth: true
-                Layout.fillHeight: root.showMeteogram
-                Layout.preferredHeight: root.showMeteogram ? -1 : implicitHeight
-                sourceComponent: root.showMeteogram ? details : overview
+                Layout.fillHeight: root.showMeteogram || root.weatherConfiguration.popupView === "charts"
+                Layout.preferredHeight: implicitHeight
+                sourceComponent: root.showMeteogram ? details : root.weatherConfiguration.popupView === "charts" ? widgetCharts : overview
             }
             Component { id: overview; CompactForecast { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude) } }
+            Component {
+                id: widgetCharts
+                WidgetForecast {
+                    weather: forecastModel
+                    profile: root.weatherConfiguration.chartProfile
+                    chartKeys: Array.from(root.weatherConfiguration.chartKeys)
+                    hours: root.weatherConfiguration.chartHours
+                    onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
+                }
+            }
             Component {
                 id: details
                 ForecastPanel {

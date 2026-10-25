@@ -42,6 +42,7 @@ public:
     bool showLegend() const;
     QVariantList profiles() const;
     QVariantList chartLayout() const;
+    Q_INVOKABLE QVariantList chartLayoutForProfile(const QString &id) const;
     QVariantList chartCatalog() const;
     QVariantList seriesCatalog() const;
     QString settingsFile() const;
@@ -51,6 +52,7 @@ public:
     void setRenderer(const QString &value);
     int chartHeight() const;
     int profileChartHeight() const;
+    Q_INVOKABLE int chartHeightForProfile(const QString &id) const;
     void setChartHeight(int value);
     void setProfileChartHeight(int value);
     void setProfile(const QString &value);

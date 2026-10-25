@@ -102,8 +102,12 @@ void UserPreferences::setShowLegend(bool value) { if (value==showLegend()) retur
 int UserPreferences::chartHeight() const { return std::clamp(m_settings.value("display/chartHeight", 174).toInt(),64,800); }
 int UserPreferences::profileChartHeight() const
 {
-    if (profile() == "custom") return m_settings.value("display/customChartHeight", 0).toInt();
-    for (const auto &value : savedProfiles()) if (value.toMap()["id"] == profile()) return value.toMap().value("chartHeight",0).toInt();
+    return chartHeightForProfile(profile());
+}
+int UserPreferences::chartHeightForProfile(const QString &id) const
+{
+    if (id == "custom") return m_settings.value("display/customChartHeight", 0).toInt();
+    for (const auto &value : savedProfiles()) if (value.toMap()["id"] == id) return value.toMap().value("chartHeight",0).toInt();
     return 0;
 }
 void UserPreferences::setChartHeight(int value)
@@ -178,7 +182,10 @@ QVariantList UserPreferences::profiles() const
 }
 QVariantList UserPreferences::chartLayout() const
 {
-    const auto id = profile();
+    return chartLayoutForProfile(profile());
+}
+QVariantList UserPreferences::chartLayoutForProfile(const QString &id) const
+{
     if (id == "custom") {
         const auto saved = m_settings.value("display/customLayout").toByteArray();
         return saved.isEmpty() ? defaultChartLayout("classic") : normalizeChartLayout(QJsonDocument::fromJson(saved).toVariant().toList());

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-25 22:51+0100\n"
+"POT-Creation-Date: 2026-10-25 23:05+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -58,14 +58,21 @@ msgstr[2] "Wybrano %1 wykresów"
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:73
+msgid "12 hours"
+msgstr "12 godzin"
+
+#: integrations/plasma/package/contents/ui/configAppearance.qml:73
 #: src/qml/ForecastSettings.qml:39
 msgid "24 hours"
 msgstr "24 godziny"
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:74
 #: src/qml/ForecastSettings.qml:39
 msgid "48 hours"
 msgstr "48 godzin"
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:74
 #: src/qml/ForecastSettings.qml:39
 msgid "72 hours"
 msgstr "72 godziny"
@@ -99,7 +106,7 @@ msgstr "Temperatura powietrza min–max"
 msgid "All"
 msgstr "Wszystkie"
 
-#: src/presentation/UserPreferences.cpp:174
+#: src/presentation/UserPreferences.cpp:178
 msgid "All charts"
 msgstr "Wszystkie wykresy"
 
@@ -158,7 +165,7 @@ msgstr "Automatycznie"
 msgid "Automatic by unit"
 msgstr "Automatycznie według jednostki"
 
-#: src/presentation/UserPreferences.cpp:174
+#: src/presentation/UserPreferences.cpp:178
 msgid "Aviation"
 msgstr "Lotniczy"
 
@@ -174,7 +181,7 @@ msgstr "Wróć do artykułów"
 msgid "Bars"
 msgstr "Słupki"
 
-#: src/presentation/UserPreferences.cpp:174
+#: src/presentation/UserPreferences.cpp:178
 msgid "Basic"
 msgstr "Podstawowy"
 
@@ -222,6 +229,7 @@ msgstr "Nazwa wykresu"
 msgid "Chart profile"
 msgstr "Profil wykresów"
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:35
 #: src/qml/ForecastSettings.qml:21
 msgid "Chart profile:"
 msgstr "Profil wykresów:"
@@ -246,6 +254,10 @@ msgstr "Wyeksportowano wykresy"
 msgid "Charts in profile"
 msgstr "Wykresy w profilu"
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:47
+msgid "Charts:"
+msgstr "Wykresy:"
+
 #: apps/meteo/main.cpp:43
 msgid "Check QML startup without downloading data."
 msgstr "Sprawdź uruchomienie QML bez pobierania danych."
@@ -258,8 +270,8 @@ msgstr "Wybierz lokalny plik CSV."
 msgid "Choose a local PNG file."
 msgstr "Wybierz lokalny plik PNG."
 
-#: src/presentation/UserPreferences.cpp:199
-#: src/presentation/UserPreferences.cpp:226
+#: src/presentation/UserPreferences.cpp:206
+#: src/presentation/UserPreferences.cpp:233
 msgid "Choose a local file."
 msgstr "Wybierz plik lokalny."
 
@@ -291,7 +303,13 @@ msgstr "Wybierz lokalizację"
 msgid "Choose on map"
 msgstr "Wybierz na mapie"
 
-#: src/presentation/UserPreferences.cpp:174
+#: integrations/plasma/package/contents/ui/configAppearance.qml:64
+msgid ""
+"Choose one or two charts. Their appearance comes from the selected profile."
+msgstr ""
+"Wybierz jeden lub dwa wykresy. Ich wygląd pochodzi z wybranego profilu."
+
+#: src/presentation/UserPreferences.cpp:178
 msgid "Classic ICM"
 msgstr "Klasyczny ICM"
 
@@ -431,7 +449,7 @@ msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 "Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji."
 
-#: src/presentation/UserPreferences.cpp:228
+#: src/presentation/UserPreferences.cpp:235
 msgid "Could not open the file: "
 msgstr "Nie udało się otworzyć pliku: "
 
@@ -461,7 +479,7 @@ msgstr ""
 msgid "Could not save PNG: "
 msgstr "Nie można zapisać PNG: "
 
-#: src/presentation/UserPreferences.cpp:220
+#: src/presentation/UserPreferences.cpp:227
 msgid "Could not save the file: "
 msgstr "Nie udało się zapisać pliku: "
 
@@ -493,14 +511,18 @@ msgstr "Własna wysokość tego wykresu"
 msgid "Custom interval"
 msgstr "Własny zakres"
 
-#: src/presentation/UserPreferences.cpp:174
-#: src/presentation/UserPreferences.cpp:206
+#: src/presentation/UserPreferences.cpp:178
+#: src/presentation/UserPreferences.cpp:213
 msgid "Custom layout"
 msgstr "Własny układ"
 
 #: src/qml/LocationEditor.qml:227
 msgid "Custom name and coordinates"
 msgstr "Własna nazwa i współrzędne"
+
+#: integrations/plasma/package/contents/ui/configAppearance.qml:30
+msgid "Daily forecast"
+msgstr "Prognoza dzienna"
 
 #: src/qml/SeriesSettings.qml:93
 msgid "Dark theme:"
@@ -562,7 +584,7 @@ msgstr "Pobrano: %1"
 msgid "Downloading forecast"
 msgstr "Pobieranie prognozy"
 
-#: src/qml/CompactForecast.qml:24 src/qml/ForecastHeader.qml:49
+#: src/qml/CompactForecast.qml:35 src/qml/ForecastHeader.qml:49
 msgid "Downloading forecast…"
 msgstr "Pobieranie prognozy…"
 
@@ -598,9 +620,14 @@ msgstr ""
 msgid "Enter a valid date in yyyy-mm-dd format."
 msgstr "Podaj poprawną datę w formacie rrrr-mm-dd."
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:74
 #: src/qml/ForecastPanel.qml:451 src/qml/ForecastSettings.qml:39
 msgid "Entire forecast"
 msgstr "Cała prognoza"
+
+#: integrations/plasma/package/contents/ui/configAppearance.qml:28
+msgid "Expanded view:"
+msgstr "Widok po rozwinięciu:"
 
 #: src/qml/DisplaySettings.qml:127
 msgid "Export"
@@ -820,7 +847,7 @@ msgstr "Nieprawidłowy adres obrazu mapy."
 msgid "Invalid meteo.pl response format."
 msgstr "Niepoprawny format odpowiedzi meteo.pl."
 
-#: src/presentation/UserPreferences.cpp:254
+#: src/presentation/UserPreferences.cpp:261
 msgid ""
 "Invalid profile definition or unknown series. No profiles were imported."
 msgstr ""
@@ -1086,7 +1113,7 @@ msgid "Near-ground temperature"
 msgstr "Temperatura przy gruncie"
 
 #: src/presentation/ChartConfiguration.cpp:157
-#: src/presentation/UserPreferences.cpp:313
+#: src/presentation/UserPreferences.cpp:320
 msgid "New chart"
 msgstr "Nowy wykres"
 
@@ -1170,7 +1197,7 @@ msgstr "Otwórz folder"
 msgid "Original ICM meteogram"
 msgstr "Oryginalny meteogram ICM"
 
-#: src/presentation/UserPreferences.cpp:174
+#: src/presentation/UserPreferences.cpp:178
 msgid "Outdoors"
 msgstr "Na zewnątrz"
 
@@ -1332,7 +1359,7 @@ msgstr "Zakres odczytu"
 msgid "Readings"
 msgstr "Odczyt"
 
-#: apps/meteo/Main.qml:48 integrations/plasma/package/contents/ui/main.qml:71
+#: apps/meteo/Main.qml:48 integrations/plasma/package/contents/ui/main.qml:77
 #: src/qml/EditorialView.qml:25
 msgid "Refresh"
 msgstr "Odśwież"
@@ -1418,6 +1445,10 @@ msgstr "Szukaj także poza Polską"
 msgid "Select between 1 and 50 charts to export."
 msgstr "Wybierz od 1 do 50 wykresów do eksportu."
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:30
+msgid "Selected charts"
+msgstr "Wybrane wykresy"
+
 #: src/qml/ForecastPanel.qml:90
 msgid "Selected charts saved."
 msgstr "Zapisano wybrane wykresy."
@@ -1438,7 +1469,7 @@ msgstr "Wygląd serii"
 msgid "Series color"
 msgstr "Kolor serii"
 
-#: apps/meteo/Main.qml:47 integrations/plasma/package/contents/ui/main.qml:72
+#: apps/meteo/Main.qml:47 integrations/plasma/package/contents/ui/main.qml:78
 #: src/qml/MeteoSettings.qml:16
 msgid "Settings"
 msgstr "Ustawienia"
@@ -1479,7 +1510,7 @@ msgstr "Pokaż legendę"
 msgid "Show legends by default"
 msgstr "Domyślnie pokazuj legendę"
 
-#: integrations/plasma/package/contents/ui/main.qml:90
+#: integrations/plasma/package/contents/ui/main.qml:106
 msgid "Show meteogram"
 msgstr "Pokaż meteogram"
 
@@ -1593,11 +1624,11 @@ msgstr ""
 msgid "The chart was closed during export."
 msgstr "Wykres został zamknięty podczas eksportu."
 
-#: src/presentation/UserPreferences.cpp:233
+#: src/presentation/UserPreferences.cpp:240
 msgid "The file does not contain a valid JSON document."
 msgstr "Plik nie zawiera poprawnego dokumentu JSON."
 
-#: src/presentation/UserPreferences.cpp:239
+#: src/presentation/UserPreferences.cpp:246
 msgid "The file must contain between 1 and 100 profiles."
 msgstr "Plik musi zawierać od 1 do 100 profili."
 
@@ -1629,7 +1660,7 @@ msgstr ""
 msgid "The name and chart changes are saved automatically."
 msgstr "Nazwa i zmiany wykresów zapisują się automatycznie."
 
-#: src/presentation/UserPreferences.cpp:229
+#: src/presentation/UserPreferences.cpp:236
 msgid "The profile file is too large (maximum 16 MiB)."
 msgstr "Plik profili jest zbyt duży (maksymalnie 16 MiB)."
 
@@ -1686,6 +1717,7 @@ msgstr "Ten punkt leży poza obszarem UM4. Wybierz model GFS."
 msgid "Time"
 msgstr "Czas"
 
+#: integrations/plasma/package/contents/ui/configAppearance.qml:71
 #: src/qml/ForecastSettings.qml:33
 msgid "Time interval:"
 msgstr "Zakres czasu:"
@@ -1694,7 +1726,7 @@ msgstr "Zakres czasu:"
 msgid "Timestamp"
 msgstr "Czas"
 
-#: src/presentation/UserPreferences.cpp:217
+#: src/presentation/UserPreferences.cpp:224
 msgid "Too many profiles in one file. Export them separately."
 msgstr "Za dużo profili w jednym pliku. Wyeksportuj je osobno."
 
@@ -1806,7 +1838,7 @@ msgstr "Jednostki i czas"
 msgid "Unpin reading"
 msgstr "Odepnij odczyt"
 
-#: src/presentation/UserPreferences.cpp:236
+#: src/presentation/UserPreferences.cpp:243
 msgid "Unsupported profile file format or version."
 msgstr "Nieobsługiwany format lub wersja pliku profili."
 
@@ -1846,7 +1878,7 @@ msgstr "WAM · okres szczytowy fali"
 msgid "WAM · significant wave height"
 msgstr "WAM · wysokość fali znacznej"
 
-#: integrations/plasma/package/contents/ui/main.qml:69
+#: integrations/plasma/package/contents/ui/main.qml:75
 msgid "Weather"
 msgstr "Pogoda"
 
@@ -1857,6 +1889,14 @@ msgid ""
 msgstr ""
 "Przy łączeniu różnych jednostek przypisz serie do lewej lub prawej osi. "
 "Puste granice oznaczają skalę automatyczną."
+
+#: integrations/plasma/package/contents/ui/main.qml:78
+msgid "Widget settings"
+msgstr "Ustawienia widgetu"
+
+#: integrations/plasma/package/contents/config/config.qml:12
+msgid "Widget view"
+msgstr "Widok widgetu"
 
 #: src/presentation/ChartConfiguration.cpp:192
 #: src/presentation/ForecastFields.cpp:67

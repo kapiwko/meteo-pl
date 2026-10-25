@@ -8,4 +8,9 @@ ConfigModel {
         icon: "mark-location"
         source: "configGeneral.qml"
     }
+    ConfigCategory {
+        name: I18n.i18n("Widget view")
+        icon: "view-statistics"
+        source: "configAppearance.qml"
+    }
 }

@@ -7,8 +7,9 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     required property WeatherModel weather
+    property bool showDays: true
     signal locationSelected(string name, real latitude, real longitude)
-    readonly property var days: weather.dailyForecast.slice(0, 7)
+    readonly property var days: showDays ? weather.dailyForecast.slice(0, 7) : []
     spacing: Kirigami.Units.largeSpacing
 
     PlacePicker {
@@ -28,7 +29,7 @@ ColumnLayout {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 0
-            Kirigami.Heading { text: root.weather.temperatureText; level: 1; font.bold: true }
+            Label { text: root.weather.temperatureText; font: Qt.font({family: Kirigami.Theme.defaultFont.family, pixelSize: 32, weight: Font.Bold}) }
             Label {
                 Layout.fillWidth: true
                 text: weatherSymbol.loading ? I18n.i18n("Downloading forecast…") : root.weather.summaryTime

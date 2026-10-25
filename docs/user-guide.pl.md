@@ -215,7 +215,10 @@ sudo cmake --install build/release
 Następnie dodaj **Meteo · meteogram ICM** w oknie „Dodaj elementy interfejsu”
 Plasma. Nowa sesja Plasma zapewni wykrycie nowego modułu QML.
 Ustawienia widgetu są niezależne dla każdej instancji.
-Widok po rozwinięciu pokazuje zwartą prognozę na dni, temperaturę i wiatr;
+Widok po rozwinięciu domyślnie pokazuje temperaturę i opady na najbliższe 24 godziny.
+W konfiguracji plasmoidu, w karcie **Widok widgetu**, wybierz profil, jeden lub dwa
+wykresy i okres 12/24/48/72 godzin lub całą prognozę. Możesz też wybrać zwarty
+widok prognozy dziennej. Każdy widget zachowuje własną konfigurację;
 **Pokaż meteogram** otwiera pełny widok w tym samym plasmoidzie. Ikona panelu
 odzwierciedla pogodę; przy braku danych używana jest własna ikona Meteo.
 Samo `kpackagetool6 -i integrations/plasma/package` nie instaluje biblioteki C++;
