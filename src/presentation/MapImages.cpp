@@ -4,6 +4,8 @@
 #include <QQuickAsyncImageProvider>
 #include <QQuickTextureFactory>
 #include <QPointer>
+#include <QRegularExpression>
+#include <QTextDocumentFragment>
 
 namespace {
 class Response : public QQuickImageResponse {
@@ -45,4 +47,26 @@ QUrl MapImages::cached(const QUrl &url) const
 void MapImages::prefetch(const QUrl &url) const
 {
     if (!url.isEmpty()) Meteo::ImageCache::shared()->request(url, [](const QImage &, const QString &) {});
+}
+QString MapImages::cachedHtml(const QString &html, const QUrl &base) const
+{
+    // Keep the original markup and dimensions; change only remote image URLs.
+    static const QRegularExpression images(QStringLiteral(R"re(<img\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))re"),
+        QRegularExpression::CaseInsensitiveOption);
+    auto matches = images.globalMatch(html);
+    QString result;
+    qsizetype position = 0;
+    while (matches.hasNext()) {
+        const auto match = matches.next();
+        int group = 1;
+        while (group < 3 && match.capturedStart(group) < 0) ++group;
+        if (match.captured(group).isEmpty()) continue;
+        const auto source = QTextDocumentFragment::fromHtml(match.captured(group)).toPlainText();
+        const auto url = base.resolved(QUrl(source));
+        if (url.scheme() != "https" && url.scheme() != "http") continue;
+        const auto start = match.capturedStart(group);
+        result += html.sliced(position, start - position) + cached(url).toString();
+        position = start + match.capturedLength(group);
+    }
+    return result + html.sliced(position);
 }

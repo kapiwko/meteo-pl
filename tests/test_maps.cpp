@@ -2,6 +2,11 @@
 #include "WeatherModel.hpp"
 #include "ImagePreloader.hpp"
 #include "ImageServer.hpp"
+#include "MapImages.hpp"
+#include <QQuickTextDocument>
+#include <QTextDocument>
+#include <QTextBlock>
+#include <QTextImageFormat>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QJSValue>
@@ -151,6 +156,52 @@ private slots:
         QTest::newRow("no-store") << QByteArray("No-Store");
         QTest::newRow("no-cache") << QByteArray("No-Cache");
         QTest::newRow("expired") << QByteArray("max-age=0");
+    }
+    void articleImagesUseDiskCacheAcrossEngines()
+    {
+        ImageServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.imageSize={600,200};
+        const auto address=server.url("green?one=1&two=2");
+        const auto html=QStringLiteral("<p>Artykuł</p><IMG alt='photo' src=\"%1\" width='600' height='200'>")
+            .arg(address.toString().toHtmlEscaped());
+        for (int iteration=0;iteration<2;++iteration) {
+            QQmlEngine engine;
+            QQmlComponent component(&engine);
+            component.setData(R"(
+                import QtQuick
+                import pl.meteo.desktop
+                TextEdit {
+                    id: body
+                    required property string html
+                    width: 300; height: 250
+                    textFormat: TextEdit.RichText
+                    text: MapImages.cachedHtml(html)
+                    ResponsiveImages { document: body.textDocument; maximumWidth: 300 }
+                }
+            )",QUrl());
+            QVERIFY2(component.isReady(),qPrintable(component.errorString()));
+            QScopedPointer<QObject> object(component.createWithInitialProperties({{"html",html}}));
+            QVERIFY2(object,qPrintable(component.errorString()));
+            auto *item=qobject_cast<QQuickItem *>(object.data());
+            QQuickWindow window;window.resize(300,250);
+            item->setParentItem(window.contentItem());window.show();
+            auto *quick=object->property("textDocument").value<QQuickTextDocument *>();
+            QVERIFY(quick);
+            QUrl imageUrl;
+            auto *document=quick->textDocument();
+            for (auto block=document->begin();block.isValid();block=block.next())
+                for (auto it=block.begin();!it.atEnd();++it)
+                    if (it.fragment().charFormat().isImageFormat()) imageUrl=QUrl(it.fragment().charFormat().toImageFormat().name());
+            QCOMPARE(imageUrl.scheme(),"image");
+            QTRY_VERIFY(!document->resource(QTextDocument::ImageResource,imageUrl).value<QImage>().isNull());
+            QCOMPARE(server.requests.size(),1);
+            const auto image=document->resource(QTextDocument::ImageResource,imageUrl).value<QImage>();
+            QCOMPARE(image.pixelColor(0,0),QColor(Qt::green));
+            QCOMPARE(server.requests.first().query(),"one=1&two=2");
+            Meteo::ImageCache::shared()->clearMemory();
+            server.close();
+        }
     }
     void clearingImagesRemovesMemoryDiskAndObsoleteDownloads()
     {
