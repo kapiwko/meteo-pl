@@ -13,11 +13,13 @@ target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network)
 target_compile_options(meteo_core PRIVATE -Wall -Wextra -Wpedantic)
 
 set_source_files_properties(qml/BufferedImage.qml PROPERTIES QT_RESOURCE_ALIAS BufferedImage.qml)
+set_source_files_properties(qml/EditorialView.qml PROPERTIES QT_RESOURCE_ALIAS EditorialView.qml)
 set_source_files_properties(qml/ForecastPanel.qml PROPERTIES QT_RESOURCE_ALIAS ForecastPanel.qml)
 set_source_files_properties(qml/LocationEditor.qml PROPERTIES QT_RESOURCE_ALIAS LocationEditor.qml)
 set_source_files_properties(qml/MapTileFrame.qml PROPERTIES QT_RESOURCE_ALIAS MapTileFrame.qml)
 set_source_files_properties(qml/MapWheelHandler.qml PROPERTIES QT_RESOURCE_ALIAS MapWheelHandler.qml)
 set_source_files_properties(qml/Meteogram.qml PROPERTIES QT_RESOURCE_ALIAS Meteogram.qml)
+set_source_files_properties(qml/OriginalMeteogram.qml PROPERTIES QT_RESOURCE_ALIAS OriginalMeteogram.qml)
 set_source_files_properties(qml/ThematicMaps.qml PROPERTIES QT_RESOURCE_ALIAS ThematicMaps.qml)
 set_source_files_properties(qml/TileMap.qml PROPERTIES QT_RESOURCE_ALIAS TileMap.qml)
 set_source_files_properties(qml/WeatherMap.qml PROPERTIES QT_RESOURCE_ALIAS WeatherMap.qml)
@@ -27,8 +29,12 @@ qt_add_qml_module(meteo_ui
     VERSION 1.0
     NO_PLUGIN_OPTIONAL
     SOURCES
+        presentation/EditorialModel.cpp
+        presentation/EditorialModel.hpp
         presentation/ForecastFields.cpp
         presentation/ForecastFields.hpp
+        presentation/LegacyMeteogramModel.cpp
+        presentation/LegacyMeteogramModel.hpp
         presentation/MapImages.cpp
         presentation/MapImages.hpp
         presentation/PlaceSearchModel.cpp
@@ -43,11 +49,13 @@ qt_add_qml_module(meteo_ui
         network/ImageCache.hpp
     QML_FILES
         qml/BufferedImage.qml
+        qml/EditorialView.qml
         qml/ForecastPanel.qml
         qml/LocationEditor.qml
         qml/MapTileFrame.qml
         qml/MapWheelHandler.qml
         qml/Meteogram.qml
+        qml/OriginalMeteogram.qml
         qml/ThematicMaps.qml
         qml/TileMap.qml
         qml/WeatherMap.qml

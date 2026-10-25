@@ -89,3 +89,5 @@ Modele QML udostępniają wyszukiwanie nazw miejscowości, regiony, ulubione, os
 Model prezentacji udostępnia archiwalne starty, dane godzinowe i dzienne, inspektor parametrów oraz pory wschodu i zachodu słońca.
 
 Mapy UM4/GFS i obrazy tematyczne mają buforowane klatki, cache obrazów, przeciąganie oraz powiększanie kółkiem myszy.
+
+Adapter treści redakcyjnych pobiera komentarze synoptyka, archiwum i kolejne strony artykułów. Brak publikacji nie jest błędem sieci.

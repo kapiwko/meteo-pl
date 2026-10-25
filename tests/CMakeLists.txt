@@ -6,6 +6,10 @@ qt_add_executable(test_client test_client.cpp)
 target_link_libraries(test_client PRIVATE meteo_core Qt6::Test)
 add_test(NAME client COMMAND test_client)
 
+qt_add_executable(test_services test_services.cpp)
+target_link_libraries(test_services PRIVATE meteo_ui Qt6::Test)
+add_test(NAME services COMMAND test_services)
+
 qt_add_executable(test_presentation test_presentation.cpp)
 target_link_libraries(test_presentation PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)
 target_compile_definitions(test_presentation PRIVATE METEO_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
