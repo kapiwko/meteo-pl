@@ -15,6 +15,7 @@ Item {
     property real selectedTime: 0
     property string selectedGroup: ""
     property bool pinned: false
+    readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
     signal configureRequested()
     signal locationSelected(string name, real latitude, real longitude)
     readonly property var selectedChart: visibleCharts.find(chart => chart.key === selectedGroup)
@@ -42,7 +43,7 @@ Item {
         viewportEnd = viewportStart + duration;
     }
     function zoom(factor, center) {
-        const span = Math.min(weather.lastTimestamp - weather.firstTimestamp, Math.max(6 * 3600, (viewportEnd - viewportStart) * factor));
+        const span = Math.min(weather.lastTimestamp - weather.firstTimestamp, Math.max(minimumViewportSpan, (viewportEnd - viewportStart) * factor));
         const fraction = (center - viewportStart) / Math.max(1, viewportEnd - viewportStart);
         viewportStart = Math.max(weather.firstTimestamp, Math.min(center - span * fraction, weather.lastTimestamp - span));
         viewportEnd = viewportStart + span;
@@ -101,74 +102,6 @@ Item {
             Kirigami.InlineMessage { visible: root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.archive; text: "Archiwalne uruchomienie modelu. Daty i godziny wykresu odnoszą się do wybranej prognozy."; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.stale; text: "Prognoza może być nieaktualna. Ostatnie pobranie: " + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
-            GridLayout {
-                visible: root.viewMode === 0
-                Layout.fillWidth: true
-                columns: width < 600 ? 1 : 3
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Profil wykresów"; font.pixelSize: 11; opacity: 0.7 }
-                    ComboBox {
-                        Layout.fillWidth: true
-                        Accessible.name: "Profil wykresów"
-                        model: UserPreferences.profiles
-                        textRole: "name"
-                        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
-                        onActivated: index => UserPreferences.profile = model[index].id
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Zakres czasu"; font.pixelSize: 11; opacity: 0.7 }
-                    ComboBox {
-                        Layout.fillWidth: true
-                        Accessible.name: "Zakres czasu na wykresach"
-                        model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny", "Własny zakres"]
-                        currentIndex: {
-                            const hours = (root.viewportEnd - root.viewportStart) / 3600;
-                            if (Math.abs(root.viewportStart - root.weather.firstTimestamp) < 1 && Math.abs(root.viewportEnd - root.weather.lastTimestamp) < 1) return 0;
-                            const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
-                            return index < 0 ? 4 : index + 1;
-                        }
-                        onActivated: index => { if (index < 4) root.setHours([0,24,48,72][index]); }
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Label { text: "Start modelu"; font.pixelSize: 11; opacity: 0.7 }
-                    ComboBox {
-                        id: archiveCombo
-                        Layout.fillWidth: true
-                        Accessible.name: "Start obliczeń modelu, także archiwalny"
-                        model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowszy dostępny"}]
-                        textRole: "label"
-                        onDownChanged: if (down) root.weather.loadRuns()
-                        currentIndex: { const entries = root.weather.availableRuns; const index = entries.findIndex(e => e.timestamp === root.weather.requestedRun); return Math.max(0, index); }
-                        onActivated: index => {
-                            if (!root.weather.availableRuns.length) root.weather.refresh();
-                            else root.weather.requestedRun = root.weather.availableRuns[index].timestamp;
-                        }
-                    }
-                }
-            }
-            Flow {
-                visible: root.viewMode === 0 && root.weather.hasData
-                Layout.fillWidth: true
-                spacing: 6
-                Button { text: "Wcześniej"; icon.name: "go-previous"; enabled: root.viewportStart > root.weather.firstTimestamp; ToolTip.text: "Przesuń widoczny przedział do wcześniejszych godzin"; ToolTip.visible: hovered; onClicked: root.moveRange(-1) }
-                Button { text: "Więcej godzin"; icon.name: "zoom-out"; enabled: root.viewportEnd - root.viewportStart < root.weather.lastTimestamp - root.weather.firstTimestamp; ToolTip.text: "Oddal wykres i pokaż dłuższy przedział czasu"; ToolTip.visible: hovered; onClicked: root.zoom(1.5, (root.viewportStart + root.viewportEnd)/2) }
-                Button { text: "Mniej godzin"; icon.name: "zoom-in"; ToolTip.text: "Przybliż wykres i pokaż krótszy przedział czasu"; ToolTip.visible: hovered; onClicked: root.zoom(0.67, (root.viewportStart + root.viewportEnd)/2) }
-                Button { text: "Później"; icon.name: "go-next"; enabled: root.viewportEnd < root.weather.lastTimestamp; ToolTip.text: "Przesuń widoczny przedział do późniejszych godzin"; ToolTip.visible: hovered; onClicked: root.moveRange(1) }
-            }
-            Label { visible: root.viewMode === 0 && root.weather.hasData; Layout.fillWidth: true; text: "Widoczny czas: " + root.weather.formatTime(root.viewportStart, "d MMM HH:mm") + " – " + root.weather.formatTime(root.viewportEnd, "d MMM HH:mm") + (root.weather.utc ? " UTC" : " · czas lokalny"); opacity: 0.7; font.pixelSize: 11; wrapMode: Text.WordWrap }
-            Slider {
-                Layout.fillWidth: true
-                visible: root.viewMode === 0 && root.viewportEnd - root.viewportStart < root.weather.lastTimestamp - root.weather.firstTimestamp - 1
-                from: root.weather.firstTimestamp
-                to: Math.max(from, root.weather.lastTimestamp - (root.viewportEnd - root.viewportStart))
-                value: root.viewportStart
-                onMoved: { const span = root.viewportEnd - root.viewportStart; root.viewportStart = value; root.viewportEnd = value + span; }
-            }
             BusyIndicator { Layout.alignment: Qt.AlignHCenter; running: root.weather.busy; visible: running && !root.weather.hasData }
             Kirigami.PlaceholderMessage {
                 Layout.fillWidth: true
@@ -182,6 +115,126 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 sourceComponent: root.viewMode === 0 ? chartsComponent : root.viewMode === 1 ? hourlyComponent : dailyComponent
+            }
+            Frame {
+                id: chartStatus
+                objectName: "chartStatusBar"
+                visible: root.viewMode === 0 && root.weather.hasData
+                Layout.fillWidth: true
+                padding: 4
+                readonly property real fullSpan: Math.max(1, root.weather.lastTimestamp - root.weather.firstTimestamp)
+                readonly property real span: Math.max(1, root.viewportEnd - root.viewportStart)
+                readonly property bool partial: span < fullSpan - 1
+                background: Rectangle {
+                    color: "transparent"
+                    Rectangle { width: parent.width; height: 1; color: Kirigami.Theme.textColor; opacity: 0.12 }
+                }
+                contentItem: ColumnLayout {
+                    spacing: 0
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: width < 680 ? 1 : 2
+                        columnSpacing: 12
+                        rowSpacing: 0
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            ToolButton {
+                                objectName: "earlierTimeButton"
+                                icon.name: "go-previous"
+                                implicitWidth: 28; implicitHeight: 28
+                                enabled: chartStatus.partial && root.viewportStart > root.weather.firstTimestamp + 1
+                                Accessible.name: "Wcześniejszy przedział"
+                                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+                                onClicked: root.moveRange(-1)
+                            }
+                            Label {
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 100
+                                text: root.weather.formatTime(root.viewportStart, "d MMM HH:mm") + " – " + root.weather.formatTime(root.viewportEnd, "d MMM HH:mm") + (root.weather.utc ? " UTC" : "")
+                                font.pixelSize: 10
+                                opacity: 0.7
+                                elide: Text.ElideRight
+                                horizontalAlignment: Text.AlignHCenter
+                                ToolTip.text: "Widoczny przedział · " + (root.weather.utc ? "UTC" : "czas lokalny")
+                                ToolTip.visible: dateHover.hovered
+                                HoverHandler { id: dateHover }
+                            }
+                            ToolButton {
+                                icon.name: "go-next"
+                                implicitWidth: 28; implicitHeight: 28
+                                enabled: chartStatus.partial && root.viewportEnd < root.weather.lastTimestamp - 1
+                                Accessible.name: "Późniejszy przedział"
+                                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+                                onClicked: root.moveRange(1)
+                            }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+                            ToolButton {
+                                icon.name: "zoom-out"
+                                implicitWidth: 28; implicitHeight: 28
+                                enabled: chartStatus.partial
+                                Accessible.name: "Pokaż dłuższy przedział"
+                                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+                                onClicked: root.zoom(1.5, (root.viewportStart + root.viewportEnd) / 2)
+                            }
+                            Slider {
+                                id: zoomSlider
+                                objectName: "chartZoomSlider"
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 70
+                                Layout.preferredWidth: 120
+                                Layout.maximumWidth: 180
+                                implicitHeight: 28
+                                from: 1
+                                to: Math.max(1, chartStatus.fullSpan / Math.max(1, root.minimumViewportSpan))
+                                value: chartStatus.fullSpan / chartStatus.span
+                                enabled: to > from
+                                Accessible.name: "Powiększenie wykresów"
+                                ToolTip.text: Math.round(value * 100) + "% · " + Math.round(chartStatus.span / 3600) + " godzin"
+                                ToolTip.visible: hovered || pressed
+                                onMoved: root.zoom(chartStatus.fullSpan / value / chartStatus.span, (root.viewportStart + root.viewportEnd) / 2)
+                            }
+                            ToolButton {
+                                icon.name: "zoom-in"
+                                implicitWidth: 28; implicitHeight: 28
+                                enabled: chartStatus.span > root.minimumViewportSpan + 1
+                                Accessible.name: "Pokaż krótszy przedział"
+                                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+                                onClicked: root.zoom(0.67, (root.viewportStart + root.viewportEnd) / 2)
+                            }
+                            ToolButton {
+                                icon.name: "zoom-fit-best"
+                                implicitWidth: 28; implicitHeight: 28
+                                enabled: chartStatus.partial
+                                Accessible.name: "Cała prognoza"
+                                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+                                onClicked: root.resetRange()
+                            }
+                            ToolButton {
+                                objectName: "viewOptionsButton"
+                                text: "Widok"
+                                icon.name: "configure"
+                                Accessible.name: "Opcje widoku"
+                                ToolTip.text: "Profil wykresów, zakres czasu i start modelu"; ToolTip.visible: hovered
+                                onClicked: viewOptions.open()
+                            }
+                        }
+                    }
+                    Slider {
+                        objectName: "chartTimeSlider"
+                        Layout.fillWidth: true
+                        visible: chartStatus.partial
+                        implicitHeight: 22
+                        from: root.weather.firstTimestamp
+                        to: Math.max(from, root.weather.lastTimestamp - chartStatus.span)
+                        value: root.viewportStart
+                        Accessible.name: "Przesuń widoczny przedział czasu"
+                        onMoved: { const span = chartStatus.span; root.viewportStart = value; root.viewportEnd = value + span; }
+                    }
+                }
             }
             Label {
                 Layout.fillWidth: true
@@ -357,6 +410,81 @@ Item {
                         }
                     }
                 }
+            }
+        }
+    }
+    Dialog {
+        id: viewOptions
+        objectName: "viewOptionsDialog"
+        title: "Opcje widoku"
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(430, parent ? parent.width - 24 : 430)
+        padding: 16
+        modal: false
+        standardButtons: Dialog.Close
+        contentItem: ColumnLayout {
+            spacing: 12
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 1
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Label { text: "Profil wykresów"; font.pixelSize: 11; opacity: 0.7 }
+                    ComboBox {
+                        Layout.fillWidth: true
+                        Accessible.name: "Profil wykresów"
+                        model: UserPreferences.profiles
+                        textRole: "name"
+                        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
+                        onActivated: index => UserPreferences.profile = model[index].id
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Label { text: "Zakres czasu"; font.pixelSize: 11; opacity: 0.7 }
+                    ComboBox {
+                        Layout.fillWidth: true
+                        Accessible.name: "Zakres czasu na wykresach"
+                        model: ["Cała prognoza", "24 godziny", "48 godzin", "72 godziny", "Własny zakres"]
+                        currentIndex: {
+                            const hours = (root.viewportEnd - root.viewportStart) / 3600;
+                            if (Math.abs(root.viewportStart - root.weather.firstTimestamp) < 1 && Math.abs(root.viewportEnd - root.weather.lastTimestamp) < 1) return 0;
+                            const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
+                            return index < 0 ? 4 : index + 1;
+                        }
+                        onActivated: index => { if (index < 4) root.setHours([0,24,48,72][index]); }
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Label { text: "Start modelu"; font.pixelSize: 11; opacity: 0.7 }
+                    ComboBox {
+                        id: archiveCombo
+                        Layout.fillWidth: true
+                        Accessible.name: "Start obliczeń modelu, także archiwalny"
+                        model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: "Najnowszy dostępny"}]
+                        textRole: "label"
+                        onDownChanged: if (down) root.weather.loadRuns()
+                        currentIndex: { const entries = root.weather.availableRuns; const index = entries.findIndex(e => e.timestamp === root.weather.requestedRun); return Math.max(0, index); }
+                        onActivated: index => {
+                            if (!root.weather.availableRuns.length) root.weather.refresh();
+                            else root.weather.requestedRun = root.weather.availableRuns[index].timestamp;
+                        }
+                    }
+                }
+            }
+            Button {
+                text: "Edytuj profile i wygląd…"
+                icon.name: "preferences-desktop-theme-global"
+                onClicked: { viewOptions.close(); root.openDisplaySettings(); }
+            }
+            Label {
+                Layout.fillWidth: true
+                text: "Zakres czasu i start modelu dotyczą tego widoku. Wybrany profil jest zapamiętywany."
+                font.pixelSize: 11
+                opacity: 0.7
+                wrapMode: Text.WordWrap
             }
         }
     }

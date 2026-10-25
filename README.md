@@ -167,3 +167,5 @@ Wysokość wykresu dziedziczy ustawienie profilu i wartość ogólną. Domyśln�
 Zwarty nagłówek łączy temperaturę z ikoną pogody. Karty prognozy dziennej mają równe szerokości, stałe pola i ikony warunków.
 
 Plasmoid otwiera zwartą prognozę z przejściem do meteogramu. Aplikacja ma własną ikonę; skrypt developerski rejestruje wpis desktop i ikonę użytkownika.
+
+Pasek statusu pod wykresami zawiera zakres dat, przesuwanie czasu i suwak powiększenia z limitem 24 godzin. Selektory profilu, okresu i startu są w opcjach widoku.
