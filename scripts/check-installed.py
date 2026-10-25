@@ -16,6 +16,7 @@ def check(command,env):
     print(result.stdout+result.stderr)
     if result.returncode or ERRORS.search(result.stdout+result.stderr):
         raise RuntimeError(f"Installed smoke test failed: {command}")
+    return result
 
 def main():
     app=shutil.which("meteo-pl")
@@ -28,6 +29,9 @@ def main():
         for name in ("QML_IMPORT_PATH","QML2_IMPORT_PATH","LD_LIBRARY_PATH","QT_PLUGIN_PATH"):env.pop(name,None)
         env.update(QT_QPA_PLATFORM="offscreen",QT_QUICK_BACKEND="software",QT_FORCE_STDERR_LOGGING="1",
             XDG_CONFIG_HOME=temporary+"/config",XDG_CACHE_HOME=temporary+"/cache",LC_ALL="C.UTF-8")
+        expected=(Path(__file__).resolve().parents[1]/"VERSION").read_text().strip()
+        if check([app,"--version"],env).stdout.strip() != "meteo-pl "+expected:
+            raise RuntimeError("The installed application has an unexpected version")
         check([app,"--smoke-test"],env)
         check([sys.executable,str(Path(__file__).with_name("plasma-smoke.py")),"pl.meteo.desktop"],env)
         check(["desktop-file-validate","/usr/share/applications/pl.meteo.desktop.desktop"],env)

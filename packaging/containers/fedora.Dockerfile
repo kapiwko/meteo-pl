@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=fedora:44
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS builder
 RUN dnf install -y \
     gcc-c++ ccache cmake ninja-build pkgconf-pkg-config python3 git file binutils gettext kf6-ki18n-devel glibc-langpack-en \
     xorg-x11-server-Xvfb xorg-x11-xauth rpm-build dbus-daemon dejavu-sans-fonts desktop-file-utils \
@@ -8,3 +8,8 @@ RUN dnf install -y \
     extra-cmake-modules kf6-breeze-icons mesa-dri-drivers plasma-workspace plasma-desktop \
     && dnf clean all
 WORKDIR /source
+
+FROM ${BASE_IMAGE} AS runtime
+RUN dnf install -y python3 dbus-daemon dejavu-sans-fonts desktop-file-utils \
+    xorg-x11-server-Xvfb xorg-x11-xauth plasma-desktop && dnf clean all
+WORKDIR /out

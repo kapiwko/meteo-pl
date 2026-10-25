@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 ROOT=Path(__file__).resolve().parents[1]
-TARGETS={"debian":("debian","debian:trixie-slim"),"ubuntu":("debian","ubuntu:26.04"),"fedora":("fedora","fedora:44"),"arch":("arch",None)}
+from linux_targets import TARGETS
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
@@ -17,7 +17,7 @@ def main():
     if args.jobs<1: parser.error("--jobs must be positive")
     recipe,base=TARGETS[args.distro]
     tag=f"meteo-pl-build:{args.distro}"
-    command=["docker","build","-f",str(ROOT/f"packaging/containers/{recipe}.Dockerfile"),"-t",tag]
+    command=["docker","build","--target","builder","-f",str(ROOT/f"packaging/containers/{recipe}.Dockerfile"),"-t",tag]
     if base:command += ["--build-arg",f"BASE_IMAGE={base}"]
     subprocess.run([*command,str(ROOT/"packaging/containers")],check=True)
     build=ROOT/"build/packages"/args.distro;build.mkdir(parents=True,exist_ok=True)

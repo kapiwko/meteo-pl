@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=debian:trixie-slim
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install --yes --no-install-recommends \
     build-essential ccache cmake ninja-build pkg-config python3 git file binutils gettext libkf6i18n-dev locales \
@@ -16,3 +16,10 @@ RUN apt-get update && apt-get install --yes --no-install-recommends \
 RUN apt-get update && apt-get install --yes --no-install-recommends xvfb xauth plasma-desktop && rm -rf /var/lib/apt/lists/*
 WORKDIR /source
 RUN echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen && locale-gen
+
+FROM ${BASE_IMAGE} AS runtime
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install --yes --no-install-recommends \
+    python3 dbus-x11 fonts-dejavu-core desktop-file-utils xvfb xauth plasma-desktop \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /out

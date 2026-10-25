@@ -24,22 +24,8 @@ jobs:
           persist-credentials: false
       - name: Build and run all tests in the target distribution
         run: python3 scripts/build-package.py --distro "${{ matrix.distro }}" --test --jobs 2
-      - name: Install and verify the native package
-        env:
-          DISTRO: ${{ matrix.distro }}
-        run: |
-          docker run --rm --init --shm-size=512m \
-            -v "$PWD:/source:ro" -v "$PWD/dist/$DISTRO:/out:ro" \
-            "meteo-pl-build:$DISTRO" bash -euc '
-              case "$(. /etc/os-release; echo "$ID")" in
-                debian|ubuntu) apt-get update; apt-get install -y /out/*.deb ;;
-                fedora) dnf install -y /out/*.rpm ;;
-                arch) pacman -U --noconfirm /out/*.pkg.tar.zst ;;
-              esac
-              cd /out
-              sha256sum --check SHA256SUMS
-              xvfb-run --auto-servernum dbus-run-session -- python3 /source/scripts/check-installed.py
-            '
+      - name: Install and verify the native package in a clean runtime image
+        run: python3 scripts/check-package-runtime.py --distro "${{ matrix.distro }}"
       - name: Preserve packages and checksums
         if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

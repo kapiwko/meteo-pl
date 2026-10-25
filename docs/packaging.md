@@ -33,6 +33,19 @@ python3 scripts/build-package.py --distro ubuntu --test
 python3 scripts/build-package.py --distro fedora --test
 ```
 
+Instalację gotowej paczki można sprawdzić w osobnym, czystym obrazie systemu:
+
+```sh
+python3 scripts/check-package-runtime.py --distro arch
+```
+
+Ten sam parametr obsługuje `debian`, `ubuntu` i `fedora`. Obraz instalacyjny
+zawiera środowisko Plasma i narzędzia testowe, bez kompilatora i bibliotek
+deweloperskich obrazu budującego. Skrypt wybiera konkretną paczkę z raportu,
+sprawdza jej sumę, wersję aplikacji oraz uruchomienie aplikacji i plasmoidu.
+Wynik i identyfikator obrazu trafiają do `BUILD-REPORT.json`; suma raportu
+w `SHA256SUMS` jest aktualizowana. CI wykonuje ten krok dla każdej dystrybucji.
+
 Wyniki są w `dist/<system>/`, a wielokrotnie używane katalogi budowania
 w `build/packages/<system>/`. Domyślnie używane są dwa zadania kompilacji;
 `--jobs 4` zmienia ten limit. `--test` uruchamia qmllint, testy CTest oraz
@@ -65,8 +78,8 @@ sha256sum --check SHA256SUMS
 budowania, `.git`, dane cache i pliki IDE. `VERSION` określa wersję aplikacji,
 widoku informacji, instalowanego plasmoidu i paczek. Binarne paczki zależą też
 od wersji kompilatora i bibliotek w danym obrazie kontenera.
-Repozytorium nie deklaruje obecnie licencji; metadane paczek oznaczają ten stan
-jako `GPL-3.0-or-later`, bez przypisywania domyślnej licencji.
+Kod projektu jest udostępniany na licencji `GPL-3.0-or-later`, opisanej w pliku
+`LICENSE`. Metadane paczek używają tego samego identyfikatora licencji.
 
 ## GitHub
 
