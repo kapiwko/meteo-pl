@@ -3,6 +3,7 @@
 #include "core/ForecastAggregation.hpp"
 #include "core/ForecastSampling.hpp"
 #include "ChartDataBuilder.hpp"
+#include "network/DiskCacheBudget.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 
@@ -214,6 +215,7 @@ bool WeatherModel::loadCache()
     const auto parsed = Meteo::parseForecast(envelope.value("payload").toString().toUtf8());
     if (!parsed)
         return false;
+    Meteo::touchCacheEntry(file.fileName());
     apply(*parsed);
     m_updated = updated;
     m_usingCache = true;
@@ -230,7 +232,7 @@ void WeatherModel::saveCache(const QByteArray &json) const
     const QJsonObject envelope{{"model", m_model}, {"latitude", m_latitude}, {"longitude", m_longitude}, {"requestedRun", m_requestedRun},
                                {"savedAt", m_updated.toString(Qt::ISODate)}, {"payload", QString::fromUtf8(json)}};
     file.write(QJsonDocument(envelope).toJson(QJsonDocument::Compact));
-    file.commit();
+    if (file.commit()) Meteo::pruneDiskCache(QFileInfo(path).absolutePath(),{QStringLiteral("*.json")},Meteo::forecastCacheBudget,path);
 }
 
 bool WeatherModel::stale() const

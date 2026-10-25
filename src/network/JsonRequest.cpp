@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "JsonRequest.hpp"
+#include "DiskCacheBudget.hpp"
 #include <QNetworkReply>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -29,7 +30,9 @@ QJsonDocument readCache(const QUrl &url, int seconds)
     const auto age=saved.secsTo(QDateTime::currentDateTimeUtc());
     if (entry.value("url").toString()!=url.toString(QUrl::FullyEncoded) || !saved.isValid() || age<0 || age>=seconds) return {};
     const auto value=entry.value("document");
-    return value.isObject()?QJsonDocument(value.toObject()):value.isArray()?QJsonDocument(value.toArray()):QJsonDocument();
+    const auto document = value.isObject()?QJsonDocument(value.toObject()):value.isArray()?QJsonDocument(value.toArray()):QJsonDocument();
+    if (!document.isNull()) touchCacheEntry(file.fileName());
+    return document;
 }
 void writeCache(const QUrl &url,const QJsonDocument &document)
 {
@@ -43,13 +46,7 @@ void writeCache(const QUrl &url,const QJsonDocument &document)
         {"document",document.isObject()?QJsonValue(document.object()):QJsonValue(document.array())}};
     file.write(QJsonDocument(entry).toJson(QJsonDocument::Compact));
     if (!file.commit()) return;
-    // Search prefixes must not grow the cache without a bound.
-    const auto files=directory.entryInfoList({QStringLiteral("*.json")},QDir::Files,QDir::Time);
-    qint64 bytes=0;
-    for (qsizetype i=0;i<files.size();++i) {
-        bytes+=files[i].size();
-        if (i>=512 || bytes>32*1024*1024) QFile::remove(files[i].absoluteFilePath());
-    }
+    pruneDiskCache(directory.absolutePath(),{QStringLiteral("*.json")},metadataCacheBudget,path);
 }
 }
 JsonRequest::JsonRequest(QObject *parent, RequestPolicy policy) : QObject(parent), m_policy(policy) {}

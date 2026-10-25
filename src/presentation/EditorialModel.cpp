@@ -1,6 +1,7 @@
 #include "core/Localization.hpp"
 #include "EditorialModel.hpp"
 #include "core/EditorialContent.hpp"
+#include "network/DiskCacheBudget.hpp"
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QDate>
@@ -102,6 +103,7 @@ bool EditorialModel::loadCache()
         || (m_commentary ? !value.isObject() || !value.toObject().value("content").isString() : !value.isArray())) return false;
     if (!applyDocument(m_commentary ? QJsonDocument(value.toObject()) : QJsonDocument(value.toArray()))) return false;
     m_savedAt = savedAt;
+    Meteo::touchCacheEntry(file.fileName());
     return true;
 }
 void EditorialModel::saveCache(const QJsonDocument &document) const
@@ -115,5 +117,5 @@ void EditorialModel::saveCache(const QJsonDocument &document) const
         {"savedAt", QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
         {"document", m_commentary ? QJsonValue(document.object()) : QJsonValue(document.array())}};
     file.write(QJsonDocument(envelope).toJson(QJsonDocument::Compact));
-    file.commit();
+    if (file.commit()) Meteo::pruneDiskCache(QFileInfo(path).absolutePath(),{QStringLiteral("*.json")},Meteo::editorialCacheBudget,path);
 }
