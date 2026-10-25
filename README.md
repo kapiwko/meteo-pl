@@ -1,260 +1,170 @@
-# Meteo Desktop
+<p align="center">
+  <img src="integrations/plasma/package/contents/images/meteo.svg" width="88" alt="Meteo icon">
+</p>
 
-Aplikacja Qt 6 / Kirigami oraz plasmoid Plasma 6 do przeglądania prognoz
-ICM UW z meteo.pl. Wspólny interfejs oferuje rozbudowane meteogramy, prognozę
-godzinową i dzienną, mapy oraz komentarz synoptyka i artykuły.
-Karty nawigacji mają ikony; w wąskim widoku pozostają same ikony z podpowiedziami.
+# Meteo
 
-Kod aplikacji i plasmoidu: © 2026 Kamil Piwowarski, licencja
-[GPL-3.0-or-later](LICENSE) — GNU GPL w wersji 3 lub dowolnej późniejszej.
-Biblioteki i dane pogodowe zachowują własne warunki udostępniania.
+[![Build, test and package](https://github.com/kapiwko/meteo-pl/actions/workflows/tests.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/tests.yml)
+[![Windows, macOS and Android](https://github.com/kapiwko/meteo-pl/actions/workflows/portable-packages.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/portable-packages.yml)
+[![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 
-## Uruchomienie
+Explore ICM UW weather forecasts from [meteo.pl](https://app.meteo.pl/meteogram)
+in a Qt 6 / Kirigami application and a KDE Plasma 6 widget. Read detailed
+meteograms, compare hourly and daily forecasts, and animate weather maps
+without leaving your desktop.
 
-Wymagania: CMake ≥ 3.25, kompilator C++23, Ninja, Qt ≥ 6.5
-(Core, Network, Qml, Quick, QuickControls2, Positioning, Test), Kirigami 6 i moduł
-QQC2 Desktop Style (`org.kde.desktop`).
-Powiadomienia po eksporcie korzystają z KDE Frameworks 6 Notifications;
-informacje o aplikacji korzystają z gotowych komponentów Kirigami.
-Aplikacja okienkowa wymaga również Qt Widgets do natywnych dialogów KDE.
-Plasmoid wymaga środowiska Plasma 6 i modułów QML Plasma.
+[![Meteo displaying a forecast with temperature and precipitation charts](docs/images/meteogram.png)](docs/images/meteogram.png)
 
-```sh
+## What You Get
+
+- Interactive charts for temperature, precipitation, wind, pressure, clouds,
+  visibility, fog and storm indicators, with an optional parameter probe.
+- UM4 forecasts for Poland and Central Europe, and global GFS forecasts.
+- A shared list of saved places: search for a town, choose a point on the map,
+  enter coordinates or use the system location service.
+- Custom chart profiles with mixed series, axis ranges, colors, drawing styles,
+  chart order and individual heights. Import and export profiles as JSON.
+- PNG export of selected charts as one image, plus PNG and CSV export of readings.
+- Interactive map layers and thematic maps with buffered loading and animation
+  preloading, so the previous map stays visible while the next frame loads.
+- Synoptic commentary and articles from meteo.pl.
+- Persistent caches for forecasts, map tiles, articles, illustrations and place
+  searches, with disk usage and clearing controls in Settings.
+- GPU rendering by default, an optional CPU renderer, and automated visual
+  comparisons between both renderers.
+
+## Install
+
+This project is under active development. GitHub Actions builds downloadable
+artifacts; there is no stable release yet. Open a successful run in
+[Actions](https://github.com/kapiwko/meteo-pl/actions) and download the artifact
+for your system. Each package directory includes SHA-256 checksums and a build
+report.
+
+| System | Package | Includes the Plasma widget |
+| --- | --- | --- |
+| Arch Linux | `.pkg.tar.zst` | Yes |
+| Debian 13 / Ubuntu 26.04 | `.deb` | Yes |
+| Fedora 44 | `.rpm` | Yes |
+| Windows | Craft installer / archive | No |
+| macOS | Craft application bundle | No |
+| Android arm64 | APK | No |
+
+Windows and macOS bundles include Qt and KDE dependencies. Android builds
+include an unsigned release APK and a development APK signed with a temporary
+test key. Development APKs built in different runs may require uninstalling the
+previous build. The Android package has been built and inspected; device testing
+is still needed.
+
+### Linux Packages
+
+```bash
+# Arch Linux
+sudo pacman -U ./meteo-pl-0.1.0-1-x86_64.pkg.tar.zst
+
+# Debian / Ubuntu
+sudo apt install ./meteo-pl_0.1.0-1_amd64.deb
+
+# Fedora
+sudo dnf install ./meteo-pl-0.1.0-1.x86_64.rpm
+```
+
+Start **Meteo** from your application launcher, or run `meteo-pl`.
+
+### Plasma Widget
+
+After installing a Linux package, open **Add Widgets…**, find **Meteo** and drag
+it onto your desktop or panel. Its panel icon follows the forecast weather;
+click it for a compact daily forecast, then choose **Show meteogram** for charts.
+
+You can also preview the installed widget in its own window:
+
+```bash
+plasmawindowed pl.meteo.desktop
+```
+
+The widget uses the shared C++ QML module. Installing the QML package with
+`kpackagetool6` alone is insufficient. A new Plasma session may be needed after
+the first installation for Plasma to discover the module.
+
+## Quick Start
+
+1. Open **Location** and search for your town or choose a point on the map.
+2. Choose **UM4** for Central Europe or **GFS** for worldwide coverage.
+3. Switch between **Meteogram**, **Hourly**, **Days**, **Maps**, **Synoptic** and
+   **Articles** using the navigation tabs.
+4. Open **Settings** to choose a chart profile, forecast run, units or renderer.
+5. Enable the pipette in the chart status bar to inspect values. Click a chart
+   to pin the reading; use **Export…** to save selected charts together.
+
+Forecasts refresh hourly. **Refresh** requests fresh data immediately. If the
+network is unavailable, saved data remains visible with its retrieval time.
+Availability of individual parameters depends on the forecast model.
+
+## Build From Source
+
+Requirements: CMake 3.25+, Ninja, a C++23 compiler, Qt 6.5+ and KDE Frameworks 6.
+Qt modules: Core, Network, Qml, Quick, QuickControls2, Positioning, Widgets and
+Test. KDE dependencies: Kirigami, Notifications and QQC2 Desktop Style. The
+widget additionally requires Plasma 6 and its QML modules.
+
+```bash
+git clone https://github.com/kapiwko/meteo-pl.git
+cd meteo-pl
 cmake --preset dev
-cmake --build --preset dev
+cmake --build --preset dev --parallel 2
 ctest --preset dev
 ./build/dev/apps/meteo/meteo-pl
 ```
 
-Przycisk **Lokalizacja** otwiera wyszukiwarkę miast i wsi z opisem regionu
-oraz wspólną listę **Moje miejsca**. Można także wskazać punkt na mapie,
-pobrać pozycję przez systemową usługę lokalizacji lub wpisać współrzędne.
-GPS wymaga dostępnego dostawcy Qt Positioning; bez niego można użyć wyszukiwarki
-lub mapy. Wyszukiwanie domyślnie obejmuje Polskę, opcjonalnie cały świat.
-Każda otwarta lokalizacja jest zapisywana w **Moich miejscach**. Przy kilku miejscach
-nazwa w nagłówku staje się polem wyboru, także w kompaktowym widoku widgetu.
-Listą zarządzasz w oknie lokalizacji; usunięcie wybranego miejsca przełącza dany
-widok na następne, a usunięcie ostatniego pokazuje wybór nowej lokalizacji.
-Aplikacja i każdy widget zachowują własny wybór z tej wspólnej listy.
-Dotychczasowe ulubione i ostatnie miejsca są zachowane przy aktualizacji.
-Mapa interaktywna oraz mapa w formularzu pokazują zapisane miejsca z etykietami.
-Wybrane miejsce jest wyróżnione; kliknięcie etykiety wybiera jego prognozę.
-Dostępne modele: UM4 60 h, UM4 120 h i GFS 240 h.
-UM4 obejmuje obszar 44,5–66,482°N i 8,21–30,176°E; GFS jest globalny.
-Współrzędne przyjmują kropkę lub przecinek dziesiętny.
-**Ustawienia → O aplikacji** pokazuje autorstwo Kamila Piwowarskiego,
-źródła danych i informacje o aktualnie pobranej prognozie.
+For a system installation, use a separate release build:
 
-Nagłówek grupuje lokalizację i prognozę na oznaczoną godzinę, temperaturę,
-wiatr i ciśnienie oraz parę godzin wschodu i zachodu słońca z ikonami.
-Godziny słońca dotyczą bieżącego dnia prognozy, a przy archiwum — oznaczonej daty.
-Współrzędne i rozwijane szczegóły nie zajmują miejsca nad wykresami;
-model i czas obliczeń są w ustawieniach i informacjach o aplikacji.
-Podsumowanie pokazuje prognozę na oznaczoną godzinę, a nie pomiar stacji.
-Oś czasu używa strefy systemu lub UTC. Wskaźnik czasu bieżącego jest przerywany.
-Domyślnie wykresy nie pokazują odczytu pod kursorem. Próbnik (ikona pipety)
-na pasku pod wykresami włącza tryb identyfikacji. W tym trybie najechanie
-pokazuje parametry, kliknięcie przypina odczyt, a Escape go zamyka.
-Wyłączenie próbnika zamyka także przypięty odczyt.
-W ustawieniach można wybrać parametry wskazanego wykresu lub wszystkie parametry.
-Wszystkie parametry mają karty kategorii; przy szerokim oknie odczyt używa dwóch kolumn.
-Przycisk eksportu w odczycie zapisuje aktualną kategorię (lub wszystkie parametry)
-do PNG albo CSV, także wiersze poza widocznym obszarem przewijania.
-CSV zawiera czas ze strefą, lokalizację, model, klucze, wartości liczbowe i jednostki;
-separator to średnik, liczby używają kropki, a brakujące wartości pozostają puste. Wykresy mają zakresy min/max, temperaturę
-odczuwalną, rodzaj i prawdopodobieństwo opadów, kierunki i porywy wiatru,
-warstwy oraz podstawy chmur, wilgotność, mgłę, widzialność i wskaźniki burz.
-Brakujące wartości pozostają lukami. Dostępność parametrów zależy od modelu.
-
-Domyślny profil **Klasyczny ICM** zawiera osiem wykresów: temperaturę, opady
-z wilgotnością, szansę opadu i burze, ciśnienie, prędkość wiatru, kierunek
-wiatru, pionowy zasięg chmur z widzialnością oraz zachmurzenie z mgłą.
-Temperatura powietrza i odczuwalna mają półprzezroczyste zakresy min–max.
-Zakres temperatury przy gruncie przedstawiają pionowe kreski od minimum do
-maksimum dla każdej godziny prognozy. Błękitne tło wyróżnia obszar poniżej 0°C.
-Kolory linii odpowiadają palecie klienta Meteo.
-Siatka pozostaje widoczna nad wypełnieniami, a mgła nad chmurami.
-Linie siatki są delikatne. Etykiety czasu na wąskich wykresach pomijają minuty
-i w razie potrzeby pojawiają się rzadziej, bez nakładania się godzin i dat.
-
-Domyślny renderer **GPU** przekazuje geometrię wykresów bezpośrednio do sceny
-Qt Quick (RHI), z wygładzaniem MSAA. W **Ustawienia → Aplikacja → Rysowanie wykresów** można od razu przełączyć na **CPU · Canvas**. Oba renderery używają
-tych samych obliczeń, kolorów, warstw i obsługi kursora. Bez akceleracji sceny
-Qt Quick aplikacja automatycznie korzysta z CPU.
-
-W ustawieniach widoku można tworzyć, nazywać i usuwać własne profile,
-tworzyć i usuwać wykresy, zmieniać ich nazwy oraz kolejność. Każdy wykres może
-łączyć dowolne serie z całego katalogu, np. temperaturę z opadem na prawej osi.
-Przy każdej serii jest próbka legendy i edytor wyglądu: sposób rysowania,
-kolory dla jasnego i ciemnego motywu, grubość i wzór linii, rozmiar punktów,
-krycie oraz przypisanie do osi. Kolor można wybrać z palety lub wpisać kod.
-Wygląd i opcjonalne granice obu osi zapisują się oddzielnie w każdym profilu.
-Domyślne wykresy są gotową konfiguracją używającą tego samego renderera.
-Przyciski **Importuj…**, **Eksportuj profil…** i **Eksportuj zapisane…**
-przenoszą profile w pliku JSON, razem z wyglądem serii i zakresami osi.
-Wybór pliku korzysta ze standardowego okna środowiska: w KDE z dialogu KDE,
-a w środowisku używającym portalu z XDG Desktop Portal. Aplikacja używa
-`QApplication`, wymaganego przez natywną integrację dialogów KDE.
-Import dodaje nowe profile; zbieżne nazwy otrzymują numer, a istniejące
-profile pozostają zachowane. Eksport zapisanych obejmuje nazwane własne
-profile i zmodyfikowany „Własny układ”. Ulubione lokalizacje i ustawienia
-globalne, takie jak jednostka wiatru i UTC, nie są częścią pliku profili.
-Dotyczy to również wyboru renderera, wspólnego dla aplikacji i plasmoidu.
-Wysokość można ustawić ogólnie, nadpisać w profilu i osobno dla wykresu.
-Obowiązuje pierwsza ustawiona wartość: wykres → profil → ustawienie ogólne.
-Wysokości profilu i wykresów są zawarte w eksporcie. Przycisk **ⓘ** bezpośrednio
-przy tytule pokazuje lub ukrywa legendę tego wykresu; globalna opcja
-**Domyślnie pokazuj legendę** określa stan początkowy.
-Można też wybrać jednostkę wiatru i cieniowanie nocy. Legenda przełącza serie
-bez zmiany skali osi. Dolny pasek statusu pokazuje widoczny przedział czasu,
-strzałki przesuwania, suwak powiększenia i przycisk dopasowania całej prognozy.
-Powiększanie zatrzymuje się na 24 godzinach, a dla krótszej prognozy na jej
-pełnym zakresie. Ctrl + kółko myszy również zmienia powiększenie. Podczas
-oglądania fragmentu pojawia się drugi suwak do przesuwania czasu.
-Przycisk **Ustawienia** w górnym pasku otwiera wspólne okno. Zakładka
-**Prognoza** zawiera **Profil wykresów**, **Zakres czasu** i **Start modelu**,
-**Profile** zawiera edytor wykresów i serii oraz import i eksport profili.
-**Duplikuj profil** tworzy niezależną kopię z gotową nazwą, którą można od razu zmienić.
-Zapisane własne profile można usuwać, a roboczy „Własny układ” wyczyścić.
-Gotowe profile pozostają dostępne jako szablony.
-**Odczyt** — zakres parametrów próbnika i domyślną widoczność legendy,
-a **Aplikacja** — renderer, jednostki, strefę czasu i ogólną wysokość wykresów.
-Formularze korzystają z `Kirigami.FormLayout`, standardowych grup opcji i kontrolek Qt Quick.
-Padding jest wewnątrz kart; pasek kart dochodzi do krawędzi okna. Działania profili
-korzystają z `Kirigami.ActionToolBar`, który przy małej szerokości pokazuje menu nadmiarowe.
-Zakres i start dotyczą bieżącego widoku; wybór profilu jest zapamiętywany.
-Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
-
-**Eksportuj…** w pasku statusu otwiera wybór wykresów: jeden, kilka lub cały
-meteogram można zapisać jako wspólny PNG. Obraz zawiera także wykresy poniżej
-widocznej części okna. Zachowuje bieżący zakres czasu, ukryte serie, legendy,
-kolory i wysokości. Podpis podaje lokalizację, model, daty i źródło danych.
-Plik wybiera się w systemowym oknie zapisu. Po zapisie można otworzyć obraz
-przyciskiem w niebieskim pasku informacji Kirigami. Eksport wykresów i profili
-wysyła również systemowe powiadomienie KDE z akcjami otwarcia pliku i folderu;
-respektuje ustawienia powiadomień pulpitu. Eksport działa z rendererem GPU i CPU.
-
-Obecny interfejs danych liczbowych nie udostępnia osobnego pola opadu
-konwekcyjnego. Opad średni, maksymalny, prawdopodobieństwo opadu i wskaźniki
-burz są prezentowane zgodnie z ich znaczeniem. Czerwona kropka przy górnej
-krawędzi oznacza przekroczenie skali przez opad maksymalny lub poryw wiatru;
-nie jest oznaczeniem konwekcji. Szczegóły porównania wykresów z klientem webowym:
-[docs/chart-parity.md](docs/chart-parity.md).
-
-Zakładka **Mapy** zawiera interaktywne warstwy UM4/GFS i 19 map tematycznych
-UM/WAM. Można zmieniać warstwę, start, godzinę i animować prognozę, a z mapy
-otworzyć meteogram wskazanego punktu. Mapy UM4 korzystają z publikacji UM4
-serwisu mapowego, niezależnej od listy startów meteogramów.
-
-Podczas ładowania pozostaje poprzednia kompletna klatka, również przy błędzie
-sieci. Przed odtwarzaniem animacja przygotowuje cały zestaw klatek w cache,
-z postępem na mapie i możliwością anulowania. Pobieranie jest ograniczone do
-czterech równoległych zadań i respektuje limity pamięci cache. Zmiana obszaru,
-warstwy lub startu unieważnia poprzednie przygotowanie. W trakcie odtwarzania
-następna klatka jest dodatkowo przygotowywana w pamięci RAM.
-Kafelki zachowują współrzędne podczas przesuwania i skalowania; nowa klatka
-pojawia się jednocześnie po przygotowaniu wszystkich jej kafelków.
-Kółko myszy i przewijanie touchpadem przybliżają mapę pod kursorem.
-Wskaźnik ładowania jest nakładany na mapę.
-Mapy tematyczne domyślnie mieszczą się w obu wymiarach widoku; **Dopasuj**
-przywraca pełny obraz po ręcznym powiększeniu.
-
-Prognoza odświeża się co godzinę. Aplikacja i widget korzystają ze wspólnego
-cache w `$XDG_CACHE_HOME/meteo-pl` (domyślnie `~/.cache/meteo-pl`).
-Niedawno zapisana prognoza ogranicza powtórne pobrania przy otwieraniu kolejnego
-widoku. Ręczne **Odśwież** zawsze pyta serwer. Gdy pobieranie się nie powiedzie,
-widoczna pozostaje zapisana prognoza z datą pobrania i komunikatem.
-
-Artykuły i komentarze synoptyka są zapisywane na dysku osobno dla każdej strony
-listy i daty. Przez 30 minut ponowne otwarcie korzysta z zapisu bez sieci.
-Ręczne odświeżenie sprawdza serwer; w razie błędu zachowuje zapisaną treść.
-Ilustracje artykułów i legendy map korzystają z tego samego trwałego cache obrazów.
-Wyniki wyszukiwania miejsc są zapamiętywane na 24 godziny, a listy dostępnych
-uruchomień modeli na 5 minut. Cache tych odpowiedzi ma limit 32 MiB / 512 wpisów;
-wyszukiwanie nowej nazwy nadal wymaga internetu.
-
-Mapy mają dodatkowy cache: do 96 MiB zdekodowanych obrazów w RAM i do 256 MiB
-cache HTTP na dysku. Powtórne żądania tego samego obrazu w procesie są łączone.
-Klucz zawiera pełny URL, w tym warstwę, start, krok i współrzędne kafelka;
-ważność odpowiedzi dyskowych wynika z nagłówków serwera. Obrazom bez jawnego
-czasu ważności (m.in. mapom tematycznym) aplikacja nadaje 30 minut także na dysku.
-Ponowne przygotowanie animacji i wznowienie po anulowaniu wykorzystują gotowe
-klatki; usunięcie obrazu z RAM nie powoduje jego ponownego pobrania z sieci.
-Cache map znajduje się w `$XDG_CACHE_HOME/meteo-pl/maps/<nazwa-procesu>`.
-W **Ustawienia → Aplikacja → Pamięć podręczna** widać zajęte miejsce na dysku
-z podziałem na prognozy, treści i obrazy. Przycisk czyszczenia usuwa cache dyskowy
-i obrazy z RAM; pozostawia zapisane miejsca, profile i aktualnie widoczne dane.
-Aplikacja i Plasma mają osobne katalogi cache HTTP, aby dwa procesy nie
-modyfikowały równocześnie magazynu `QNetworkDiskCache`.
-Ulubione i preferencje widoku są wspólne, w `~/.config/meteo-pl/desktop.ini`.
-Ścieżka jest też widoczna na dole ustawień wyglądu; respektuje `XDG_CONFIG_HOME`.
-
-## Instalacja
-
-Do uruchamiania wersji z `build/dev` można zarejestrować wpis aplikacji i ikonę:
-`python3 scripts/register-dev-desktop.py`. Wpis użytkownika wskazuje bezpośrednio
-na zbudowany program i umożliwia rozpoznawanie aplikacji przez portal KDE.
-Skrypt nie zastępuje istniejącego wpisu zwykłej instalacji.
-
-Preset `dev` instaluje do `build/stage`, aby umożliwić sprawdzenie pakietu:
-
-```sh
-cmake --install build/dev
-QML_IMPORT_PATH="$PWD/build/stage/lib/qt6/qml" ./build/stage/bin/meteo-pl
-```
-
-Do normalnej instalacji aplikacji i plasmoidu skonfiguruj osobny katalog:
-
-```sh
+```bash
 cmake -S . -B build/release -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTING=OFF
-cmake --build build/release
+cmake --build build/release --parallel 2
 sudo cmake --install build/release
 ```
 
-Następnie dodaj **Meteo · meteogram ICM** w oknie „Dodaj elementy interfejsu”
-Plasma. Nowa sesja Plasma zapewni wykrycie nowego modułu QML.
-Ustawienia widgetu są niezależne dla każdej instancji.
-Widok po rozwinięciu pokazuje zwartą prognozę na dni, temperaturę i wiatr;
-**Pokaż meteogram** otwiera pełny widok w tym samym plasmoidzie. Ikona panelu
-odzwierciedla pogodę; przy braku danych używana jest własna ikona Meteo.
-Samo `kpackagetool6 -i integrations/plasma/package` nie instaluje biblioteki C++;
-potrzebna jest także instalacja modułu `pl.meteo.desktop` przez CMake.
-Ścieżkę modułu można ustawić przez `METEO_QML_INSTALL_DIR`, np. dla dystrybucji
-używających `lib64` zamiast `lib`.
+`METEO_BUILD_APP` and `METEO_BUILD_PLASMOID` control the two frontends.
+`METEO_QML_INSTALL_DIR` overrides the shared module installation directory.
 
-Opcje `METEO_BUILD_APP` i `METEO_BUILD_PLASMOID` wyłączają odpowiednie frontendy.
-`BUILD_TESTING=OFF` usuwa zależność od Qt Test.
+## Documentation
 
-## Paczki i CI
+- [User guide — Polish](docs/user-guide.pl.md): profiles, maps, exports and cache
+  behavior.
+- [Linux packaging and CI](docs/packaging.md): isolated distribution builds and
+  installation checks.
+- [Windows, macOS and Android builds](docs/portable-packages.md): Craft bundles,
+  SDK setup and package limitations.
+- [CPU/GPU visual tests](docs/renderer-tests.md): comparison coverage and how to
+  run the tests.
+- [Chart parity](docs/chart-parity.md): correspondence with the web client and
+  parameter availability.
+- [Architecture](docs/architecture.md): shared backend and frontend structure.
 
-Paczki dla Arch Linux, Debiana 13, Ubuntu 26.04 i Fedory 44 można budować
-w kontenerach: `python3 scripts/build-package.py --distro debian --test`.
-Wyniki zawierają źródła, sumy SHA-256 i raport budowy.
-GitHub Actions uruchamia testy, porównuje wygląd CPU/GPU i sprawdza instalację
-paczek. Szczegóły: [budowanie paczek i CI](docs/packaging.md).
+Preferences and saved places are stored in
+`$XDG_CONFIG_HOME/meteo-pl/desktop.ini` (normally
+`~/.config/meteo-pl/desktop.ini`). Cached data lives in
+`$XDG_CACHE_HOME/meteo-pl` (normally `~/.cache/meteo-pl`). Each widget keeps its
+selected location in the standard Plasma configuration.
 
-## Architektura i źródła
+## Forecast Sources
 
-Podział na wspólny backend i opcjonalną integrację KDE nawiązuje do lokalnego
-projektu `../btrfs-backup`. Szczegóły: [docs/architecture.md](docs/architecture.md).
+Forecasts and map images come from **ICM UW / meteo.pl**; the UM model is
+provided by the **Met Office**. This is an independent client using the web
+application's data interface, which may change. Weather data and third-party
+libraries retain their own terms. See the
+[meteo.pl terms](https://www.meteo.pl/regulamin-aplikacji-meteo-icm).
 
-Punkty odniesienia:
+The project does not yet implement every feature of the Android app: observed
+radar, FLOPRES, weather alerts and account/subscription integration are not
+available. Precipitation maps show model forecasts. The numeric interface does
+not expose a separate convective precipitation total.
 
-- [Klient webowy meteo.pl](https://app.meteo.pl/meteogram) — format danych i modele.
-- [Meteo ICM w Google Play](https://play.google.com/store/apps/details?id=pl.janpogocki.icm.pogoda&hl=pl) — funkcje i prezentacja meteogramów.
-- [Meteo API](https://api.meteo.pl/) — osobna usługa dostępu do danych.
+## License
 
-Aktualny adapter używa interfejsu klienta webowego
-`https://devmgramapi.meteo.pl/meteorograms/…`, sprawdzonego 25.10.2026.
-To nieudokumentowany interfejs, który może się zmienić. Nie jest to integracja
-z kontem ani płatnym API. Zasady wykorzystania prognoz określa
-[regulamin meteo.pl](https://www.meteo.pl/regulamin-aplikacji-meteo-icm).
-Repozytorium zawiera wyłącznie syntetyczne dane testowe, a interfejs podaje źródło prognozy.
+Copyright © 2026 **Kamil Piwowarski** · [kapiwko@gmail.com](mailto:kapiwko@gmail.com).
 
-Nie jest to jeszcze pełna zgodność funkcji z Androidem: brak radaru obserwacyjnego,
-FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
-i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
-
-Paczki Windows, macOS i Android: [instrukcja budowania z Qt/KDE](docs/portable-packages.md).
-Testy porównania wyglądu CPU/GPU: [zakres i uruchamianie](docs/renderer-tests.md).
+Licensed under **[GNU GPL version 3 or later](LICENSE)**
+(`GPL-3.0-or-later`).
