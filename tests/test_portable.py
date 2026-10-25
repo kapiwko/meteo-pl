@@ -15,6 +15,24 @@ spec.loader.exec_module(portable)
 
 
 class PortablePackagingTest(unittest.TestCase):
+    def test_android_output_is_set_before_cmake_configures_the_package(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary); dist=root/"dist"; dist.mkdir()
+            configured=[]
+            def prepare(command):
+                configured.append(Path(next(arg.split("=",1)[1] for arg in command if str(arg).startswith("[Packager]Destination="))))
+            def package(command,**kwargs):
+                self.assertEqual(len(configured),1)
+                destination=Path(next(arg.split("=",1)[1] for arg in command if str(arg).startswith("[Packager]Destination=")))
+                self.assertEqual(destination,configured[0])
+                (configured[0]/"meteo.apk").write_bytes(b"current")
+            def sign(apk,stage):
+                result=stage/"meteo-development.apk"; result.write_bytes(apk.read_bytes()+b"signed"); return result
+            with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign):
+                artifacts=portable.package_current_build(["craft"],"android",root,dist,root/"CraftRoot",{},prepare)
+            self.assertEqual([p.name for p in artifacts],["meteo.apk","meteo-development.apk"])
+            self.assertFalse(configured[0].exists())
+
     def test_windows_smoke_uses_only_the_explicit_current_archive(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

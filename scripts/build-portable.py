@@ -127,12 +127,15 @@ def check_packaged_desktop(target, packages, craft_root, environment):
             if mounted: run(["hdiutil", "detach", mount])
 
 
-def package_current_build(command, target, work, dist, craft_root, environment):
+def package_current_build(command, target, work, dist, craft_root, environment, prepare=None):
     # Keep previous releases outside the artifact selection and smoke test.
     # Publish only after the package from this invocation has passed verification.
     with tempfile.TemporaryDirectory(prefix="packages-", dir=work) as temporary:
         staging = Path(temporary)
-        run([*command, "--options", f"[Packager]Destination={staging}", "--package", "meteo-pl"], env=environment)
+        staged_command = [*command, "--options", f"[Packager]Destination={staging}"]
+        # Android embeds ANDROID_APK_OUTPUT_DIR at CMake configure time.
+        if prepare is not None: prepare(staged_command)
+        run([*staged_command, "--package", "meteo-pl"], env=environment)
         artifacts = sorted(p for p in staging.iterdir() if p.suffix in (".exe", ".zip", ".dmg", ".apk"))
         suffix = {"windows": ".zip", "macos": ".dmg", "android": ".apk"}[target]
         packages = [p for p in artifacts if p.suffix == suffix]
@@ -195,18 +198,20 @@ def build(args):
     else:
         checkout("https://github.com/KDE/craft-blueprints-kde.git", BLUEPRINTS_REVISION, blueprints)
     command = [sys.executable, craft, "--options", f"meteo-pl.srcDir={ROOT}"]
-    run([*command, "--ignoreInstalled", "meteo-pl"], env=environment)
     smoke = "not-run"
-    if args.target != "android":
-        executable = craft_root / ("bin/meteo-pl.exe" if args.target == "windows" else "bin/meteo-pl.app/Contents/MacOS/meteo-pl")
-        smoke_env = environment | {"QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software", "QT_FORCE_STDERR_LOGGING": "1"}
-        with tempfile.TemporaryDirectory(prefix="meteo-smoke-") as temporary:
-            smoke_env.update(XDG_CONFIG_HOME=temporary+"/config", XDG_CACHE_HOME=temporary+"/cache")
-            result = run([*command, "--run", executable, "--smoke-test"], env=smoke_env, capture_output=True, text=True, timeout=60)
-            print(result.stdout + result.stderr)
-            if QML_ERRORS.search(result.stdout + result.stderr): raise RuntimeError("QML smoke test failed")
-        smoke = "passed"
-    artifacts = package_current_build(command, args.target, work, dist, craft_root, environment)
+    def prepare(staged_command):
+        nonlocal smoke
+        run([*staged_command, "--ignoreInstalled", "meteo-pl"], env=environment)
+        if args.target != "android":
+            executable = craft_root / ("bin/meteo-pl.exe" if args.target == "windows" else "bin/meteo-pl.app/Contents/MacOS/meteo-pl")
+            smoke_env = environment | {"QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software", "QT_FORCE_STDERR_LOGGING": "1"}
+            with tempfile.TemporaryDirectory(prefix="meteo-smoke-") as temporary:
+                smoke_env.update(XDG_CONFIG_HOME=temporary+"/config", XDG_CACHE_HOME=temporary+"/cache")
+                result = run([*staged_command, "--run", executable, "--smoke-test"], env=smoke_env, capture_output=True, text=True, timeout=60)
+                print(result.stdout + result.stderr)
+                if QML_ERRORS.search(result.stdout + result.stderr): raise RuntimeError("QML smoke test failed")
+            smoke = "passed"
+    artifacts = package_current_build(command, args.target, work, dist, craft_root, environment, prepare)
     report = {"version": (ROOT / "VERSION").read_text().strip(), "target": args.target,
               "architecture": "arm64-v8a" if args.target == "android" else platform.machine(),
               "smokeTest": smoke, "releaseSigned": False, "bootstrapRevision": CRAFT_REVISION,
