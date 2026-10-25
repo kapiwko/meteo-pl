@@ -409,7 +409,7 @@ QString UserPreferences::duplicateProfile()
         names.append(entry["name"].toString());
         if (entry["id"] == profile()) base = entry["name"].toString();
     }
-    base = base.left(60) + QStringLiteral(" — kopia");
+    base = Meteo::i18n("%1 — copy").arg(base.left(60));
     auto name = base;
     for (int number = 2; names.contains(name, Qt::CaseInsensitive); ++number)
         name = base + QStringLiteral(" (%1)").arg(number);

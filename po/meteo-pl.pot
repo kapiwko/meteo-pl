@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-25 23:59+0100\n"
+"POT-Creation-Date: 2026-10-26 00:24+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/qml/ForecastPanel.qml:435
+#: src/qml/ForecastPanel.qml:438
 msgid " hours"
 msgstr ""
 
@@ -33,15 +33,15 @@ msgstr ""
 msgid " · approximate time · "
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:81 src/qml/ForecastPanel.qml:179
+#: src/qml/ForecastPanel.qml:84 src/qml/ForecastPanel.qml:182
 msgid " · local time"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:79 src/qml/ForecastPanel.qml:127
+#: src/qml/ForecastPanel.qml:82 src/qml/ForecastPanel.qml:130
 msgid " · model run: "
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:126
+#: src/qml/ForecastPanel.qml:129
 msgid " · parameter reading · "
 msgstr ""
 
@@ -49,14 +49,18 @@ msgstr ""
 msgid " · run: "
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:188
+#: src/qml/ForecastPanel.qml:191
 msgid "%1 chart selected"
 msgid_plural "%1 charts selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/presentation/WeatherModel.cpp:574
+#: src/presentation/WeatherModel.cpp:583
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
+msgstr ""
+
+#: src/presentation/UserPreferences.cpp:412
+msgid "%1 — copy"
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configAppearance.qml:74
@@ -103,7 +107,7 @@ msgid "Air temperature min–max"
 msgstr ""
 
 #: src/qml/ForecastInspector.qml:21 src/qml/ForecastInspector.qml:92
-#: src/qml/ForecastPanel.qml:113 src/qml/ForecastPanel.qml:186
+#: src/qml/ForecastPanel.qml:116 src/qml/ForecastPanel.qml:189
 msgid "All"
 msgstr ""
 
@@ -119,7 +123,7 @@ msgstr ""
 msgid "All saved profiles…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:625
+#: src/qml/ForecastPanel.qml:628
 msgid ""
 "An interval crosses midnight. Its precipitation is shared between days in "
 "proportion to duration."
@@ -141,7 +145,7 @@ msgstr ""
 msgid "Application and Plasma widget for ICM UW meteograms"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:343
+#: src/qml/ForecastPanel.qml:346
 msgid ""
 "Archived model run. Chart dates and times refer to the selected forecast."
 msgstr ""
@@ -150,7 +154,7 @@ msgstr ""
 msgid "Article"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:321
+#: src/qml/ForecastPanel.qml:324
 msgid "Articles"
 msgstr ""
 
@@ -190,7 +194,7 @@ msgstr ""
 msgid "Basic"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:138
+#: src/qml/ForecastPanel.qml:141
 msgid "CSV data (*.csv)"
 msgstr ""
 
@@ -206,11 +210,11 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastPanel.qml:560
 msgid "Chance %"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:214
+#: src/qml/ForecastPanel.qml:217
 msgid "Chart appearance, series visibility and legends will be preserved."
 msgstr ""
 
@@ -243,7 +247,7 @@ msgstr ""
 msgid "Chart time interval"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:434
+#: src/qml/ForecastPanel.qml:437
 msgid "Chart zoom"
 msgstr ""
 
@@ -251,7 +255,7 @@ msgstr ""
 msgid "Charts"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:94
+#: src/qml/ForecastPanel.qml:97
 msgid "Charts exported"
 msgstr ""
 
@@ -271,7 +275,7 @@ msgstr ""
 msgid "Choose a local CSV file."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:42
+#: src/presentation/ChartExporter.cpp:43
 msgid "Choose a local PNG file."
 msgstr ""
 
@@ -284,7 +288,7 @@ msgstr ""
 msgid "Choose a place or a point on the map"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:350
+#: src/qml/ForecastPanel.qml:353
 msgid "Choose a place to download its meteogram."
 msgstr ""
 
@@ -292,7 +296,7 @@ msgstr ""
 msgid "Choose a series…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:177
+#: src/qml/ForecastPanel.qml:180
 msgid "Choose charts to combine into one PNG image."
 msgstr ""
 
@@ -300,7 +304,7 @@ msgstr ""
 msgid "Choose color"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:351 src/qml/PlacePicker.qml:14
+#: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:14
 msgid "Choose location"
 msgstr ""
 
@@ -317,7 +321,7 @@ msgstr ""
 msgid "Classic ICM"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:507
+#: src/presentation/WeatherModel.cpp:516
 msgid "Clear"
 msgstr ""
 
@@ -377,7 +381,7 @@ msgstr ""
 msgid "Clouds"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastPanel.qml:560
 msgid "Clouds %"
 msgstr ""
 
@@ -386,7 +390,7 @@ msgstr ""
 msgid "Clouds and precipitation"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:375
+#: src/presentation/WeatherModel.cpp:384
 msgid "Code %1"
 msgstr ""
 
@@ -398,7 +402,7 @@ msgstr ""
 msgid "Color by precipitation type"
 msgstr ""
 
-#: src/presentation/EditorialModel.cpp:42
+#: src/presentation/EditorialModel.cpp:43
 msgid "Commentary for future dates is not available yet."
 msgstr ""
 
@@ -414,7 +418,7 @@ msgstr ""
 msgid "Copyright:"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:120
+#: src/presentation/ChartExporter.cpp:131
 msgid "Could not create PNG: "
 msgstr ""
 
@@ -432,7 +436,7 @@ msgstr ""
 msgid "Could not download all tiles. Keeping the previous map visible."
 msgstr ""
 
-#: src/network/JsonRequest.cpp:100
+#: src/network/JsonRequest.cpp:97
 msgid "Could not download data (HTTP %1). %2"
 msgstr ""
 
@@ -457,20 +461,20 @@ msgid ""
 "Could not prepare all animation frames. Try again or choose an earlier run."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:131
+#: src/presentation/ChartExporter.cpp:142
 msgid "Could not prepare the chart image."
 msgstr ""
 
-#: src/network/ImageCache.cpp:210
+#: src/network/ImageCache.cpp:224
 msgid "Could not read the map image."
 msgstr ""
 
-#: src/presentation/EditorialModel.cpp:27
+#: src/presentation/EditorialModel.cpp:28
 msgid "Could not refresh. Showing content from the cache."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:117
-#: src/presentation/ChartExporter.cpp:121
+#: src/presentation/ChartExporter.cpp:128
+#: src/presentation/ChartExporter.cpp:132
 msgid "Could not save PNG: "
 msgstr ""
 
@@ -533,7 +537,7 @@ msgid ""
 "kept."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:318
+#: src/qml/ForecastPanel.qml:321
 msgid "Days"
 msgstr ""
 
@@ -549,7 +553,7 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:187
+#: src/qml/ForecastPanel.qml:190
 msgid "Deselect all"
 msgstr ""
 
@@ -561,7 +565,7 @@ msgstr ""
 msgid "Direction arrows"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:463
+#: src/qml/ForecastPanel.qml:466
 msgid "Disable parameter identification"
 msgstr ""
 
@@ -569,7 +573,7 @@ msgstr ""
 msgid "Dotted"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:83
+#: src/qml/ForecastPanel.qml:86
 msgid "Downloaded: %1"
 msgstr ""
 
@@ -593,7 +597,7 @@ msgstr ""
 msgid "Duplicate profile"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:386
+#: src/qml/ForecastPanel.qml:389
 msgid "Earlier interval"
 msgstr ""
 
@@ -607,12 +611,12 @@ msgid ""
 "Click to pin a reading."
 msgstr ""
 
-#: src/presentation/EditorialModel.cpp:41
+#: src/presentation/EditorialModel.cpp:42
 msgid "Enter a valid date in yyyy-mm-dd format."
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configAppearance.qml:75
-#: src/qml/ForecastPanel.qml:451 src/qml/ForecastSettings.qml:39
+#: src/qml/ForecastPanel.qml:454 src/qml/ForecastSettings.qml:39
 msgid "Entire forecast"
 msgstr ""
 
@@ -624,11 +628,11 @@ msgstr ""
 msgid "Export"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:163
+#: src/presentation/ChartExporter.cpp:177
 msgid "Export cancelled."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:162
+#: src/qml/ForecastPanel.qml:165
 msgid "Export charts"
 msgstr ""
 
@@ -640,7 +644,7 @@ msgstr ""
 msgid "Export saved profiles"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:470
+#: src/qml/ForecastPanel.qml:473
 msgid "Export selected charts to PNG"
 msgstr ""
 
@@ -648,15 +652,15 @@ msgstr ""
 msgid "Export visible parameters"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:467
+#: src/qml/ForecastPanel.qml:470
 msgid "Exporting…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:467
+#: src/qml/ForecastPanel.qml:470
 msgid "Export…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastPanel.qml:560
 msgid "Feels like"
 msgstr ""
 
@@ -676,7 +680,7 @@ msgstr ""
 msgid "Fill:"
 msgstr ""
 
-#: src/qml/Meteogram.qml:426
+#: src/qml/Meteogram.qml:437
 msgid ""
 "Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
 msgstr ""
@@ -705,7 +709,7 @@ msgstr ""
 msgid "Forecast"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:282
+#: src/presentation/WeatherModel.cpp:288
 msgid "Forecast for "
 msgstr ""
 
@@ -733,7 +737,7 @@ msgstr ""
 msgid "GPU · Qt Quick scene graph (default)"
 msgstr ""
 
-#: src/qml/Meteogram.qml:279
+#: src/qml/Meteogram.qml:290
 msgid "Ground min–max"
 msgstr ""
 
@@ -746,19 +750,19 @@ msgstr ""
 msgid "Ground temperature min–max"
 msgstr ""
 
-#: src/qml/Meteogram.qml:320
+#: src/qml/Meteogram.qml:331
 msgid "Gust above scale"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastPanel.qml:560
 msgid "Gusts"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:629
+#: src/qml/ForecastPanel.qml:632
 msgid "Gusts: "
 msgstr ""
 
-#: src/qml/Meteogram.qml:245
+#: src/qml/Meteogram.qml:256
 msgid "Hide legend"
 msgstr ""
 
@@ -775,7 +779,7 @@ msgstr ""
 msgid "Horizontal segments"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:317
+#: src/qml/ForecastPanel.qml:320
 msgid "Hourly"
 msgstr ""
 
@@ -795,11 +799,11 @@ msgstr ""
 msgid "ICM wind palette"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:463
+#: src/qml/ForecastPanel.qml:466
 msgid "Identify parameters · move the cursor over a chart"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:26
+#: src/presentation/ChartExporter.cpp:27
 msgid "Image preparation timed out. Try again."
 msgstr ""
 
@@ -827,7 +831,7 @@ msgstr ""
 msgid "Interval start"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:383
+#: src/presentation/WeatherModel.cpp:392
 msgid "Interval: %1–%2"
 msgstr ""
 
@@ -843,7 +847,7 @@ msgstr ""
 msgid "Invalid map image URL."
 msgstr ""
 
-#: src/core/Forecast.cpp:82 src/presentation/EditorialModel.cpp:21
+#: src/core/Forecast.cpp:82 src/presentation/EditorialModel.cpp:22
 msgid "Invalid meteo.pl response format."
 msgstr ""
 
@@ -860,7 +864,7 @@ msgstr ""
 msgid "Last downloaded: "
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:406
+#: src/qml/ForecastPanel.qml:409
 msgid "Later interval"
 msgstr ""
 
@@ -872,7 +876,7 @@ msgstr ""
 msgid "Latest available"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:54 src/presentation/WeatherModel.cpp:67
+#: src/presentation/WeatherModel.cpp:55 src/presentation/WeatherModel.cpp:68
 msgid "Latest forecast"
 msgstr ""
 
@@ -952,7 +956,7 @@ msgstr ""
 msgid "Low clouds"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:319
+#: src/qml/ForecastPanel.qml:322
 msgid "Maps"
 msgstr ""
 
@@ -964,7 +968,7 @@ msgstr ""
 msgid "Maximum feels like"
 msgstr ""
 
-#: src/qml/Meteogram.qml:320
+#: src/qml/Meteogram.qml:331
 msgid "Maximum precipitation above scale"
 msgstr ""
 
@@ -988,8 +992,8 @@ msgstr ""
 msgid "Meteo · ICM meteograms"
 msgstr ""
 
-#: apps/meteo/Main.qml:44 src/qml/ForecastPanel.qml:70
-#: src/qml/ForecastPanel.qml:316
+#: apps/meteo/Main.qml:44 src/qml/ForecastPanel.qml:73
+#: src/qml/ForecastPanel.qml:319
 msgid "Meteogram"
 msgstr ""
 
@@ -1018,7 +1022,7 @@ msgstr ""
 msgid "Minimum visibility"
 msgstr ""
 
-#: src/qml/Meteogram.qml:279
+#: src/qml/Meteogram.qml:290
 msgid "Min–max range"
 msgstr ""
 
@@ -1072,7 +1076,7 @@ msgstr ""
 msgid "Move chart up"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:484
+#: src/qml/ForecastPanel.qml:487
 msgid "Move the visible time interval"
 msgstr ""
 
@@ -1113,7 +1117,7 @@ msgstr ""
 msgid "New chart"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:503
+#: src/presentation/WeatherModel.cpp:512
 msgid "No cloud cover data"
 msgstr ""
 
@@ -1121,11 +1125,11 @@ msgstr ""
 msgid "No current run is available for the selected model."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:349 src/qml/WeatherSymbol.qml:14
+#: src/qml/ForecastPanel.qml:352 src/qml/WeatherSymbol.qml:14
 msgid "No forecast"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:280
+#: src/presentation/WeatherModel.cpp:286
 msgid "No forecast for the current hour"
 msgstr ""
 
@@ -1151,7 +1155,7 @@ msgstr ""
 msgid "No places found. Refine the name or choose a point on the map."
 msgstr ""
 
-#: src/presentation/EditorialModel.cpp:30
+#: src/presentation/EditorialModel.cpp:31
 msgid ""
 "No synoptic commentary for %1. Choose another date or the latest commentary."
 msgstr ""
@@ -1160,11 +1164,11 @@ msgstr ""
 msgid "No valid reading time."
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:373
+#: src/presentation/WeatherModel.cpp:382
 msgid "None"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:75
+#: src/presentation/ChartExporter.cpp:76
 msgid "Not enough memory for the meteogram image."
 msgstr ""
 
@@ -1177,7 +1181,7 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:108
+#: src/qml/ForecastPanel.qml:111
 msgid "Open a parameter reading and try again."
 msgstr ""
 
@@ -1193,11 +1197,11 @@ msgstr ""
 msgid "Outdoors"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:507
+#: src/presentation/WeatherModel.cpp:516
 msgid "Overcast"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:138 src/qml/ForecastPanel.qml:153
+#: src/qml/ForecastPanel.qml:141 src/qml/ForecastPanel.qml:156
 msgid "PNG image (*.png)"
 msgstr ""
 
@@ -1209,15 +1213,15 @@ msgstr ""
 msgid "Parameter identification"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:462
+#: src/qml/ForecastPanel.qml:465
 msgid "Parameter identification mode"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:90
+#: src/qml/ForecastPanel.qml:93
 msgid "Parameter reading saved."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:113
+#: src/qml/ForecastPanel.qml:116
 msgid "Parameters"
 msgstr ""
 
@@ -1225,7 +1229,7 @@ msgstr ""
 msgid "Parameters of the indicated chart"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:507
+#: src/presentation/WeatherModel.cpp:516
 msgid "Partly cloudy"
 msgstr ""
 
@@ -1254,19 +1258,19 @@ msgstr ""
 msgid "Points"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:566
+#: src/presentation/WeatherModel.cpp:575
 msgid "Polar day"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:566
+#: src/presentation/WeatherModel.cpp:575
 msgid "Polar night"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:499
+#: src/presentation/WeatherModel.cpp:508
 msgid "Possible thunderstorms"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastPanel.qml:560
 msgid "Precip. mm"
 msgstr ""
 
@@ -1286,7 +1290,7 @@ msgstr ""
 msgid "Precipitation type"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:620
+#: src/qml/ForecastPanel.qml:623
 msgid "Precipitation: "
 msgstr ""
 
@@ -1323,11 +1327,11 @@ msgstr ""
 msgid "Profiles imported: "
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:373
+#: src/presentation/WeatherModel.cpp:382
 msgid "Rain"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:502
+#: src/presentation/WeatherModel.cpp:511
 msgid "Rainfall"
 msgstr ""
 
@@ -1335,7 +1339,7 @@ msgstr ""
 msgid "Read on meteo.pl"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:94
+#: src/qml/ForecastPanel.qml:97
 msgid "Reading exported"
 msgstr ""
 
@@ -1396,7 +1400,7 @@ msgstr ""
 msgid "Sample time"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:382
+#: src/presentation/WeatherModel.cpp:391
 msgid "Sample: %1"
 msgstr ""
 
@@ -1404,15 +1408,15 @@ msgstr ""
 msgid "Sampling"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:171
+#: src/qml/ForecastPanel.qml:174
 msgid "Save PNG…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:136
+#: src/qml/ForecastPanel.qml:139
 msgid "Save parameter reading as CSV"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:136
+#: src/qml/ForecastPanel.qml:139
 msgid "Save parameter reading as PNG"
 msgstr ""
 
@@ -1424,7 +1428,7 @@ msgstr ""
 msgid "Save reading as PNG…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:71
+#: src/qml/ForecastPanel.qml:74
 msgid "Save selected charts"
 msgstr ""
 
@@ -1445,7 +1449,7 @@ msgstr ""
 msgid "Search outside Poland too"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:43
+#: src/presentation/ChartExporter.cpp:44
 msgid "Select between 1 and 50 charts to export."
 msgstr ""
 
@@ -1453,7 +1457,7 @@ msgstr ""
 msgid "Selected charts"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:90
+#: src/qml/ForecastPanel.qml:93
 msgid "Selected charts saved."
 msgstr ""
 
@@ -1490,11 +1494,11 @@ msgstr ""
 msgid "Show UTC time"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:418
+#: src/qml/ForecastPanel.qml:421
 msgid "Show a longer interval"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:443
+#: src/qml/ForecastPanel.qml:446
 msgid "Show a shorter interval"
 msgstr ""
 
@@ -1506,7 +1510,7 @@ msgstr ""
 msgid "Show forecast: "
 msgstr ""
 
-#: src/qml/Meteogram.qml:245
+#: src/qml/Meteogram.qml:256
 msgid "Show legend"
 msgstr ""
 
@@ -1522,15 +1526,15 @@ msgstr ""
 msgid "Show:"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:374 src/presentation/WeatherModel.cpp:501
+#: src/presentation/WeatherModel.cpp:383 src/presentation/WeatherModel.cpp:510
 msgid "Sleet"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:374
+#: src/presentation/WeatherModel.cpp:383
 msgid "Snow"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:500
+#: src/presentation/WeatherModel.cpp:509
 msgid "Snowfall"
 msgstr ""
 
@@ -1563,7 +1567,7 @@ msgstr ""
 msgid "Storms"
 msgstr ""
 
-#: src/qml/Meteogram.qml:279
+#: src/qml/Meteogram.qml:290
 msgid "Storms / lightning"
 msgstr ""
 
@@ -1583,7 +1587,7 @@ msgstr ""
 msgid "Surface pressure"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:320
+#: src/qml/ForecastPanel.qml:323
 msgid "Synoptic"
 msgstr ""
 
@@ -1591,7 +1595,7 @@ msgstr ""
 msgid "Synoptic commentary"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastPanel.qml:560
 msgid "Temp."
 msgstr ""
 
@@ -1616,11 +1620,11 @@ msgstr ""
 msgid "The cache has been cleared."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:52
+#: src/presentation/ChartExporter.cpp:53
 msgid "The chart is not ready to export. Open the meteogram and try again."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:128
+#: src/presentation/ChartExporter.cpp:139
 msgid "The chart was closed during export."
 msgstr ""
 
@@ -1632,15 +1636,15 @@ msgstr ""
 msgid "The file must contain between 1 and 100 profiles."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:626
+#: src/qml/ForecastPanel.qml:629
 msgid "The forecast covers part of this day. Missing intervals are excluded."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:344
+#: src/qml/ForecastPanel.qml:347
 msgid "The forecast may be outdated. Last downloaded: "
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:72
+#: src/presentation/ChartExporter.cpp:73
 msgid ""
 "The image is too large. Reduce chart heights or export charts separately."
 msgstr ""
@@ -1664,11 +1668,11 @@ msgstr ""
 msgid "The profile file is too large (maximum 16 MiB)."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:137
+#: src/presentation/ChartExporter.cpp:151
 msgid "The renderer did not return a chart image."
 msgstr ""
 
-#: src/network/ImageCache.cpp:174 src/network/JsonRequest.cpp:96
+#: src/network/ImageCache.cpp:188 src/network/JsonRequest.cpp:93
 #: src/network/MeteoClient.cpp:46
 msgid "The request timed out. Try again."
 msgstr ""
@@ -1677,11 +1681,11 @@ msgstr ""
 msgid "The server response is too large."
 msgstr ""
 
-#: src/network/JsonRequest.cpp:107
+#: src/network/JsonRequest.cpp:104
 msgid "The server returned an invalid JSON document."
 msgstr ""
 
-#: src/presentation/EditorialModel.cpp:29
+#: src/presentation/EditorialModel.cpp:30
 msgid "The synoptic commentary has not been published yet. Try again later."
 msgstr ""
 
@@ -1695,7 +1699,8 @@ msgid ""
 "remembered."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:100
+#: src/presentation/ChartExporter.cpp:101
+#: src/presentation/ChartExporter.cpp:180
 msgid "The view changed during export. Try again."
 msgstr ""
 
@@ -1714,7 +1719,7 @@ msgstr ""
 msgid "This point is outside the UM4 area. Choose the GFS model."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:557 src/qml/ForecastPanel.qml:558
+#: src/qml/ForecastPanel.qml:560 src/qml/ForecastPanel.qml:561
 msgid "Time"
 msgstr ""
 
@@ -1743,7 +1748,7 @@ msgstr ""
 msgid "Total on disk:"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:626
+#: src/qml/ForecastPanel.qml:629
 msgid "Total precipitation for this day."
 msgstr ""
 
@@ -1871,7 +1876,7 @@ msgstr ""
 msgid "Very low clouds"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:398
+#: src/qml/ForecastPanel.qml:401
 msgid "Visible interval · "
 msgstr ""
 
@@ -1910,7 +1915,7 @@ msgstr ""
 msgid "Wind"
 msgstr ""
 
-#: src/qml/ForecastHeader.qml:54 src/qml/ForecastPanel.qml:557
+#: src/qml/ForecastHeader.qml:54 src/qml/ForecastPanel.qml:560
 msgid "Wind "
 msgstr ""
 
@@ -1949,7 +1954,11 @@ msgid ""
 "layout”."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:398
+#: src/qml/Meteogram.qml:221
+msgid "fraction"
+msgstr ""
+
+#: src/qml/ForecastPanel.qml:401
 msgid "local time"
 msgstr ""
 
@@ -1963,6 +1972,10 @@ msgstr ""
 
 #: src/qml/SeriesSettings.qml:48
 msgid "no data"
+msgstr ""
+
+#: src/qml/Meteogram.qml:220
+msgid "octas"
 msgstr ""
 
 #: src/qml/ForecastHeader.qml:81

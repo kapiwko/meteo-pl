@@ -217,8 +217,8 @@ ColumnLayout {
     function axisUnit(right) {
         if (directionOnly || right && !hasRightAxis) return "";
         const kind = right ? rightScale : scaleKind;
-        if (kind === "clouds") return "oktanty";
-        if (kind === "fraction") return "frakcja";
+        if (kind === "clouds") return I18n.i18n("octas");
+        if (kind === "fraction") return I18n.i18n("fraction");
         if (right && kind === "linked") {
             if (scaleKind === "pressure") return "mm Hg";
             if (wind) return weather.windUnit === "m/s" ? "km/h" : "m/s";
