@@ -28,6 +28,7 @@ Item {
     property url exportedFile
     readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
     signal configureRequested()
+    signal exportReported()
     signal locationSelected(string name, real latitude, real longitude)
     readonly property var selectedChart: visibleCharts.find(chart => chart.key === selectedGroup)
     readonly property var selectedFieldKeys: {
@@ -80,8 +81,8 @@ Item {
     ChartExporter {
         id: chartExporter
         objectName: "chartExporter"
-        onSaved: (file, path) => { root.exportFailed = false; root.exportedFile = file; root.exportMessage = "Zapisano: " + path; root.exportItems = []; }
-        onFailed: message => { root.exportFailed = true; root.exportMessage = message; root.exportItems = []; }
+        onSaved: (file, path) => { root.exportFailed = false; root.exportedFile = file; root.exportMessage = "Zapisano wybrane wykresy."; root.exportItems = []; root.exportReported(); ExportNotifications.saved(file, "Wyeksportowano wykresy"); }
+        onFailed: message => { root.exportFailed = true; root.exportMessage = message; root.exportItems = []; root.exportReported(); }
     }
     Dialogs.FileDialog {
         id: chartFileDialog
@@ -378,23 +379,22 @@ Item {
                         Accessible.name: "Przesuń widoczny przedział czasu"
                         onMoved: { const span = chartStatus.span; root.viewportStart = value; root.viewportEnd = value + span; }
                     }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        visible: root.exportMessage.length > 0
-                        Label {
-                            Layout.fillWidth: true
-                            text: root.exportMessage
-                            color: root.exportFailed ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
-                            font.pixelSize: 11
-                            elide: Text.ElideMiddle
-                            Accessible.role: Accessible.AlertMessage
-                            ToolTip.text: text; ToolTip.visible: exportHover.hovered
-                            HoverHandler { id: exportHover }
-                        }
-                        ToolButton { text: "Otwórz obraz"; icon.name: "document-open"; display: AbstractButton.IconOnly; visible: !root.exportFailed; onClicked: Qt.openUrlExternally(root.exportedFile); ToolTip.text: text; ToolTip.visible: hovered }
-                        ToolButton { text: "Zamknij komunikat"; icon.name: "dialog-close"; display: AbstractButton.IconOnly; onClicked: root.exportMessage = ""; ToolTip.text: text; ToolTip.visible: hovered }
-                    }
+
                 }
+            }
+            Kirigami.InlineMessage {
+                id: exportNotice
+                objectName: "exportNotice"
+                Layout.fillWidth: true
+                visible: false
+                text: root.exportMessage
+                type: root.exportFailed ? Kirigami.MessageType.Error : Kirigami.MessageType.Information
+                showCloseButton: true
+                Connections { target: root; function onExportReported() { exportNotice.visible = true; } }
+                actions: [
+                    Kirigami.Action { text: "Otwórz"; icon.name: "document-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFile(root.exportedFile) },
+                    Kirigami.Action { text: "Otwórz folder"; icon.name: "folder-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFolder(root.exportedFile) }
+                ]
             }
             Label {
                 Layout.fillWidth: true

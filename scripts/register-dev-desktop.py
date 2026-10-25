@@ -20,6 +20,9 @@ if desktop.exists() and "X-Meteo-Development=true" not in desktop.read_text():
 icon = data / "icons/hicolor/scalable/apps/pl.meteo.desktop.svg"
 icon.parent.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(repository / "integrations/plasma/package/contents/images/meteo.svg", icon)
+notification = data / "knotifications6/pl.meteo.desktop.notifyrc"
+notification.parent.mkdir(parents=True, exist_ok=True)
+shutil.copyfile(repository / "apps/meteo/pl.meteo.desktop.notifyrc", notification)
 entry = (repository / "apps/meteo/pl.meteo.desktop.desktop").read_text()
 quoted = '"' + str(binary).replace("\\", "\\\\").replace('"', '\\"').replace("`", "\\`").replace("$", "\\$") + '"'
 entry = entry.replace("Exec=meteo-pl", "Exec=" + quoted) + "\nX-Meteo-Development=true\n"
@@ -34,3 +37,4 @@ for command in (["update-desktop-database", str(desktop.parent)], ["gtk-update-i
             print(f"{command[0]}: {result.stderr.strip()}")
 print(f"Zarejestrowano aplikację: {desktop}")
 print(f"Ikona: {icon}")
+print(f"Powiadomienia: {notification}")

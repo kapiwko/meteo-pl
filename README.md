@@ -10,6 +10,7 @@ Karty nawigacji mają ikony; w wąskim widoku pozostają same ikony z podpowiedz
 Wymagania: CMake ≥ 3.25, kompilator C++23, Ninja, Qt ≥ 6.5
 (Core, Network, Qml, Quick, QuickControls2, Positioning, Test), Kirigami 6 i moduł
 QQC2 Desktop Style (`org.kde.desktop`).
+Powiadomienia po eksporcie korzystają z KDE Frameworks 6 Notifications.
 Aplikacja okienkowa wymaga również Qt Widgets do natywnych dialogów KDE.
 Plasmoid wymaga środowiska Plasma 6 i modułów QML Plasma.
 
@@ -94,7 +95,9 @@ meteogram można zapisać jako wspólny PNG. Obraz zawiera także wykresy poniż
 widocznej części okna. Zachowuje bieżący zakres czasu, ukryte serie, legendy,
 kolory i wysokości. Podpis podaje lokalizację, model, daty i źródło danych.
 Plik wybiera się w systemowym oknie zapisu. Po zapisie można otworzyć obraz
-przyciskiem w komunikacie. Eksport działa z rendererem GPU i CPU.
+przyciskiem w niebieskim pasku informacji Kirigami. Eksport wykresów i profili
+wysyła również systemowe powiadomienie KDE z akcjami otwarcia pliku i folderu;
+respektuje ustawienia powiadomień pulpitu. Eksport działa z rendererem GPU i CPU.
 
 Obecny interfejs danych liczbowych nie udostępnia osobnego pola opadu
 konwekcyjnego. Opad średni, maksymalny, prawdopodobieństwo opadu i wskaźniki
