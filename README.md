@@ -164,6 +164,7 @@ widoczna pozostaje zapisana prognoza z datą pobrania i komunikatem.
 Artykuły i komentarze synoptyka są zapisywane na dysku osobno dla każdej strony
 listy i daty. Przez 30 minut ponowne otwarcie korzysta z zapisu bez sieci.
 Ręczne odświeżenie sprawdza serwer; w razie błędu zachowuje zapisaną treść.
+Ilustracje artykułów i legendy map korzystają z tego samego trwałego cache obrazów.
 Wyniki wyszukiwania miejsc są zapamiętywane na 24 godziny, a listy dostępnych
 uruchomień modeli na 5 minut. Cache tych odpowiedzi ma limit 32 MiB / 512 wpisów;
 wyszukiwanie nowej nazwy nadal wymaga internetu.

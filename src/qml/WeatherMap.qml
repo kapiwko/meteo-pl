@@ -101,7 +101,7 @@ ColumnLayout {
         visible: legendToggle.checked
         Layout.fillWidth: true
         Layout.preferredHeight: 130
-        Image { source: legendToggle.checked ? layers.legendUrl : ""; asynchronous: true; fillMode: Image.PreserveAspectFit }
+        Image { source: legendToggle.checked ? MapImages.cached(layers.legendUrl) : ""; cache: false; asynchronous: true; fillMode: Image.PreserveAspectFit }
     }
     Timer { interval: 1300; repeat: true; running: play.checked && animationCache.ready && !root.thematic && !layers.busy && !map.loading && map.hasFrame && !map.error.length; onTriggered: layers.step = root.nextStep() }
     }
