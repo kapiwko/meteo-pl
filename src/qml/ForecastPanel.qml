@@ -275,6 +275,7 @@ Item {
             Component.onCompleted: Qt.callLater(selectPage)
             Connections { target: root; function onViewModeChanged() { navigation.selectPage(); } }
             component ForecastTab: Kirigami.NavigationTabButton {
+                id: forecastTab
                 required property int page
                 Layout.minimumWidth: navigation.buttonWidth
                 Layout.maximumWidth: navigation.buttonWidth
@@ -287,6 +288,30 @@ Item {
                 Accessible.name: text
                 ToolTip.text: text
                 ToolTip.visible: hovered
+                implicitHeight: Math.max(implicitContentHeight + topPadding + bottomPadding, Kirigami.Units.gridUnit * 2) + topInset + bottomInset
+                contentItem: Item {
+                    implicitWidth: tabContents.implicitWidth
+                    implicitHeight: tabContents.implicitHeight
+                    RowLayout {
+                        id: tabContents
+                        anchors.centerIn: parent
+                        spacing: Kirigami.Units.smallSpacing * 1.5
+                        Kirigami.Icon {
+                            source: forecastTab.icon.name
+                            color: forecastTab.icon.color
+                            Layout.preferredWidth: forecastTab.icon.width
+                            Layout.preferredHeight: forecastTab.icon.height
+                            Accessible.ignored: true
+                        }
+                        Label {
+                            text: forecastTab.text
+                            font: forecastTab.font
+                            visible: forecastTab.display !== AbstractButton.IconOnly
+                            color: Kirigami.Theme.textColor
+                            Accessible.ignored: true
+                        }
+                    }
+                }
             }
             ForecastTab { page: 0; text: "Meteogram"; icon.name: "office-chart-line" }
             ForecastTab { page: 1; text: "Godzinowo"; icon.name: "chronometer" }
