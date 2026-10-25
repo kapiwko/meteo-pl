@@ -1,5 +1,5 @@
 #include <QCommandLineParser>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
@@ -7,7 +7,9 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
+    // KDE's native file and color dialogs require QApplication, including
+    // when the application itself uses only Qt Quick controls.
+    QApplication app(argc, argv);
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/icons/meteo.svg")));
     QCoreApplication::setApplicationName(QStringLiteral("meteo-pl"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));

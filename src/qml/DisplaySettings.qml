@@ -21,6 +21,7 @@ ColumnLayout {
     }
     FileDialog {
         id: importDialog
+        objectName: "profileImportDialog"
         title: "Importuj profile meteogramu"
         nameFilters: ["Profile meteogramu (*.json)"]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
@@ -28,6 +29,7 @@ ColumnLayout {
     }
     FileDialog {
         id: exportDialog
+        objectName: "profileExportDialog"
         property bool allSaved: false
         title: allSaved ? "Eksportuj zapisane profile" : "Eksportuj bieżący profil"
         fileMode: FileDialog.SaveFile

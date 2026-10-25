@@ -9,6 +9,7 @@ godzinową i dzienną, mapy oraz komentarz synoptyka i artykuły.
 Wymagania: CMake ≥ 3.25, kompilator C++23, Ninja, Qt ≥ 6.5
 (Core, Network, Qml, Quick, QuickControls2, Positioning, Test), Kirigami 6 i moduł
 QQC2 Desktop Style (`org.kde.desktop`).
+Aplikacja okienkowa wymaga również Qt Widgets do natywnych dialogów KDE.
 Plasmoid wymaga środowiska Plasma 6 i modułów QML Plasma.
 
 ```sh
@@ -62,6 +63,9 @@ Wygląd i opcjonalne granice obu osi zapisują się oddzielnie w każdym profilu
 Domyślne wykresy są gotową konfiguracją używającą tego samego renderera.
 Przyciski **Importuj…**, **Eksportuj profil…** i **Eksportuj zapisane…**
 przenoszą profile w pliku JSON, razem z wyglądem serii i zakresami osi.
+Wybór pliku korzysta ze standardowego okna środowiska: w KDE z dialogu KDE,
+a w środowisku używającym portalu z XDG Desktop Portal. Aplikacja używa
+`QApplication`, wymaganego przez natywną integrację dialogów KDE.
 Import dodaje nowe profile; zbieżne nazwy otrzymują numer, a istniejące
 profile pozostają zachowane. Eksport zapisanych obejmuje nazwane własne
 profile i zmodyfikowany „Własny układ”. Ulubione lokalizacje i ustawienia
