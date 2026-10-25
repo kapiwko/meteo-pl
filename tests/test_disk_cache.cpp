@@ -16,13 +16,14 @@ private slots:
         const auto now = QDateTime::currentDateTimeUtc();
         const auto write = [&](const QString &name,int age,int size) {
             QFile file(directory.filePath(name));
-            return file.open(QIODevice::WriteOnly) && file.write(QByteArray(size,'x')) == size
+            return file.open(QIODevice::WriteOnly) && file.write(QByteArray(size,'x')) == size && file.flush()
                 && file.setFileTime(now.addSecs(-age),QFileDevice::FileModificationTime);
         };
         QVERIFY(write("used.json",300,20));
         QVERIFY(write("current.json",200,20));
         QVERIFY(write("unused.json",100,20));
         QVERIFY(write("settings.ini",0,100));
+        QVERIFY(QFileInfo(directory.filePath("unused.json")).lastModified() < now.addSecs(-50));
         Meteo::touchCacheEntry(directory.filePath("used.json"));
         QVERIFY(QFileInfo(directory.filePath("used.json")).lastModified() >= now.addSecs(-1));
         Meteo::pruneDiskCache(directory.path(),{"*.json"},{40,2},directory.filePath("current.json"));
