@@ -237,3 +237,6 @@ Repozytorium zawiera wyłącznie syntetyczne dane testowe, a interfejs podaje ź
 Nie jest to jeszcze pełna zgodność funkcji z Androidem: brak radaru obserwacyjnego,
 FLOPRES, powiadomień i automatycznego GPS przy starcie oraz integracji konta
 i subskrypcji. Mapy opadów w tej aplikacji przedstawiają prognozę modelu.
+
+Paczki Windows, macOS i Android: [instrukcja budowania z Qt/KDE](docs/portable-packages.md).
+Testy porównania wyglądu CPU/GPU: [zakres i uruchamianie](docs/renderer-tests.md).

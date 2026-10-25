@@ -1,4 +1,5 @@
 #pragma once
+#include "presentation/MeteoUiExport.hpp"
 #include <QCache>
 #include <QDateTime>
 #include <QImage>
@@ -10,7 +11,7 @@
 namespace Meteo {
 // One instance per process: engines share requests and decoded images. Different
 // applications use separate disk directories, as required by QNetworkDiskCache.
-class ImageCache : public QObject {
+class METEO_UI_EXPORT ImageCache : public QObject {
 public:
     using Completion = std::function<void(const QImage &, const QString &)>;
     explicit ImageCache(const QString &directory, QObject *parent = nullptr);

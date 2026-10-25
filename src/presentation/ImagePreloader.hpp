@@ -1,11 +1,12 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QObject>
 #include <QUrl>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 namespace Meteo { class ImageCache; }
 
-class ImagePreloader : public QObject {
+class METEO_UI_EXPORT ImagePreloader : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(bool busy READ busy NOTIFY changed)

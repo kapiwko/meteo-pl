@@ -1,9 +1,10 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include "network/JsonRequest.hpp"
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
-class WeatherLayersModel : public QObject {
+class METEO_UI_EXPORT WeatherLayersModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QString model READ model WRITE setModel NOTIFY changed)

@@ -16,7 +16,8 @@ aplikacja okienkowa może działać również w innych środowiskach.
 
 Każda paczka binarna powstaje w odpowiedniej dystrybucji, z jej wersją Qt,
 KDE, glibc i kompilatora. Paczki Debiana i Ubuntu są oddzielnymi artefaktami.
-Nie jest to kompilacja dla Windows/macOS ani paczka z dołączonym całym Qt.
+Paczki Linuksa korzystają z bibliotek systemowych. Budowanie Windows, macOS
+i Androida opisano w [osobnej instrukcji](portable-packages.md).
 Ubuntu 24.04 i Debian 12 nie mają w domyślnych repozytoriach wymaganej kombinacji
 Qt i KDE Frameworks 6.
 

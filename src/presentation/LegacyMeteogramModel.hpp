@@ -1,11 +1,12 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QNetworkAccessManager>
 #include <QPointer>
 #include <QTimer>
 #include <QtQml/qqmlregistration.h>
 class QNetworkReply;
 
-class LegacyMeteogramModel : public QObject {
+class METEO_UI_EXPORT LegacyMeteogramModel : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QUrl lookup READ lookup WRITE setLookup NOTIFY changed)

@@ -1,4 +1,5 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QImage>
 #include <QPointer>
 #include <QQuickItem>
@@ -8,7 +9,7 @@
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
-class ChartExporter : public QObject {
+class METEO_UI_EXPORT ChartExporter : public QObject {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(bool busy READ busy NOTIFY stateChanged)

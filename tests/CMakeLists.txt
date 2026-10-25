@@ -55,3 +55,5 @@ set_tests_properties(renderer_parity PROPERTIES
 find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
 add_test(NAME release_archives COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_release.py")
 set_tests_properties(release_archives PROPERTIES TIMEOUT 15)
+add_test(NAME portable_packaging COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_portable.py")
+set_tests_properties(portable_packaging PROPERTIES TIMEOUT 15)

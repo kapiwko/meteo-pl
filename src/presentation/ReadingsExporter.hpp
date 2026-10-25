@@ -1,11 +1,12 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QObject>
 #include <QUrl>
 #include <QVariantList>
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
 
-class ReadingsExporter : public QObject {
+class METEO_UI_EXPORT ReadingsExporter : public QObject {
     Q_OBJECT
     QML_ELEMENT
 public:

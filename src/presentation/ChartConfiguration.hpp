@@ -1,12 +1,13 @@
 #pragma once
+#include "MeteoUiExport.hpp"
 #include <QVariantList>
 #include <QVariantMap>
 
-QVariantList chartSeriesCatalog();
-QVariantMap defaultSeriesStyle(const QString &key);
-QVariantMap normalizeSeriesStyle(const QVariantMap &value);
-QVariantList defaultChartLayout(const QString &profile);
-QVariantList normalizeChartLayout(const QVariantList &saved);
-QVariantList integrateWindDirection(const QVariantList &saved);
-QStringList chartFieldKeys(const QVariantList &series);
-QString seriesScale(const QString &key);
+METEO_UI_EXPORT QVariantList chartSeriesCatalog();
+METEO_UI_EXPORT QVariantMap defaultSeriesStyle(const QString &key);
+METEO_UI_EXPORT QVariantMap normalizeSeriesStyle(const QVariantMap &value);
+METEO_UI_EXPORT QVariantList defaultChartLayout(const QString &profile);
+METEO_UI_EXPORT QVariantList normalizeChartLayout(const QVariantList &saved);
+METEO_UI_EXPORT QVariantList integrateWindDirection(const QVariantList &saved);
+METEO_UI_EXPORT QStringList chartFieldKeys(const QVariantList &series);
+METEO_UI_EXPORT QString seriesScale(const QString &key);

@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <numeric>
 
 namespace {
@@ -51,7 +52,7 @@ void GpuPlot::rect(qreal x,qreal y,qreal w,qreal h) { moveTo(x,y); lineTo(x+w,y)
 void GpuPlot::arc(qreal x,qreal y,qreal radius,qreal start,qreal end)
 {
     if (!(radius>0) || !std::isfinite(radius)) return;
-    const auto span=std::clamp(end-start,-2*M_PI,2*M_PI);
+    const auto span=std::clamp(end-start,-2*std::numbers::pi,2*std::numbers::pi);
     const int count=std::clamp(int(std::ceil(std::abs(span)*std::sqrt(radius)*3)),12,128);
     for (int i=0;i<=count;++i) {
         const auto angle=start+span*i/count;
