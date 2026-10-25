@@ -69,7 +69,9 @@ Wysokość wykresu dziedziczy ustawienie profilu, a następnie wartość ogóln�
 Globalna preferencja legendy określa stan początkowy; przycisk przy tytule
 przełącza ją lokalnie bez zapisywania w profilu. Dolny pasek `ForecastPanel`
 obsługuje zakres i powiększenie z minimalnym przedziałem 24 godzin.
-Selektory profilu, okresu i uruchomienia modelu są w osobnym panelu opcji widoku.
+Wspólne okno `MeteoSettings` dla aplikacji i plasmoidu zawiera selektory
+profilu, okresu i uruchomienia modelu oraz edytor wyglądu i preferencje globalne.
+Otwiera je jeden przycisk „Ustawienia” w górnym pasku.
 Import i eksport korzystają z lokalnych plików JSON w formacie
 `pl.meteo.chart-profiles`, wersja 1. Zapis jest atomowy (`QSaveFile`). Import
 sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe

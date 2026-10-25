@@ -37,7 +37,7 @@ Kirigami.ApplicationWindow {
         title: "Meteogram"
         actions: [
             Kirigami.Action { text: "Lokalizacja"; icon.name: "mark-location"; onTriggered: locationDialog.open() },
-            Kirigami.Action { text: "Wygląd"; icon.name: "configure"; onTriggered: forecastPanel.openDisplaySettings() },
+            Kirigami.Action { text: "Ustawienia"; icon.name: "configure"; onTriggered: forecastPanel.openSettings() },
             Kirigami.Action { text: "Odśwież"; icon.name: "view-refresh"; enabled: !forecastModel.busy; onTriggered: forecastModel.refresh() },
             Kirigami.Action { text: "meteo.pl"; icon.name: "internet-web-browser"; onTriggered: Qt.openUrlExternally("https://app.meteo.pl/meteogram") }
         ]
