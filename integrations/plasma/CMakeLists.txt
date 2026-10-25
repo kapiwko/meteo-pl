@@ -1,1 +1,5 @@
-install(DIRECTORY package/ DESTINATION "${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/pl.meteo.desktop")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/package/metadata.json" metadata)
+string(JSON metadata SET "${metadata}" KPlugin Version "\"${PROJECT_VERSION}\"")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/metadata.json" "${metadata}\n")
+install(DIRECTORY package/ DESTINATION "${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/pl.meteo.desktop" PATTERN metadata.json EXCLUDE)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/metadata.json" DESTINATION "${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/pl.meteo.desktop")

@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/icons/meteo.svg")));
     QCoreApplication::setApplicationName(QStringLiteral("meteo-pl"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QCoreApplication::setApplicationVersion(QStringLiteral(METEO_VERSION));
     QCoreApplication::setOrganizationName(QStringLiteral("meteo-pl"));
     QGuiApplication::setApplicationDisplayName(QStringLiteral("Meteo · meteogramy ICM"));
     QGuiApplication::setDesktopFileName(QStringLiteral("pl.meteo.desktop"));

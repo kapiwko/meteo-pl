@@ -5,3 +5,6 @@
 /dist/
 *.user
 *.swp
+
+__pycache__/
+*.pyc

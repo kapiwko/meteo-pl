@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import "AppInfo.js" as AppInfo
 import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
@@ -28,7 +29,7 @@ Dialog {
                 Kirigami.Icon { source: "pl.meteo.desktop"; Layout.preferredWidth: 64; Layout.preferredHeight: 64 }
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Kirigami.Heading { text: "Meteo 0.1.0"; level: 1 }
+                    Kirigami.Heading { text: "Meteo " + AppInfo.version; level: 1 }
                     Label { text: "Aplikacja i plasmoid z meteogramami ICM UW"; Layout.fillWidth: true; wrapMode: Text.WordWrap }
                 }
             }

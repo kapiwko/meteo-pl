@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
-project(meteo_pl VERSION 0.1.0 LANGUAGES CXX)
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" METEO_VERSION LIMIT_COUNT 1)
+if(NOT METEO_VERSION MATCHES "^[0-9]+[.][0-9]+[.][0-9]+$")
+    message(FATAL_ERROR "VERSION must contain MAJOR.MINOR.PATCH")
+endif()
+project(meteo_pl VERSION "${METEO_VERSION}" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,3 +39,6 @@ if(BUILD_TESTING)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     add_subdirectory(tests)
 endif()
+
+install(FILES README.md VERSION DESTINATION "${CMAKE_INSTALL_DOCDIR}")
+include(cmake/Packaging.cmake)
