@@ -14,7 +14,6 @@ Kirigami.ApplicationWindow {
     minimumHeight: 440
     visible: true
     title: forecastModel.locationName + " · Meteo"
-    pageStack.initialPage: forecastPage
 
     Settings {
         id: settings
@@ -34,29 +33,27 @@ Kirigami.ApplicationWindow {
         windUnit: UserPreferences.windUnit
         utc: UserPreferences.utc
     }
-    Component {
-        id: forecastPage
-        Kirigami.Page {
-            title: "Meteogram"
-            actions: [
-                Kirigami.Action { text: "Lokalizacja"; icon.name: "mark-location"; onTriggered: locationDialog.open() },
-                Kirigami.Action { text: "Wygląd"; icon.name: "configure"; onTriggered: forecastPanel.openDisplaySettings() },
-                Kirigami.Action { text: "Odśwież"; icon.name: "view-refresh"; enabled: !forecastModel.busy; onTriggered: forecastModel.refresh() },
-                Kirigami.Action { text: "meteo.pl"; icon.name: "internet-web-browser"; onTriggered: Qt.openUrlExternally("https://app.meteo.pl/meteogram") }
-            ]
-            ForecastPanel {
-                id: forecastPanel
-                anchors.fill: parent
-                weather: forecastModel
-                onConfigureRequested: locationDialog.open()
-                onLocationSelected: (name, latitude, longitude) => {
-                    settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
-                    if (!((latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176))) settings.model = "gfs";
-                    UserPreferences.rememberPlace(name, latitude, longitude);
-                }
+    pageStack.initialPage: Kirigami.Page {
+        title: "Meteogram"
+        actions: [
+            Kirigami.Action { text: "Lokalizacja"; icon.name: "mark-location"; onTriggered: locationDialog.open() },
+            Kirigami.Action { text: "Wygląd"; icon.name: "configure"; onTriggered: forecastPanel.openDisplaySettings() },
+            Kirigami.Action { text: "Odśwież"; icon.name: "view-refresh"; enabled: !forecastModel.busy; onTriggered: forecastModel.refresh() },
+            Kirigami.Action { text: "meteo.pl"; icon.name: "internet-web-browser"; onTriggered: Qt.openUrlExternally("https://app.meteo.pl/meteogram") }
+        ]
+        ForecastPanel {
+            id: forecastPanel
+            anchors.fill: parent
+            weather: forecastModel
+            onConfigureRequested: locationDialog.open()
+            onLocationSelected: (name, latitude, longitude) => {
+                settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
+                if (!((latitude >= 44.5 && latitude <= 66.482 && longitude >= 8.21 && longitude <= 30.176))) settings.model = "gfs";
+                UserPreferences.rememberPlace(name, latitude, longitude);
             }
         }
     }
+
     Dialog {
         id: locationDialog
         objectName: "locationDialog"

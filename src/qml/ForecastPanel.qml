@@ -267,26 +267,39 @@ Item {
         id: dailyComponent
         ScrollView {
             id: dailyScroll
+            implicitWidth: 0
             contentWidth: availableWidth
             clip: true
             GridLayout {
+                id: dayGrid
                 width: dailyScroll.availableWidth
-                columns: Math.max(1, Math.floor(width / 220))
+                columns: Math.max(1, Math.min(days.count, Math.floor(width / 160)))
+                readonly property real cardWidth: (width - columnSpacing * (columns - 1)) / columns
                 Repeater {
+                    id: days
                     model: root.weather.dailyForecast
                     delegate: Frame {
                         id: dayCard
+                        objectName: "forecastDayCard"
                         required property var modelData
-                        Layout.fillWidth: true
-                        padding: 16
+                        Layout.minimumWidth: dayGrid.cardWidth
+                        Layout.preferredWidth: dayGrid.cardWidth
+                        Layout.maximumWidth: dayGrid.cardWidth
+                        Layout.fillHeight: true
+                        padding: 12
                         ColumnLayout {
                             anchors.fill: parent
-                            Label { text: dayCard.modelData.day; font.bold: true }
-                            Kirigami.Icon { source: dayCard.modelData.icon; Layout.preferredWidth: 48; Layout.preferredHeight: 48; Accessible.name: dayCard.modelData.description }
-                            Label { Layout.fillWidth: true; text: dayCard.modelData.description; wrapMode: Text.WordWrap; opacity: 0.7 }
-                            Kirigami.Heading { text: root.number(dayCard.modelData.maximum, 0) + "° / " + root.number(dayCard.modelData.minimum, 0) + "°"; level: 2 }
-                            Label { text: "Opad: " + root.number(dayCard.modelData.rain, 1) + " mm" }
-                            Label { text: "Porywy: " + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit }
+                            spacing: 4
+                            Label { Layout.fillWidth: true; Layout.preferredHeight: 28; text: dayCard.modelData.day; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; wrapMode: Text.WordWrap }
+                            Kirigami.Icon { source: dayCard.modelData.icon; Layout.preferredWidth: 48; Layout.preferredHeight: 48; Layout.alignment: Qt.AlignHCenter; Accessible.name: dayCard.modelData.description }
+                            Label { Layout.fillWidth: true; Layout.preferredHeight: 32; text: dayCard.modelData.description; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; opacity: 0.7; font.pixelSize: 11 }
+                            RowLayout {
+                                Layout.alignment: Qt.AlignHCenter
+                                Label { text: root.number(dayCard.modelData.maximum, 0) + "°"; font.pixelSize: 20; font.bold: true }
+                                Label { text: root.number(dayCard.modelData.minimum, 0) + "°"; font.pixelSize: 16; opacity: 0.65 }
+                            }
+                            Label { Layout.fillWidth: true; text: "Opad: " + root.number(dayCard.modelData.rain, 1) + " mm"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                            Label { Layout.fillWidth: true; text: "Porywy: " + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
                         }
                     }
                 }
