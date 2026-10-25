@@ -66,7 +66,7 @@ budowania, `.git`, dane cache i pliki IDE. `VERSION` określa wersję aplikacji,
 widoku informacji, instalowanego plasmoidu i paczek. Binarne paczki zależą też
 od wersji kompilatora i bibliotek w danym obrazie kontenera.
 Repozytorium nie deklaruje obecnie licencji; metadane paczek oznaczają ten stan
-jako `LicenseRef-Unspecified`, bez przypisywania domyślnej licencji.
+jako `GPL-3.0-or-later`, bez przypisywania domyślnej licencji.
 
 ## GitHub
 
