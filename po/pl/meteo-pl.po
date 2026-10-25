@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-25 23:48+0100\n"
+"POT-Creation-Date: 2026-10-25 23:54+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -440,11 +440,11 @@ msgid "Could not download all tiles. Keeping the previous map visible."
 msgstr ""
 "Nie udało się pobrać wszystkich kafelków. Poprzednia mapa pozostaje widoczna."
 
-#: src/network/JsonRequest.cpp:99
+#: src/network/JsonRequest.cpp:100
 msgid "Could not download data (HTTP %1). %2"
 msgstr "Nie udało się pobrać danych (HTTP %1). %2"
 
-#: src/network/MeteoClient.cpp:52
+#: src/network/MeteoClient.cpp:51
 msgid "Could not download the forecast from meteo.pl (HTTP %1). %2"
 msgstr "Nie udało się pobrać prognozy z meteo.pl (HTTP %1). %2"
 
@@ -472,7 +472,7 @@ msgstr ""
 msgid "Could not prepare the chart image."
 msgstr "Nie udało się przygotować obrazu wykresu."
 
-#: src/network/ImageCache.cpp:110
+#: src/network/ImageCache.cpp:134
 msgid "Could not read the map image."
 msgstr "Nie udało się odczytać obrazu mapy."
 
@@ -859,7 +859,7 @@ msgstr "Niepoprawna oś czasu prognozy."
 msgid "Invalid forecast values."
 msgstr "Niepoprawne wartości prognozy."
 
-#: src/network/ImageCache.cpp:47
+#: src/network/ImageCache.cpp:72
 msgid "Invalid map image URL."
 msgstr "Nieprawidłowy adres obrazu mapy."
 
@@ -1704,11 +1704,15 @@ msgstr "Plik profili jest zbyt duży (maksymalnie 16 MiB)."
 msgid "The renderer did not return a chart image."
 msgstr "Renderer nie zwrócił obrazu wykresu."
 
-#: src/core/Forecast.cpp:73 src/network/MeteoClient.cpp:58
+#: src/network/JsonRequest.cpp:96 src/network/MeteoClient.cpp:46
+msgid "The request timed out. Try again."
+msgstr "Upłynął limit czasu żądania. Spróbuj ponownie."
+
+#: src/core/Forecast.cpp:73 src/network/MeteoClient.cpp:57
 msgid "The server response is too large."
 msgstr "Odpowiedź serwera jest zbyt duża."
 
-#: src/network/JsonRequest.cpp:106
+#: src/network/JsonRequest.cpp:107
 msgid "The server returned an invalid JSON document."
 msgstr "Serwer zwrócił niepoprawny dokument JSON."
 
@@ -1737,7 +1741,7 @@ msgid ""
 "This is a draft layout. Duplicate the profile to save it with your own name."
 msgstr "To roboczy układ. Duplikuj profil, aby zapisać go pod własną nazwą."
 
-#: src/network/MeteoClient.cpp:69
+#: src/network/MeteoClient.cpp:68
 msgid ""
 "This location is outside the model area. Choose GFS for locations outside "
 "Central Europe."

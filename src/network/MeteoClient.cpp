@@ -16,13 +16,12 @@ QNetworkRequest requestFor(const QUrl &url)
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", "MeteoDesktop/0.1 (Qt; personal desktop client)");
     request.setRawHeader("Accept", "application/json");
-    request.setTransferTimeout(20000);
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     return request;
 }
 } // namespace
 
-MeteoClient::MeteoClient(QObject *parent, QUrl endpoint) : QObject(parent), m_endpoint(std::move(endpoint)) {}
+MeteoClient::MeteoClient(QObject *parent, QUrl endpoint, RequestPolicy policy)
+    : QObject(parent), m_policy(policy), m_endpoint(std::move(endpoint)) {}
 
 void MeteoClient::cancel()
 {
@@ -37,16 +36,16 @@ void MeteoClient::cancel()
 void MeteoClient::readReply(QNetworkReply *reply, quint64 generation, const std::function<void(QByteArray)> &consume)
 {
     m_reply = reply;
-    // Bound buffering even if Content-Length is missing or incorrect.
-    connect(reply, &QIODevice::readyRead, this, [reply] {
-        if (reply->bytesAvailable() > 2 * 1024 * 1024)
-            reply->abort();
-    });
+    m_policy.enforce(reply);
     connect(reply, &QNetworkReply::finished, this, [this, reply, generation, consume] {
         reply->deleteLater();
         if (generation != m_generation)
             return;
         m_reply = nullptr;
+        if (RequestPolicy::deadlineExceeded(reply)) {
+            emit failed(Meteo::i18n("The request timed out. Try again."));
+            return;
+        }
         const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (reply->error() != QNetworkReply::NoError || status != 200) {
             emit failed(Meteo::i18n("Could not download the forecast from meteo.pl (HTTP %1). %2")
@@ -71,6 +70,7 @@ void MeteoClient::fetch(double latitude, double longitude, const QString &model,
     }
     const auto generation = m_generation;
     auto request = requestFor(m_endpoint.resolved(QUrl(QStringLiteral("/meteorograms/available"))));
+    m_policy.configure(request);
     readReply(m_network.get(request), generation, [this, latitude, longitude, model, generation, requestedRun](const QByteArray &body) {
         QList<qint64> runs;
         for (const auto &value : QJsonDocument::fromJson(body).object().value(model).toArray()) {
@@ -88,6 +88,7 @@ void MeteoClient::fetch(double latitude, double longitude, const QString &model,
         const QJsonObject point{{"lat", QString::number(latitude, 'f', 6)}, {"lon", QString::number(longitude, 'f', 6)}};
         const QJsonObject payload{{"point", point}, {"date", *run}};
         auto forecastRequest = requestFor(m_endpoint.resolved(QUrl(QStringLiteral("/meteorograms/") + model)));
+        m_policy.configure(forecastRequest);
         forecastRequest.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
         readReply(m_network.post(forecastRequest, QJsonDocument(payload).toJson(QJsonDocument::Compact)), generation,
                   [this](const QByteArray &json) { emit received(json); });

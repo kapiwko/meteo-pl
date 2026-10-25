@@ -52,7 +52,7 @@ void writeCache(const QUrl &url,const QJsonDocument &document)
     }
 }
 }
-JsonRequest::JsonRequest(QObject *parent) : QObject(parent) {}
+JsonRequest::JsonRequest(QObject *parent, RequestPolicy policy) : QObject(parent), m_policy(policy) {}
 void JsonRequest::cancel()
 {
     ++m_generation;
@@ -79,22 +79,23 @@ void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force)
         }
     }
     QNetworkRequest request(url);
-    request.setTransferTimeout(15000);
+    m_policy.configure(request);
     request.setRawHeader("User-Agent", "MeteoDesktop/0.2 (Qt desktop client)");
     request.setRawHeader("Accept", "application/json");
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     auto *reply = m_network.get(request);
     m_reply = reply;
     const auto generation = m_generation;
-    connect(reply, &QIODevice::readyRead, this, [reply] {
-        if (reply->bytesAvailable() > 4 * 1024 * 1024) reply->abort();
-    });
+    m_policy.enforce(reply);
     connect(reply, &QNetworkReply::finished, this, [this, reply, generation, url, cacheSeconds] {
         reply->deleteLater();
         if (generation != m_generation) return;
         m_reply = nullptr;
         const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         m_statusCode = status;
+        if (RequestPolicy::deadlineExceeded(reply)) {
+            emit failed(Meteo::i18n("The request timed out. Try again."));
+            return;
+        }
         if (reply->error() != QNetworkReply::NoError || status != 200) {
             emit failed(Meteo::i18n("Could not download data (HTTP %1). %2").arg(status).arg(reply->errorString()));
             return;

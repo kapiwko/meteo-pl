@@ -1,4 +1,6 @@
 #include "network/MeteoClient.hpp"
+#include "network/JsonRequest.hpp"
+#include <QElapsedTimer>
 #include "Fixture.hpp"
 #include <QSignalSpy>
 #include <QTcpServer>
@@ -38,6 +40,45 @@ public:
 class ClientTest : public QObject {
     Q_OBJECT
 private slots:
+    void tricklingResponsesCannotExtendTheTotalDeadline_data()
+    {
+        QTest::addColumn<bool>("json");
+        QTest::newRow("forecast") << false;
+        QTest::newRow("json") << true;
+    }
+    void tricklingResponsesCannotExtendTheTotalDeadline()
+    {
+        QFETCH(bool,json);
+        QTcpServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        int chunks = 0;
+        connect(&server,&QTcpServer::newConnection,this,[&] {
+            auto *socket = server.nextPendingConnection();
+            connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
+            connect(socket,&QTcpSocket::readyRead,socket,[&,socket,sent=false]() mutable {
+                socket->readAll();
+                if (sent) return;
+                sent = true;
+                socket->write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 10000\r\n\r\n");
+                auto *drip = new QTimer(socket);
+                connect(drip,&QTimer::timeout,socket,[&,socket] { ++chunks; socket->write(" "); });
+                drip->start(15);
+            });
+        });
+        const QUrl url(QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort()));
+        const Meteo::RequestPolicy policy{150,250,1024*1024};
+        Meteo::JsonRequest request(nullptr,policy);
+        Meteo::MeteoClient client(nullptr,url,policy);
+        QSignalSpy failed(json ? static_cast<QObject *>(&request) : static_cast<QObject *>(&client),SIGNAL(failed(QString)));
+        QElapsedTimer elapsed; elapsed.start();
+        if (json) request.get(url); else client.fetch(52,21,"um4_60");
+        QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,1500);
+        QVERIFY(chunks >= 3); // Actual progress prevented an inactivity timeout.
+        QVERIFY(elapsed.elapsed() < 1200);
+        QVERIFY(failed.first().first().toString().contains("timed out"));
+        QTest::qWait(100);
+        QCOMPARE(failed.count(),1);
+    }
     void requestsNewestRunAndCoordinates()
     {
         HttpFixture server;
