@@ -3,8 +3,10 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
+import tempfile
 from linux_targets import TARGETS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,11 +33,24 @@ def current_package(directory, distro, expected_version):
     return package
 
 
+def atomic_text(path, contents):
+    # Docker may own the old file. The caller owns its output directory, so an
+    # atomic replacement works without privileged writes or changing ownership.
+    descriptor, temporary=tempfile.mkstemp(prefix="."+path.name+"-",dir=path.parent)
+    try:
+        with os.fdopen(descriptor,"w",encoding="utf-8") as output:
+            output.write(contents)
+        os.chmod(temporary,0o644)
+        os.replace(temporary,path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
 def record_runtime_result(directory, result):
     path=directory/"BUILD-REPORT.json"
     report=json.loads(path.read_text())
     report["runtimeInstallationCheck"]=result
-    path.write_text(json.dumps(report,indent=2)+"\n")
+    atomic_text(path,json.dumps(report,indent=2)+"\n")
     sums=[]
     for entry in report["artifacts"]:
         name=entry["file"]
@@ -44,7 +59,7 @@ def record_runtime_result(directory, result):
     with path.open("rb") as contents:
         digest=hashlib.file_digest(contents,"sha256").hexdigest()
     sums.append(f"{digest}  {path.name}\n")
-    (directory/"SHA256SUMS").write_text("".join(sums))
+    atomic_text(directory/"SHA256SUMS","".join(sums))
 
 
 def main():

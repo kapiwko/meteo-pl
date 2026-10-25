@@ -26,7 +26,14 @@ class ReleaseTest(unittest.TestCase):
                 "artifacts":[{"file":current.name,"sha256":release.sha256(current)}]}
             (root/"BUILD-REPORT.json").write_text(json.dumps(report))
             self.assertEqual(runtime.current_package(root,"debian","0.2"),current)
+            report_path=root/"BUILD-REPORT.json"
+            old_inode=report_path.stat().st_ino
+            (root/"SHA256SUMS").write_text("old report checksum\n")
+            if os.name == "posix":
+                report_path.chmod(0o444)
+                (root/"SHA256SUMS").chmod(0o444)
             runtime.record_runtime_result(root,{"status":"passed","image":"sha256:synthetic"})
+            if os.name == "posix": self.assertNotEqual(report_path.stat().st_ino,old_inode)
             updated=json.loads((root/"BUILD-REPORT.json").read_text())
             self.assertEqual(updated["runtimeInstallationCheck"]["status"],"passed")
             sums=(root/"SHA256SUMS").read_text()
