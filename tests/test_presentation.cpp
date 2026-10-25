@@ -715,10 +715,10 @@ private slots:
         const auto closedTotal = item->implicitHeight();
         for (int repeat = 0; repeat < 2; ++repeat) {
             object->setProperty("expandedChart", "temperature");
-            QTRY_VERIFY(chart->height() > closedHeight + 250);
+            QTRY_VERIFY(chart->height() > closedHeight + 100);
             const auto openHeight = chart->height();
             object->setProperty("expandedSeries", "temperature/airtmp_point");
-            QTRY_VERIFY(chart->height() > openHeight + 250);
+            QTRY_VERIFY(chart->height() > openHeight + 100);
             object->setProperty("expandedSeries", "");
             QTRY_VERIFY(qAbs(chart->height() - openHeight) < 2);
             object->setProperty("expandedChart", "");

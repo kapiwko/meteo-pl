@@ -18,7 +18,6 @@ qt_add_qml_module(meteo_ui
     SHARED
     URI pl.meteo.desktop
     VERSION 1.0
-    NO_PLUGIN_OPTIONAL
     SOURCES presentation/WeatherModel.cpp presentation/WeatherModel.hpp
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp

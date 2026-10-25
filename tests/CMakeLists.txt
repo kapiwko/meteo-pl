@@ -33,7 +33,8 @@ endif()
 if(METEO_BUILD_PLASMOID)
     find_program(PLASMAWINDOWED_EXECUTABLE plasmawindowed)
     if(PLASMAWINDOWED_EXECUTABLE)
-        add_test(NAME plasma_smoke COMMAND "${PLASMAWINDOWED_EXECUTABLE}" --smoke-test "${PROJECT_SOURCE_DIR}/integrations/plasma/package")
+        find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        add_test(NAME plasma_smoke COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/scripts/plasma-smoke.py" --program "${PLASMAWINDOWED_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/integrations/plasma/package")
         set_tests_properties(plasma_smoke PROPERTIES
             ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QSG_RHI_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY};XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-cache"
             TIMEOUT 15

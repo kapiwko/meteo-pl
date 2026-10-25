@@ -50,10 +50,10 @@ Dialog {
             id: sections
             objectName: "settingsSections"
             Layout.fillWidth: true
-            TabButton { text: "Prognoza"; icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
-            TabButton { text: "Profile"; icon.name: "view-statistics"; icon.width: 16; icon.height: 16 }
-            TabButton { text: "Odczyt"; icon.name: "color-picker"; icon.width: 16; icon.height: 16 }
-            TabButton { text: "Aplikacja"; icon.name: "configure"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: "Prognoza"; icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: "Profile"; icon.name: "view-statistics"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: "Odczyt"; icon.name: "color-picker"; icon.width: 16; icon.height: 16 }
+            TabButton { baselineOffset: height / 2; text: "Aplikacja"; icon.name: "configure"; icon.width: 16; icon.height: 16 }
         }
         StackLayout {
             Layout.fillWidth: true
