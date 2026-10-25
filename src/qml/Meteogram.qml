@@ -360,8 +360,8 @@ ColumnLayout {
                         required property var modelData
                         text: modelData.text
                         color: modelData.color
-                        font.family: "sans-serif"
-                        font.pixelSize: 10
+                        renderType: Text.NativeRendering
+                        font: gpuPlot.labelFont
                         x: modelData.x - (modelData.align === "center" ? implicitWidth / 2 : modelData.align === "right" ? implicitWidth : 0)
                         y: modelData.y - (modelData.baseline === "middle" ? implicitHeight / 2 : implicitHeight)
                     }
