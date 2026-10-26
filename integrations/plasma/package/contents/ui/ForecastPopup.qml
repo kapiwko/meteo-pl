@@ -21,10 +21,10 @@ PlasmaComponents.ScrollView {
     signal configureRequested()
     signal sectionToggled(string key, bool expanded)
     function chooseLocation() { if (sections.headerItem) sections.headerItem.chooseLocation(); }
-    implicitHeight: Math.min(720, sections.contentHeight)
     contentWidth: availableWidth
     clip: true
     PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
+    PlasmaComponents.ScrollBar.vertical.objectName: "widgetVerticalScrollBar"
     WidgetChartSelection {
         id: selection
         weather: root.weather
@@ -56,6 +56,7 @@ PlasmaComponents.ScrollView {
         footer: PlasmaExtras.PlaceholderMessage {
             width: sections.width
             visible: !root.weather.hasData && !root.weather.busy
+            height: visible ? implicitHeight : 0
             text: root.weather.locationName.length ? I18n.i18n("No forecast available") : I18n.i18n("Choose location")
             iconName: "weather-none-available"
             helpfulAction: QQC2.Action {

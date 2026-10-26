@@ -1527,6 +1527,50 @@ private slots:
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, last), Q_ARG(int, sectionCount - 1)) && last);
         QCOMPARE(last->objectName(), "widgetSection-" + configured.last().toMap()["key"].toString());
     }
+    void nativeWidgetScrollsOnlyWhenContentExceedsAvailableHeight()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto previous = preferences->profile();
+        preferences->setProfile("classic");
+        const auto profile = preferences->createProfile("Scroll test");
+        const auto restore = qScopeGuard([&] { preferences->setProfile(profile); preferences->deleteProfile(); preferences->setProfile(previous); });
+        preferences->setChartOptions("temperature", {{"height", 760}});
+        for (const auto &entry : preferences->chartLayout()) {
+            const auto key = entry.toMap()["key"].toString();
+            if (key != "temperature") preferences->setChartEnabled(key, false);
+        }
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/ForecastPopup.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> popup(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"profile", profile}}));
+        QVERIFY2(popup, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(540, 1400);
+        auto *item = qobject_cast<QQuickItem *>(popup.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        auto *list = popup->findChild<QObject *>("widgetSections");
+        auto *bar = popup->findChild<QObject *>("widgetVerticalScrollBar");
+        QVERIFY(list && bar);
+        QTRY_COMPARE(list->property("count").toInt(), 2);
+        auto *footer = list->property("footerItem").value<QQuickItem *>();
+        QVERIFY(footer && !footer->isVisible());
+        QCOMPARE(footer->height(), 0);
+        QQuickItem *temperature = nullptr;
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
+        QTRY_VERIFY(item->implicitHeight() > 720);
+        QTRY_VERIFY(!bar->property("visible").toBool());
+        item->setHeight(300);
+        QTRY_VERIFY(bar->property("visible").toBool());
+        QVERIFY(QMetaObject::invokeMethod(temperature, "collapse"));
+        QTRY_VERIFY(temperature->height() < 100);
+        QTRY_VERIFY(!bar->property("visible").toBool());
+        item->setHeight(1400);
+        QVERIFY(QMetaObject::invokeMethod(temperature, "expand"));
+        QTRY_VERIFY(temperature->height() > 760);
+        QTRY_VERIFY(!bar->property("visible").toBool());
+    }
 #endif
     void widgetPlaceSettingsValidateSelectionAndReorderPlaces()
     {
