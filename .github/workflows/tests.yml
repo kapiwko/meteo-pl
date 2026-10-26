@@ -19,7 +19,7 @@ jobs:
       matrix:
         distro: [arch, debian, ubuntu, fedora]
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Build and run all tests in the target distribution
@@ -28,7 +28,7 @@ jobs:
         run: python3 scripts/check-package-runtime.py --distro "${{ matrix.distro }}"
       - name: Preserve packages and checksums
         if: success()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: meteo-pl-${{ matrix.distro }}-${{ github.sha }}
           path: dist/${{ matrix.distro }}/
@@ -36,7 +36,7 @@ jobs:
           compression-level: 0
       - name: Preserve test reports and renderer comparisons
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tests-${{ matrix.distro }}-${{ github.sha }}
           path: |
