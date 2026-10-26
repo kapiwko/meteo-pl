@@ -395,6 +395,19 @@ private slots:
         if (commentary) QVERIFY(reopened.commentHtml().contains("Saved comment"));
         else QCOMPARE(reopened.articles().size(),1);
     }
+    void editorialCalendarNotifiesWhenMidnightChangesTheCurrentDay()
+    {
+        QDate today(2026,10,25);
+        EditorialModel model(nullptr,QUrl("https://example.test"),[&] { return today; });
+        QCOMPARE(model.today(),"2026-10-25");
+        QSignalSpy changed(&model,&EditorialModel::changed);
+        QVERIFY(QMetaObject::invokeMethod(&model,"updateCalendarDay"));
+        QCOMPARE(changed.count(),0);
+        today=today.addDays(1);
+        QVERIFY(QMetaObject::invokeMethod(&model,"updateCalendarDay"));
+        QCOMPARE(model.today(),"2026-10-26");
+        QCOMPARE(changed.count(),1);
+    }
     void editorialRejectsFutureDatesAndExplainsMissingComments()
     {
         ServiceFixture server;

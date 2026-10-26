@@ -12,8 +12,13 @@
 #include <QStandardPaths>
 #include <utility>
 
-EditorialModel::EditorialModel(QObject *parent, QUrl endpoint) : QObject(parent), m_endpoint(std::move(endpoint))
+EditorialModel::EditorialModel(QObject *parent, QUrl endpoint, Clock clock)
+    : QObject(parent), m_endpoint(std::move(endpoint)),
+      m_clock(clock ? std::move(clock) : Clock([] { return QDate::currentDate(); })), m_today(m_clock())
 {
+    m_calendarTimer.setInterval(60000);
+    connect(&m_calendarTimer,&QTimer::timeout,this,&EditorialModel::updateCalendarDay);
+    m_calendarTimer.start();
     connect(&m_request, &Meteo::JsonRequest::received, this, [this](const QJsonDocument &document) {
         m_busy = false;
         if (applyDocument(document)) {
@@ -40,9 +45,16 @@ void EditorialModel::setDate(const QString &value)
     if (!value.isEmpty()) {
         const auto date = QDate::fromString(value, Qt::ISODate);
         if (!date.isValid()) { m_notice = Meteo::i18n("Enter a valid date in yyyy-mm-dd format."); emit changed(); return; }
-        if (date > QDate::currentDate()) { m_notice = Meteo::i18n("Commentary for future dates is not available yet."); emit changed(); return; }
+        if (date > m_clock()) { m_notice = Meteo::i18n("Commentary for future dates is not available yet."); emit changed(); return; }
     }
     m_date = value; m_commentHtml.clear(); m_publishedDate.clear(); reload(false);
+}
+void EditorialModel::updateCalendarDay()
+{
+    const auto today=m_clock();
+    if (!today.isValid() || today==m_today) return;
+    m_today=today;
+    emit changed();
 }
 void EditorialModel::reload(bool force) { load(1, force); }
 void EditorialModel::more() { if (!m_busy && !m_commentary) load(m_page + 1); }

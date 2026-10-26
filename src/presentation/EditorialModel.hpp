@@ -4,6 +4,8 @@
 #include <QVariantList>
 #include <QMap>
 #include <QDateTime>
+#include <QTimer>
+#include <functional>
 #include <QtQml/qqmlregistration.h>
 
 class METEO_UI_EXPORT EditorialModel : public QObject {
@@ -17,8 +19,10 @@ class METEO_UI_EXPORT EditorialModel : public QObject {
     Q_PROPERTY(QVariantList articles READ articles NOTIFY changed)
     Q_PROPERTY(QString commentHtml READ commentHtml NOTIFY changed)
     Q_PROPERTY(QString publishedDate READ publishedDate NOTIFY changed)
+    Q_PROPERTY(QString today READ today NOTIFY changed)
 public:
-    explicit EditorialModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://meteo-backend.dev.meteo.pl")));
+    using Clock = std::function<QDate()>;
+    explicit EditorialModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://meteo-backend.dev.meteo.pl")), Clock clock = {});
     bool commentary() const { return m_commentary; }
     QString date() const { return m_date; }
     bool busy() const { return m_busy; }
@@ -27,10 +31,13 @@ public:
     QVariantList articles() const { return m_articles; }
     QString commentHtml() const { return m_commentHtml; }
     QString publishedDate() const { return m_publishedDate; }
+    QString today() const { return m_today.toString(Qt::ISODate); }
     void setCommentary(bool value);
     void setDate(const QString &value);
     Q_INVOKABLE void reload(bool force = true);
     Q_INVOKABLE void more();
+private slots:
+    void updateCalendarDay();
 private:
     void load(int page, bool force = false);
     bool applyDocument(const QJsonDocument &document);
@@ -47,6 +54,9 @@ private:
     QDateTime m_savedAt;
     bool m_cached = false;
     QUrl m_endpoint;
+    Clock m_clock;
+    QDate m_today;
+    QTimer m_calendarTimer;
 signals:
     void changed();
 };

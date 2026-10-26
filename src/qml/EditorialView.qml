@@ -9,7 +9,7 @@ ColumnLayout {
     property bool commentary: true
     property bool initialized: false
     property var selectedArticle: null
-    readonly property string today: Qt.formatDate(new Date(), "yyyy-MM-dd")
+    readonly property string today: feed.today
     readonly property string shownDate: feed.date || feed.publishedDate.slice(0, 10) || today
     EditorialModel { id: feed; commentary: root.commentary }
     Component.onCompleted: { initialized = true; feed.reload(false); }
@@ -32,7 +32,7 @@ ColumnLayout {
             id: dateField
             Layout.fillWidth: true
             Binding on text { value: root.shownDate; when: !dateField.activeFocus; restoreMode: Binding.RestoreNone }
-            placeholderText: "rrrr-mm-dd"
+            placeholderText: I18n.i18n("yyyy-mm-dd")
             inputMask: "9999-99-99"
             onAccepted: feed.date = text
         }
