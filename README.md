@@ -99,7 +99,8 @@ Its expanded state is remembered for each widget.
 On Linux, type **pogoda Gdańsk**, **weather London**, or **meteo** in KRunner.
 Saved places are matched locally, including names typed without Polish accents.
 New places use the same worldwide search and disk cache as the application.
-Selecting a result opens a full Meteo window for that location. The plugin can
+Selecting a result opens a temporary preview in a full Meteo window, without
+adding the place to your list or changing your last selected location. The plugin can
 be disabled with `-DMETEO_BUILD_KRUNNER=OFF` when configuring the build.
 
 You can also preview the installed widget in its own window:

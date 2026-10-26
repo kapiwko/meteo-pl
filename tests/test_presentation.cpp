@@ -23,6 +23,7 @@
 #include <QTest>
 #include <QSignalSpy>
 #include <QScopeGuard>
+#include <QSettings>
 
 class PresentationTest : public QObject {
     Q_OBJECT
@@ -1695,6 +1696,53 @@ private slots:
         QCOMPARE(weather->model(), "um4_120");
         QVERIFY(!weather->autoRefresh());
         QVERIFY(object->property("startupReady").toBool());
+    }
+    void externalForecastPreviewDoesNotSaveThePlaceOrChangeTheLastLocation()
+    {
+        QSettings settings;
+        settings.beginGroup("Location");
+        QVariantMap original;
+        for (const auto &key : settings.childKeys()) original.insert(key, settings.value(key));
+        const auto restore = qScopeGuard([&] {
+            settings.remove("");
+            for (auto it = original.cbegin(); it != original.cend(); ++it) settings.setValue(it.key(), it.value());
+            settings.sync();
+        });
+        settings.setValue("locationName", "Warszawa");
+        settings.setValue("latitude", 52.2297);
+        settings.setValue("longitude", 21.0122);
+        settings.setValue("model", "um4_60");
+        settings.sync();
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QVERIFY(preferences);
+        const auto places = preferences->favorites();
+        const auto recent = preferences->recentPlaces();
+        const QVariantMap preview{{"locationName", "New York"}, {"latitude", 40.7128}, {"longitude", -74.006}, {"model", "gfs"}};
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", preview}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *weather = object->findChild<WeatherModel *>();
+        auto *locationSettings = object->findChild<QObject *>("locationSettings");
+        QVERIFY(weather); QVERIFY(locationSettings);
+        QTest::qWait(100); // Allow saved-place synchronization and delayed Settings writes.
+        QCOMPARE(weather->locationName(), "New York");
+        QCOMPARE(weather->model(), "gfs");
+        QVERIFY(object->property("temporaryLocation").toBool());
+        QCOMPARE(preferences->favorites(), places);
+        QCOMPARE(preferences->recentPlaces(), recent);
+        QCOMPARE(locationSettings->property("locationName").toString(), "Warszawa");
+        QCOMPARE(locationSettings->property("latitude").toDouble(), 52.2297);
+        QCOMPARE(locationSettings->property("longitude").toDouble(), 21.0122);
+        QCOMPARE(locationSettings->property("model").toString(), "um4_60");
+        // Explicitly choosing a saved place ends the preview and persists that choice.
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "selectForecast", Q_ARG(QVariant, "Warszawa"),
+            Q_ARG(QVariant, 52.2297), Q_ARG(QVariant, 21.0122), Q_ARG(QVariant, "um4_120")));
+        QVERIFY(!object->property("temporaryLocation").toBool());
+        QCOMPARE(weather->locationName(), "Warszawa");
+        QCOMPARE(weather->model(), "um4_120");
+        QCOMPARE(locationSettings->property("model").toString(), "um4_120");
     }
     void locationDialogUsesInsetContentAndFitsNarrowWindows()
     {
