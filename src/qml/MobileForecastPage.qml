@@ -52,15 +52,20 @@ Kirigami.Page {
             }
         }
     }
+    component MobileTab: TabButton {
+        // Older qqc2-desktop-style provides a null contentItem while still
+        // deriving its baseline from that item. Keep both native styles valid.
+        baselineOffset: contentItem ? contentItem.y + contentItem.baselineOffset : height / 2
+    }
     footer: TabBar {
         objectName: "mobileNavigation"
         position: TabBar.Footer
         currentIndex: root.destination
         onCurrentIndexChanged: if (currentIndex >= 0) root.showDestination(currentIndex)
         MaterialStyle.Material.background: Kirigami.Theme.backgroundColor
-        TabButton { text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
-        TabButton { text: I18n.i18n("Maps"); icon.name: "globe"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
-        TabButton { text: I18n.i18n("News"); icon.name: "view-list-text"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
+        MobileTab { text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
+        MobileTab { text: I18n.i18n("Maps"); icon.name: "globe"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
+        MobileTab { text: I18n.i18n("News"); icon.name: "view-list-text"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
     }
     ColumnLayout {
         anchors.fill: parent
@@ -71,9 +76,9 @@ Kirigami.Page {
             visible: root.destination === 0
             currentIndex: root.forecastView
             onCurrentIndexChanged: if (visible && currentIndex >= 0) forecastPanel.viewMode = currentIndex
-            TabButton { text: I18n.i18n("Meteogram") }
-            TabButton { text: I18n.i18n("Hourly") }
-            TabButton { text: I18n.i18n("Days") }
+            MobileTab { text: I18n.i18n("Meteogram") }
+            MobileTab { text: I18n.i18n("Hourly") }
+            MobileTab { text: I18n.i18n("Days") }
         }
         TabBar {
             objectName: "mobileNewsTabs"
@@ -81,8 +86,8 @@ Kirigami.Page {
             visible: root.destination === 2
             currentIndex: root.newsView - 4
             onCurrentIndexChanged: if (visible && currentIndex >= 0) forecastPanel.viewMode = currentIndex + 4
-            TabButton { text: I18n.i18n("Synoptic") }
-            TabButton { text: I18n.i18n("Articles") }
+            MobileTab { text: I18n.i18n("Synoptic") }
+            MobileTab { text: I18n.i18n("Articles") }
         }
         ForecastPanel {
             id: forecastPanel

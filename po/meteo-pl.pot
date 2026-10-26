@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 19:10+0100\n"
+"POT-Creation-Date: 2026-10-26 19:17+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -88,7 +88,7 @@ msgid ": "
 msgstr ""
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:28
-#: src/qml/MobileForecastPage.qml:136 src/qml/MobileSettingsPage.qml:49
+#: src/qml/MobileForecastPage.qml:141 src/qml/MobileSettingsPage.qml:49
 msgid "About"
 msgstr ""
 
@@ -104,7 +104,7 @@ msgstr ""
 msgid "Add chart"
 msgstr ""
 
-#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:125
+#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:130
 #: src/qml/MobileLocationPage.qml:13 src/qml/PlacePicker.qml:49
 msgid "Add location"
 msgstr ""
@@ -173,7 +173,7 @@ msgstr ""
 msgid "Article"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:336 src/qml/MobileForecastPage.qml:85
+#: src/qml/ForecastPanel.qml:336 src/qml/MobileForecastPage.qml:90
 msgid "Articles"
 msgstr ""
 
@@ -591,7 +591,7 @@ msgid ""
 "kept."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:333 src/qml/MobileForecastPage.qml:76
+#: src/qml/ForecastPanel.qml:333 src/qml/MobileForecastPage.qml:81
 msgid "Days"
 msgstr ""
 
@@ -759,7 +759,7 @@ msgid "Fog cover"
 msgstr ""
 
 #: src/qml/LocationEditor.qml:192 src/qml/MeteoSettings.qml:53
-#: src/qml/MobileForecastPage.qml:61 src/qml/MobileSettingsPage.qml:14
+#: src/qml/MobileForecastPage.qml:66 src/qml/MobileSettingsPage.qml:14
 msgid "Forecast"
 msgstr ""
 
@@ -841,7 +841,7 @@ msgstr ""
 msgid "Horizontal segments"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:332 src/qml/MobileForecastPage.qml:75
+#: src/qml/ForecastPanel.qml:332 src/qml/MobileForecastPage.qml:80
 msgid "Hourly"
 msgstr ""
 
@@ -1016,7 +1016,7 @@ msgstr ""
 msgid "Location"
 msgstr ""
 
-#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:134
+#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:139
 #: src/qml/MobileLocationPage.qml:13
 msgid "Location and model"
 msgstr ""
@@ -1045,7 +1045,7 @@ msgstr ""
 msgid "Map type"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:334 src/qml/MobileForecastPage.qml:62
+#: src/qml/ForecastPanel.qml:334 src/qml/MobileForecastPage.qml:67
 msgid "Maps"
 msgstr ""
 
@@ -1092,7 +1092,7 @@ msgstr ""
 #: apps/meteo/Main.qml:11
 #: integrations/plasma/package/contents/ui/configAppearance.qml:28
 #: src/qml/ForecastPanel.qml:83 src/qml/ForecastPanel.qml:331
-#: src/qml/MobileForecastPage.qml:74
+#: src/qml/MobileForecastPage.qml:79
 msgid "Meteogram"
 msgstr ""
 
@@ -1167,7 +1167,7 @@ msgid ""
 "Model run: %2"
 msgstr ""
 
-#: src/qml/MobileForecastPage.qml:50 src/qml/MobileForecastPage.qml:130
+#: src/qml/MobileForecastPage.qml:50 src/qml/MobileForecastPage.qml:135
 msgid "More options"
 msgstr ""
 
@@ -1195,7 +1195,7 @@ msgstr ""
 msgid "My location"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:155 src/qml/MobileForecastPage.qml:106
+#: src/qml/LocationEditor.qml:155 src/qml/MobileForecastPage.qml:111
 msgid "My places"
 msgstr ""
 
@@ -1228,7 +1228,7 @@ msgstr ""
 msgid "New chart"
 msgstr ""
 
-#: src/qml/MobileForecastPage.qml:63
+#: src/qml/MobileForecastPage.qml:68
 msgid "News"
 msgstr ""
 
@@ -1651,7 +1651,7 @@ msgid "Series color"
 msgstr ""
 
 #: apps/meteo/Main.qml:14 src/qml/MeteoSettings.qml:16
-#: src/qml/MobileForecastPage.qml:135 src/qml/MobileSettingsPage.qml:19
+#: src/qml/MobileForecastPage.qml:140 src/qml/MobileSettingsPage.qml:19
 msgid "Settings"
 msgstr ""
 
@@ -1777,7 +1777,7 @@ msgstr ""
 msgid "Surface pressure"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:335 src/qml/MobileForecastPage.qml:84
+#: src/qml/ForecastPanel.qml:335 src/qml/MobileForecastPage.qml:89
 msgid "Synoptic"
 msgstr ""
 

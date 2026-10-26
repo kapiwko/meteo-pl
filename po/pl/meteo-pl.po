@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 19:10+0100\n"
+"POT-Creation-Date: 2026-10-26 19:17+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -87,7 +87,7 @@ msgid ": "
 msgstr " słońca: "
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:28
-#: src/qml/MobileForecastPage.qml:136 src/qml/MobileSettingsPage.qml:49
+#: src/qml/MobileForecastPage.qml:141 src/qml/MobileSettingsPage.qml:49
 msgid "About"
 msgstr "O aplikacji"
 
@@ -103,7 +103,7 @@ msgstr "Dodaj i pokaż prognozę"
 msgid "Add chart"
 msgstr "Dodaj wykres"
 
-#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:125
+#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:130
 #: src/qml/MobileLocationPage.qml:13 src/qml/PlacePicker.qml:49
 msgid "Add location"
 msgstr "Dodaj lokalizację"
@@ -177,7 +177,7 @@ msgstr ""
 msgid "Article"
 msgstr "Artykuł"
 
-#: src/qml/ForecastPanel.qml:336 src/qml/MobileForecastPage.qml:85
+#: src/qml/ForecastPanel.qml:336 src/qml/MobileForecastPage.qml:90
 msgid "Articles"
 msgstr "Artykuły"
 
@@ -608,7 +608,7 @@ msgstr ""
 "Dane zostaną pobrane ponownie, gdy będą potrzebne. Zapisane miejsca i "
 "profile pozostaną zachowane."
 
-#: src/qml/ForecastPanel.qml:333 src/qml/MobileForecastPage.qml:76
+#: src/qml/ForecastPanel.qml:333 src/qml/MobileForecastPage.qml:81
 msgid "Days"
 msgstr "Dni"
 
@@ -778,7 +778,7 @@ msgid "Fog cover"
 msgstr "Pokrycie mgłą"
 
 #: src/qml/LocationEditor.qml:192 src/qml/MeteoSettings.qml:53
-#: src/qml/MobileForecastPage.qml:61 src/qml/MobileSettingsPage.qml:14
+#: src/qml/MobileForecastPage.qml:66 src/qml/MobileSettingsPage.qml:14
 msgid "Forecast"
 msgstr "Prognoza"
 
@@ -862,7 +862,7 @@ msgstr ""
 msgid "Horizontal segments"
 msgstr "Poziome kreski"
 
-#: src/qml/ForecastPanel.qml:332 src/qml/MobileForecastPage.qml:75
+#: src/qml/ForecastPanel.qml:332 src/qml/MobileForecastPage.qml:80
 msgid "Hourly"
 msgstr "Godzinowo"
 
@@ -1039,7 +1039,7 @@ msgstr "Ustalanie pozycji…"
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:134
+#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:139
 #: src/qml/MobileLocationPage.qml:13
 msgid "Location and model"
 msgstr "Lokalizacja i model"
@@ -1068,7 +1068,7 @@ msgstr "Chmury niskie"
 msgid "Map type"
 msgstr "Rodzaj mapy"
 
-#: src/qml/ForecastPanel.qml:334 src/qml/MobileForecastPage.qml:62
+#: src/qml/ForecastPanel.qml:334 src/qml/MobileForecastPage.qml:67
 msgid "Maps"
 msgstr "Mapy"
 
@@ -1115,7 +1115,7 @@ msgstr "Meteo · meteogramy ICM"
 #: apps/meteo/Main.qml:11
 #: integrations/plasma/package/contents/ui/configAppearance.qml:28
 #: src/qml/ForecastPanel.qml:83 src/qml/ForecastPanel.qml:331
-#: src/qml/MobileForecastPage.qml:74
+#: src/qml/MobileForecastPage.qml:79
 msgid "Meteogram"
 msgstr "Meteogram"
 
@@ -1192,7 +1192,7 @@ msgstr ""
 "Model: %1\n"
 "Obliczenia: %2"
 
-#: src/qml/MobileForecastPage.qml:50 src/qml/MobileForecastPage.qml:130
+#: src/qml/MobileForecastPage.qml:50 src/qml/MobileForecastPage.qml:135
 msgid "More options"
 msgstr "Więcej opcji"
 
@@ -1220,7 +1220,7 @@ msgstr "Przesuń w górę"
 msgid "My location"
 msgstr "Moja pozycja"
 
-#: src/qml/LocationEditor.qml:155 src/qml/MobileForecastPage.qml:106
+#: src/qml/LocationEditor.qml:155 src/qml/MobileForecastPage.qml:111
 msgid "My places"
 msgstr "Moje miejsca"
 
@@ -1253,7 +1253,7 @@ msgstr "Temperatura przy gruncie"
 msgid "New chart"
 msgstr "Nowy wykres"
 
-#: src/qml/MobileForecastPage.qml:63
+#: src/qml/MobileForecastPage.qml:68
 msgid "News"
 msgstr "Aktualności"
 
@@ -1680,7 +1680,7 @@ msgid "Series color"
 msgstr "Kolor serii"
 
 #: apps/meteo/Main.qml:14 src/qml/MeteoSettings.qml:16
-#: src/qml/MobileForecastPage.qml:135 src/qml/MobileSettingsPage.qml:19
+#: src/qml/MobileForecastPage.qml:140 src/qml/MobileSettingsPage.qml:19
 msgid "Settings"
 msgstr "Ustawienia"
 
@@ -1808,7 +1808,7 @@ msgstr "Zachód"
 msgid "Surface pressure"
 msgstr "Ciśnienie na wysokości terenu"
 
-#: src/qml/ForecastPanel.qml:335 src/qml/MobileForecastPage.qml:84
+#: src/qml/ForecastPanel.qml:335 src/qml/MobileForecastPage.qml:89
 msgid "Synoptic"
 msgstr "Synoptyk"
 
