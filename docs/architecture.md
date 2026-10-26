@@ -161,13 +161,20 @@ Jedna reguła porównywania współrzędnych zachowuje dotychczasową tolerancj�
 `MeteoMapSource` waliduje opublikowane starty z `/json/UM4_min_max.json`
 lub `/json/GFS_min_max.json` i tworzy żądania WMS w EPSG:3857.
 `WeatherLayersModel` przechowuje wybór warstwy, startu i dopuszczalnego kroku.
+`MapLegendModel` pobiera `legend_style.json` i `layers_legend.json` z serwisu
+mapowego. `MapLegend` pokazuje te kolory, progi i jednostki bezpośrednio na mapie;
+zmiana warstwy korzysta z już pobranego katalogu. Nie wymaga obrazu WMS legendy.
 `ThematicMapSource` oddziela adresy i zegar publikacji UM/WAM od ich widoku.
 `TileMap` zamraża adresy i współrzędne kafelków dla każdej klatki.
 `MapTileFrame` przechowuje poprzednią kompletną klatkę do przygotowania nowej;
 położenie starej nadal wynika z bieżącego środka i skali mapy. Odrzucone lub
 niekompletne klatki nie zastępują widocznej. `BufferedImage` zapewnia taką samą
-podmianę pojedynczych map tematycznych. Zegar animacji pracuje tylko przy
-gotowej klatce, a podpis czasu dotyczy obrazu widocznego na ekranie.
+podmianę pojedynczych map tematycznych, używając dwóch stałych elementów obrazu.
+Następny PNG jest przygotowany pod bieżącym, z nieprzezroczystym tłem oddzielającym
+przezroczyste obszary. Kafelkowy podkład i napisy współdzielą aktywne tekstury
+pomiędzy krokami prognozy. Zegar próbuje przełączyć klatkę co 500 ms i pomija
+próbę podczas ładowania, bez restartowania całego odstępu. Podpis czasu zawsze
+dotyczy obrazu widocznego na ekranie.
 
 Singleton QML `MapImages` rejestruje asynchronicznego dostawcę obrazów w każdym
 silniku QML. `ImageCache` współdzieli trwające pobrania i cache LRU obrazów
@@ -180,7 +187,10 @@ klatki używa tego samego magazynu i nie zmienia kroku aktualnie wyświetlanego.
 Gdy serwer nie podaje czasu ważności, poprawnie zdekodowany obraz otrzymuje
 30 minut także na dysku. Dzięki temu opuszczenie RAM LRU nie wymusza pobrania
 całej animacji ponownie. Jawne ograniczenia cache z odpowiedzi są respektowane.
-`ImagePreloader` przed animacją przygotowuje całą pętlę. Wspólny limit czterech
+`ImagePreloader` domyślnie przygotowuje całą pętlę map tematycznych. Dla mapy
+interaktywnej gotowość obejmuje bieżący krok i dwa następne, a reszta prognozy
+ładuje się w tle. Kolejność zaczyna się od wybranego kroku i zawija na końcu.
+Wspólny limit czterech
 zadań obejmuje pobieranie i oczekiwanie na dekoder, niezależnie od konsumenta.
 Anulowanie usuwa subskrypcję danego widoku, zachowując żądanie potrzebne innym.
 Licznik generacji odrzuca zakończenia anulowanego zadania;
@@ -217,6 +227,8 @@ pokazuje wszystkie włączone wykresy wybranego profilu jako niezależnie zwijan
 sekcje; alternatywny widok pokazuje kompaktową prognozę dzienną. Własny profil,
 okres, zwinięcia, aktywne miejsce i filtr/kolejność miejsc należą do konfiguracji
 konkretnej instancji. Jednostki, UTC, katalog profili i zapisanych miejsc są wspólne.
+Przycisk PIN i akcja „Pozostaw otwarte” przełączają natywne
+`hideOnWindowDeactivate`; ustawienie jest zapisywane osobno dla każdej instancji.
 Natywne strony konfiguracji Plasma odpowiadają za widok i miejsca widgetu,
 a także dają dostęp do preferencji wspólnych. „Pokaż meteogram” uruchamia osobne
 pełne okno aplikacji. `WidgetForecast` pozostaje eksportowanym komponentem

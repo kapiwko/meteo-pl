@@ -155,10 +155,13 @@ Zakładka **Mapy** zawiera interaktywne warstwy UM4/GFS i 19 map tematycznych
 UM/WAM. Można zmieniać warstwę, start, godzinę i animować prognozę, a z mapy
 otworzyć meteogram wskazanego punktu. Mapy UM4 korzystają z publikacji UM4
 serwisu mapowego, niezależnej od listy startów meteogramów.
+Przycisk **Legenda** pokazuje kolory, wartości i jednostki wybranej warstwy
+bezpośrednio na mapie. Na telefonie legenda jest początkowo zwinięta.
 
 Podczas ładowania pozostaje poprzednia kompletna klatka, również przy błędzie
-sieci. Przed odtwarzaniem animacja przygotowuje cały zestaw klatek w cache,
-z postępem na mapie i możliwością anulowania. Pobieranie jest ograniczone do
+sieci. Mapa interaktywna rozpoczyna animację po przygotowaniu najbliższych klatek,
+a dalszą część prognozy wczytuje w tle. Mapy tematyczne przygotowują całą pętlę.
+Postęp jest widoczny na mapie; ładowanie można anulować. Pobieranie jest ograniczone do
 czterech równoległych zadań i respektuje limity pamięci cache. Zmiana obszaru,
 warstwy lub startu unieważnia poprzednie przygotowanie. W trakcie odtwarzania
 następna klatka jest dodatkowo przygotowywana w pamięci RAM.
@@ -224,7 +227,9 @@ sudo cmake --install build/release
 
 Następnie dodaj **Meteo · meteogram ICM** w oknie „Dodaj elementy interfejsu”
 Plasma. Nowa sesja Plasma zapewni wykrycie nowego modułu QML.
-Ustawienia widgetu są niezależne dla każdej instancji.
+Ustawienia widgetu są niezależne dla każdej instancji. Przycisk **PIN** w nagłówku
+pozwala pozostawić popup otwarty po kliknięciu innego okna; ponowne kliknięcie
+przywraca automatyczne zamykanie. Ta sama opcja jest w menu widgetu.
 Widok po rozwinięciu domyślnie pokazuje wszystkie wykresy profilu Klasyczny ICM na najbliższe 24 godziny.
 W konfiguracji plasmoidu, w karcie **Widok widgetu**, wybierz profil
 i okres 12/24/48/72 godzin lub całą prognozę. Widget pokazuje wszystkie włączone
