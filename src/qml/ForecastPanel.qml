@@ -68,10 +68,13 @@ Item {
         exportSelection.open();
     }
     function saveSelectedCharts() {
-        exportItems = exportCandidates.filter(entry => exportSelectedKeys.indexOf(entry.key) >= 0).map(entry => entry.item);
-        if (!exportItems.length) return;
+        saveCharts(exportCandidates.filter(entry => exportSelectedKeys.indexOf(entry.key) >= 0).map(entry => entry.item));
+    }
+    function saveCharts(items) {
+        if (chartExporter.busy || !items.length) return;
+        exportItems = items;
         exportTitle = exportItems.length === 1 ? exportItems[0].title : I18n.i18n("Meteogram");
-        chartFileDialog.title = I18n.i18n("Save selected charts");
+        chartFileDialog.title = exportItems.length === 1 ? I18n.i18n("Save chart as…") : I18n.i18n("Save selected charts");
         chartFileDialog.selectedFile = chartExporter.suggestedFile(weather.locationName, exportItems.length === 1 ? exportTitle : "", weather.formatTime(viewportStart, "yyyyMMdd-HHmm"));
         chartFileDialog.open();
     }
@@ -534,6 +537,7 @@ Item {
                         endTime: root.viewportEnd
                         selectedTime: root.selectedTime
                         identificationEnabled: root.identificationEnabled
+                        exportHandler: chart => root.saveCharts([chart])
                         nights: UserPreferences.showNight ? root.weather.nightIntervals : []
                         onProbeMoved: (timestamp, position) => root.showProbe(timestamp, position, groupKey)
                         onProbeLeft: closeProbe.restart()

@@ -106,7 +106,11 @@ Wysokości profilu i wykresów są zawarte w eksporcie. Przycisk **ⓘ** bezpoś
 przy tytule pokazuje lub ukrywa legendę tego wykresu; globalna opcja
 **Domyślnie pokazuj legendę** określa stan początkowy.
 Można też wybrać jednostkę wiatru i cieniowanie nocy. Legenda przełącza serie
-bez zmiany skali osi. Dolny pasek statusu pokazuje widoczny przedział czasu,
+bez zmiany skali osi. Kliknięcie prawym przyciskiem na wykresie otwiera menu
+**Zapisz wykres jako…** oraz listę serii z checkboxami zsynchronizowanymi z legendą.
+Menu działa również w plasmoidzie i jest dostępne z klawiatury klawiszem Menu
+lub Shift+F10. Zapis PNG zachowuje widoczne serie i wybrany zakres czasu.
+Dolny pasek statusu pokazuje widoczny przedział czasu,
 strzałki przesuwania, suwak powiększenia i przycisk dopasowania całej prognozy.
 Powiększanie zatrzymuje się na 24 godzinach, a dla krótszej prognozy na jej
 pełnym zakresie. Ctrl + kółko myszy również zmienia powiększenie. Podczas

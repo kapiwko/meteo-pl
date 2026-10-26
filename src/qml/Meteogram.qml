@@ -16,6 +16,11 @@ ColumnLayout {
     property bool exportMode: false
     property bool showHeading: true
     property bool identificationEnabled: false
+    // The desktop panel shares its exporter and status message across charts.
+    // Standalone charts (including Plasma) use the same native save workflow.
+    property var exportHandler: null
+    property ChartSaveDialog saveDialog: null
+    readonly property var legendFields: fields.filter(f => ["hidden", "type"].indexOf(f.kind) < 0 && (f.kind !== "flash" || !fields.some(g => g.kind === "storm")))
     readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
     readonly property string rightScale: chartConfiguration.rightScale || (scaleKind === "clouds" ? "fraction" : scaleKind === "cloudHeights" ? "visibility" : scaleKind === "precipitation" ? "humidity" : "linked")
@@ -67,6 +72,16 @@ ColumnLayout {
         return style;
     }
     function shown(field) { return hiddenKeys.indexOf(field.key) < 0; }
+    function legendLabel(field) {
+        return field.kind === "upper" ? I18n.i18n("Min–max range") : field.kind === "feelUpper" ? I18n.i18n("Feels like min–max")
+            : field.kind === "groundHigh" ? I18n.i18n("Ground min–max") : field.kind === "storm" || field.kind === "flash" ? I18n.i18n("Storms / lightning") : field.label;
+    }
+    function saveChart() {
+        chartContextMenu.close();
+        if (exportHandler) { exportHandler(root); return; }
+        if (!saveDialog) saveDialog = saveDialogComponent.createObject(root, {chart: root});
+        saveDialog.choose();
+    }
     function seriesColor(field) { return darkPalette && field.darkColor ? field.darkColor : field.color; }
     function isRightField(field) { return field.axis !== undefined ? field.axis === "right" : field.kind === "right" || field.kind === "rightBars"; }
     function configuredAxis(axis, right) {
@@ -247,6 +262,32 @@ ColumnLayout {
             weather.firstTimestamp, (time, format) => weather.formatTime(time, format), text => axisFont.advanceWidth(text), weather.calendarDays(startTime, endTime));
     }
 
+    Component { id: saveDialogComponent; ChartSaveDialog {} }
+    Menu {
+        id: chartContextMenu
+        objectName: "chartContextMenu"
+        MenuItem {
+            objectName: "saveChartMenuItem"
+            text: I18n.i18n("Save chart as…")
+            icon.name: "document-save-as"
+            onTriggered: root.saveChart()
+        }
+        MenuSeparator {}
+        Instantiator {
+            model: root.legendFields
+            delegate: MenuItem {
+                required property var modelData
+                objectName: "chartLayer-" + modelData.key
+                text: root.legendLabel(modelData)
+                checkable: true
+                checked: root.shown(modelData)
+                onTriggered: root.toggle(modelData.key)
+            }
+            onObjectAdded: (index, object) => chartContextMenu.insertItem(index + 2, object)
+            onObjectRemoved: (index, object) => chartContextMenu.removeItem(object)
+        }
+    }
+
     RowLayout {
         Layout.fillWidth: true
         visible: root.showHeading
@@ -285,11 +326,12 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 8
         Repeater {
-            model: root.fields.filter(f => ["hidden", "type"].indexOf(f.kind) < 0 && (f.kind !== "flash" || !root.fields.some(g => g.kind === "storm")))
+            model: root.legendFields
             delegate: AbstractButton {
                 id: legend
                 required property var modelData
-                text: modelData.kind === "upper" ? I18n.i18n("Min–max range") : modelData.kind === "feelUpper" ? I18n.i18n("Feels like min–max") : modelData.kind === "groundHigh" ? I18n.i18n("Ground min–max") : modelData.kind === "storm" || modelData.kind === "flash" ? I18n.i18n("Storms / lightning") : modelData.label
+                objectName: "chartLegend-" + modelData.key
+                text: root.legendLabel(modelData)
                 checkable: true
                 checked: root.shown(modelData)
                 padding: 4
@@ -338,6 +380,13 @@ ColumnLayout {
         objectName: "plot-" + root.groupKey
         Layout.fillWidth: true
         Layout.preferredHeight: root.chartHeight + root.directionBandHeight
+        activeFocusOnTab: !root.exportMode
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Menu || event.key === Qt.Key_F10 && event.modifiers & Qt.ShiftModifier) {
+                chartContextMenu.popup(plot, root.leftMargin, root.topMargin);
+                event.accepted = true;
+            }
+        }
         property bool softwareFallback: false
         readonly property string activeRenderer: UserPreferences.renderer === "cpu" || softwareFallback ? "cpu" : "gpu"
         // Own the MSAA texture on the regular container, not on a custom
@@ -410,16 +459,22 @@ ColumnLayout {
         MouseArea {
             anchors.fill: parent
             enabled: !root.exportMode
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             hoverEnabled: root.identificationEnabled
             cursorShape: root.identificationEnabled ? Qt.CrossCursor : Qt.ArrowCursor
             onPositionChanged: mouse => {
-                if (!root.identificationEnabled) return;
+                if (!root.identificationEnabled || chartContextMenu.visible) return;
                 if (mouse.x < root.leftMargin || mouse.x > width - root.rightMargin) return;
                 const time = root.startTime + (mouse.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);
                 root.probeMoved(root.weather.nearestTimestamp(time), mapToItem(null, mouse.x, mouse.y));
             }
             onExited: root.probeLeft()
             onClicked: mouse => {
+                if (mouse.button === Qt.RightButton) {
+                    plot.forceActiveFocus();
+                    chartContextMenu.popup(plot, mouse.x, mouse.y);
+                    return;
+                }
                 if (!root.identificationEnabled) return;
                 if (mouse.x < root.leftMargin || mouse.x > width - root.rightMargin) return;
                 const time = root.startTime + (mouse.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);
@@ -432,6 +487,14 @@ ColumnLayout {
                 } else wheel.accepted = false;
             }
         }
+    }
+    Kirigami.InlineMessage {
+        Layout.fillWidth: true
+        visible: !root.exportMode && text.length > 0
+        text: root.saveDialog ? root.saveDialog.error : ""
+        type: Kirigami.MessageType.Error
+        showCloseButton: true
+        onVisibleChanged: if (!visible && root.saveDialog) root.saveDialog.error = ""
     }
     Label {
         visible: root.legendVisible && root.fields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")

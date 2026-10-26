@@ -461,6 +461,133 @@ private slots:
         QVERIFY(cards.size()>1);
         for (auto *card:cards) QVERIFY(qAbs(card->width()-cards.first()->width())<1);
     }
+    void chartContextMenuSharesLegendStateAndSaveAction_data()
+    {
+        QTest::addColumn<QString>("group");
+        QTest::addColumn<QString>("key");
+        QTest::addColumn<QString>("partner");
+        QTest::newRow("temperature range") << QStringLiteral("temperature") << QStringLiteral("airtmp_max") << QStringLiteral("airtmp_min");
+        QTest::newRow("storms and lightning") << QStringLiteral("probability") << QStringLiteral("storm_max") << QStringLiteral("flash_max");
+    }
+    void chartContextMenuSharesLegendStateAndSaveAction()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QFETCH(QString, group); QFETCH(QString, key); QFETCH(QString, partner);
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QVariantMap definition;
+        for (const auto &entry : weather.chartGroups()) if (entry.toMap()["key"] == group) definition = entry.toMap();
+        QVERIFY(!definition.isEmpty());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import pl.meteo.desktop
+            Meteogram {
+                property Item requestedChart: null
+                exportHandler: chart => requestedChart = chart
+                legendOverride: 1
+                identificationEnabled: true
+            }
+        )", QUrl());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)},
+            {"title", definition["title"]}, {"groupKey", group}, {"fields", definition["fields"]}, {"chartConfiguration", definition}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *chart = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(780, 400);
+        chart->setParentItem(window.contentItem()); chart->setSize({780, 400}); window.show();
+        auto *plot = chart->findChild<QQuickItem *>("plot-" + group);
+        auto *menu = chart->findChild<QObject *>("chartContextMenu");
+        auto *layer = chart->findChild<QQuickItem *>("chartLayer-" + key);
+        const auto findVisual = [](auto &&self, QQuickItem *item, const QString &name) -> QQuickItem * {
+            if (item->objectName() == name) return item;
+            for (auto *child : item->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        auto *legend = findVisual(findVisual, chart, "chartLegend-" + key);
+        auto *save = chart->findChild<QQuickItem *>("saveChartMenuItem");
+        QVERIFY(plot); QVERIFY(menu); QVERIFY(layer); QVERIFY(legend); QVERIFY(save);
+        const auto bounds = chart->property("bounds").toMap(), rightBounds = chart->property("rightBounds").toMap();
+        QSignalSpy pins(chart, SIGNAL(pinRequested(double,QPointF)));
+        QVERIFY(pins.isValid());
+        const auto click = [](QQuickItem *item, Qt::MouseButton button) {
+            QTest::mouseClick(item->window(), button, Qt::NoModifier,
+                item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint());
+        };
+        QTest::qWait(100);
+        click(plot, Qt::RightButton);
+        QTRY_VERIFY(menu->property("opened").toBool());
+        QCOMPARE(pins.count(), 0);
+        QCOMPARE(layer->property("text"), legend->property("text"));
+        QVERIFY(layer->property("checked").toBool());
+        click(layer, Qt::LeftButton);
+        QTRY_VERIFY(!menu->property("visible").toBool());
+        QVERIFY(!legend->property("checked").toBool());
+        const auto hidden = chart->property("hiddenKeys").value<QJSValue>().toVariant().toList();
+        QVERIFY(hidden.contains(key)); QVERIFY(hidden.contains(partner));
+        QCOMPARE(chart->property("bounds").toMap(), bounds);
+        QCOMPARE(chart->property("rightBounds").toMap(), rightBounds);
+        click(legend, Qt::LeftButton);
+        QVERIFY(legend->property("checked").toBool());
+        QVERIFY(layer->property("checked").toBool());
+        // Keyboard users can open the same native menu and save the very chart
+        // they selected, without adding buttons beside every chart heading.
+        plot->forceActiveFocus();
+        QTest::keyClick(&window, Qt::Key_Menu);
+        QTRY_VERIFY(menu->property("opened").toBool());
+        click(save, Qt::LeftButton);
+        QTRY_VERIFY(!menu->property("visible").toBool());
+        QCOMPARE(chart->property("requestedChart").value<QQuickItem *>(), chart);
+        QCOMPARE(pins.count(), 0);
+    }
+    void standaloneChartSaveUsesCurrentRangeAndVisibility()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        const auto nativeDialogsDisabled = QCoreApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        const auto restore = qScopeGuard([&] { QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs, nativeDialogsDisabled); });
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        const auto definition = weather.chartGroups().first().toMap();
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "Meteogram");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)},
+            {"title", definition["title"]}, {"groupKey", definition["key"]}, {"fields", definition["fields"]}, {"chartConfiguration", definition}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *chart = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(780, 350);
+        chart->setParentItem(window.contentItem()); chart->setSize({780, 350}); window.show();
+        chart->setProperty("endTime", weather.firstTimestamp() + 12 * 3600);
+        QVERIFY(QMetaObject::invokeMethod(chart, "toggle", Q_ARG(QVariant, "airtmp_point")));
+        const auto hidden = chart->property("hiddenKeys").value<QJSValue>().toVariant();
+        QTest::qWait(100);
+        QVERIFY(QMetaObject::invokeMethod(chart, "saveChart"));
+        auto *dialog = chart->property("saveDialog").value<QObject *>();
+        QVERIFY(dialog);
+        QTRY_VERIFY(dialog->property("visible").toBool());
+        auto *exporter = dialog->findChild<ChartExporter *>();
+        QVERIFY(exporter);
+        QSignalSpy saved(exporter, &ChartExporter::saved), failed(exporter, &ChartExporter::failed);
+        QTemporaryDir files; QVERIFY(files.isValid());
+        const auto file = QUrl::fromLocalFile(files.filePath("chart.png"));
+        // Emulate the native picker returning a file; its filename editor and
+        // platform-specific validation are outside this component's contract.
+        QVERIFY(QMetaObject::invokeMethod(dialog, "close"));
+        QVERIFY(dialog->setProperty("selectedFile", file));
+        QVERIFY(QMetaObject::invokeMethod(dialog, "accepted"));
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count() + failed.count(), 1, 5000);
+        QVERIFY2(failed.isEmpty(), qPrintable(exporter->error()));
+        const QImage image(file.toLocalFile());
+        QVERIFY(!image.isNull());
+        QVERIFY(image.text("Title").contains(weather.locationName()));
+        QVERIFY(image.text("Description").contains(weather.formatTime(weather.firstTimestamp() + 12 * 3600, "d MMM yyyy HH:mm")));
+        QVERIFY(image.text("Source").contains("meteo.pl"));
+        QCOMPARE(chart->property("hiddenKeys").value<QJSValue>().toVariant(), hidden);
+        QVERIFY(!chart->property("exportMode").toBool());
+    }
     void exportsCompleteChartsAndHonorsVisibleSeries_data()
     {
         QTest::addColumn<QString>("renderer");
