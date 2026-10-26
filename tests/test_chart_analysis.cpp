@@ -52,6 +52,49 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void autoAxesRejectAThirdUnitButPreserveExplicitChoices()
+    {
+        const QVariantList points{QVariantMap{{"time", 1800000000LL}, {"value", 2.0}, {"interval", 3600}}};
+        QVariantMap series{{"airtmp_point", points}, {"slpres_point", points}, {"wind10_sd_true_prev_point", points},
+                            {"wind10_dr_deg_true_prev_point", points}, {"storm_max", points}};
+        const auto chart = [&](const QStringList &keys, bool explicitAxes = false, bool fixedScale = false) {
+            QVariantList styles;
+            for (const auto &key : keys) {
+                auto style = defaultSeriesStyle(key);
+                if (explicitAxes) style["axis"] = key == "airtmp_point" ? "left" : "right";
+                styles.append(style);
+            }
+            QVariantMap layout{{"key", "chart:mixed"}, {"title", "Mixed"}, {"enabled", true}, {"series", styles},
+                               {"leftScale", "auto"}, {"rightScale", fixedScale ? "wind" : "auto"}};
+            if (fixedScale) { layout["rightMin"] = 0.0; layout["rightMax"] = 1200.0; }
+            return buildConfiguredCharts({layout}, series, "m/s").first().toMap();
+        };
+        QVERIFY(chart({"airtmp_point"})["axisConflict"].toString().isEmpty());
+        QVERIFY(chart({"airtmp_point", "wind10_sd_true_prev_point"})["axisConflict"].toString().isEmpty());
+        const auto first = chart({"airtmp_point", "wind10_sd_true_prev_point", "slpres_point"});
+        const auto second = chart({"airtmp_point", "slpres_point", "wind10_sd_true_prev_point"});
+        QVERIFY(!first["axisConflict"].toString().isEmpty());
+        QCOMPARE(first["axisConflict"], second["axisConflict"]);
+        QCOMPARE(first["fields"].toList().size(), 3);
+        const auto deliberate = chart({"airtmp_point", "wind10_sd_true_prev_point", "slpres_point"}, true);
+        QVERIFY(deliberate["axisConflict"].toString().isEmpty());
+        QCOMPARE(deliberate["rightScale"].toString(), "linear");
+        const auto fixed = chart({"airtmp_point", "wind10_sd_true_prev_point", "slpres_point"}, true, true);
+        QCOMPARE(fixed["rightScale"].toString(), "wind");
+        QCOMPARE(fixed["rightMax"].toDouble(), 1200.0);
+        const auto categorical = chart({"wind10_dr_deg_true_prev_point", "storm_max", "airtmp_point", "wind10_sd_true_prev_point"});
+        QVERIFY(categorical["axisConflict"].toString().isEmpty());
+        QCOMPARE(categorical["leftUnit"].toString(), "°C");
+        QCOMPARE(categorical["rightUnit"].toString(), "m/s");
+        series.remove("slpres_point");
+        QVERIFY(chart({"airtmp_point", "wind10_sd_true_prev_point", "slpres_point"})["axisConflict"].toString().isEmpty());
+        // Explicit right axes with the same unit do not steal the primary auto axis.
+        auto humidity = defaultSeriesStyle("realhum_aver"), fog = defaultSeriesStyle("fog_max");
+        fog["axis"] = "right";
+        const auto sameUnit = buildConfiguredCharts({QVariantMap{{"key", "humidity"}, {"enabled", true},
+            {"series", QVariantList{humidity, fog}}}}, {{"realhum_aver", points}, {"fog_max", points}}, "m/s").first().toMap();
+        QCOMPARE(sameUnit["fields"].toList().first().toMap()["axis"].toString(), "left");
+    }
     void stormEventsCombineBothNativeAxes_data()
     {
         QTest::addColumn<QVariantList>("fields");

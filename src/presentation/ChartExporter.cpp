@@ -48,6 +48,9 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
         auto *object = value.value<QObject *>();
         if (!object && value.metaType() == QMetaType::fromType<QJSValue>()) object = value.value<QJSValue>().toQObject();
         auto *item = qobject_cast<QQuickItem *>(object);
+        if (item && item->property("axisConflict").toBool()) {
+            fail(Meteo::i18n("Resolve the chart's axis conflict before exporting.")); return false;
+        }
         if (!item || !item->window() || !item->isVisible() || !std::isfinite(item->width()) || !std::isfinite(item->height())
             || item->width() < 1 || item->height() < 1 || item->width() > 8192 || item->height() > 8192) {
             fail(Meteo::i18n("The chart is not ready to export. Open the meteogram and try again.")); return false;

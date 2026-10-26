@@ -8,3 +8,4 @@
 // Painters receive values to draw, without independently interpreting sampling.
 METEO_UI_EXPORT QVariantMap buildChartSeries(const Meteo::Forecast &forecast, const QHash<QString, double> &scales);
 METEO_UI_EXPORT QVariantList prepareChartFields(const QVariantList &fields);
+METEO_UI_EXPORT QVariantList buildConfiguredCharts(const QVariantList &layout, const QVariantMap &series, const QString &windUnit);

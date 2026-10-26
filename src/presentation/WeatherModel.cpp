@@ -355,48 +355,7 @@ QVariantList WeatherModel::chartGroups() const
 
 QVariantList WeatherModel::configuredCharts(const QVariantList &layout) const
 {
-    QVariantList result;
-    for (const auto &entry : normalizeChartLayout(layout)) {
-        auto chart = entry.toMap();
-        if (!chart["enabled"].toBool()) continue;
-        QVariantList fields;
-        QString leftUnit, leftScale, rightScale;
-        QStringList leftUnits, rightUnits;
-        const auto series = chart["series"].toList();
-        const auto unitFor = [this](const QVariantMap &style) { return style["unit"] == "m/s" ? m_windUnit : style["unit"].toString(); };
-        for (const auto &value : series) {
-            const auto style = value.toMap();
-            if (style["enabled"].toBool() && style["axis"] != "right" && m_series.contains(style["key"].toString()) && style["render"] != "type") { leftUnit = unitFor(style); break; }
-        }
-        for (const auto &value : series) {
-            auto style = value.toMap();
-            const auto key = style["key"].toString();
-            if (!style["enabled"].toBool() || !m_series.contains(key)) continue;
-            const auto unit = unitFor(style);
-            const auto axis = style["axis"] == "auto" ? (unit == leftUnit || style["render"] == "type" ? "left" : "right") : style["axis"].toString();
-            style["axis"] = axis;
-            style["unit"] = unit;
-            style["kind"] = style["render"];
-            style["points"] = m_series.value(key);
-            if (style["render"] == "range" || style["render"] == "rangeStems") {
-                const auto lower = m_series.value(style["lowerKey"].toString()).toList();
-                if (lower.isEmpty()) style["kind"] = "line";
-                else style["lowerPoints"] = lower;
-            }
-            fields.append(style);
-            if (style["render"] == "type" || style["render"] == "direction" || style["render"] == "storm" || style["render"] == "flash") continue;
-            auto &units = axis == "right" ? rightUnits : leftUnits;
-            if (!unit.isEmpty() && !units.contains(unit)) units.append(unit);
-            auto &scale = axis == "right" ? rightScale : leftScale;
-            if (scale.isEmpty()) scale = seriesScale(key);
-        }
-        chart["fields"] = fields;
-        chart["leftScale"] = chart["leftScale"] == "auto" ? (leftScale.isEmpty() ? "linear" : leftScale) : chart["leftScale"];
-        chart["rightScale"] = chart["rightScale"] == "auto" ? (rightScale.isEmpty() ? "linked" : rightScale) : chart["rightScale"];
-        chart["leftUnit"] = leftUnits.join(" / "); chart["rightUnit"] = rightUnits.join(" / ");
-        if (!fields.isEmpty()) result.append(chart);
-    }
-    return result;
+    return buildConfiguredCharts(layout, m_series, m_windUnit);
 }
 
 QVariantList WeatherModel::hourlyForecast() const

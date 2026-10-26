@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 18:07+0100\n"
+"POT-Creation-Date: 2026-10-26 18:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -57,7 +57,7 @@ msgid_plural "%1 charts selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/presentation/WeatherModel.cpp:520
+#: src/presentation/WeatherModel.cpp:452
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr ""
 
@@ -189,6 +189,12 @@ msgstr ""
 
 #: src/qml/DisplaySettings.qml:248
 msgid "Automatic"
+msgstr ""
+
+#: src/presentation/ChartDataBuilder.cpp:217
+msgid ""
+"Automatic axes support two units. Assign axes explicitly or split this chart "
+"(%1)."
 msgstr ""
 
 #: src/qml/SeriesSettings.qml:87
@@ -354,7 +360,7 @@ msgstr ""
 msgid "Classic ICM"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:453
+#: src/presentation/WeatherModel.cpp:403
 msgid "Clear"
 msgstr ""
 
@@ -423,7 +429,7 @@ msgstr ""
 msgid "Clouds and precipitation"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:321
+#: src/presentation/WeatherModel.cpp:303
 msgid "Code %1"
 msgstr ""
 
@@ -451,7 +457,7 @@ msgstr ""
 msgid "Copyright:"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:131
+#: src/presentation/ChartExporter.cpp:134
 msgid "Could not create PNG: "
 msgstr ""
 
@@ -506,7 +512,7 @@ msgstr ""
 msgid "Could not prepare preferences for saving."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:142
+#: src/presentation/ChartExporter.cpp:145
 msgid "Could not prepare the chart image."
 msgstr ""
 
@@ -522,8 +528,8 @@ msgstr ""
 msgid "Could not refresh. Showing content from the cache."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:128
-#: src/presentation/ChartExporter.cpp:132
+#: src/presentation/ChartExporter.cpp:131
+#: src/presentation/ChartExporter.cpp:135
 msgid "Could not save PNG: "
 msgstr ""
 
@@ -685,7 +691,7 @@ msgstr ""
 msgid "Export"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:177
+#: src/presentation/ChartExporter.cpp:180
 msgid "Export cancelled."
 msgstr ""
 
@@ -762,7 +768,7 @@ msgstr ""
 msgid "Forecast"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:224
+#: src/presentation/WeatherModel.cpp:205
 msgid "Forecast for "
 msgstr ""
 
@@ -798,7 +804,7 @@ msgstr ""
 msgid "GPU · Qt Quick scene graph (default)"
 msgstr ""
 
-#: src/qml/Meteogram.qml:80
+#: src/qml/Meteogram.qml:82
 msgid "Ground min–max"
 msgstr ""
 
@@ -811,7 +817,7 @@ msgstr ""
 msgid "Ground temperature min–max"
 msgstr ""
 
-#: src/qml/Meteogram.qml:378
+#: src/qml/Meteogram.qml:380
 msgid "Gust above scale"
 msgstr ""
 
@@ -823,7 +829,7 @@ msgstr ""
 msgid "Gusts: "
 msgstr ""
 
-#: src/qml/Meteogram.qml:302
+#: src/qml/Meteogram.qml:304
 msgid "Hide legend"
 msgstr ""
 
@@ -896,7 +902,7 @@ msgstr ""
 msgid "Interval start"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:329
+#: src/presentation/WeatherModel.cpp:311
 msgid "Interval: %1–%2"
 msgstr ""
 
@@ -947,7 +953,7 @@ msgstr ""
 msgid "Latest available"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:46
+#: src/presentation/WeatherModel.cpp:332
 msgid "Latest forecast"
 msgstr ""
 
@@ -1056,7 +1062,7 @@ msgstr ""
 msgid "Maximum feels like"
 msgstr ""
 
-#: src/qml/Meteogram.qml:378
+#: src/qml/Meteogram.qml:380
 msgid "Maximum precipitation above scale"
 msgstr ""
 
@@ -1072,7 +1078,7 @@ msgstr ""
 msgid "Mean precipitation in interval"
 msgstr ""
 
-#: src/presentation/ChartAnalysis.cpp:108
+#: src/presentation/ChartAnalysis.cpp:109
 msgid "Mean: total over %1 h. Maximum: total over %2 h."
 msgstr ""
 
@@ -1120,7 +1126,7 @@ msgstr ""
 msgid "Minimum visibility"
 msgstr ""
 
-#: src/qml/Meteogram.qml:79
+#: src/qml/Meteogram.qml:81
 msgid "Min–max range"
 msgstr ""
 
@@ -1231,7 +1237,7 @@ msgstr ""
 msgid "News"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:449
+#: src/presentation/WeatherModel.cpp:399
 msgid "No cloud cover data"
 msgstr ""
 
@@ -1247,7 +1253,7 @@ msgstr ""
 msgid "No forecast available"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:222
+#: src/presentation/WeatherModel.cpp:203
 msgid "No forecast for the current hour"
 msgstr ""
 
@@ -1282,11 +1288,11 @@ msgstr ""
 msgid "No valid reading time."
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:319
+#: src/presentation/WeatherModel.cpp:301
 msgid "None"
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:76
+#: src/presentation/ChartExporter.cpp:79
 msgid "Not enough memory for the meteogram image."
 msgstr ""
 
@@ -1323,7 +1329,7 @@ msgstr ""
 msgid "Outdoors"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:453
+#: src/presentation/WeatherModel.cpp:403
 msgid "Overcast"
 msgstr ""
 
@@ -1360,7 +1366,7 @@ msgstr ""
 msgid "Parameters of the indicated chart"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:453
+#: src/presentation/WeatherModel.cpp:403
 msgid "Partly cloudy"
 msgstr ""
 
@@ -1397,15 +1403,15 @@ msgstr ""
 msgid "Points"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:512
+#: src/presentation/WeatherModel.cpp:444
 msgid "Polar day"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:512
+#: src/presentation/WeatherModel.cpp:444
 msgid "Polar night"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:445
+#: src/presentation/WeatherModel.cpp:395
 msgid "Possible thunderstorms"
 msgstr ""
 
@@ -1429,7 +1435,7 @@ msgstr ""
 msgid "Precipitation chance and storms"
 msgstr ""
 
-#: src/presentation/ChartAnalysis.cpp:107
+#: src/presentation/ChartAnalysis.cpp:108
 msgid "Precipitation totals over %1 h."
 msgstr ""
 
@@ -1482,11 +1488,11 @@ msgstr ""
 msgid "Profiles imported: "
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:319
+#: src/presentation/WeatherModel.cpp:301
 msgid "Rain"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:448
+#: src/presentation/WeatherModel.cpp:398
 msgid "Rainfall"
 msgstr ""
 
@@ -1546,6 +1552,10 @@ msgstr ""
 msgid "Reset layout"
 msgstr ""
 
+#: src/presentation/ChartExporter.cpp:52
+msgid "Resolve the chart's axis conflict before exporting."
+msgstr ""
+
 #: src/qml/WeatherMap.qml:67
 msgid "Retry"
 msgstr ""
@@ -1562,7 +1572,7 @@ msgstr ""
 msgid "Sample time"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:328
+#: src/presentation/WeatherModel.cpp:310
 msgid "Sample: %1"
 msgstr ""
 
@@ -1575,7 +1585,7 @@ msgid "Save PNG…"
 msgstr ""
 
 #: src/qml/ChartSaveDialog.qml:11 src/qml/ForecastPanel.qml:84
-#: src/qml/Meteogram.qml:274
+#: src/qml/Meteogram.qml:276
 msgid "Save chart as…"
 msgstr ""
 
@@ -1691,7 +1701,7 @@ msgid "Show forecast: "
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/ForecastPopup.qml:86
-#: src/qml/Meteogram.qml:302
+#: src/qml/Meteogram.qml:304
 msgid "Show legend"
 msgstr ""
 
@@ -1708,15 +1718,15 @@ msgstr ""
 msgid "Show:"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:320 src/presentation/WeatherModel.cpp:447
+#: src/presentation/WeatherModel.cpp:302 src/presentation/WeatherModel.cpp:397
 msgid "Sleet"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:320
+#: src/presentation/WeatherModel.cpp:302
 msgid "Snow"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:446
+#: src/presentation/WeatherModel.cpp:396
 msgid "Snowfall"
 msgstr ""
 
@@ -1754,7 +1764,7 @@ msgstr ""
 msgid "Storms"
 msgstr ""
 
-#: src/qml/Meteogram.qml:80
+#: src/qml/Meteogram.qml:82
 msgid "Storms / lightning"
 msgstr ""
 
@@ -1807,11 +1817,11 @@ msgstr ""
 msgid "The cache has been cleared."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:53
+#: src/presentation/ChartExporter.cpp:56
 msgid "The chart is not ready to export. Open the meteogram and try again."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:139
+#: src/presentation/ChartExporter.cpp:142
 msgid "The chart was closed during export."
 msgstr ""
 
@@ -1831,7 +1841,7 @@ msgstr ""
 msgid "The forecast may be outdated. Last downloaded: "
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:73
+#: src/presentation/ChartExporter.cpp:76
 msgid ""
 "The image is too large. Reduce chart heights or export charts separately."
 msgstr ""
@@ -1860,7 +1870,7 @@ msgstr ""
 msgid "The profile file is too large (maximum 16 MiB)."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:151
+#: src/presentation/ChartExporter.cpp:154
 msgid "The renderer did not return a chart image."
 msgstr ""
 
@@ -1891,8 +1901,8 @@ msgid ""
 "remembered."
 msgstr ""
 
-#: src/presentation/ChartExporter.cpp:101
-#: src/presentation/ChartExporter.cpp:180
+#: src/presentation/ChartExporter.cpp:104
+#: src/presentation/ChartExporter.cpp:183
 msgid "The view changed during export. Try again."
 msgstr ""
 
@@ -2147,7 +2157,7 @@ msgstr ""
 msgid "Zoom out"
 msgstr ""
 
-#: src/qml/Meteogram.qml:240
+#: src/qml/Meteogram.qml:242
 msgid "fraction"
 msgstr ""
 
@@ -2167,7 +2177,7 @@ msgstr ""
 msgid "no data"
 msgstr ""
 
-#: src/qml/Meteogram.qml:239
+#: src/qml/Meteogram.qml:241
 msgid "octas"
 msgstr ""
 

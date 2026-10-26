@@ -13,6 +13,7 @@ ColumnLayout {
     required property var fields
     readonly property var plotFields: ChartAnalysis.prepareFields(fields)
     property var chartConfiguration: ({})
+    readonly property bool axisConflict: Boolean(chartConfiguration.axisConflict)
     property int legendOverride: -1
     property bool exportMode: false
     property bool showHeading: true
@@ -383,7 +384,8 @@ ColumnLayout {
         id: plot
         objectName: "plot-" + root.groupKey
         Layout.fillWidth: true
-        Layout.preferredHeight: root.chartHeight + root.directionBandHeight
+        visible: !root.axisConflict
+        Layout.preferredHeight: visible ? root.chartHeight + root.directionBandHeight : 0
         activeFocusOnTab: !root.exportMode
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Menu || event.key === Qt.Key_F10 && event.modifiers & Qt.ShiftModifier) {
@@ -505,6 +507,13 @@ ColumnLayout {
             onRangeRequested: (first, last) => root.rangeRequested(first, last)
             onResetRequested: root.resetRangeRequested()
         }
+    }
+    Kirigami.InlineMessage {
+        objectName: "chartAxisConflict"
+        Layout.fillWidth: true
+        visible: root.axisConflict
+        text: root.chartConfiguration.axisConflict || ""
+        type: Kirigami.MessageType.Warning
     }
     Kirigami.InlineMessage {
         Layout.fillWidth: true

@@ -1129,6 +1129,21 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(chart.data(), "toggle", Q_ARG(QVariant, "pcpttl_aver")));
         QCOMPARE(chart->property("bounds").toMap(), bounds);
         QCOMPARE(chart->property("rightBounds").toMap(), right);
+        const auto conflict = model.configuredCharts({QVariantMap{{"key", "chart:mixed"}, {"enabled", true},
+            {"series", QVariantList{defaultSeriesStyle("airtmp_point"), defaultSeriesStyle("wind10_sd_true_prev_point"), defaultSeriesStyle("slpres_point")}}}}).first().toMap();
+        chart->setProperty("fields", conflict["fields"]);
+        chart->setProperty("chartConfiguration", conflict);
+        auto *notice = chart->findChild<QQuickItem *>("chartAxisConflict");
+        auto *plot = chart->findChild<QQuickItem *>("plot-chart:mixed");
+        QVERIFY(notice); QVERIFY(plot);
+        QTRY_VERIFY(notice->isVisible());
+        QVERIFY(!plot->isVisible());
+        ChartExporter exporter;
+        QTemporaryDir files;
+        const auto png = files.filePath("conflicting-axes.png");
+        QVERIFY(!exporter.savePng(QUrl::fromLocalFile(png), {QVariant::fromValue(chart.data())}, {}));
+        QVERIFY(exporter.error().contains("axis conflict"));
+        QVERIFY(!QFile::exists(png));
     }
     void settingsReleaseSpaceAfterCollapsingChartsAndSeries()
     {
