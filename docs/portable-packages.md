@@ -94,6 +94,8 @@ Workflow `portable-packages.yml` uruchamia natywne zadania Windows i macOS oraz
 budowę Androida w przypiętym obrazie SDK. Artefakty są udostępniane po poprawnym
 zakończeniu zadania. Bootstrap Craft i blueprinty są wskazane przez rewizje
 w skrypcie. Cache binarny zależności KDE jest zewnętrzny i może się zmieniać.
+Zadanie macOS używa mirrora GWDG, aby korzystać z pełnego indeksu zależności
+podczas przebudowy głównego cache KDE.
 Przy ręcznym uruchomieniu opcja **include_alternatives** dołącza dodatkowe formaty.
 
 Podstawa konfiguracji: [KDE Craft](https://develop.kde.org/docs/getting-started/building/craft/),

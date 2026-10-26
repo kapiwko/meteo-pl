@@ -25,6 +25,8 @@ jobs:
             os: windows-2022
           - target: macos
             os: macos-15
+            # The primary cache can publish an incomplete manifest while rebuilding.
+            cache_url: https://ftp.gwdg.de/pub/linux/kde/extrafiles/craft/Qt6/
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     steps:
@@ -43,6 +45,8 @@ jobs:
       - name: Prepare the Python trust store
         run: python -m pip install certifi pefile==2024.8.26 macholib==1.16.3
       - name: Build the desktop package with Qt and KDE dependencies
+        env:
+          METEO_CRAFT_CACHE_URL: ${{ matrix.cache_url }}
         run: python scripts/build-portable.py --target "${{ matrix.target }}" --work-dir "${{ runner.temp }}/MeteoBuild" --craft-root "${{ runner.temp }}/MeteoCraft" ${{ inputs.include_alternatives && '--include-alternatives' || '' }}
       - name: Preserve the installer and checksums
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
