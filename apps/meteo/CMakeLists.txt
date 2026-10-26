@@ -8,7 +8,7 @@ qt_add_qml_module(meteo-pl
     URI pl.meteo.app
     VERSION 1.0
     NO_IMPORT_SCAN
-    QML_FILES Main.qml Mobile.qml ForecastWindow.qml
+    QML_FILES Main.qml Mobile.qml ForecastWindow.qml ForecastSession.qml
 )
 target_link_libraries(meteo-pl PRIVATE meteo_ui Qt6::Quick Qt6::QuickControls2 Qt6::Widgets)
 if(WIN32 OR APPLE OR ANDROID)

@@ -194,6 +194,11 @@ private slots:
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));
         QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        // Material controls use the native Linux palette provider. Kirigami
+        // 6.13's QML fallback dereferences destroyed pages during theme sync.
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
         QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         const QVariantMap startupForecast{{"locationName", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}, {"model", "um4_60"}};
@@ -206,6 +211,8 @@ private slots:
         QVERIFY(weather->hasData());
         auto *window = qobject_cast<QQuickWindow *>(object.data());
         QVERIFY(window);
+        window->requestActivate();
+        QTRY_VERIFY(window->isActive());
         const bool materialStyle = QQuickStyle::name() == QStringLiteral("Material");
         if (materialStyle && qEnvironmentVariable("QT_QUICK_CONTROLS_MATERIAL_THEME") != QStringLiteral("Dark")) {
             QVERIFY(object->setProperty("colorScheme", QVariant::fromValue(Qt::ColorScheme::Dark)));
@@ -224,6 +231,8 @@ private slots:
             return nullptr;
         };
         const auto click = [window](QQuickItem *button) {
+            auto *stack = window->findChild<QObject *>("mobilePageStack");
+            if (stack) QTRY_VERIFY(!stack->property("busy").toBool());
             QTRY_VERIFY(button->isVisible() && button->width() > 0
                 && button->mapToScene({button->width()/2, button->height()/2}).x() >= 0
                 && button->mapToScene({button->width()/2, button->height()/2}).x() < window->width()
@@ -256,17 +265,17 @@ private slots:
         auto *addPage = stack->property("currentItem").value<QQuickItem *>();
         QVERIFY(addPage);
         QTRY_VERIFY(qAbs(addPage->mapToScene({0, 0}).x()) < 1);
-        auto *addColumns = stack->property("columnView").value<QObject *>();
-        QVERIFY(addColumns);
-        QTRY_VERIFY(!addColumns->property("moving").toBool());
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QCOMPARE(addPage->objectName(), "mobileLocationPage");
         QVERIFY(addPage->property("addingPlace").toBool());
         auto *newPlaceButton = addPage->findChild<QObject *>("mobileShowForecastButton");
         QVERIFY(newPlaceButton);
         QVERIFY(!newPlaceButton->property("enabled").toBool());
         QCOMPARE(addPage->findChild<QObject *>("customLocationName")->property("text").toString(), QString());
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QTest::keySequence(window, QKeySequence(QKeySequence::Back));
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QTRY_VERIFY(!places->property("visible").toBool());
         auto *moreButton = find(find, page, "mobileMoreButton");
         QVERIFY(moreButton); click(moreButton);
@@ -336,8 +345,10 @@ private slots:
         auto currentPage = [stack] { return stack->property("currentItem").value<QQuickItem *>(); };
         QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsPage");
         QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QTest::keySequence(window, QKeySequence(QKeySequence::Back));
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QTRY_VERIFY(qAbs(page->mapToScene({0, 0}).x()) < 1);
         QVERIFY(QMetaObject::invokeMethod(page, "openSettings"));
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
@@ -362,6 +373,7 @@ private slots:
         QTRY_VERIFY(back = find(find, currentPage(), "mobileBackButton"));
         click(back);
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QVERIFY(QMetaObject::invokeMethod(page, "chooseLocation"));
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileLocationPage");
@@ -371,10 +383,9 @@ private slots:
         QVERIFY(show->isEnabled());
         click(show);
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QTRY_VERIFY(qAbs(page->mapToScene({0, 0}).x()) < 1);
-        auto *columns = stack->property("columnView").value<QObject *>();
-        QVERIFY(columns);
-        QTRY_VERIFY(!columns->property("moving").toBool());
+        QTRY_VERIFY(!stack->property("busy").toBool());
         QVERIFY(!window->grabWindow().isNull());
         if (const auto path = qEnvironmentVariable("METEO_MOBILE_SCREENSHOT"); !path.isEmpty()) QVERIFY(window->grabWindow().save(path));
     }
