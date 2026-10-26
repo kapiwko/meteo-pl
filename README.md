@@ -130,7 +130,7 @@ Qt modules: Core, Network, Qml, Quick, QuickControls2, Positioning, Widgets and
 Test. KDE dependencies: Kirigami, Notifications, KI18n and QQC2 Desktop Style.
 GNU gettext tools are required to compile translations. The
 widget additionally requires Plasma 6 and its QML modules.
-The optional Linux search plugin requires the KF6 Runner development package.
+The optional Linux search plugin requires the KF6 Runner and Config development packages.
 
 ```bash
 git clone https://github.com/kapiwko/meteo-pl.git
