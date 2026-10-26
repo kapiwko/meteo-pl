@@ -24,6 +24,11 @@ ColumnLayout {
         onFinished: map.prefetchStep(root.nextStep())
         onFailed: play.checked = false
     }
+    MapLegendModel {
+        id: mapLegend
+        layer: layers.layers[layers.layerIndex].id
+        active: !root.thematic && legendToggle.checked
+    }
     Timer { id: prepareDelay; interval: 120; onTriggered: root.prepareAnimation() }
     function nextStep() { return layers.step >= layers.lastStep ? layers.firstStep : Math.min(layers.lastStep, layers.step + layers.stepHours); }
     signal locationSelected(string name, real latitude, real longitude)
@@ -83,6 +88,30 @@ ColumnLayout {
         zoom: 6
         weatherLayer: layers
         active: !root.thematic
+        ToolButton {
+            id: legendToggle
+            objectName: "mapLegendToggle"
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.margins: Kirigami.Units.largeSpacing
+            z: 4
+            text: I18n.i18n("Legend")
+            icon.name: "view-list-details"
+            checkable: true
+            checked: !root.mobileLayout
+            ToolTip.text: text
+            ToolTip.visible: hovered
+        }
+        MapLegend {
+            legend: mapLegend
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.margins: Kirigami.Units.largeSpacing
+            anchors.bottomMargin: 32
+            z: 4
+            visible: legendToggle.checked
+            onCloseRequested: legendToggle.checked = false
+        }
         onPlaceSelected: (name, latitude, longitude) => { root.picked = null; root.locationSelected(name, latitude, longitude); }
         onCoordinateSelected: (latitude, longitude) => root.picked = {latitude: latitude, longitude: longitude}
         onFrameCommitted: if (play.checked) { root.prepareAnimation(); if (animationCache.ready) prefetchStep(root.nextStep()); }
@@ -110,14 +139,7 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        ToolButton { id: legendToggle; text: I18n.i18n("Legend"); checkable: true }
         Label { text: I18n.i18n("Model forecast ") + (root.weather.model === "gfs" ? "GFS" : "UM4") + I18n.i18n(" · ICM UW data"); opacity: 0.65; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-    }
-    ScrollView {
-        visible: legendToggle.checked
-        Layout.fillWidth: true
-        Layout.preferredHeight: 130
-        Image { source: legendToggle.checked ? MapImages.cached(layers.legendUrl) : ""; cache: false; asynchronous: true; fillMode: Image.PreserveAspectFit }
     }
     Timer { interval: 500; repeat: true; running: play.checked && animationCache.ready && !root.thematic && !layers.busy && map.hasFrame && !map.error.length; onTriggered: if (!map.loading) layers.step = root.nextStep() }
     }

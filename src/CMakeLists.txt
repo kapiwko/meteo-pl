@@ -69,6 +69,7 @@ qt_add_qml_module(meteo_ui
         presentation/PreferencesStore.cpp presentation/PreferencesStore.hpp
         presentation/SavedPlaceController.cpp presentation/SavedPlaceController.hpp
         presentation/WeatherLayersModel.cpp presentation/WeatherLayersModel.hpp
+        presentation/MapLegendModel.cpp presentation/MapLegendModel.hpp
         presentation/ThematicMapsModel.cpp presentation/ThematicMapsModel.hpp
         presentation/EditorialModel.cpp presentation/EditorialModel.hpp
         presentation/MapImages.cpp presentation/MapImages.hpp
@@ -134,3 +135,5 @@ install(FILES
 
 set_source_files_properties(qml/DailyForecastView.qml PROPERTIES QT_RESOURCE_ALIAS DailyForecastView.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/DailyForecastView.qml)
+set_source_files_properties(qml/MapLegend.qml PROPERTIES QT_RESOURCE_ALIAS MapLegend.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/MapLegend.qml)

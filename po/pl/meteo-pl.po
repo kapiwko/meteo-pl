@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 19:17+0100\n"
+"POT-Creation-Date: 2026-10-26 21:00+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -19,7 +19,7 @@ msgstr ""
 msgid " hours"
 msgstr " godzin"
 
-#: src/qml/WeatherMap.qml:112
+#: src/qml/WeatherMap.qml:142
 msgid " · ICM UW data"
 msgstr " · dane ICM UW"
 
@@ -43,7 +43,7 @@ msgstr " · obliczenia: "
 msgid " · parameter reading · "
 msgstr " · odczyt parametrów · "
 
-#: src/qml/ThematicMaps.qml:28
+#: src/qml/ThematicMaps.qml:29
 msgid " · run: "
 msgstr " · start: "
 
@@ -150,7 +150,7 @@ msgstr ""
 "Przedział obejmuje północ. Opad jest dzielony między dni proporcjonalnie do "
 "czasu trwania."
 
-#: src/qml/ThematicMaps.qml:67 src/qml/WeatherMap.qml:57
+#: src/qml/ThematicMaps.qml:68 src/qml/WeatherMap.qml:64
 msgid "Animate"
 msgstr "Animuj"
 
@@ -235,7 +235,7 @@ msgstr "Dane CSV (*.csv)"
 msgid "Cache"
 msgstr "Pamięć podręczna"
 
-#: src/qml/ThematicMaps.qml:67 src/qml/WeatherMap.qml:57
+#: src/qml/ThematicMaps.qml:68 src/qml/WeatherMap.qml:64
 msgid "Cancel loading"
 msgstr "Anuluj ładowanie"
 
@@ -420,8 +420,7 @@ msgstr "Punkty chmur"
 msgid "Cloud tops"
 msgstr "Wierzchołki chmur"
 
-#: src/qml/ForecastInspector.qml:24 src/qml/HourlyForecastTable.qml:21
-#: src/qml/MobileHourlyForecast.qml:49
+#: src/presentation/MapLegendModel.cpp:115
 msgid "Clouds"
 msgstr "Chmury"
 
@@ -492,7 +491,7 @@ msgstr "Nie udało się pobrać danych (HTTP %1). %2"
 msgid "Could not download the forecast from meteo.pl (HTTP %1). %2"
 msgstr "Nie udało się pobrać prognozy z meteo.pl (HTTP %1). %2"
 
-#: src/qml/BufferedImage.qml:40
+#: src/qml/BufferedImage.qml:67
 msgid "Could not download the map. Keeping the previous image visible."
 msgstr "Nie udało się pobrać mapy. Poprzedni obraz pozostaje widoczny."
 
@@ -509,7 +508,7 @@ msgstr "Nie udało się otworzyć Meteo. Zainstaluj aplikację i spróbuj ponown
 msgid "Could not open the file: "
 msgstr "Nie udało się otworzyć pliku: "
 
-#: src/presentation/ImagePreloader.cpp:47
+#: src/presentation/ImagePreloader.cpp:58
 msgid ""
 "Could not prepare all animation frames. Try again or choose an earlier run."
 msgstr ""
@@ -668,7 +667,7 @@ msgstr "Gotowy profil możesz zduplikować i edytować jako własny."
 msgid "Duplicate profile"
 msgstr "Duplikuj profil"
 
-#: src/qml/ThematicMaps.qml:58
+#: src/qml/ThematicMaps.qml:59
 msgid "Earlier"
 msgstr "Wcześniej"
 
@@ -761,11 +760,11 @@ msgstr "Wypełnienie:"
 msgid "Find a place"
 msgstr "Znajdź miejsce"
 
-#: src/qml/ThematicMaps.qml:71
+#: src/qml/ThematicMaps.qml:72
 msgid "Fit"
 msgstr "Dopasuj"
 
-#: src/qml/ThematicMaps.qml:71
+#: src/qml/ThematicMaps.qml:72
 msgid "Fit the entire map to the view"
 msgstr "Dopasuj całą mapę do widoku"
 
@@ -843,11 +842,12 @@ msgstr "Porywy"
 msgid "Gusts: "
 msgstr "Porywy: "
 
-#: src/qml/Meteogram.qml:304
+#: src/qml/MapLegend.qml:21 src/qml/Meteogram.qml:304
 msgid "Hide legend"
 msgstr "Ukryj legendę"
 
 #: src/presentation/ForecastFields.cpp:31
+#: src/presentation/MapLegendModel.cpp:92
 msgid "High clouds"
 msgstr "Chmury wysokie"
 
@@ -870,7 +870,7 @@ msgstr "Godzinowo"
 msgid "Humidity and fog"
 msgstr "Wilgotność i mgła"
 
-#: src/qml/ThematicMaps.qml:112
+#: src/qml/ThematicMaps.qml:113
 msgid "ICM UW / meteo.pl thematic maps · selected run and forecast step"
 msgstr "Mapy tematyczne ICM UW / meteo.pl · wskazany start i krok prognozy"
 
@@ -906,7 +906,7 @@ msgstr "Importuj profile meteogramu"
 msgid "Import…"
 msgstr "Importuj…"
 
-#: src/qml/WeatherMap.qml:31 src/qml/WeatherMap.qml:39
+#: src/qml/WeatherMap.qml:38 src/qml/WeatherMap.qml:46
 msgid "Interactive map"
 msgstr "Mapa interaktywna"
 
@@ -960,7 +960,7 @@ msgstr "Klucz"
 msgid "Last downloaded: "
 msgstr "Ostatnie pobranie: "
 
-#: src/qml/ThematicMaps.qml:61
+#: src/qml/ThematicMaps.qml:62
 msgid "Later"
 msgstr "Później"
 
@@ -968,7 +968,7 @@ msgstr "Później"
 msgid "Later interval"
 msgstr "Późniejszy przedział"
 
-#: src/qml/EditorialView.qml:40 src/qml/ThematicMaps.qml:60
+#: src/qml/EditorialView.qml:40 src/qml/ThematicMaps.qml:61
 msgid "Latest"
 msgstr "Najnowszy"
 
@@ -1000,7 +1000,8 @@ msgstr "Lewa"
 msgid "Left axis"
 msgstr "Lewa oś"
 
-#: src/qml/OriginalMeteogram.qml:14 src/qml/WeatherMap.qml:111
+#: src/qml/MapLegend.qml:19 src/qml/OriginalMeteogram.qml:14
+#: src/qml/WeatherMap.qml:98
 msgid "Legend"
 msgstr "Legenda"
 
@@ -1036,6 +1037,10 @@ msgstr "Linia:"
 msgid "Load older articles"
 msgstr "Wczytaj starsze artykuły"
 
+#: src/qml/WeatherMap.qml:124
+msgid "Loading next frames: "
+msgstr "Wczytywanie kolejnych klatek: "
+
 #: src/qml/LocationEditor.qml:121
 msgid "Locating…"
 msgstr "Ustalanie pozycji…"
@@ -1066,10 +1071,11 @@ msgid "Longitude of the location."
 msgstr "Długość geograficzna lokalizacji."
 
 #: src/presentation/ForecastFields.cpp:29
+#: src/presentation/MapLegendModel.cpp:88
 msgid "Low clouds"
 msgstr "Chmury niskie"
 
-#: src/qml/WeatherMap.qml:38
+#: src/qml/WeatherMap.qml:45
 msgid "Map type"
 msgstr "Rodzaj mapy"
 
@@ -1106,6 +1112,7 @@ msgid "Mean: total over %1 h. Maximum: total over %2 h."
 msgstr "Opad średni: suma z %1 h. Maksymalny: suma z %2 h."
 
 #: src/presentation/ForecastFields.cpp:30
+#: src/presentation/MapLegendModel.cpp:90
 msgid "Medium clouds"
 msgstr "Chmury średnie"
 
@@ -1124,7 +1131,7 @@ msgstr "Meteo · meteogramy ICM"
 msgid "Meteogram"
 msgstr "Meteogram"
 
-#: src/qml/WeatherMap.qml:103
+#: src/qml/WeatherMap.qml:134
 msgid "Meteogram for the selected point"
 msgstr "Meteogram dla wskazanego punktu"
 
@@ -1169,7 +1176,7 @@ msgstr "Brak temperatury lub daty uruchomienia modelu."
 msgid "Model"
 msgstr "Model"
 
-#: src/qml/WeatherMap.qml:112
+#: src/qml/WeatherMap.qml:142
 msgid "Model forecast "
 msgstr "Prognoza modelu "
 
@@ -1286,6 +1293,10 @@ msgstr "Brak prognozy na bieżącą godzinę"
 msgid "No forecast has been downloaded yet."
 msgstr "Nie pobrano jeszcze prognozy."
 
+#: src/qml/MapLegend.qml:45
+msgid "No legend is available for this layer."
+msgstr "Brak legendy dla tej warstwy."
+
 #: src/presentation/ThematicMapsModel.cpp:113
 msgid ""
 "No map is available for this run and step. Choose an earlier run or another "
@@ -1399,7 +1410,7 @@ msgstr "Parametry wskazanego wykresu"
 msgid "Partly cloudy"
 msgstr "Częściowe zachmurzenie"
 
-#: src/qml/ThematicMaps.qml:67 src/qml/WeatherMap.qml:57
+#: src/qml/ThematicMaps.qml:68 src/qml/WeatherMap.qml:64
 msgid "Pause"
 msgstr "Pauza"
 
@@ -1419,8 +1430,8 @@ msgstr "Miejsca w tym widżecie"
 msgid "Places:"
 msgstr "Miejsca:"
 
-#: src/qml/LocationEditor.qml:144 src/qml/WeatherMap.qml:79
-#: src/qml/WeatherMap.qml:105
+#: src/qml/LocationEditor.qml:144 src/qml/WeatherMap.qml:86
+#: src/qml/WeatherMap.qml:136
 msgid "Point on map"
 msgstr "Punkt na mapie"
 
@@ -1477,10 +1488,11 @@ msgstr "Opad: "
 msgid "Preferences are being changed by another process. Try again."
 msgstr "Inny proces zmienia ustawienia. Spróbuj ponownie."
 
-#: src/qml/ThematicMaps.qml:104 src/qml/WeatherMap.qml:93
+#: src/qml/ThematicMaps.qml:105 src/qml/WeatherMap.qml:124
 msgid "Preparing animation: "
 msgstr "Przygotowywanie animacji: "
 
+#: src/presentation/MapLegendModel.cpp:109
 #: src/presentation/WeatherLayersModel.cpp:37
 #: src/presentation/WeatherLayersModel.cpp:42
 msgid "Pressure"
@@ -1515,6 +1527,7 @@ msgid "Profiles imported: "
 msgstr "Zaimportowano profili: "
 
 #: src/presentation/ForecastFormatting.cpp:27
+#: src/presentation/MapLegendModel.cpp:117
 msgid "Rain"
 msgstr "Deszcz"
 
@@ -1550,6 +1563,10 @@ msgstr "Odczyt"
 msgid "Refresh"
 msgstr "Odśwież"
 
+#: src/qml/MapLegend.qml:20
+msgid "Refresh legend"
+msgstr "Odśwież legendę"
+
 #: src/presentation/ForecastFields.cpp:38
 msgid "Relative humidity"
 msgstr "Wilgotność względna"
@@ -1582,7 +1599,7 @@ msgstr "Wyczyść układ"
 msgid "Resolve the chart's axis conflict before exporting."
 msgstr "Przed eksportem popraw przypisanie osi wykresu."
 
-#: src/qml/WeatherMap.qml:67
+#: src/qml/WeatherMap.qml:74
 msgid "Retry"
 msgstr "Ponów"
 
@@ -1668,7 +1685,7 @@ msgstr "Wybierz od 1 do 50 wykresów do eksportu."
 msgid "Selected charts saved."
 msgstr "Zapisano wybrane wykresy."
 
-#: src/qml/TileMap.qml:210
+#: src/qml/TileMap.qml:214
 msgid "Selected location"
 msgstr "Wybrana lokalizacja"
 
@@ -1722,7 +1739,7 @@ msgstr "Pokazuj wszystkie zapisane miejsca, również nowe"
 msgid "Show forecast"
 msgstr "Pokaż prognozę"
 
-#: src/qml/TileMap.qml:207
+#: src/qml/TileMap.qml:211
 msgid "Show forecast: "
 msgstr "Pokaż prognozę: "
 
@@ -1750,6 +1767,7 @@ msgid "Sleet"
 msgstr "Deszcz ze śniegiem"
 
 #: src/presentation/ForecastFormatting.cpp:28
+#: src/presentation/MapLegendModel.cpp:120
 msgid "Snow"
 msgstr "Śnieg"
 
@@ -1826,6 +1844,7 @@ msgid "Temp."
 msgstr "Temp."
 
 #: src/presentation/ForecastFields.cpp:63
+#: src/presentation/MapLegendModel.cpp:106
 msgid "Temperature"
 msgstr "Temperatura"
 
@@ -1998,7 +2017,7 @@ msgstr "Suma opadu dla całego dnia."
 msgid "Town or village name…"
 msgstr "Nazwa miasta lub wsi…"
 
-#: src/qml/WeatherMap.qml:32 src/qml/WeatherMap.qml:39
+#: src/qml/WeatherMap.qml:39 src/qml/WeatherMap.qml:46
 msgid "UM / WAM thematic maps"
 msgstr "Mapy tematyczne UM / WAM"
 
@@ -2119,6 +2138,7 @@ msgid "Vertical stems"
 msgstr "Pionowe szpilki"
 
 #: src/presentation/ForecastFields.cpp:28
+#: src/presentation/MapLegendModel.cpp:86
 msgid "Very low clouds"
 msgstr "Chmury bardzo niskie"
 
@@ -2152,6 +2172,7 @@ msgstr "Widok widgetu"
 
 #: src/presentation/ChartConfiguration.cpp:206
 #: src/presentation/ForecastFields.cpp:67
+#: src/presentation/MapLegendModel.cpp:112
 msgid "Wind"
 msgstr "Wiatr"
 
@@ -2196,11 +2217,11 @@ msgstr ""
 "Gotowy profil możesz zduplikować. Edycja jego wykresów tworzy roboczy "
 "„Własny układ”."
 
-#: src/qml/TileMap.qml:233
+#: src/qml/TileMap.qml:237
 msgid "Zoom in"
 msgstr "Przybliż"
 
-#: src/qml/TileMap.qml:234
+#: src/qml/TileMap.qml:238
 msgid "Zoom out"
 msgstr "Oddal"
 
@@ -2219,6 +2240,14 @@ msgstr "Artykuły meteo.pl"
 #: apps/meteo/main.cpp:42
 msgid "meteo.pl meteograms for the KDE desktop"
 msgstr "Meteogramy meteo.pl dla pulpitu KDE"
+
+#: src/presentation/MapLegendModel.cpp:122
+msgid "mm of water / 1 h"
+msgstr "mm wody / 1 h"
+
+#: src/presentation/MapLegendModel.cpp:121
+msgid "mm of water / 6 h"
+msgstr "mm wody / 6 h"
 
 #: src/qml/SeriesSettings.qml:49
 msgid "no data"
@@ -2282,6 +2311,3 @@ msgstr "rrrr-mm-dd"
 
 #~ msgid "Selected: "
 #~ msgstr "Wybrano: "
-
-msgid "Loading next frames: "
-msgstr "Wczytywanie kolejnych klatek: "

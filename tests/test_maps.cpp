@@ -1,3 +1,5 @@
+#include "MapLegendModel.hpp"
+#include "ServiceFixture.hpp"
 #include <QSGRendererInterface>
 #include "network/ImageCache.hpp"
 #include "WeatherModel.hpp"
@@ -108,6 +110,56 @@ private slots:
         QTRY_COMPARE(completed, 4);
         QVERIFY2(failure.isEmpty(), qPrintable(failure));
         QCOMPARE(server.requests.size(), 1);
+    }
+    void mapLegendUsesSupplierPalettesAndPreservesThemOnFailedRefresh()
+    {
+        ServiceFixture server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [](const QUrl &url) {
+            return url.path().endsWith("legend_style.json")
+                ? QByteArray("{\"styles\":{\"tempC_z11\":[{\"color\":\"#0050a8\",\"label\":\"-16\"},{\"color\":\"#f8f800\",\"label\":\"12\"}],\"clouds\":[{\"color\":\"#404040\",\"label\":\"very low\"}],\"rain_1h\":[{\"color\":\"#00ff00\",\"label\":\"1\"}],\"snow_1h\":[{\"color\":\"#1478ff\",\"label\":\"1\"}],\"wind\":[{\"color\":\"#80ffff\",\"label\":\"0\"}]}}")
+                : QByteArray("{\"um:UM4_TEMPERATURE_AT_1_5M\":[\"tempC_z11\"],\"um:UM4_CLOUD\":[\"clouds\",\"rain_1h\",\"snow_1h\"],\"um:UM4_wind_vect\":[\"wind\"]}");
+        };
+        MapLegendModel model(nullptr, server.endpoint());
+        model.setLayer("um:UM4_TEMPERATURE_AT_1_5M"); model.setActive(true);
+        QTRY_VERIFY(!model.busy());
+        QVERIFY2(model.error().isEmpty(), qPrintable(model.error()));
+        QCOMPARE(server.requests.size(), 2);
+        QCOMPARE(model.legends().size(), 1);
+        QCOMPARE(model.legends().first().toMap()["unit"].toString(), "°C");
+        const auto stops = model.legends().first().toMap()["stops"].toList();
+        QCOMPARE(QColor(stops.first().toMap()["color"].toString()), QColor("#0050a8"));
+        QCOMPARE(stops.first().toMap()["label"].toString(), "-16");
+        model.setLayer("um:UM4_CLOUD");
+        QCOMPARE(model.legends().size(), 3);
+        QVERIFY(model.legends().first().toMap()["categorical"].toBool());
+        QCOMPARE(model.legends().last().toMap()["unit"].toString(), "mm of water / 1 h");
+        QCOMPARE(server.requests.size(), 2);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "MapLegend");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"legend", QVariant::fromValue(&model)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(280, 220); item->setParentItem(window.contentItem()); window.show();
+        QTRY_VERIFY(item->width() > 160 && item->width() <= window.width());
+        QTRY_VERIFY(item->height() > 60 && item->height() <= window.height());
+        const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
+            if (parent->objectName() == name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        QTRY_VERIFY(find(find, item, "mapLegendScale-snow_1h"));
+        const auto accepted = model.legends();
+        server.response = [](const QUrl &url) {
+            return url.path().endsWith("legend_style.json") ? QByteArray("{\"styles\":{\"clouds\":[]}}") : QByteArray("[]");
+        };
+        model.reload(); QTRY_VERIFY(!model.busy());
+        QVERIFY(!model.error().isEmpty());
+        QCOMPARE(model.legends(), accepted);
+        model.setLayer("um:UM4_WIND");
+        QCOMPARE(model.legends().first().toMap()["unit"].toString(), "m/s");
     }
     void changingForecastStepReusesTheLiveBasemapAndLabels()
     {
