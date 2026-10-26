@@ -24,8 +24,21 @@ def main():
         package=Path(applet)
         if package.is_dir():
             applet=json.loads((package/"metadata.json").read_text())["KPlugin"]["Id"]
-            shutil.copytree(package,Path(temporary)/"plasma/plasmoids"/applet)
+            copied = Path(temporary)/"plasma/plasmoids"/applet
+            shutil.copytree(package,copied)
+            # This test checks component loading. Network states are exercised
+            # by plasma-interactions.py against its local fixture server.
+            host = copied/"contents/ui/main.qml"
+            source = host.read_text()
+            binding = "autoRefresh: locationName.length > 0"
+            if source.count(binding) != 1:
+                raise RuntimeError("The smoke host must disable exactly one forecast auto-refresh binding")
+            host.write_text(source.replace(binding, "autoRefresh: false"))
             environment["XDG_DATA_HOME"]=temporary
+            environment["XDG_CONFIG_HOME"]=str(Path(temporary)/"config")
+            environment["XDG_CACHE_HOME"]=str(Path(temporary)/"cache")
+        else:
+            parser.error("pass a local applet package so the smoke test can disable network refresh")
         command=[args.program,*(["--smoke-test"] if smoke else []),applet]
         return run(command,environment,smoke)
 
