@@ -22,7 +22,8 @@ ColumnLayout {
             {id:"storm",name:I18n.i18n("Storm indicator")}, {id:"flash",name:I18n.i18n("Lightning")}, {id:"type",name:I18n.i18n("Precipitation type")}
         ];
         if (seriesStyle.lowerKey) result.push({id:"range",name:I18n.i18n("Min–max range: area")}, {id:"rangeStems",name:I18n.i18n("Min–max range: stems")});
-        return result;
+        const allowed = UserPreferences.seriesRenderers(seriesStyle.key);
+        return result.filter(renderer => allowed.indexOf(renderer.id) >= 0);
     }
     function change(options) {
         if ((options.color !== undefined || options.darkColor !== undefined) && ["storm", "flash"].indexOf(seriesStyle.render) >= 0) options.eventColors = false;

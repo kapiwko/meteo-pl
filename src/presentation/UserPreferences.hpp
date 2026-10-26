@@ -43,6 +43,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     bool showLegend() const;
     QVariantList profiles() const;
     QVariantList chartLayout() const;
+    Q_INVOKABLE QStringList seriesRenderers(const QString &key) const;
     Q_INVOKABLE QVariantList chartLayoutForProfile(const QString &id) const;
     QVariantList chartCatalog() const;
     QVariantList seriesCatalog() const;

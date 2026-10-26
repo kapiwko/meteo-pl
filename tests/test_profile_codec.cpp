@@ -26,6 +26,31 @@ private slots:
         QVERIFY(ProfileFileCodec::write(file, profiles, &error));
         QCOMPARE(ProfileFileCodec::read(file), decoded);
     }
+    void importedSemanticRenderersAreRestrictedToTheirQuantities()
+    {
+        auto layout = defaultChartLayout("classic");
+        auto chart = layout.first().toMap();
+        QVariantList invalid;
+        for (const auto &key : {"airtmp_point", "pcpttl_type_max", "wind10_dr_deg_true_prev_point", "storm_max", "flash_max"}) {
+            auto style = defaultSeriesStyle(key);
+            style["render"] = QString(key) == "flash_max" ? "direction" : "flash";
+            invalid.append(style);
+        }
+        chart["series"] = invalid;
+        layout[0] = chart;
+        const auto json = QJsonDocument(QJsonObject{{"format", "pl.meteo.chart-profiles"}, {"version", 1},
+            {"profiles", QJsonArray{QJsonObject{{"name", "Imported"}, {"charts", QJsonArray::fromVariantList(layout)}}}}}).toJson();
+        QString error;
+        const auto decoded = ProfileFileCodec::decode(json, &error);
+        QVERIFY2(decoded, qPrintable(error));
+        const auto styles = decoded->first().toMap()["charts"].toList().first().toMap()["series"].toList();
+        const QStringList expected{"line", "type", "direction", "storm", "flash"};
+        for (int i = 0; i < expected.size(); ++i) QCOMPARE(styles[i].toMap()["render"].toString(), expected[i]);
+        QVERIFY(!seriesRenderers("airtmp_point").contains("flash"));
+        QVERIFY(seriesRenderers("airtmp_max").contains("rangeStems"));
+        QVERIFY(!seriesRenderers("pcpttl_aver").contains("direction"));
+        QCOMPARE(normalizeSeriesStyle({{"key", "airtmp_point"}, {"render", "bars"}})["render"].toString(), "bars");
+    }
     void rejectsTheWholeFileIfTheLastProfileIsInvalid()
     {
         const auto charts = QJsonArray::fromVariantList(defaultChartLayout("classic"));

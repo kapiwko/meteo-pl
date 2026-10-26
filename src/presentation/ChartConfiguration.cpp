@@ -66,11 +66,24 @@ QVariantList chartSeriesCatalog()
     return result;
 }
 
+QStringList seriesRenderers(const QString &key)
+{
+    const auto style = defaultSeriesStyle(key);
+    if (style.isEmpty()) return {};
+    // Semantic glyphs require data prepared for that specific quantity.
+    if (key == "pcpttl_type_max") return {"type"};
+    QStringList renderers{"line", "points", "area", "bars", "stems", "gusts", "rightBars"};
+    const auto semantic = style.value("render").toString();
+    if (QStringList{"direction", "storm", "flash", "cloudArea", "cloudPoint"}.contains(semantic)) renderers.append(semantic);
+    if (!style.value("lowerKey").toString().isEmpty()) renderers.append({"range", "rangeStems"});
+    return renderers;
+}
+
 QVariantMap normalizeSeriesStyle(const QVariantMap &value)
 {
     auto result = defaultSeriesStyle(value["key"].toString());
     if (result.isEmpty()) return {};
-    const QStringList renderers{"line", "points", "area", "bars", "stems", "gusts", "cloudArea", "cloudPoint", "rightBars", "direction", "storm", "flash", "type", "range", "rangeStems"};
+    const auto renderers = seriesRenderers(value.value("key").toString());
     if (value.contains("enabled")) result["enabled"] = value["enabled"].toBool();
     if (value.contains("precipitationColors")) result["precipitationColors"] = value["precipitationColors"].toBool();
     if (value.contains("eventColors")) result["eventColors"] = value["eventColors"].toBool();

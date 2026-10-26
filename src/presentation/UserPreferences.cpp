@@ -625,3 +625,5 @@ bool UserPreferences::change(const std::function<void()> &operation)
 }
 
 QString UserPreferences::createProfile(const QString &name) { return createProfileFrom(name, profile()); }
+
+QStringList UserPreferences::seriesRenderers(const QString &key) const { return ::seriesRenderers(key); }

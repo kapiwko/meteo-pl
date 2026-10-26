@@ -4,6 +4,7 @@
 #include <QVariantMap>
 
 METEO_UI_EXPORT QVariantList chartSeriesCatalog();
+METEO_UI_EXPORT QStringList seriesRenderers(const QString &key);
 METEO_UI_EXPORT QVariantMap defaultSeriesStyle(const QString &key);
 METEO_UI_EXPORT QVariantMap normalizeSeriesStyle(const QVariantMap &value);
 METEO_UI_EXPORT QVariantList defaultChartLayout(const QString &profile);
