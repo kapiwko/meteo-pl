@@ -6,7 +6,7 @@ import org.kde.kirigami as Kirigami
 
 FileDialog {
     id: root
-    required property Item chart
+    required property var chart
     property string error: ""
     title: I18n.i18n("Save chart as…")
     fileMode: FileDialog.SaveFile
