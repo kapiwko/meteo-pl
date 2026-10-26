@@ -19,6 +19,33 @@ PlasmoidItem {
     toolTipSubText: forecastModel.summaryTime + "\n" + forecastModel.modelName
     Plasmoid.icon: forecastModel.hasData ? forecastModel.weatherIcon : Qt.resolvedUrl("../images/meteo.svg")
     Plasmoid.status: PlasmaCore.Types.ActiveStatus
+    Plasmoid.contextualActions: [
+        PlasmaCore.Action {
+            id: refreshAction
+            objectName: "refreshForecastAction"
+            text: I18n.i18n("Refresh")
+            icon.name: "view-refresh"
+            enabled: !forecastModel.busy && forecastModel.locationName.length > 0
+            onTriggered: forecastModel.refresh()
+        },
+        PlasmaCore.Action {
+            objectName: "openForecastAction"
+            text: I18n.i18n("Show meteogram")
+            icon.name: "window-new"
+            onTriggered: root.openMeteogram()
+        }
+    ]
+
+    function openMeteogram() {
+        if (ApplicationLauncher.openForecast(forecastModel.locationName, forecastModel.latitude,
+            forecastModel.longitude, forecastModel.model)) {
+            launchError = "";
+            expanded = false;
+        } else {
+            launchError = I18n.i18n("Could not open Meteo. Install the desktop application and try again.");
+            expanded = true;
+        }
+    }
 
     WeatherModel {
         id: forecastModel
@@ -79,8 +106,8 @@ PlasmoidItem {
                 icon.name: "view-refresh"
                 text: I18n.i18n("Refresh")
                 display: AbstractButton.IconOnly
-                enabled: !forecastModel.busy
-                onClicked: forecastModel.refresh()
+                enabled: refreshAction.enabled
+                onClicked: refreshAction.trigger()
                 PlasmaComponents.ToolTip { text: refreshButton.text }
             }
         }
@@ -94,15 +121,7 @@ PlasmoidItem {
                     objectName: "openMeteogramButton"
                     text: I18n.i18n("Show meteogram")
                     icon.name: "window-new"
-                    onClicked: {
-                        if (ApplicationLauncher.openForecast(forecastModel.locationName, forecastModel.latitude,
-                            forecastModel.longitude, forecastModel.model)) {
-                            root.launchError = "";
-                            root.expanded = false;
-                        } else {
-                            root.launchError = I18n.i18n("Could not open Meteo. Install the desktop application and try again.");
-                        }
-                    }
+                    onClicked: root.openMeteogram()
                 }
             }
         }

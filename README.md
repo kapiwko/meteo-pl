@@ -82,6 +82,8 @@ or two charts, and a 12/24/48/72-hour interval or the entire forecast. You can
 also choose a compact daily forecast. The popup uses Plasma's standard container;
 **Show meteogram** opens the full application in a separate window for the selected location.
 Each widget keeps its own view configuration independently of the application.
+The widget's context menu provides **Refresh**, **Show meteogram** and Plasma's
+standard configuration action; these are also available from its header menu.
 
 You can also preview the installed widget in its own window:
 
