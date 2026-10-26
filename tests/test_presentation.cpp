@@ -205,6 +205,13 @@ private slots:
         QVERIFY(weather->hasData());
         auto *window = qobject_cast<QQuickWindow *>(object.data());
         QVERIFY(window);
+        const bool materialStyle = QQuickStyle::name() == QStringLiteral("Material");
+        if (materialStyle && qEnvironmentVariable("QT_QUICK_CONTROLS_MATERIAL_THEME") != QStringLiteral("Dark")) {
+            QVERIFY(object->setProperty("colorScheme", QVariant::fromValue(Qt::ColorScheme::Dark)));
+            QTRY_VERIFY(window->color().lightnessF() < 0.5);
+            QVERIFY(object->setProperty("colorScheme", QVariant::fromValue(Qt::ColorScheme::Light)));
+            QTRY_VERIFY(window->color().lightnessF() > 0.5);
+        }
         const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
             if (parent->objectName() == name) return parent;
             for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
