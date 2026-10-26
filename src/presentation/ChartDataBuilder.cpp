@@ -1,6 +1,8 @@
 #include "ChartDataBuilder.hpp"
 #include "core/ForecastSampling.hpp"
 #include <cmath>
+#include <QSet>
+#include <algorithm>
 
 QVariantMap buildChartSeries(const Meteo::Forecast &forecast, const QHash<QString, double> &scales)
 {
@@ -36,7 +38,63 @@ QVariantMap buildChartSeries(const Meteo::Forecast &forecast, const QHash<QStrin
     return result;
 }
 
-QVariantList prepareChartRanges(const QVariantList &fields)
+namespace {
+QVariantList chartEvents(const QVariantList &fields)
+{
+    struct Source { qint64 from, to; QVariant value; bool flash; };
+    QList<Source> sources;
+    QSet<qint64> boundaries;
+    const auto positive = [](const QVariant &value) {
+        return value.isValid() && !value.isNull() && std::isfinite(value.toDouble()) && value.toDouble() > 0;
+    };
+    for (const auto &entry : fields) {
+        const auto field = entry.toMap();
+        const auto kind = field.value("kind", field.value("render")).toString();
+        if (kind != "storm" && kind != "flash") continue;
+        for (const auto &value : field.value("points").toList()) {
+            const auto point = value.toMap();
+            const auto from = point.value("intervalFrom").isValid() && !point.value("intervalFrom").isNull()
+                ? point.value("intervalFrom").toLongLong() : point.value("time").toLongLong();
+            const auto to = point.value("intervalTo").isValid() && !point.value("intervalTo").isNull()
+                ? point.value("intervalTo").toLongLong() : from + point.value("interval").toLongLong();
+            if (to <= from) continue;
+            sources.append({from, to, point.value("value"), kind == "flash"});
+            if (positive(point.value("value"))) { boundaries.insert(from); boundaries.insert(to); }
+        }
+    }
+    auto times = boundaries.values(); std::sort(times.begin(), times.end());
+    QVariantList events;
+    QVariant previousStormSource, previousFlashSource;
+    for (qsizetype i = 1; i < times.size(); ++i) {
+        const auto from = times[i-1], to = times[i];
+        QVariant storm, flash, stormSource, flashSource;
+        for (const auto &source : sources) {
+            if (source.from > from || source.to < to) continue;
+            auto &value = source.flash ? flash : storm;
+            auto &origin = source.flash ? flashSource : stormSource;
+            value = source.value;
+            if (positive(value)) origin = source.from;
+        }
+        if (!positive(storm) && !positive(flash)) continue;
+        if (!events.isEmpty()) {
+            auto previous = events.last().toMap();
+            if (previous.value("intervalTo").toLongLong() == from && previous.value("storm") == storm
+                && previous.value("flash") == flash && previousStormSource == stormSource && previousFlashSource == flashSource) {
+                previous["intervalTo"] = to;
+                previous["interval"] = to - previous.value("intervalFrom").toLongLong();
+                events.last() = previous;
+                continue;
+            }
+        }
+        events.append(QVariantMap{{"time", from}, {"intervalFrom", from}, {"intervalTo", to}, {"interval", to-from},
+                                  {"storm", storm}, {"flash", flash}});
+        previousStormSource = stormSource; previousFlashSource = flashSource;
+    }
+    return events;
+}
+}
+
+QVariantList prepareChartFields(const QVariantList &fields)
 {
     QVariantList result;
     const auto number = [](const QVariant &value) { return value.isValid() && !value.isNull() && std::isfinite(value.toDouble()); };
@@ -71,6 +129,12 @@ QVariantList prepareChartRanges(const QVariantList &fields)
             field["rangePairs"] = pairs;
         }
         result.append(field);
+    }
+    const auto events = chartEvents(result);
+    for (auto &entry : result) {
+        auto field = entry.toMap();
+        const auto kind = field.value("kind", field.value("render")).toString();
+        if (kind == "storm" || kind == "flash") { field["events"] = events; entry = field; }
     }
     return result;
 }

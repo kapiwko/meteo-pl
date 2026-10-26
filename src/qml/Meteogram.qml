@@ -11,7 +11,7 @@ ColumnLayout {
     required property string title
     required property string groupKey
     required property var fields
-    readonly property var plotFields: ChartAnalysis.prepareRanges(fields)
+    readonly property var plotFields: ChartAnalysis.prepareFields(fields)
     property var chartConfiguration: ({})
     property int legendOverride: -1
     property bool exportMode: false

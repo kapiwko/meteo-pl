@@ -110,4 +110,4 @@ QString ChartAnalysis::precipitationCaption(const QVariantList &fields) const
         .arg(hours(periods.value("pcpttl_aver")), hours(periods.value("pcpttl_max")));
 }
 
-QVariantList ChartAnalysis::prepareRanges(const QVariantList &fields) const { return prepareChartRanges(fields); }
+QVariantList ChartAnalysis::prepareFields(const QVariantList &fields) const { return prepareChartFields(fields); }

@@ -4,6 +4,7 @@
 #include <QTest>
 #include <QFile>
 #include <QJSEngine>
+#include <QSet>
 #include <cmath>
 #include <limits>
 
@@ -16,7 +17,7 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
     script.remove(0, script.indexOf('\n') + 1);
     const auto loaded = engine.evaluate(script);
     if (loaded.isError()) return loaded;
-    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartRanges(fields)));
+    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartFields(fields)));
     return engine.evaluate(QStringLiteral(R"JS(
         (function() {
             const rectangles=[], polygons=[], circles=[], lines=[], ctx={}; let path=[];
@@ -51,6 +52,45 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void stormEventsCombineBothNativeAxes_data()
+    {
+        QTest::addColumn<QVariantList>("fields");
+        QTest::addColumn<QVariantList>("centers");
+        QTest::addColumn<int>("flashes");
+        const auto field = [](const QString &kind, int first, int interval, const QVariantList &values) {
+            QVariantList points;
+            for (qsizetype i = 0; i < values.size(); ++i)
+                points.append(QVariantMap{{"time", 1800000000LL + (first + i * interval) * 3600},
+                                           {"value", values[i]}, {"interval", interval * 3600}});
+            return QVariantMap{{"key", kind == "storm" ? "storm_max" : "flash_max"}, {"kind", kind},
+                               {"eventColors", false}, {"points", points}};
+        };
+        QTest::newRow("storm before flash coverage") << QVariantList{field("storm",0,1,{1.0}),field("flash",1,1,{0.0})} << QVariantList{50.0} << 0;
+        QTest::newRow("flash before storm coverage") << QVariantList{field("storm",1,1,{0.0}),field("flash",0,1,{15.0})} << QVariantList{50.0} << 1;
+        QTest::newRow("same interval one symbol") << QVariantList{field("storm",0,1,{1.0}),field("flash",0,1,{15.0})} << QVariantList{50.0} << 1;
+        QTest::newRow("different overlapping intervals") << QVariantList{field("storm",0,3,{1.0}),field("flash",1,1,{15.0})} << QVariantList{50.0,150.0,250.0} << 1;
+        QTest::newRow("zero flash does not split storm") << QVariantList{field("storm",0,3,{1.0}),field("flash",1,1,{0.0})} << QVariantList{150.0} << 0;
+        QTest::newRow("only storm enabled") << QVariantList{field("storm",0,3,{1.0})} << QVariantList{150.0} << 0;
+        QTest::newRow("only flash enabled with gap") << QVariantList{field("flash",0,3,{QVariant(),15.0})} << QVariantList{450.0} << 1;
+        QTest::newRow("nonoverlapping axes") << QVariantList{field("storm",0,1,{1.0}),field("flash",3,1,{15.0})} << QVariantList{50.0,350.0} << 1;
+        QTest::newRow("missing data stays missing") << QVariantList{field("storm",0,1,{QVariant()}),field("flash",0,1,{QVariant()})} << QVariantList{} << 0;
+    }
+    void stormEventsCombineBothNativeAxes()
+    {
+        QFETCH(QVariantList, fields); QFETCH(QVariantList, centers); QFETCH(int, flashes);
+        const auto prepared = prepareChartFields(fields);
+        const auto events = prepared.first().toMap().value("events").toList();
+        QCOMPARE(events.size(), centers.size());
+        QJSEngine engine;
+        const auto drawing = recordChart(engine, fields);
+        QVERIFY2(!drawing.isError(), qPrintable(drawing.toString()));
+        const auto circles = drawing.property("circles");
+        QCOMPARE(circles.property("length").toInt(), centers.size() + flashes);
+        QSet<double> actual;
+        for (int i = 0; i < circles.property("length").toInt(); ++i) actual.insert(circles.property(i).property("x").toNumber());
+        QCOMPARE(actual.size(), centers.size());
+        for (const auto &center : centers) QVERIFY(actual.contains(center.toDouble()));
+    }
     void rangesJoinNativeTimestampsAndPreserveGaps_data()
     {
         QTest::addColumn<QVariantList>("lower");

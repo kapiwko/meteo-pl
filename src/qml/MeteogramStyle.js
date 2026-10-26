@@ -298,18 +298,17 @@ function paintChart(root, plot, ctx, withCursor) {
         if (["points", "cloudPoint", "gusts", "bars", "barsBack", "stems", "rightBars"].indexOf(field.kind) < 0) ctx.stroke();
         ctx.setLineDash([]);
     }
-    if (root.fields.some(f => f.kind === "storm" || f.kind === "flash")) {
-        const storm = root.fields.find(f => f.kind === "storm" && root.shown(f));
-        const flashes = root.fields.find(f => f.kind === "flash" && root.shown(f));
-        const events = flashes ? flashes.points : storm ? storm.points : [];
-        const eventStep = events.length > 1 ? events[1].time - events[0].time : 3600;
+    if (fields.some(f => f.kind === "storm" || f.kind === "flash")) {
+        const storm = fields.find(f => f.kind === "storm" && root.shown(f));
+        const flashes = fields.find(f => f.kind === "flash" && root.shown(f));
+        const events = flashes ? flashes.events : storm ? storm.events : [];
         for (const point of events) {
             const intensity = storm && root.valid(point.storm) ? point.storm : 0;
             const flash = flashes && root.valid(point.flash) ? point.flash : 0;
             if (flash <= 0 && intensity <= 0) continue;
             const eventStyle = flashes || storm, autoColors = eventStyle.eventColors !== false, radius = eventStyle.pointSize || 4;
             ctx.fillStyle = autoColors ? (flash >= 30 ? (root.darkPalette ? "#ff6b6b" : "#f44336") : flash >= 10 ? (root.darkPalette ? "#ffb74d" : "#ff9800") : "#ffeb3b") : root.seriesColor(eventStyle);
-            const eventX = root.px(point.time + eventStep / 2), eventY = (top + bottom) / 2;
+            const eventX = root.px(intervalBounds(point).center), eventY = (top + bottom) / 2;
             ctx.globalAlpha = eventStyle.opacity === undefined ? 1 : eventStyle.opacity;
             if (flash > 0) { ctx.beginPath(); ctx.arc(eventX, eventY, radius, 0, Math.PI * 2); ctx.fill(); }
             ctx.strokeStyle = root.darkPalette ? "#ffffff" : "#000000"; ctx.lineWidth = eventStyle.lineWidth || 2;
