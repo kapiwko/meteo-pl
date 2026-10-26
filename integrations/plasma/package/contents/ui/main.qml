@@ -17,7 +17,7 @@ PlasmoidItem {
     switchHeight: Kirigami.Units.gridUnit * 24
     toolTipMainText: forecastModel.locationName + " · " + forecastModel.temperatureText
     toolTipSubText: forecastModel.summaryTime + "\n" + forecastModel.modelName
-    Plasmoid.icon: forecastModel.hasData ? forecastModel.weatherIcon : Qt.resolvedUrl("../images/meteo.svg")
+    Plasmoid.icon: forecastModel.hasData ? forecastModel.weatherIcon : "pl.meteo.desktop"
     Plasmoid.status: PlasmaCore.Types.ActiveStatus
     Plasmoid.contextualActions: [
         PlasmaCore.Action {

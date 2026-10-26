@@ -36,6 +36,7 @@ def scenario(name, args):
         weather: forecastModel
         configuration: Plasmoid.configuration
         actions: Plasmoid.contextualActions
+        appletIcon: Plasmoid.icon
     }
 '''
         position = text.rfind('}')
@@ -55,6 +56,8 @@ def scenario(name, args):
             def respond(self):
                 requests.append({'method': self.command, 'path': self.path})
                 if name == 'loading': time.sleep(0.6)
+                if name == 'ready' and self.command == 'POST' and sum(request['method'] == 'POST' for request in requests) > 1:
+                    time.sleep(0.4)
                 status = 503 if name in ('failed', 'cached') else 200
                 if status != 200:
                     body = b'{}'

@@ -122,7 +122,8 @@ msgstr "Wszystkie wykresy"
 
 #: integrations/plasma/package/contents/ui/configAppearance.qml:43
 msgid "All enabled charts from this profile are shown as collapsible sections."
-msgstr "Wszystkie włączone wykresy tego profilu są pokazywane jako zwijane sekcje."
+msgstr ""
+"Wszystkie włączone wykresy tego profilu są pokazywane jako zwijane sekcje."
 
 #: src/qml/ReadingSettings.qml:24
 msgid "All parameters"
@@ -317,7 +318,7 @@ msgstr "Wybierz wykresy do wspólnego obrazu PNG."
 msgid "Choose color"
 msgstr "Wybierz kolor"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:59
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
 #: integrations/plasma/package/contents/ui/main.qml:33
 #: src/qml/ForecastPanel.qml:357 src/qml/PlacePicker.qml:21
 msgid "Choose location"
@@ -610,7 +611,7 @@ msgstr "Kropkowana"
 msgid "Downloaded: %1"
 msgstr "Pobrano: %1"
 
-#: src/qml/WeatherSymbol.qml:14
+#: src/qml/WeatherSymbol.qml:15
 msgid "Downloading forecast"
 msgstr "Pobieranie prognozy"
 
@@ -1198,11 +1199,11 @@ msgstr "Brak danych o zachmurzeniu"
 msgid "No current run is available for the selected model."
 msgstr "Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."
 
-#: src/qml/ForecastPanel.qml:355 src/qml/WeatherSymbol.qml:14
+#: src/qml/ForecastPanel.qml:355 src/qml/WeatherSymbol.qml:15
 msgid "No forecast"
 msgstr "Brak prognozy"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:59
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
 msgid "No forecast available"
 msgstr "Brak dostępnej prognozy"
 
@@ -1454,7 +1455,7 @@ msgid "Readings"
 msgstr "Odczyt"
 
 #: apps/meteo/Main.qml:57
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:62
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:63
 #: integrations/plasma/package/contents/ui/main.qml:26
 #: integrations/plasma/package/contents/ui/main.qml:140
 #: src/qml/EditorialView.qml:25
@@ -1628,7 +1629,7 @@ msgstr "Pokaż prognozę"
 msgid "Show forecast: "
 msgstr "Pokaż prognozę: "
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:87
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:88
 #: src/qml/Meteogram.qml:299
 msgid "Show legend"
 msgstr "Pokaż legendę"
@@ -1702,12 +1703,12 @@ msgstr "Burze / wyładowania"
 msgid "Storms and lightning"
 msgstr "Burze i wyładowania"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:120
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:121
 #: src/qml/ForecastHeader.qml:68
 msgid "Sunrise"
 msgstr "Wschód"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:121
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:122
 #: src/qml/ForecastHeader.qml:69
 msgid "Sunset"
 msgstr "Zachód"

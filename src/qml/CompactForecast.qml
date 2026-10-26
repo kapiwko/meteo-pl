@@ -69,6 +69,10 @@ ColumnLayout {
                 Label { Layout.fillWidth: true; text: root.weather.formatTime(day.modelData.time, "ddd"); horizontalAlignment: Text.AlignHCenter; font.bold: true }
                 Kirigami.Icon {
                     source: day.modelData.icon
+                    placeholder: ""
+                    fallback: "weather-none-available"
+                    animated: false
+                    opacity: status === Kirigami.Icon.Ready ? 1 : 0
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 40
                     Layout.alignment: Qt.AlignHCenter

@@ -86,15 +86,20 @@ private slots:
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> header(component.createWithInitialProperties({{"weather", QVariant::fromValue(&model)}}));
         QVERIFY(header);
+        QQuickWindow window; window.resize(720, 180);
+        auto *item = qobject_cast<QQuickItem *>(header.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
         auto *symbol = header->findChild<QObject *>("headerWeatherSymbol");
         QVERIFY(symbol);
         auto *indicator = symbol->findChild<QObject *>("forecastLoadingIndicator");
         auto *icon = symbol->findChild<QObject *>("forecastWeatherIcon");
         auto *time = header->findChild<QObject *>("forecastSummaryTime");
         QVERIFY(indicator); QVERIFY(icon); QVERIFY(time);
-        QVERIFY(!header->property("loading").toBool());
+        QTRY_VERIFY(!header->property("loading").toBool());
         QVERIFY(!indicator->property("running").toBool());
         QVERIFY(!icon->property("source").toString().isEmpty());
+        QCOMPARE(icon->property("placeholder").toString(), QString());
+        QTRY_COMPARE(icon->property("opacity").toDouble(), 1.0);
         model.setAutoRefresh(true);
         QVERIFY(!header->property("loading").toBool()); // Background refresh keeps the weather icon.
         model.setLocationName("Kielce"); model.setLatitude(50.8661); model.setLongitude(20.6286);

@@ -9,9 +9,11 @@ QtObject {
     required property WeatherModel weather
     required property var configuration
     required property var actions
+    required property string appletIcon
     property int phase: 0
     property int ticks: 0
     property bool sawLoading: false
+    property bool sawLocationLoading: false
     readonly property int expectedSectionCount: {
         const revision = weather.dataRevision;
         return 1 + weather.configuredCharts(UserPreferences.chartLayoutForProfile(configuration.chartProfile)).length;
@@ -54,6 +56,7 @@ QtObject {
             const refresh = action("refreshForecastAction");
             require(refresh && action("openForecastAction"), "Missing native context actions");
             const scenario = FixtureDriver.scenario;
+            if (!weather.hasData) require(appletIcon === "pl.meteo.desktop", "Applet fallback is not a theme icon name");
             if (scenario === "empty") {
                 require(!weather.locationName.length && !weather.busy && sections.count === 0, "Empty widget starts requests or shows charts");
                 finish(); return;
@@ -84,6 +87,12 @@ QtObject {
                 const button = find(frame, "openMeteogramButton");
                 finish(() => button.clicked()); return;
             }
+            if (phase === 3 && weather.busy && !weather.hasData) {
+                const indicator = find(frame, "forecastLoadingIndicator");
+                const icon = find(frame, "forecastWeatherIcon");
+                require(indicator && indicator.running && icon && !icon.visible, "Location change shows an empty weather icon instead of a loader");
+                sawLocationLoading = true;
+            }
             if (!weather.hasData || weather.busy || sections.count !== expectedSectionCount) return;
             const details = find(frame, "widgetSection-details");
             const temperature = find(frame, "widgetSection-temperature");
@@ -104,6 +113,7 @@ QtObject {
                 if (!selector || selector.count !== 2 || selector.model[0].name !== "Gdańsk") return;
                 phase = 3; selector.activated(0);
             } else if (phase === 3 && weather.locationName === "Gdańsk") {
+                require(sawLocationLoading, "Location change did not show its loading state");
                 require(!temperature.expanded, "Section state lost on location change");
                 action("choosePlaceAction").trigger();
                 phase = 4;
