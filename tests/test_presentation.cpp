@@ -999,7 +999,9 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(object.data(), "exportReadingsToFile", Q_RETURN_ARG(QVariant, accepted),
             Q_ARG(QVariant, QUrl::fromLocalFile(pngPath)), Q_ARG(QVariant, QStringLiteral("png"))));
         QVERIFY(accepted.toBool());
-        QTRY_COMPARE_WITH_TIMEOUT(saved.count(), 1, 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(!saved.isEmpty() || !failed.isEmpty(), 18000);
+        QVERIFY2(failed.isEmpty(), qPrintable(exporter->error()));
+        QCOMPARE(saved.count(), 1);
         QCOMPARE(failed.count(), 0);
         QImage image(pngPath); QVERIFY(!image.isNull());
         QVERIFY(image.height() > readings->height());
@@ -1346,10 +1348,12 @@ private slots:
         window.show();
         auto *plot = chart->findChild<QQuickItem *>("plot-precipitation");
         QVERIFY(plot);
+        QTRY_VERIFY(plot->height() > 40 && plot->width() > 0);
         QVariant boundary;
         QVERIFY(QMetaObject::invokeMethod(chart.data(), "px", Q_RETURN_ARG(QVariant, boundary), Q_ARG(QVariant, first + 3600)));
-        const auto pixel = plot->mapToScene({boundary.toDouble(), plot->height() - 40}).toPoint();
-        QTRY_COMPARE(window.grabWindow().pixelColor(pixel), QColor("#00aa00"));
+        const auto nearBaseline = [&] { return plot->mapToScene({boundary.toDouble(), plot->height() - 40}).toPoint(); };
+        QTRY_COMPARE(window.grabWindow().pixelColor(nearBaseline()), QColor("#00aa00"));
+        const auto pixel = nearBaseline();
         const auto image = window.grabWindow();
         for (int offset = -2; offset <= 2; ++offset) QCOMPARE(image.pixelColor(pixel + QPoint(offset, 0)), QColor("#00aa00"));
         const QVariantMap fog{{"key", "fog_max"}, {"label", "Fog"}, {"unit", "%"}, {"color", "#ffb400"}, {"kind", "rightBars"}, {"points", points(100)}};
@@ -1357,8 +1361,7 @@ private slots:
         chart->setProperty("groupKey", "clouds");
         chart->setProperty("fields", QVariantList{fog, clouds}); // deliberately reversed layer order
         QVERIFY(QMetaObject::invokeMethod(chart.data(), "px", Q_RETURN_ARG(QVariant, boundary), Q_ARG(QVariant, first + 3600)));
-        const auto fogPixel = plot->mapToScene({boundary.toDouble(), plot->height() - 40}).toPoint();
-        QTRY_COMPARE(window.grabWindow().pixelColor(fogPixel), QColor("#ffb400"));
+        QTRY_COMPARE(window.grabWindow().pixelColor(nearBaseline()), QColor("#ffb400"));
 
         // Opaque fills used to erase the grid on these four charts. A grid
         // column must remain distinguishable from the same fill beside it.

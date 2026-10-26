@@ -391,7 +391,7 @@ ColumnLayout {
             }
         }
         property bool softwareFallback: false
-        readonly property string activeRenderer: UserPreferences.renderer === "cpu" || softwareFallback ? "cpu" : "gpu"
+        readonly property string activeRenderer: UserPreferences.renderer === "cpu" || GraphicsInfo.api === GraphicsInfo.Software || softwareFallback ? "cpu" : "gpu"
         // Own the MSAA texture on the regular container, not on a custom
         // scene-graph item; otherwise arrow-only items can leave an empty layer.
         layer.enabled: activeRenderer === "gpu"
