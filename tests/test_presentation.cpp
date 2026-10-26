@@ -304,6 +304,15 @@ private slots:
         QTRY_VERIFY(mapViewport->height() >= 160);
         QVERIFY(mapType->mapToScene({mapType->width(), 0}).x() <= window->width() + 1);
         QVERIFY(mapViewport->mapToScene({0, mapViewport->height()}).y() <= navigation->mapToScene({0, 0}).y() + 1);
+        auto *mapZoomIn = find(find, mapViewport, "mapZoomIn");
+        auto *mapZoomOut = find(find, mapViewport, "mapZoomOut");
+        QVERIFY(mapZoomIn && mapZoomOut);
+        QVERIFY(mapZoomIn->width() >= 48 && mapZoomIn->height() >= 48);
+        const auto originalZoom = mapViewport->property("zoom").toInt();
+        click(mapZoomIn);
+        QTRY_COMPARE(mapViewport->property("zoom").toInt(), originalZoom + 1);
+        click(mapZoomOut);
+        QTRY_COMPARE(mapViewport->property("zoom").toInt(), originalZoom);
         click(forecast);
         QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
         QVERIFY(QMetaObject::invokeMethod(page, "openSettings"));

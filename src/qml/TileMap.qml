@@ -229,8 +229,9 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 8
-        Button { text: "+"; width: 36; onClicked: root.zoomAt(1, root.width / 2, root.height / 2) }
-        Button { text: "−"; width: 36; onClicked: root.zoomAt(-1, root.width / 2, root.height / 2) }
+        spacing: Kirigami.Units.smallSpacing
+        RoundButton { objectName: "mapZoomIn"; icon.name: "zoom-in"; width: 48; height: 48; Accessible.name: I18n.i18n("Zoom in"); onClicked: root.zoomAt(1, root.width / 2, root.height / 2) }
+        RoundButton { objectName: "mapZoomOut"; icon.name: "zoom-out"; width: 48; height: 48; Accessible.name: I18n.i18n("Zoom out"); onClicked: root.zoomAt(-1, root.width / 2, root.height / 2) }
     }
     Rectangle {
         z: 2

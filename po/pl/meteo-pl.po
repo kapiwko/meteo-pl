@@ -2154,6 +2154,14 @@ msgstr ""
 "Gotowy profil możesz zduplikować. Edycja jego wykresów tworzy roboczy "
 "„Własny układ”."
 
+#: src/qml/TileMap.qml:233
+msgid "Zoom in"
+msgstr "Przybliż"
+
+#: src/qml/TileMap.qml:234
+msgid "Zoom out"
+msgstr "Oddal"
+
 #: src/qml/Meteogram.qml:240
 msgid "fraction"
 msgstr "frakcja"

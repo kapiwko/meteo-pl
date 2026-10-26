@@ -2107,6 +2107,14 @@ msgid ""
 "layout”."
 msgstr ""
 
+#: src/qml/TileMap.qml:233
+msgid "Zoom in"
+msgstr ""
+
+#: src/qml/TileMap.qml:234
+msgid "Zoom out"
+msgstr ""
+
 #: src/qml/Meteogram.qml:240
 msgid "fraction"
 msgstr ""
