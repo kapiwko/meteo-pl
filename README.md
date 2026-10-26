@@ -55,7 +55,8 @@ report.
 | Android arm64 | APK | No |
 
 Windows and macOS bundles include Qt and KDE dependencies. Android builds
-include a development APK signed with a temporary test key. The Windows portable
+support a [persistent signing key](docs/portable-packages.md#stały-podpis-androida)
+for installable updates; unconfigured builds use a temporary development key. The Windows portable
 ZIP and unsigned Android APK are available with `--include-alternatives`, or the
 matching option when running the workflow manually. Development APKs built in different runs may require uninstalling the
 previous build. For local emulator and device testing, see the

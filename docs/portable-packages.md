@@ -8,7 +8,7 @@ wyłączony na tych platformach.
 | --- | --- | --- |
 | Windows x64 | Windows, Visual Studio 2022, Python ≥ 3.11 | instalator NSIS `.exe` |
 | macOS | macOS, Xcode z macOS SDK ≥ 15, Python ≥ 3.11 | `.dmg` z aplikacją `.app`, architektura komputera budującego |
-| Android arm64 | Linux z Dockerem, oficjalny obraz SDK KDE/Qt 6.11 | instalowalny `-development.apk` |
+| Android arm64 | Linux z Dockerem, oficjalny obraz SDK KDE/Qt 6.11 | instalowalny `-signed.apk` z własnym kluczem lub testowy `-development.apk` |
 
 ## Budowanie
 
@@ -76,12 +76,92 @@ Instalator Windows nie jest podpisany Authenticode. Aplikacja macOS nie jest
 notaryzowana i może wymagać lokalnego podpisu oraz zezwolenia Gatekeeper.
 Nie są potrzebne konta ani klucze sklepów do utworzenia tych artefaktów.
 
-Android dostarcza APK podpisany tymczasowym kluczem deweloperskim, zweryfikowany przez
-`apksigner verify`. Klucz nie trafia do artefaktów. Nowy build ma nowy klucz,
-więc aktualizacja zainstalowanej wersji deweloperskiej może wymagać jej
-odinstalowania. Do stałych aktualizacji trzeba użyć własnego, niezmiennego
-klucza wydania. Niepodpisany plik do własnego podpisu jest dostępny przez
-`--include-alternatives`. Narzędzie nie publikuje w Google Play, Microsoft Store ani App Store.
+Android obsługuje własny, stały klucz podpisujący, dzięki któremu kolejne APK
+można instalować jako aktualizacje. Bez konfiguracji klucza powstaje testowy
+APK z nowym, tymczasowym podpisem przy każdym budowaniu. Zmiana takiego
+podpisu na stały może wymagać jednorazowego odinstalowania poprzedniej wersji,
+co usuwa jej ustawienia. Narzędzie nie publikuje w sklepach z aplikacjami.
+
+### Stały podpis Androida
+
+Klucz przechowuj **poza repozytorium**, z kopią zapasową w bezpiecznym miejscu.
+Nie można go odtworzyć z APK. Dla dystrybucji własnych APK utrata klucza oznacza
+utratę możliwości podpisania zgodnej aktualizacji
+([podpisywanie aplikacji Android](https://developer.android.com/studio/publish/app-signing)).
+Warto używać osobnego klucza dla każdej aplikacji.
+
+Jeśli nie masz jeszcze klucza, utwórz go interaktywnie poleceniem `keytool`
+z JDK. Hasło wpisujesz w terminalu, a nie w argumentach polecenia:
+
+```bash
+install -d -m 700 "$HOME/.local/share/meteo-signing"
+export METEO_ANDROID_KEYSTORE="$HOME/.local/share/meteo-signing/meteo.p12"
+export METEO_ANDROID_KEY_ALIAS=meteo
+keytool -genkeypair -keystore "$METEO_ANDROID_KEYSTORE" -storetype PKCS12 \
+  -alias "$METEO_ANDROID_KEY_ALIAS" -keyalg RSA -keysize 3072 -validity 10000 \
+  -dname "CN=Kamil Piwowarski"
+chmod 600 "$METEO_ANDROID_KEYSTORE"
+```
+
+Przed budowaniem ustaw trzy zmienne. Dla istniejącego klucza podaj jego
+rzeczywistą ścieżkę i alias. Opcjonalna `METEO_ANDROID_KEY_PASSWORD` określa
+inne hasło klucza; domyślnie używane jest hasło magazynu:
+
+```bash
+export METEO_ANDROID_KEYSTORE="$HOME/.local/share/meteo-signing/meteo.p12"
+export METEO_ANDROID_KEY_ALIAS=meteo
+read -r -s -p 'Hasło magazynu: ' METEO_ANDROID_STORE_PASSWORD
+printf '\n'
+export METEO_ANDROID_STORE_PASSWORD
+python3 scripts/build-portable.py --target android --require-release-signing
+unset METEO_ANDROID_STORE_PASSWORD METEO_ANDROID_KEY_PASSWORD
+```
+
+Powstaje `-signed.apk`. Magazyn jest montowany do kontenera tylko do odczytu;
+nie trafia do źródeł, cache budowania ani artefaktów. Hasła są przekazywane
+przez środowisko, bez wypisywania ich w poleceniach. Niepełna konfiguracja
+przerywa budowanie zamiast użyć innego klucza. Opcja `--require-release-signing`
+wymaga stałego podpisu także wtedy, gdy zapomnisz ustawić wszystkie zmienne.
+
+`apksigner verify --verbose --print-certs` sprawdza wynik i wypisuje publiczny
+odcisk certyfikatu. `BUILD-REPORT.json` podaje `releaseSigned: true` dla APK
+podpisanego skonfigurowanym kluczem. Publiczny certyfikat można udostępniać,
+ale plik magazynu i jego hasła muszą pozostać prywatne.
+
+### Podpis Androida w GitHub Actions
+
+W ustawieniach repozytorium **Secrets and variables → Actions** skonfiguruj:
+
+| Secret | Zawartość |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Magazyn klucza zakodowany Base64 |
+| `ANDROID_KEY_ALIAS` | Alias klucza, np. `meteo` |
+| `ANDROID_STORE_PASSWORD` | Hasło magazynu |
+| `ANDROID_KEY_PASSWORD` | Opcjonalne inne hasło klucza |
+
+Przykład przesłania magazynu przez standardowe wejście, bez wyświetlania go:
+
+```bash
+base64 -w 0 "$METEO_ANDROID_KEYSTORE" | gh secret set ANDROID_KEYSTORE_BASE64 --repo kapiwko/meteo-pl
+```
+
+Pozostałe wartości można wpisać interaktywnie przez `gh secret set NAZWA`.
+Base64 nie jest szyfrowaniem; ochronę zapewniają GitHub Actions secrets.
+Workflow udostępnia klucz wyłącznie przy budowaniu zaufanej gałęzi lub ręcznym
+uruchomieniu. Pull requesty zawsze budują z kluczem tymczasowym, także PR-y
+z tego samego repozytorium. Plik magazynu jest usuwany po budowaniu.
+Bez sekretów dotychczasowe paczki testowe nadal powstają.
+Więcej: [sekrety GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).
+
+Windows wymaga osobnego podpisu Authenticode. Dla projektu open source warto
+sprawdzić program SignPath Foundation; dla zwykłej dystrybucji potrzebny jest
+zaufany certyfikat lub usługa podpisywania. Sam podpis nie gwarantuje braku
+ostrzeżeń SmartScreen
+([opcje podpisu Windows](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options)).
+macOS wymaga certyfikatu Developer ID z Apple Developer Program i notaryzacji
+do standardowej dystrybucji poza App Store
+([Developer ID](https://developer.apple.com/developer-id/)).
+Te tożsamości nie są jeszcze skonfigurowane w workflow projektu.
 
 Port Androida korzysta ze stylu Material (Material 3 w Qt Quick Controls),
 z jasnym lub ciemnym motywem systemowym. Paczka sprawdza obecność pluginu

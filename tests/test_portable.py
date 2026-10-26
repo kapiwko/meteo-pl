@@ -179,5 +179,54 @@ class PortablePackagingTest(unittest.TestCase):
             self.assertTrue(str(output).endswith("-development.apk"))
             self.assertFalse(Path(commands[0][commands[0].index("-keystore")+1]).exists())
 
+    def test_persistent_android_key_is_reused_without_logging_passwords(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            key = Path(temporary)/"release.keystore"; key.write_bytes(b"private")
+            environment = {"ANDROID_SDK_ROOT": "/sdk", "ANDROID_BUILD_TOOLS_REVISION": "36.0.0",
+                           "METEO_ANDROID_KEYSTORE": str(key), "METEO_ANDROID_KEY_ALIAS": "meteo",
+                           "METEO_ANDROID_STORE_PASSWORD": "secret-store-password",
+                           "METEO_ANDROID_KEY_PASSWORD": "secret-key-password"}
+            with patch.dict(portable.os.environ, environment, clear=True), patch.object(portable,"run") as run:
+                for _ in range(2):
+                    output = portable.sign_android(Path(temporary)/"meteo.apk",Path(temporary))
+                commands = [list(map(str,call.args[0])) for call in run.call_args_list]
+                self.assertFalse(any(c[0] == "keytool" for c in commands))
+                signing = [c for c in commands if c[1] == "sign"]
+                self.assertEqual(len(signing), 2)
+                for command in signing:
+                    self.assertEqual(command[command.index("--ks")+1],str(key))
+                    self.assertIn("env:METEO_ANDROID_STORE_PASSWORD",command)
+                    self.assertIn("env:METEO_ANDROID_KEY_PASSWORD",command)
+                    self.assertNotIn("secret-store-password", " ".join(command))
+                    self.assertNotIn("secret-key-password", " ".join(command))
+                self.assertTrue(str(output).endswith("-signed.apk"))
+                self.assertTrue(key.exists())
+
+    def test_partial_signing_configuration_never_falls_back_to_a_temporary_key(self):
+        with patch.dict(portable.os.environ, {"METEO_ANDROID_KEY_ALIAS": "meteo"}, clear=True), patch.object(portable,"run") as run:
+            with self.assertRaisesRegex(ValueError,"Incomplete Android signing"):
+                portable.sign_android(Path("meteo.apk"),Path("dist"))
+            run.assert_not_called()
+        with patch.dict(portable.os.environ, {}, clear=True):
+            self.assertIsNone(portable.android_signing_key())
+            with self.assertRaisesRegex(ValueError,"Incomplete Android signing"):
+                portable.android_signing_key(required=True)
+
+    def test_signing_key_outside_docker_is_mounted_read_only_and_secrets_are_not_arguments(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary); key=root/"release.keystore"; key.write_bytes(b"private")
+            environment={"METEO_ANDROID_KEYSTORE": str(key), "METEO_ANDROID_KEY_ALIAS": "meteo",
+                         "METEO_ANDROID_STORE_PASSWORD": "secret-store-password"}
+            args=SimpleNamespace(work_dir=root/"work",dist_dir=root/"dist",require_release_signing=True,
+                                 cache_url=None,include_alternatives=False)
+            with patch.dict(portable.os.environ,environment,clear=True), patch.dict("sys.modules",{"release":SimpleNamespace(source_files=lambda:[])}), patch.object(portable.platform,"system",return_value="Linux"), patch.object(portable,"run") as run:
+                portable.android_container(args)
+            command=list(map(str,run.call_args_list[-1].args[0]))
+            self.assertIn(f"type=bind,source={key},target=/run/meteo-signing.keystore,readonly",command)
+            self.assertIn("METEO_ANDROID_STORE_PASSWORD",command)
+            self.assertIn("--require-release-signing",command)
+            self.assertNotIn("secret-store-password", " ".join(command))
+            self.assertEqual(list((root/"dist").iterdir()),[])
+
 
 if __name__ == "__main__": unittest.main()

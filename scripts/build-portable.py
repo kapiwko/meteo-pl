@@ -22,6 +22,8 @@ CRAFT_REVISION = "ce3702673ea4f9dde99f6f3b70b276a3e6a7e396"
 BLUEPRINTS_REVISION = "51848c5646799a62016caf9e3f344d9351a7071c"
 ANDROID_IMAGE = "invent-registry.kde.org/sysadmin/ci-images/android-qt611@sha256:11759d824824228d952a3dbb5f75aa85cd4237da1f1148b0b0d4330c3484911a"
 QML_ERRORS = re.compile(r"TypeError|ReferenceError|Binding loop|failed to load component|is not installed|is not a type|Invalid image provider", re.IGNORECASE)
+ANDROID_SIGNING_VARIABLES = ("METEO_ANDROID_KEYSTORE", "METEO_ANDROID_KEY_ALIAS",
+                             "METEO_ANDROID_STORE_PASSWORD", "METEO_ANDROID_KEY_PASSWORD")
 
 
 def run(command, **kwargs):
@@ -71,23 +73,46 @@ def build_environment(target):
     return environment
 
 
+def android_signing_key(required=False):
+    values = {name: os.environ.get(name, "") for name in ANDROID_SIGNING_VARIABLES}
+    if not any(values.values()) and not required:
+        return None
+    missing = [name for name in ANDROID_SIGNING_VARIABLES[:3] if not values[name]]
+    if missing:
+        raise ValueError("Incomplete Android signing configuration: " + ", ".join(missing))
+    key = Path(values["METEO_ANDROID_KEYSTORE"]).expanduser().resolve()
+    if not key.is_file():
+        raise ValueError("Android signing keystore does not exist")
+    if key.is_relative_to(ROOT):
+        raise ValueError("Keep the Android signing keystore outside the source repository")
+    return key
+
+
 def sign_android(apk, dist):
+    release_key = android_signing_key()
     sdk = Path(os.environ.get("ANDROID_SDK_ROOT", os.environ.get("ANDROID_HOME", "")))
     version = os.environ.get("ANDROID_BUILD_TOOLS_REVISION")
     tools = sdk / "build-tools" / version if version else sorted((sdk / "build-tools").iterdir())[-1]
-    # CI creates an installable development APK, never a release signing key.
-    # Store the key outside artifacts; it is deliberately temporary.
     with tempfile.TemporaryDirectory(prefix="meteo-apk-sign-") as temporary:
-        key = Path(temporary) / "debug.keystore"
-        run(["keytool", "-genkeypair", "-noprompt", "-keystore", key, "-alias", "androiddebugkey",
-             "-storepass", "android", "-keypass", "android", "-dname", "CN=Meteo Development",
-             "-keyalg", "RSA", "-keysize", "2048", "-validity", "365"])
+        if release_key:
+            key = release_key
+            alias = os.environ["METEO_ANDROID_KEY_ALIAS"]
+            store_pass = "env:METEO_ANDROID_STORE_PASSWORD"
+            key_pass = "env:METEO_ANDROID_KEY_PASSWORD" if os.environ.get("METEO_ANDROID_KEY_PASSWORD") else store_pass
+        else:
+            # Development keys remain temporary and never enter published artifacts.
+            key = Path(temporary) / "debug.keystore"
+            alias = "androiddebugkey"
+            store_pass = key_pass = "pass:android"
+            run(["keytool", "-genkeypair", "-noprompt", "-keystore", key, "-alias", alias,
+                 "-storepass", "android", "-keypass", "android", "-dname", "CN=Meteo Development",
+                 "-keyalg", "RSA", "-keysize", "2048", "-validity", "365"])
         aligned = Path(temporary) / "aligned.apk"
         run([tools / "zipalign", "-p", "-f", "4", apk, aligned])
-        result = dist / (apk.stem + "-development.apk")
-        run([tools / "apksigner", "sign", "--ks", key, "--ks-key-alias", "androiddebugkey",
-             "--ks-pass", "pass:android", "--key-pass", "pass:android", "--out", result, aligned])
-        run([tools / "apksigner", "verify", "--verbose", result])
+        result = dist / (apk.stem + ("-signed.apk" if release_key else "-development.apk"))
+        run([tools / "apksigner", "sign", "--ks", key, "--ks-key-alias", alias,
+             "--ks-pass", store_pass, "--key-pass", key_pass, "--out", result, aligned])
+        run([tools / "apksigner", "verify", "--verbose", "--print-certs", result])
     return result
 
 
@@ -247,7 +272,7 @@ def build(args):
     artifacts = package_current_build(command, args.target, work, dist, craft_root, environment, prepare, args.include_alternatives)
     report = {"version": (ROOT / "VERSION").read_text().strip(), "target": args.target,
               "architecture": "arm64-v8a" if args.target == "android" else platform.machine(),
-              "smokeTest": smoke, "releaseSigned": False, "bootstrapRevision": CRAFT_REVISION,
+              "smokeTest": smoke, "releaseSigned": args.target == "android" and android_signing_key() is not None, "bootstrapRevision": CRAFT_REVISION,
               "blueprintsRevision": BLUEPRINTS_REVISION, "artifacts": [p.name for p in artifacts]}
     report["cacheUrl"] = args.cache_url or "https://files.kde.org/craft/Qt6/"
     report["bundleSmokeTest"] = "not-run" if args.target == "android" else "passed"
@@ -267,6 +292,7 @@ def build(args):
 
 def android_container(args):
     if platform.system() != "Linux": raise ValueError("The Android Docker build requires a Linux host")
+    signing_key = android_signing_key(args.require_release_signing)
     work, dist = args.work_dir.resolve(), args.dist_dir.resolve()
     work.mkdir(parents=True, exist_ok=True); dist.mkdir(parents=True, exist_ok=True)
     image = "meteo-pl-build:android"
@@ -282,9 +308,15 @@ def android_container(args):
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, destination)
         command = ["docker", "run", "--rm", "--init", "--shm-size=512m", "--user", f"{os.getuid()}:{os.getgid()}",
-             "-e", "HOME=/work/home", "-v", f"{source}:/source:ro", "-v", f"{work}:/work", "-v", f"{dist}:/out", "-w", "/source",
-             image, "python3", "scripts/build-portable.py", "--target", "android", "--inside-sdk",
+             "-e", "HOME=/work/home", "-v", f"{source}:/source:ro", "-v", f"{work}:/work", "-v", f"{dist}:/out", "-w", "/source"]
+        if signing_key:
+            command += ["--mount", f"type=bind,source={signing_key},target=/run/meteo-signing.keystore,readonly",
+                        "-e", "METEO_ANDROID_KEYSTORE=/run/meteo-signing.keystore"]
+            for name in ANDROID_SIGNING_VARIABLES[1:]:
+                command += ["-e", name]
+        command += [image, "python3", "scripts/build-portable.py", "--target", "android", "--inside-sdk",
              "--work-dir", "/work", "--craft-root", "/work/CraftRoot", "--dist-dir", "/out"]
+        if args.require_release_signing: command.append("--require-release-signing")
         if args.cache_url: command += ["--cache-url", args.cache_url]
         if args.include_alternatives: command.append("--include-alternatives")
         run(command)
@@ -300,7 +332,13 @@ def main():
     parser.add_argument("--inside-sdk", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--include-alternatives", action="store_true",
                         help="Also publish the Windows portable ZIP or unsigned Android APK")
+    parser.add_argument("--require-release-signing", action="store_true",
+                        help="Require a persistent Android signing key; never fall back to a development key")
     args = parser.parse_args()
+    if args.require_release_signing and args.target != "android":
+        parser.error("--require-release-signing is supported only for Android")
+    if args.target == "android":
+        android_signing_key(args.require_release_signing)
     if args.cache_url:
         url = urlsplit(args.cache_url)
         if url.scheme != "https" or not url.netloc or url.username or url.password or url.query or url.fragment:
