@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 12:36+0100\n"
+"POT-Creation-Date: 2026-10-26 12:39+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -85,6 +85,7 @@ msgid "72 hours"
 msgstr ""
 
 #: src/qml/CompactForecast.qml:123 src/qml/ForecastHeader.qml:79
+#: src/qml/MobileHourlyForecast.qml:58
 msgid ": "
 msgstr ""
 
@@ -134,7 +135,7 @@ msgstr ""
 msgid "All saved profiles…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:664
+#: src/qml/ForecastPanel.qml:671
 msgid ""
 "An interval crosses midnight. Its precipitation is shared between days in "
 "proportion to duration."
@@ -225,7 +226,7 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603
 msgid "Chance %"
 msgstr ""
 
@@ -400,11 +401,11 @@ msgstr ""
 msgid "Cloud tops"
 msgstr ""
 
-#: src/qml/ForecastInspector.qml:24
+#: src/qml/ForecastInspector.qml:24 src/qml/MobileHourlyForecast.qml:49
 msgid "Clouds"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603
 msgid "Clouds %"
 msgstr ""
 
@@ -687,7 +688,7 @@ msgstr ""
 msgid "Export…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603 src/qml/MobileHourlyForecast.qml:46
 msgid "Feels like"
 msgstr ""
 
@@ -794,11 +795,11 @@ msgstr ""
 msgid "Gust above scale"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603 src/qml/MobileHourlyForecast.qml:51
 msgid "Gusts"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:668
+#: src/qml/ForecastPanel.qml:675
 msgid "Gusts: "
 msgstr ""
 
@@ -1376,16 +1377,20 @@ msgstr ""
 msgid "Possible thunderstorms"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603
 msgid "Precip. mm"
 msgstr ""
 
-#: src/qml/ForecastInspector.qml:22
+#: src/qml/ForecastInspector.qml:22 src/qml/MobileHourlyForecast.qml:47
 msgid "Precipitation"
 msgstr ""
 
 #: src/presentation/ForecastFields.cpp:64
 msgid "Precipitation and humidity"
+msgstr ""
+
+#: src/qml/MobileHourlyForecast.qml:48
+msgid "Precipitation chance"
 msgstr ""
 
 #: src/presentation/ForecastFields.cpp:65
@@ -1396,7 +1401,7 @@ msgstr ""
 msgid "Precipitation type"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:659
+#: src/qml/ForecastPanel.qml:666
 msgid "Precipitation: "
 msgstr ""
 
@@ -1737,7 +1742,7 @@ msgstr ""
 msgid "Synoptic commentary"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603
 msgid "Temp."
 msgstr ""
 
@@ -1778,7 +1783,7 @@ msgstr ""
 msgid "The file must contain between 1 and 100 profiles."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:665
+#: src/qml/ForecastPanel.qml:672
 msgid "The forecast covers part of this day. Missing intervals are excluded."
 msgstr ""
 
@@ -1862,7 +1867,7 @@ msgstr ""
 msgid "This point is outside the UM4 area. Choose the GFS model."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:596 src/qml/ForecastPanel.qml:597
+#: src/qml/ForecastPanel.qml:603 src/qml/ForecastPanel.qml:604
 msgid "Time"
 msgstr ""
 
@@ -1891,7 +1896,7 @@ msgstr ""
 msgid "Total on disk:"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:665
+#: src/qml/ForecastPanel.qml:672
 msgid "Total precipitation for this day."
 msgstr ""
 
@@ -2051,7 +2056,7 @@ msgid "Wind"
 msgstr ""
 
 #: src/qml/CompactForecast.qml:52 src/qml/ForecastHeader.qml:54
-#: src/qml/ForecastPanel.qml:596
+#: src/qml/ForecastPanel.qml:603
 msgid "Wind "
 msgstr ""
 

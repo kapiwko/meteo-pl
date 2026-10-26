@@ -125,6 +125,8 @@ the first installation for Plasma to discover the module.
 On Android, Material controls follow the system theme. The bottom bar switches
 between **Forecast**, **Maps** and **News**. Forecast contains the meteogram,
 hourly and daily views; News contains synoptic commentary and articles. Tap the
+hourly view for a vertically scrolling forecast with temperature, rain, wind
+and pressure; tap an hour to inspect all available parameters. Tap the
 place name in the app bar to switch saved places. The overflow menu opens
 location search and full-page settings, grouped into forecast, profiles,
 readings and application preferences. Desktop and Plasma retain their existing UI.

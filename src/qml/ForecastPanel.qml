@@ -379,7 +379,7 @@ Item {
             Loader {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                sourceComponent: root.viewMode === 0 ? chartsComponent : root.viewMode === 1 ? hourlyComponent : dailyComponent
+                sourceComponent: root.viewMode === 0 ? chartsComponent : root.viewMode === 1 ? (root.mobileLayout ? mobileHourlyComponent : hourlyComponent) : dailyComponent
             }
             Frame {
                 id: chartStatus
@@ -581,6 +581,13 @@ Item {
                     }
                 }
             }
+        }
+    }
+    Component {
+        id: mobileHourlyComponent
+        MobileHourlyForecast {
+            weather: root.weather
+            onReadingRequested: (timestamp, position) => { root.pinned = false; root.showProbe(timestamp, position, "", true); root.pinned = true; }
         }
     }
     Component {

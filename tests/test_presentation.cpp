@@ -251,6 +251,16 @@ private slots:
         auto *zoom = find(find, page, "chartZoomSlider");
         QVERIFY(zoom && !zoom->isVisible());
         QVERIFY(QMetaObject::invokeMethod(panel, "setHours", Q_ARG(QVariant, 24)));
+        auto *hourly = findButton(findButton, page, "Hourly");
+        QVERIFY(hourly); click(hourly);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 1);
+        QQuickItem *hours = nullptr, *firstHour = nullptr;
+        QTRY_VERIFY(hours = find(find, page, "mobileHourlyForecast"));
+        QTRY_VERIFY(firstHour = find(find, hours, "mobileForecastHour-0"));
+        QTRY_VERIFY(hours->width() > 100);
+        QCOMPARE(hours->property("count").toInt(), weather->hourlyForecast().size());
+        QVERIFY(firstHour->mapToScene({firstHour->width(), 0}).x() <= window->width() + 1);
+        QVERIFY(hours->property("contentHeight").toDouble() > hours->height());
         auto *days = findButton(findButton, page, "Days");
         QVERIFY(days); click(days);
         QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
