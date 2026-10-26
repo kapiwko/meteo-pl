@@ -7,6 +7,7 @@ import org.kde.kirigami as Kirigami
 
 ColumnLayout {
     id: root
+    objectName: "locationEditor"
     property string locationName: "Warszawa"
     property real latitude: 52.2297
     property real longitude: 21.0122
@@ -17,6 +18,7 @@ ColumnLayout {
     readonly property bool valid: locationName.trim().length > 0 && LocationRules.valid(latitude, longitude, model)
         && (!manual.checked || (latField.acceptableInput && lonField.acceptableInput))
     readonly property bool outsideModel: model !== "gfs" && !LocationRules.valid(latitude, longitude, model)
+    readonly property bool savedPlace: locationName.trim().length > 0 && UserPreferences.places.some(place => LocationRules.samePlace(place.latitude, place.longitude, root.latitude, root.longitude))
     spacing: Kirigami.Units.largeSpacing
 
     function resetDraft(name, lat, lon, forecastModel) {

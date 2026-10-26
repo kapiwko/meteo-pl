@@ -9,6 +9,7 @@ GridLayout {
     objectName: "forecastHeader"
     required property WeatherModel weather
     signal locationSelected(string name, real latitude, real longitude)
+    signal addLocationRequested()
     readonly property bool loading: weatherSymbol.loading
     readonly property var solar: weather.solarTimes
     readonly property bool wide: width >= 660
@@ -21,6 +22,7 @@ GridLayout {
         PlacePicker {
             Layout.fillWidth: true
             weather: root.weather
+            onAddLocationRequested: root.addLocationRequested()
             onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
         }
         RowLayout {

@@ -33,6 +33,7 @@ Item {
     property url exportedFile
     readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
     signal configureRequested()
+    signal addLocationRequested()
     signal settingsRequested()
     signal exportReported()
     signal locationSelected(string name, real latitude, real longitude)
@@ -356,6 +357,7 @@ Item {
                 visible: !root.mobileLayout
                 Layout.fillWidth: true
                 weather: root.weather
+                onAddLocationRequested: root.addLocationRequested()
                 onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
             }
             Loader {

@@ -50,6 +50,7 @@ PlasmaComponents.ScrollView {
             weather: root.weather
             places: root.places
             showDays: !root.showCharts
+            onAddLocationRequested: root.configureRequested()
             onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
         }
         footer: PlasmaExtras.PlaceholderMessage {

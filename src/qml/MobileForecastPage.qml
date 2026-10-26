@@ -20,6 +20,7 @@ Kirigami.Page {
     function showDestination(index) { forecastPanel.viewMode = index === 0 ? forecastView : index === 1 ? 3 : newsView; }
     function openSettings() { navigationStack.push(settingsPage); }
     function chooseLocation() { navigationStack.push(locationPage); }
+    function addLocation() { navigationStack.push(locationPage, {addingPlace: true}); }
     header: ToolBar {
         MaterialStyle.Material.background: Kirigami.Theme.backgroundColor
         MaterialStyle.Material.foreground: Kirigami.Theme.textColor
@@ -121,7 +122,7 @@ Kirigami.Page {
                 }
             }
         }
-        footer: Component { Button { text: I18n.i18n("Find or add a place"); icon.name: "list-add"; onClicked: { placesSheet.close(); root.chooseLocation(); } } }
+        footer: Component { Button { text: I18n.i18n("Add location"); icon.name: "list-add"; highlighted: true; onClicked: { placesSheet.close(); root.addLocation(); } } }
     }
     MobileSheet {
         id: moreSheet

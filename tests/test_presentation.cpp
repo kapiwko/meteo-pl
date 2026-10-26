@@ -247,11 +247,26 @@ private slots:
         QTRY_VERIFY(places->property("opened").toBool());
         auto *sheetBody = places->property("contentItem").value<QQuickItem *>();
         QVERIFY(sheetBody);
-        auto *addPlace = findButton(findButton, sheetBody, "Find or add a place");
+        auto *addPlace = findButton(findButton, sheetBody, "Add location");
         QVERIFY(addPlace);
         QVERIFY(places->property("height").toDouble() >= addPlace->height());
         QCOMPARE(places->property("width").toDouble(), double(window->width()));
-        QVERIFY(QMetaObject::invokeMethod(places, "close"));
+        click(addPlace);
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        auto *addPage = stack->property("currentItem").value<QQuickItem *>();
+        QVERIFY(addPage);
+        QTRY_VERIFY(qAbs(addPage->mapToScene({0, 0}).x()) < 1);
+        auto *addColumns = stack->property("columnView").value<QObject *>();
+        QVERIFY(addColumns);
+        QTRY_VERIFY(!addColumns->property("moving").toBool());
+        QCOMPARE(addPage->objectName(), "mobileLocationPage");
+        QVERIFY(addPage->property("addingPlace").toBool());
+        auto *newPlaceButton = addPage->findChild<QObject *>("mobileShowForecastButton");
+        QVERIFY(newPlaceButton);
+        QVERIFY(!newPlaceButton->property("enabled").toBool());
+        QCOMPARE(addPage->findChild<QObject *>("customLocationName")->property("text").toString(), QString());
+        QTest::keySequence(window, QKeySequence(QKeySequence::Back));
+        QTRY_COMPARE(stack->property("depth").toInt(), 1);
         QTRY_VERIFY(!places->property("visible").toBool());
         auto *moreButton = find(find, page, "mobileMoreButton");
         QVERIFY(moreButton); click(moreButton);
@@ -1743,6 +1758,41 @@ private slots:
         QCOMPARE(weather->locationName(), "Warszawa");
         QCOMPARE(weather->model(), "um4_120");
         QCOMPARE(locationSettings->property("model").toString(), "um4_120");
+    }
+    void addLocationStartsWithAnEmptyDraftAndSavesOnlyOnConfirmation()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        const QVariantMap preview{{"locationName", "New York"}, {"latitude", 40.7128}, {"longitude", -74.006}, {"model", "gfs"}};
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", preview}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *weather = object->findChild<WeatherModel *>();
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QVERIFY(weather); QVERIFY(preferences);
+        const auto places = preferences->favorites();
+        auto *add = object->findChild<QObject *>("addLocationButton");
+        auto *dialog = object->findChild<QObject *>("locationDialog");
+        auto *editor = object->findChild<QObject *>("locationEditor");
+        auto *save = object->findChild<QObject *>("saveLocationButton");
+        QVERIFY(add); QVERIFY(dialog); QVERIFY(editor); QVERIFY(save);
+        QVERIFY(QMetaObject::invokeMethod(add, "clicked"));
+        QTRY_VERIFY(dialog->property("visible").toBool());
+        QCOMPARE(dialog->property("title").toString(), "Add location");
+        QCOMPARE(editor->property("locationName").toString(), QString());
+        QVERIFY(!save->property("enabled").toBool());
+        const QVariantMap place{{"name", "Test place"}, {"latitude", 1.2345}, {"longitude", 2.3456}};
+        QVERIFY(QMetaObject::invokeMethod(editor, "selectPlace", Q_ARG(QVariant, place)));
+        QVERIFY(save->property("enabled").toBool());
+        QCOMPARE(save->property("text").toString(), "Add and show forecast");
+        QCOMPARE(preferences->favorites(), places);
+        QCOMPARE(weather->locationName(), "New York");
+        QVERIFY(QMetaObject::invokeMethod(dialog, "accept"));
+        QCOMPARE(weather->locationName(), "Test place");
+        QCOMPARE(weather->latitude(), 1.2345);
+        QCOMPARE(weather->longitude(), 2.3456);
+        QVERIFY(preferences->isFavorite(1.2345, 2.3456));
+        preferences->removePlace(1.2345, 2.3456);
     }
     void locationDialogUsesInsetContentAndFitsNarrowWindows()
     {

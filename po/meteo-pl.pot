@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/qml/ForecastPanel.qml:465
+#: src/qml/ForecastPanel.qml:467
 msgid " hours"
 msgstr ""
 
@@ -25,25 +25,25 @@ msgstr ""
 msgid " · ICM UW data"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:52 src/qml/ForecastHeader.qml:54
+#: src/qml/CompactForecast.qml:54 src/qml/ForecastHeader.qml:56
 msgid " · Pressure "
 msgstr ""
 
-#: src/qml/CompactForecast.qml:125 src/qml/ForecastHeader.qml:81
+#: src/qml/CompactForecast.qml:127 src/qml/ForecastHeader.qml:83
 msgid " · approximate time · "
 msgstr ""
 
-#: src/qml/ChartSaveDialog.qml:27 src/qml/ForecastPanel.qml:93
-#: src/qml/ForecastPanel.qml:191
+#: src/qml/ChartSaveDialog.qml:27 src/qml/ForecastPanel.qml:94
+#: src/qml/ForecastPanel.qml:192
 msgid " · local time"
 msgstr ""
 
-#: src/qml/ChartSaveDialog.qml:25 src/qml/ForecastPanel.qml:91
-#: src/qml/ForecastPanel.qml:139
+#: src/qml/ChartSaveDialog.qml:25 src/qml/ForecastPanel.qml:92
+#: src/qml/ForecastPanel.qml:140
 msgid " · model run: "
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:138
+#: src/qml/ForecastPanel.qml:139
 msgid " · parameter reading · "
 msgstr ""
 
@@ -51,7 +51,7 @@ msgstr ""
 msgid " · run: "
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:200
+#: src/qml/ForecastPanel.qml:201
 msgid "%1 chart selected"
 msgid_plural "%1 charts selected"
 msgstr[0] ""
@@ -84,13 +84,13 @@ msgstr ""
 msgid "72 hours"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:123 src/qml/ForecastHeader.qml:79
+#: src/qml/CompactForecast.qml:125 src/qml/ForecastHeader.qml:81
 #: src/qml/MobileHourlyForecast.qml:58
 msgid ": "
 msgstr ""
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:28
-#: src/qml/MobileForecastPage.qml:135 src/qml/MobileSettingsPage.qml:49
+#: src/qml/MobileForecastPage.qml:136 src/qml/MobileSettingsPage.qml:49
 msgid "About"
 msgstr ""
 
@@ -98,8 +98,17 @@ msgstr ""
 msgid "Add a place on the Location page first."
 msgstr ""
 
+#: apps/meteo/Main.qml:44 src/qml/MobileLocationPage.qml:28
+msgid "Add and show forecast"
+msgstr ""
+
 #: src/qml/DisplaySettings.qml:157
 msgid "Add chart"
+msgstr ""
+
+#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:125
+#: src/qml/MobileLocationPage.qml:13 src/qml/PlacePicker.qml:49
+msgid "Add location"
 msgstr ""
 
 #: src/qml/DisplaySettings.qml:223
@@ -115,7 +124,7 @@ msgid "Air temperature min–max"
 msgstr ""
 
 #: src/qml/ForecastInspector.qml:21 src/qml/ForecastInspector.qml:92
-#: src/qml/ForecastPanel.qml:125 src/qml/ForecastPanel.qml:198
+#: src/qml/ForecastPanel.qml:126 src/qml/ForecastPanel.qml:199
 msgid "All"
 msgstr ""
 
@@ -135,7 +144,7 @@ msgstr ""
 msgid "All saved profiles…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:671
+#: src/qml/ForecastPanel.qml:673
 msgid ""
 "An interval crosses midnight. Its precipitation is shared between days in "
 "proportion to duration."
@@ -157,7 +166,7 @@ msgstr ""
 msgid "Application and Plasma widget for ICM UW meteograms"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:369
+#: src/qml/ForecastPanel.qml:371
 msgid ""
 "Archived model run. Chart dates and times refer to the selected forecast."
 msgstr ""
@@ -166,7 +175,7 @@ msgstr ""
 msgid "Article"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:339 src/qml/MobileForecastPage.qml:84
+#: src/qml/ForecastPanel.qml:340 src/qml/MobileForecastPage.qml:85
 msgid "Articles"
 msgstr ""
 
@@ -210,7 +219,7 @@ msgstr ""
 msgid "Basic"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:150
+#: src/qml/ForecastPanel.qml:151
 msgid "CSV data (*.csv)"
 msgstr ""
 
@@ -226,11 +235,11 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603
+#: src/qml/ForecastPanel.qml:605
 msgid "Chance %"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:226
+#: src/qml/ForecastPanel.qml:227
 msgid "Chart appearance, series visibility and legends will be preserved."
 msgstr ""
 
@@ -263,7 +272,7 @@ msgstr ""
 msgid "Chart time interval"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:464
+#: src/qml/ForecastPanel.qml:466
 msgid "Chart zoom"
 msgstr ""
 
@@ -271,7 +280,7 @@ msgstr ""
 msgid "Charts"
 msgstr ""
 
-#: src/qml/ChartSaveDialog.qml:34 src/qml/ForecastPanel.qml:106
+#: src/qml/ChartSaveDialog.qml:34 src/qml/ForecastPanel.qml:107
 msgid "Charts exported"
 msgstr ""
 
@@ -304,11 +313,11 @@ msgstr ""
 msgid "Choose a local file."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:198
+#: src/qml/LocationEditor.qml:200
 msgid "Choose a place or a point on the map"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:376
+#: src/qml/ForecastPanel.qml:378
 msgid "Choose a place to download its meteogram."
 msgstr ""
 
@@ -316,7 +325,7 @@ msgstr ""
 msgid "Choose a series…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:189
+#: src/qml/ForecastPanel.qml:190
 msgid "Choose charts to combine into one PNG image."
 msgstr ""
 
@@ -324,14 +333,14 @@ msgstr ""
 msgid "Choose color"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:59
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
 #: integrations/plasma/package/contents/ui/main.qml:33
-#: src/qml/ForecastPanel.qml:377 src/qml/MobileForecastPage.qml:34
-#: src/qml/PlacePicker.qml:21
+#: src/qml/ForecastPanel.qml:379 src/qml/MobileForecastPage.qml:35
+#: src/qml/PlacePicker.qml:22
 msgid "Choose location"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:115
+#: src/qml/LocationEditor.qml:117
 msgid "Choose on map"
 msgstr ""
 
@@ -405,7 +414,7 @@ msgstr ""
 msgid "Clouds"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603
+#: src/qml/ForecastPanel.qml:605
 msgid "Clouds %"
 msgstr ""
 
@@ -450,7 +459,7 @@ msgstr ""
 msgid "Could not delete all cached files. Try again."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:47
+#: src/qml/LocationEditor.qml:49
 msgid ""
 "Could not determine your location. Check the location service or choose a "
 "point on the map."
@@ -543,7 +552,7 @@ msgstr ""
 msgid "Custom layout"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:226
+#: src/qml/LocationEditor.qml:228
 msgid "Custom name and coordinates"
 msgstr ""
 
@@ -565,7 +574,7 @@ msgid ""
 "kept."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:336 src/qml/MobileForecastPage.qml:75
+#: src/qml/ForecastPanel.qml:337 src/qml/MobileForecastPage.qml:76
 msgid "Days"
 msgstr ""
 
@@ -581,7 +590,7 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:199
+#: src/qml/ForecastPanel.qml:200
 msgid "Deselect all"
 msgstr ""
 
@@ -593,7 +602,7 @@ msgstr ""
 msgid "Direction arrows"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:495
+#: src/qml/ForecastPanel.qml:497
 msgid "Disable parameter identification"
 msgstr ""
 
@@ -601,7 +610,7 @@ msgstr ""
 msgid "Dotted"
 msgstr ""
 
-#: src/qml/ChartSaveDialog.qml:29 src/qml/ForecastPanel.qml:95
+#: src/qml/ChartSaveDialog.qml:29 src/qml/ForecastPanel.qml:96
 msgid "Downloaded: %1"
 msgstr ""
 
@@ -609,7 +618,7 @@ msgstr ""
 msgid "Downloading forecast"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:43 src/qml/ForecastHeader.qml:49
+#: src/qml/CompactForecast.qml:45 src/qml/ForecastHeader.qml:51
 msgid "Downloading forecast…"
 msgstr ""
 
@@ -629,7 +638,7 @@ msgstr ""
 msgid "Earlier"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:413
+#: src/qml/ForecastPanel.qml:415
 msgid "Earlier interval"
 msgstr ""
 
@@ -648,7 +657,7 @@ msgid "Enter a valid date in yyyy-mm-dd format."
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configAppearance.qml:52
-#: src/qml/ForecastPanel.qml:483 src/qml/ForecastSettings.qml:39
+#: src/qml/ForecastPanel.qml:485 src/qml/ForecastSettings.qml:39
 msgid "Entire forecast"
 msgstr ""
 
@@ -664,7 +673,7 @@ msgstr ""
 msgid "Export cancelled."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:174
+#: src/qml/ForecastPanel.qml:175
 msgid "Export charts"
 msgstr ""
 
@@ -676,7 +685,7 @@ msgstr ""
 msgid "Export saved profiles"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:504
+#: src/qml/ForecastPanel.qml:506
 msgid "Export selected charts to PNG"
 msgstr ""
 
@@ -684,15 +693,15 @@ msgstr ""
 msgid "Export visible parameters"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:499
+#: src/qml/ForecastPanel.qml:501
 msgid "Exporting…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:499
+#: src/qml/ForecastPanel.qml:501
 msgid "Export…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603 src/qml/MobileHourlyForecast.qml:46
+#: src/qml/ForecastPanel.qml:605 src/qml/MobileHourlyForecast.qml:46
 msgid "Feels like"
 msgstr ""
 
@@ -717,12 +726,8 @@ msgid ""
 "Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
 msgstr ""
 
-#: src/qml/LocationEditor.qml:52
+#: src/qml/LocationEditor.qml:54
 msgid "Find a place"
-msgstr ""
-
-#: src/qml/MobileForecastPage.qml:124
-msgid "Find or add a place"
 msgstr ""
 
 #: src/qml/ThematicMaps.qml:71
@@ -741,8 +746,8 @@ msgstr ""
 msgid "Fog cover"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:188 src/qml/MeteoSettings.qml:53
-#: src/qml/MobileForecastPage.qml:60 src/qml/MobileSettingsPage.qml:14
+#: src/qml/LocationEditor.qml:190 src/qml/MeteoSettings.qml:53
+#: src/qml/MobileForecastPage.qml:61 src/qml/MobileSettingsPage.qml:14
 msgid "Forecast"
 msgstr ""
 
@@ -754,7 +759,7 @@ msgstr ""
 msgid "Forecast for %1"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:207
+#: src/qml/LocationEditor.qml:209
 msgid "Forecast model"
 msgstr ""
 
@@ -770,11 +775,11 @@ msgstr ""
 msgid "From cache: "
 msgstr ""
 
-#: src/qml/LocationEditor.qml:208
+#: src/qml/LocationEditor.qml:210
 msgid "GFS · 240 hours"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:215
+#: src/qml/LocationEditor.qml:217
 msgid "GFS: worldwide forecast."
 msgstr ""
 
@@ -799,11 +804,11 @@ msgstr ""
 msgid "Gust above scale"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603 src/qml/MobileHourlyForecast.qml:51
+#: src/qml/ForecastPanel.qml:605 src/qml/MobileHourlyForecast.qml:51
 msgid "Gusts"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:675
+#: src/qml/ForecastPanel.qml:677
 msgid "Gusts: "
 msgstr ""
 
@@ -824,7 +829,7 @@ msgstr ""
 msgid "Horizontal segments"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:335 src/qml/MobileForecastPage.qml:74
+#: src/qml/ForecastPanel.qml:336 src/qml/MobileForecastPage.qml:75
 msgid "Hourly"
 msgstr ""
 
@@ -844,11 +849,11 @@ msgstr ""
 msgid "ICM wind palette"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:495
+#: src/qml/ForecastPanel.qml:497
 msgid "Identify parameters · move the cursor over a chart"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:495
+#: src/qml/ForecastPanel.qml:497
 msgid "Identify parameters · tap a chart"
 msgstr ""
 
@@ -919,7 +924,7 @@ msgstr ""
 msgid "Later"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:434
+#: src/qml/ForecastPanel.qml:436
 msgid "Later interval"
 msgstr ""
 
@@ -935,7 +940,7 @@ msgstr ""
 msgid "Latest forecast"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:245
+#: src/qml/LocationEditor.qml:247
 msgid "Latitude (°N):"
 msgstr ""
 
@@ -991,7 +996,7 @@ msgstr ""
 msgid "Load older articles"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:117
+#: src/qml/LocationEditor.qml:119
 msgid "Locating…"
 msgstr ""
 
@@ -999,12 +1004,12 @@ msgstr ""
 msgid "Location"
 msgstr ""
 
-#: apps/meteo/Main.qml:29 src/qml/MobileForecastPage.qml:133
-#: src/qml/MobileLocationPage.qml:12
+#: apps/meteo/Main.qml:31 src/qml/MobileForecastPage.qml:134
+#: src/qml/MobileLocationPage.qml:13
 msgid "Location and model"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:46
+#: src/qml/LocationEditor.qml:48
 msgid "Location lookup timed out. You can choose a point on the map."
 msgstr ""
 
@@ -1012,7 +1017,7 @@ msgstr ""
 msgid "Location to display."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:255
+#: src/qml/LocationEditor.qml:257
 msgid "Longitude (°E):"
 msgstr ""
 
@@ -1028,7 +1033,7 @@ msgstr ""
 msgid "Map type"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:337 src/qml/MobileForecastPage.qml:61
+#: src/qml/ForecastPanel.qml:338 src/qml/MobileForecastPage.qml:62
 msgid "Maps"
 msgstr ""
 
@@ -1070,8 +1075,8 @@ msgstr ""
 
 #: apps/meteo/Main.qml:11
 #: integrations/plasma/package/contents/ui/configAppearance.qml:28
-#: src/qml/ForecastPanel.qml:82 src/qml/ForecastPanel.qml:334
-#: src/qml/MobileForecastPage.qml:73
+#: src/qml/ForecastPanel.qml:83 src/qml/ForecastPanel.qml:335
+#: src/qml/MobileForecastPage.qml:74
 msgid "Meteogram"
 msgstr ""
 
@@ -1136,7 +1141,7 @@ msgstr ""
 msgid "Model run:"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:204
+#: src/qml/LocationEditor.qml:206
 msgid "Model:"
 msgstr ""
 
@@ -1146,7 +1151,7 @@ msgid ""
 "Model run: %2"
 msgstr ""
 
-#: src/qml/MobileForecastPage.qml:49 src/qml/MobileForecastPage.qml:129
+#: src/qml/MobileForecastPage.qml:50 src/qml/MobileForecastPage.qml:130
 msgid "More options"
 msgstr ""
 
@@ -1162,7 +1167,7 @@ msgstr ""
 msgid "Move down"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:518
+#: src/qml/ForecastPanel.qml:520
 msgid "Move the visible time interval"
 msgstr ""
 
@@ -1170,19 +1175,19 @@ msgstr ""
 msgid "Move up"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:39
+#: src/qml/LocationEditor.qml:41
 msgid "My location"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:151 src/qml/MobileForecastPage.qml:105
+#: src/qml/LocationEditor.qml:153 src/qml/MobileForecastPage.qml:106
 msgid "My places"
 msgstr ""
 
-#: src/qml/MobileForecastPage.qml:35 src/qml/PlacePicker.qml:40
+#: src/qml/MobileForecastPage.qml:36 src/qml/PlacePicker.qml:41
 msgid "My places · choose a forecast"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:69 src/qml/LocationEditor.qml:235
+#: src/qml/DisplaySettings.qml:69 src/qml/LocationEditor.qml:237
 msgid "Name:"
 msgstr ""
 
@@ -1207,7 +1212,7 @@ msgstr ""
 msgid "New chart"
 msgstr ""
 
-#: src/qml/MobileForecastPage.qml:62
+#: src/qml/MobileForecastPage.qml:63
 msgid "News"
 msgstr ""
 
@@ -1219,11 +1224,11 @@ msgstr ""
 msgid "No current run is available for the selected model."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:375 src/qml/WeatherSymbol.qml:15
+#: src/qml/ForecastPanel.qml:377 src/qml/WeatherSymbol.qml:15
 msgid "No forecast"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:59
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
 msgid "No forecast available"
 msgstr ""
 
@@ -1249,7 +1254,7 @@ msgstr ""
 msgid "No parameters to export."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:107
+#: src/qml/LocationEditor.qml:109
 msgid "No places found. Refine the name or choose a point on the map."
 msgstr ""
 
@@ -1287,7 +1292,7 @@ msgstr ""
 msgid "Open Meteo or choose a saved place"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:120
+#: src/qml/ForecastPanel.qml:121
 msgid "Open a parameter reading and try again."
 msgstr ""
 
@@ -1307,8 +1312,8 @@ msgstr ""
 msgid "Overcast"
 msgstr ""
 
-#: src/qml/ChartSaveDialog.qml:13 src/qml/ForecastPanel.qml:150
-#: src/qml/ForecastPanel.qml:165
+#: src/qml/ChartSaveDialog.qml:13 src/qml/ForecastPanel.qml:151
+#: src/qml/ForecastPanel.qml:166
 msgid "PNG image (*.png)"
 msgstr ""
 
@@ -1324,15 +1329,15 @@ msgstr ""
 msgid "Parameter identification and legends"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:494
+#: src/qml/ForecastPanel.qml:496
 msgid "Parameter identification mode"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:102
+#: src/qml/ForecastPanel.qml:103
 msgid "Parameter reading saved."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:125
+#: src/qml/ForecastPanel.qml:126
 msgid "Parameters"
 msgstr ""
 
@@ -1352,7 +1357,7 @@ msgstr ""
 msgid "Pin reading"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:196
+#: src/qml/LocationEditor.qml:198
 msgid "Place:"
 msgstr ""
 
@@ -1364,7 +1369,7 @@ msgstr ""
 msgid "Places:"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:140 src/qml/WeatherMap.qml:79
+#: src/qml/LocationEditor.qml:142 src/qml/WeatherMap.qml:79
 #: src/qml/WeatherMap.qml:105
 msgid "Point on map"
 msgstr ""
@@ -1389,7 +1394,7 @@ msgstr ""
 msgid "Possible thunderstorms"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603
+#: src/qml/ForecastPanel.qml:605
 msgid "Precip. mm"
 msgstr ""
 
@@ -1413,7 +1418,7 @@ msgstr ""
 msgid "Precipitation type"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:666
+#: src/qml/ForecastPanel.qml:668
 msgid "Precipitation: "
 msgstr ""
 
@@ -1466,7 +1471,7 @@ msgstr ""
 msgid "Read on meteo.pl"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:106
+#: src/qml/ForecastPanel.qml:107
 msgid "Reading exported"
 msgstr ""
 
@@ -1483,10 +1488,10 @@ msgid "Readings"
 msgstr ""
 
 #: apps/meteo/Main.qml:15
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:62
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:63
 #: integrations/plasma/package/contents/ui/main.qml:26
 #: integrations/plasma/package/contents/ui/main.qml:136
-#: src/qml/EditorialView.qml:25 src/qml/MobileForecastPage.qml:42
+#: src/qml/EditorialView.qml:25 src/qml/MobileForecastPage.qml:43
 msgid "Refresh"
 msgstr ""
 
@@ -1498,7 +1503,7 @@ msgstr ""
 msgid "Remove chart from this profile"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:179
+#: src/qml/LocationEditor.qml:181
 msgid "Remove place: "
 msgstr ""
 
@@ -1542,20 +1547,20 @@ msgstr ""
 msgid "Sampling"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:183
+#: src/qml/ForecastPanel.qml:184
 msgid "Save PNG…"
 msgstr ""
 
-#: src/qml/ChartSaveDialog.qml:11 src/qml/ForecastPanel.qml:83
+#: src/qml/ChartSaveDialog.qml:11 src/qml/ForecastPanel.qml:84
 #: src/qml/Meteogram.qml:274
 msgid "Save chart as…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:148
+#: src/qml/ForecastPanel.qml:149
 msgid "Save parameter reading as CSV"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:148
+#: src/qml/ForecastPanel.qml:149
 msgid "Save parameter reading as PNG"
 msgstr ""
 
@@ -1567,7 +1572,7 @@ msgstr ""
 msgid "Save reading as PNG…"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:83
+#: src/qml/ForecastPanel.qml:84
 msgid "Save selected charts"
 msgstr ""
 
@@ -1584,11 +1589,11 @@ msgstr ""
 msgid "Search and models:"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:65
+#: src/qml/LocationEditor.qml:67
 msgid "Search for a place"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:81
+#: src/qml/LocationEditor.qml:83
 msgid "Search outside Poland too"
 msgstr ""
 
@@ -1600,7 +1605,7 @@ msgstr ""
 msgid "Select between 1 and 50 charts to export."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:102
+#: src/qml/ForecastPanel.qml:103
 msgid "Selected charts saved."
 msgstr ""
 
@@ -1621,7 +1626,7 @@ msgid "Series color"
 msgstr ""
 
 #: apps/meteo/Main.qml:14 src/qml/MeteoSettings.qml:16
-#: src/qml/MobileForecastPage.qml:134 src/qml/MobileSettingsPage.qml:19
+#: src/qml/MobileForecastPage.qml:135 src/qml/MobileSettingsPage.qml:19
 msgid "Settings"
 msgstr ""
 
@@ -1637,11 +1642,11 @@ msgstr ""
 msgid "Show UTC time"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:447
+#: src/qml/ForecastPanel.qml:449
 msgid "Show a longer interval"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:474
+#: src/qml/ForecastPanel.qml:476
 msgid "Show a shorter interval"
 msgstr ""
 
@@ -1654,7 +1659,7 @@ msgstr ""
 msgid "Show all saved places, including new ones"
 msgstr ""
 
-#: apps/meteo/Main.qml:41 src/qml/MobileLocationPage.qml:27
+#: apps/meteo/Main.qml:44 src/qml/MobileLocationPage.qml:28
 msgid "Show forecast"
 msgstr ""
 
@@ -1662,7 +1667,7 @@ msgstr ""
 msgid "Show forecast: "
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:85
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:86
 #: src/qml/Meteogram.qml:302
 msgid "Show legend"
 msgstr ""
@@ -1734,11 +1739,11 @@ msgstr ""
 msgid "Storms and lightning"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:63 src/qml/ForecastHeader.qml:68
+#: src/qml/CompactForecast.qml:65 src/qml/ForecastHeader.qml:70
 msgid "Sunrise"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:70 src/qml/ForecastHeader.qml:69
+#: src/qml/CompactForecast.qml:72 src/qml/ForecastHeader.qml:71
 msgid "Sunset"
 msgstr ""
 
@@ -1746,7 +1751,7 @@ msgstr ""
 msgid "Surface pressure"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:338 src/qml/MobileForecastPage.qml:83
+#: src/qml/ForecastPanel.qml:339 src/qml/MobileForecastPage.qml:84
 msgid "Synoptic"
 msgstr ""
 
@@ -1754,7 +1759,7 @@ msgstr ""
 msgid "Synoptic commentary"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603
+#: src/qml/ForecastPanel.qml:605
 msgid "Temp."
 msgstr ""
 
@@ -1795,11 +1800,11 @@ msgstr ""
 msgid "The file must contain between 1 and 100 profiles."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:672
+#: src/qml/ForecastPanel.qml:674
 msgid "The forecast covers part of this day. Missing intervals are excluded."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:370
+#: src/qml/ForecastPanel.qml:372
 msgid "The forecast may be outdated. Last downloaded: "
 msgstr ""
 
@@ -1814,7 +1819,7 @@ msgid ""
 "sets the initial state for all profiles."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:123
+#: src/qml/LocationEditor.qml:125
 msgid ""
 "The location service is unavailable. Choose a place or a point on the map."
 msgstr ""
@@ -1875,11 +1880,11 @@ msgid ""
 "Central Europe."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:220
+#: src/qml/LocationEditor.qml:222
 msgid "This point is outside the UM4 area. Choose the GFS model."
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:603 src/qml/ForecastPanel.qml:604
+#: src/qml/ForecastPanel.qml:605 src/qml/ForecastPanel.qml:606
 msgid "Time"
 msgstr ""
 
@@ -1908,11 +1913,11 @@ msgstr ""
 msgid "Total on disk:"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:672
+#: src/qml/ForecastPanel.qml:674
 msgid "Total precipitation for this day."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:64
+#: src/qml/LocationEditor.qml:66
 msgid "Town or village name…"
 msgstr ""
 
@@ -1924,11 +1929,11 @@ msgstr ""
 msgid "UM model:"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:208
+#: src/qml/LocationEditor.qml:210
 msgid "UM4 · 120 hours"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:208
+#: src/qml/LocationEditor.qml:210
 msgid "UM4 · 60 hours"
 msgstr ""
 
@@ -1996,7 +2001,7 @@ msgstr ""
 msgid "UM4 · visibility"
 msgstr ""
 
-#: src/qml/LocationEditor.qml:215
+#: src/qml/LocationEditor.qml:217
 msgid "UM4: detailed forecasts for Poland and Central Europe."
 msgstr ""
 
@@ -2016,7 +2021,7 @@ msgstr ""
 msgid "Unsupported profile file format or version."
 msgstr ""
 
-#: src/qml/LocationEditor.qml:117
+#: src/qml/LocationEditor.qml:119
 msgid "Use my location"
 msgstr ""
 
@@ -2036,7 +2041,7 @@ msgstr ""
 msgid "Very low clouds"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:425
+#: src/qml/ForecastPanel.qml:427
 msgid "Visible interval · "
 msgstr ""
 
@@ -2067,8 +2072,8 @@ msgstr ""
 msgid "Wind"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:52 src/qml/ForecastHeader.qml:54
-#: src/qml/ForecastPanel.qml:603
+#: src/qml/CompactForecast.qml:54 src/qml/ForecastHeader.qml:56
+#: src/qml/ForecastPanel.qml:605
 msgid "Wind "
 msgstr ""
 
@@ -2119,7 +2124,7 @@ msgstr ""
 msgid "fraction"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:425
+#: src/qml/ForecastPanel.qml:427
 msgid "local time"
 msgstr ""
 
@@ -2139,7 +2144,7 @@ msgstr ""
 msgid "octas"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:125 src/qml/ForecastHeader.qml:81
+#: src/qml/CompactForecast.qml:127 src/qml/ForecastHeader.qml:83
 msgid "system local time"
 msgstr ""
 

@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-ColumnLayout {
+RowLayout {
     id: root
     required property WeatherModel weather
     property bool centered: false
@@ -16,6 +16,7 @@ ColumnLayout {
         }
     }
     signal locationSelected(string name, real latitude, real longitude)
+    signal addLocationRequested()
     Kirigami.Heading {
         objectName: "forecastLocationName"
         text: root.weather.locationName.length ? root.weather.locationName : I18n.i18n("Choose location")
@@ -42,5 +43,11 @@ ColumnLayout {
             const place = model[index];
             if (place) root.locationSelected(place.name, place.latitude, place.longitude);
         }
+    }
+    ToolButton {
+        objectName: "addLocationButton"
+        text: I18n.i18n("Add location")
+        icon.name: "list-add"
+        onClicked: root.addLocationRequested()
     }
 }
