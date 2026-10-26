@@ -43,4 +43,5 @@ jobs:
             build/packages/${{ matrix.distro }}/build/test-results.xml
             build/packages/${{ matrix.distro }}/build/Testing/Temporary/
             build/packages/${{ matrix.distro }}/build/renderer-diffs/
+            build/packages/${{ matrix.distro }}/build/tests/plasma-artifacts/
           if-no-files-found: warn

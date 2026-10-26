@@ -151,6 +151,12 @@ sudo cmake --install build/release
 `METEO_BUILD_APP` and `METEO_BUILD_PLASMOID` control the two frontends.
 `METEO_QML_INSTALL_DIR` overrides the shared module installation directory.
 
+When `plasmawindowed` is available, CTest also hosts the real widget in isolated
+Plasma sessions. A local synthetic weather service covers loading, empty and
+failed requests, offline cache, keyboard expansion, saved-place selection and
+opening the desktop application. These tests leave screenshots, logs and request
+traces in `build/dev/tests/plasma-artifacts`; CI publishes them with test reports.
+
 ## Documentation
 
 - [User guide — Polish](docs/user-guide.pl.md): profiles, maps, exports and cache

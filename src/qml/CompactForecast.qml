@@ -49,7 +49,7 @@ ColumnLayout {
             Label { text: root.weather.windText; font.bold: true }
         }
     }
-    Kirigami.InlineMessage { Layout.fillWidth: true; text: root.weather.error; visible: text.length > 0; type: Kirigami.MessageType.Warning }
+    Kirigami.InlineMessage { objectName: "forecastErrorMessage"; Layout.fillWidth: true; text: root.weather.error; visible: text.length > 0; type: Kirigami.MessageType.Warning }
     Kirigami.Separator { Layout.fillWidth: true; visible: root.days.length > 0 }
     GridLayout {
         id: forecastGrid

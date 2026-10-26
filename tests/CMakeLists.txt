@@ -76,6 +76,13 @@ if(METEO_BUILD_PLASMOID)
     find_program(PLASMAWINDOWED_EXECUTABLE plasmawindowed)
     if(PLASMAWINDOWED_EXECUTABLE)
         find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        qt_add_qml_module(meteo_test_fixtures SHARED URI pl.meteo.testfixtures SOURCES plasma/FixtureWeatherModel.hpp)
+        target_link_libraries(meteo_test_fixtures PRIVATE meteo_ui Qt6::Quick Qt6::Test)
+        target_include_directories(meteo_test_fixtures PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/plasma")
+        add_test(NAME plasma_interactions COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/scripts/plasma-interactions.py"
+            --program "${PLASMAWINDOWED_EXECUTABLE}" --qml-path "${QT_QML_OUTPUT_DIRECTORY}"
+            --artifacts "${CMAKE_CURRENT_BINARY_DIR}/plasma-artifacts")
+        set_tests_properties(plasma_interactions PROPERTIES TIMEOUT 100 LABELS "plasma;integration")
         add_test(NAME plasma_smoke COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/scripts/plasma-smoke.py" --program "${PLASMAWINDOWED_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/integrations/plasma/package")
         set_tests_properties(plasma_smoke PROPERTIES
             ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY};XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/plasma-cache"
