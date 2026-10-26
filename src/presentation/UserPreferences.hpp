@@ -1,9 +1,7 @@
 #pragma once
 #include "MeteoUiExport.hpp"
+#include "PreferencesStore.hpp"
 #include <QObject>
-#include <QSettings>
-#include <QFileSystemWatcher>
-#include <QTimer>
 #include <QUrl>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
@@ -85,13 +83,7 @@ private:
     QVariantList savedProfiles() const;
     QVariantList readPlaces(const QString &key) const;
     void writePlaces(const QString &key, const QVariantList &places);
-    QByteArray placesSnapshot() const;
-    QByteArray displaySnapshot() const;
-    mutable QSettings m_settings;
-    QFileSystemWatcher m_settingsWatcher;
-    QTimer m_placesReload;
-    QByteArray m_lastPlaces;
-    QByteArray m_lastDisplay;
+    PreferencesStore m_store;
 signals:
     void placesChanged();
     void displayChanged();

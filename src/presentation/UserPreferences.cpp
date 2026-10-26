@@ -4,129 +4,48 @@
 #include "ChartConfiguration.hpp"
 #include "ProfileFileCodec.hpp"
 #include <QJsonDocument>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QDataStream>
-#include <QFile>
-#include <QFileInfo>
 #include <QSet>
 #include <cmath>
 #include <QUuid>
 #include <algorithm>
 
-UserPreferences::UserPreferences(QObject *parent)
-    : QObject(parent), m_settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("meteo-pl"), QStringLiteral("desktop"))
+UserPreferences::UserPreferences(QObject *parent) : QObject(parent)
 {
-    if (m_settings.value("display/layoutVersion", 0).toInt() < 2) {
-        m_settings.setValue("display/profile", "classic");
-        m_settings.setValue("display/layoutVersion", 2);
-        m_settings.sync();
-    }
-    if (m_settings.value("display/layoutVersion", 0).toInt() < 3) {
-        if (m_settings.contains("display/customLayout")) {
-            const auto old = QJsonDocument::fromJson(m_settings.value("display/customLayout").toByteArray()).toVariant().toList();
-            m_settings.setValue("display/customLayout", QJsonDocument::fromVariant(integrateWindDirection(old)).toJson(QJsonDocument::Compact));
-        }
-        auto saved = QJsonDocument::fromJson(m_settings.value("display/savedProfiles").toByteArray()).toVariant().toList();
-        for (auto &value : saved) {
-            auto entry = value.toMap();
-            entry["charts"] = integrateWindDirection(entry["charts"].toList());
-            value = entry;
-        }
-        if (!saved.isEmpty()) m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-        m_settings.setValue("display/layoutVersion", 3); m_settings.sync();
-    }
-    if (m_settings.value("places/listVersion", 0).toInt() < 1) {
-        auto places = favorites();
-        for (const auto &value : recentPlaces()) {
-            const auto recent = value.toMap();
-            bool found = false;
-            for (const auto &entry : places) {
-                const auto saved = entry.toMap();
-                if (std::abs(saved["latitude"].toDouble()-recent["latitude"].toDouble()) < 0.000001 && std::abs(saved["longitude"].toDouble()-recent["longitude"].toDouble()) < 0.000001) { found = true; break; }
-            }
-            if (!found && !recent["name"].toString().isEmpty()) places.append(recent);
-        }
-        m_settings.setValue("places/favorites", QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
-        m_settings.setValue("places/listVersion", 1); m_settings.sync();
-    }
-    m_lastPlaces = placesSnapshot();
-    m_lastDisplay = displaySnapshot();
-    connect(this, &UserPreferences::displayChanged, this, [this] { m_lastDisplay = displaySnapshot(); });
-    m_settingsWatcher.addPath(QFileInfo(m_settings.fileName()).absolutePath());
-    m_settingsWatcher.addPath(m_settings.fileName());
-    m_placesReload.setSingleShot(true);
-    m_placesReload.setInterval(40);
-    connect(&m_settingsWatcher, &QFileSystemWatcher::fileChanged, this, [this] { m_placesReload.start(); });
-    connect(&m_settingsWatcher, &QFileSystemWatcher::directoryChanged, this, [this] { m_placesReload.start(); });
-    connect(&m_placesReload, &QTimer::timeout, this, [this] {
-        // QSettings replaces the file atomically; restore the watch after each replacement.
-        if (!m_settingsWatcher.files().contains(m_settings.fileName()) && QFile::exists(m_settings.fileName()))
-            m_settingsWatcher.addPath(m_settings.fileName());
-        m_settings.sync();
-        const auto current = placesSnapshot();
-        if (current != m_lastPlaces) {
-            m_lastPlaces = current;
-            emit placesChanged();
-        }
-        const auto display = displaySnapshot();
-        if (display != m_lastDisplay) {
-            m_lastDisplay = display;
-            emit displayChanged();
-        }
-    });
-}
-
-QByteArray UserPreferences::placesSnapshot() const
-{
-    return m_settings.value("places/favorites").toByteArray() + '\n' + m_settings.value("places/recent").toByteArray();
-}
-
-QByteArray UserPreferences::displaySnapshot() const
-{
-    QVariantMap values;
-    for (const auto &key : m_settings.allKeys())
-        if (key.startsWith("display/")) values.insert(key, m_settings.value(key));
-    QByteArray snapshot;
-    QDataStream stream(&snapshot, QIODevice::WriteOnly);
-    stream << values;
-    return snapshot;
+    connect(&m_store, &PreferencesStore::placesChanged, this, &UserPreferences::placesChanged);
+    connect(&m_store, &PreferencesStore::displayChanged, this, &UserPreferences::displayChanged);
 }
 
 QVariantList UserPreferences::readPlaces(const QString &key) const
 {
-    m_settings.sync();
-    return QJsonDocument::fromJson(m_settings.value(key).toByteArray()).toVariant().toList();
+    return QJsonDocument::fromJson(m_store.value(key).toByteArray()).toVariant().toList();
 }
 void UserPreferences::writePlaces(const QString &key, const QVariantList &places)
 {
-    m_settings.setValue(key, QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
-    m_settings.sync();
-    m_lastPlaces = placesSnapshot();
-    emit placesChanged();
+    m_store.setValue(key, QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
+    m_store.sync();
 }
 QVariantList UserPreferences::favorites() const { return readPlaces(QStringLiteral("places/favorites")); }
 QVariantList UserPreferences::recentPlaces() const { return readPlaces(QStringLiteral("places/recent")); }
-QString UserPreferences::profile() const { return m_settings.value("display/profile", "classic").toString(); }
+QString UserPreferences::profile() const { return m_store.value("display/profile", "classic").toString(); }
 QStringList UserPreferences::visibleGroups() const
 {
     QStringList result;
     for (const auto &entry : chartLayout()) if (entry.toMap()["enabled"].toBool()) result.append(entry.toMap()["key"].toString());
     return result;
 }
-QString UserPreferences::windUnit() const { return m_settings.value("display/windUnit", "m/s").toString(); }
-bool UserPreferences::utc() const { return m_settings.value("display/utc", false).toBool(); }
-bool UserPreferences::showNight() const { return m_settings.value("display/showNight", true).toBool(); }
-bool UserPreferences::showLegend() const { return m_settings.value("display/showLegend", true).toBool(); }
-void UserPreferences::setShowLegend(bool value) { if (value==showLegend()) return; m_settings.setValue("display/showLegend",value);m_settings.sync();emit displayChanged(); }
-int UserPreferences::chartHeight() const { return std::clamp(m_settings.value("display/chartHeight", 174).toInt(),64,800); }
+QString UserPreferences::windUnit() const { return m_store.value("display/windUnit", "m/s").toString(); }
+bool UserPreferences::utc() const { return m_store.value("display/utc", false).toBool(); }
+bool UserPreferences::showNight() const { return m_store.value("display/showNight", true).toBool(); }
+bool UserPreferences::showLegend() const { return m_store.value("display/showLegend", true).toBool(); }
+void UserPreferences::setShowLegend(bool value) { if (value==showLegend()) return; m_store.setValue("display/showLegend",value);m_store.sync(); }
+int UserPreferences::chartHeight() const { return std::clamp(m_store.value("display/chartHeight", 174).toInt(),64,800); }
 int UserPreferences::profileChartHeight() const
 {
     return chartHeightForProfile(profile());
 }
 int UserPreferences::chartHeightForProfile(const QString &id) const
 {
-    if (id == "custom") return m_settings.value("display/customChartHeight", 0).toInt();
+    if (id == "custom") return m_store.value("display/customChartHeight", 0).toInt();
     for (const auto &value : savedProfiles()) if (value.toMap()["id"] == id) return value.toMap().value("chartHeight",0).toInt();
     return 0;
 }
@@ -134,7 +53,7 @@ void UserPreferences::setChartHeight(int value)
 {
     value=std::clamp(value,64,800);
     if (value==chartHeight()) return;
-    m_settings.setValue("display/chartHeight",value);m_settings.sync();emit displayChanged();
+    m_store.setValue("display/chartHeight",value);m_store.sync();
 }
 void UserPreferences::setProfileChartHeight(int value)
 {
@@ -143,28 +62,28 @@ void UserPreferences::setProfileChartHeight(int value)
     if (profile().startsWith("user:")) {
         auto saved=savedProfiles();
         for (auto &item:saved) { auto entry=item.toMap();if (entry["id"]==profile()) { entry["chartHeight"]=value;item=entry;break; } }
-        m_settings.setValue("display/savedProfiles",QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        m_store.setValue("display/savedProfiles",QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
     } else {
-        if (profile()!="custom") m_settings.setValue("display/customLayout",QJsonDocument::fromVariant(chartLayout()).toJson(QJsonDocument::Compact));
-        m_settings.setValue("display/profile","custom");m_settings.setValue("display/customChartHeight",value);
+        if (profile()!="custom") m_store.setValue("display/customLayout",QJsonDocument::fromVariant(chartLayout()).toJson(QJsonDocument::Compact));
+        m_store.setValue("display/profile","custom");m_store.setValue("display/customChartHeight",value);
     }
-    m_settings.sync();emit displayChanged();
+    m_store.sync();
 }
 QString UserPreferences::probeMode() const
 {
-    const auto mode = m_settings.value("display/probeMode", "chart").toString();
+    const auto mode = m_store.value("display/probeMode", "chart").toString();
     return QStringList{"chart", "all"}.contains(mode) ? mode : QStringLiteral("chart");
 }
 void UserPreferences::setProbeMode(const QString &value)
 {
     if (!QStringList{"chart", "all"}.contains(value) || value == probeMode()) return;
-    m_settings.setValue("display/probeMode", value); m_settings.sync(); emit displayChanged();
+    m_store.setValue("display/probeMode", value); m_store.sync();
 }
-QString UserPreferences::renderer() const { return m_settings.value("display/renderer", "gpu").toString() == "cpu" ? "cpu" : "gpu"; }
+QString UserPreferences::renderer() const { return m_store.value("display/renderer", "gpu").toString() == "cpu" ? "cpu" : "gpu"; }
 void UserPreferences::setRenderer(const QString &value)
 {
     if ((value != "gpu" && value != "cpu") || value == renderer()) return;
-    m_settings.setValue("display/renderer", value); m_settings.sync(); emit displayChanged();
+    m_store.setValue("display/renderer", value); m_store.sync();
 }
 void UserPreferences::setProfile(const QString &value)
 {
@@ -172,7 +91,7 @@ void UserPreferences::setProfile(const QString &value)
     bool valid = false;
     for (const auto &entry : profiles()) if (entry.toMap()["id"] == value) valid = true;
     if (!valid) return;
-    m_settings.setValue("display/profile", value); m_settings.sync(); emit displayChanged();
+    m_store.setValue("display/profile", value); m_store.sync();
 }
 void UserPreferences::setVisibleGroups(const QStringList &value)
 {
@@ -183,14 +102,14 @@ void UserPreferences::setVisibleGroups(const QStringList &value)
 void UserPreferences::setWindUnit(const QString &value)
 {
     if (!QStringList{"m/s", "km/h", "kt"}.contains(value)) return;
-    m_settings.setValue("display/windUnit", value); m_settings.sync(); emit displayChanged();
+    m_store.setValue("display/windUnit", value); m_store.sync();
 }
-void UserPreferences::setUtc(bool value) { m_settings.setValue("display/utc", value); m_settings.sync(); emit displayChanged(); }
-void UserPreferences::setShowNight(bool value) { m_settings.setValue("display/showNight", value); m_settings.sync(); emit displayChanged(); }
+void UserPreferences::setUtc(bool value) { m_store.setValue("display/utc", value); m_store.sync();  }
+void UserPreferences::setShowNight(bool value) { m_store.setValue("display/showNight", value); m_store.sync();  }
 
 QVariantList UserPreferences::savedProfiles() const
 {
-    return QJsonDocument::fromJson(m_settings.value("display/savedProfiles").toByteArray()).toVariant().toList();
+    return QJsonDocument::fromJson(m_store.value("display/savedProfiles").toByteArray()).toVariant().toList();
 }
 QVariantList UserPreferences::profiles() const
 {
@@ -207,7 +126,7 @@ QVariantList UserPreferences::chartLayout() const
 QVariantList UserPreferences::chartLayoutForProfile(const QString &id) const
 {
     if (id == "custom") {
-        const auto saved = m_settings.value("display/customLayout").toByteArray();
+        const auto saved = m_store.value("display/customLayout").toByteArray();
         return saved.isEmpty() ? defaultChartLayout("classic") : normalizeChartLayout(QJsonDocument::fromJson(saved).toVariant().toList());
     }
     if (id.startsWith("user:")) for (const auto &entry : savedProfiles())
@@ -219,7 +138,7 @@ QVariantList UserPreferences::chartCatalog() const
     return defaultChartLayout("full");
 }
 QVariantList UserPreferences::seriesCatalog() const { return chartSeriesCatalog(); }
-QString UserPreferences::settingsFile() const { return m_settings.fileName(); }
+QString UserPreferences::settingsFile() const { return m_store.fileName(); }
 
 QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) const
 {
@@ -229,8 +148,8 @@ QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) cons
             const auto entry = value.toMap();
             exported.append(QVariantMap{{"name", entry["name"]}, {"charts", normalizeChartLayout(entry["charts"].toList())}, {"chartHeight",entry.value("chartHeight",0)}});
         }
-        if (m_settings.contains("display/customLayout")) exported.append(QVariantMap{{"name", Meteo::i18n("Custom layout")},
-            {"charts", normalizeChartLayout(QJsonDocument::fromJson(m_settings.value("display/customLayout").toByteArray()).toVariant().toList())}, {"chartHeight",m_settings.value("display/customChartHeight",0)}});
+        if (m_store.contains("display/customLayout")) exported.append(QVariantMap{{"name", Meteo::i18n("Custom layout")},
+            {"charts", normalizeChartLayout(QJsonDocument::fromJson(m_store.value("display/customLayout").toByteArray()).toVariant().toList())}, {"chartHeight",m_store.value("display/customChartHeight",0)}});
     }
     if (exported.isEmpty()) {
         QString name;
@@ -261,10 +180,10 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url)
         saved.append(QVariantMap{{"id", id}, {"name", name}, {"charts", entry["charts"]}, {"chartHeight", entry["chartHeight"]}});
         if (selected.isEmpty()) selected = id;
     }
-    m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-    m_settings.setValue("display/profile", selected);
-    m_settings.sync();
-    emit displayChanged();
+    m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+    m_store.setValue("display/profile", selected);
+    m_store.sync();
+
     return {{"ok", true}, {"count", imported->size()}};
 }
 void UserPreferences::saveLayout(const QVariantList &layout)
@@ -274,13 +193,13 @@ void UserPreferences::saveLayout(const QVariantList &layout)
     if (profile().startsWith("user:")) {
         auto saved = savedProfiles();
         for (auto &item : saved) { auto entry = item.toMap(); if (entry["id"] == profile()) { entry["charts"] = normalized; item = entry; break; } }
-        m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
     } else {
-        if (profile()!="custom") m_settings.setValue("display/customChartHeight",profileChartHeight());
-        m_settings.setValue("display/customLayout", QJsonDocument::fromVariant(normalized).toJson(QJsonDocument::Compact));
-        m_settings.setValue("display/profile", "custom");
+        if (profile()!="custom") m_store.setValue("display/customChartHeight",profileChartHeight());
+        m_store.setValue("display/customLayout", QJsonDocument::fromVariant(normalized).toJson(QJsonDocument::Compact));
+        m_store.setValue("display/profile", "custom");
     }
-    m_settings.sync(); emit displayChanged();
+    m_store.sync();
 }
 void UserPreferences::setChartEnabled(const QString &key, bool enabled)
 {
@@ -371,8 +290,8 @@ QString UserPreferences::createProfile(const QString &name)
     const auto id = "user:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
     auto saved = savedProfiles();
     saved.append(QVariantMap{{"id", id}, {"name", name.trimmed().left(80)}, {"charts", chartLayout()}, {"chartHeight",profileChartHeight()}});
-    m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-    m_settings.setValue("display/profile", id); m_settings.sync(); emit displayChanged(); return id;
+    m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+    m_store.setValue("display/profile", id); m_store.sync();  return id;
 }
 QString UserPreferences::duplicateProfile()
 {
@@ -394,22 +313,22 @@ void UserPreferences::renameProfile(const QString &name)
     if (!profile().startsWith("user:") || name.trimmed().isEmpty()) return;
     auto saved = savedProfiles();
     for (auto &item : saved) { auto entry = item.toMap(); if (entry["id"] == profile()) { entry["name"] = name.trimmed().left(80); item = entry; break; } }
-    m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-    m_settings.sync(); emit displayChanged();
+    m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+    m_store.sync();
 }
 void UserPreferences::deleteProfile()
 {
     if (profile() == "custom") {
-        m_settings.remove("display/customLayout");
-        m_settings.remove("display/customChartHeight");
-        m_settings.setValue("display/profile", "classic"); m_settings.sync(); emit displayChanged();
+        m_store.remove("display/customLayout");
+        m_store.remove("display/customChartHeight");
+        m_store.setValue("display/profile", "classic"); m_store.sync();
         return;
     }
     if (!profile().startsWith("user:")) return;
     auto saved = savedProfiles();
     saved.removeIf([this](const QVariant &item) { return item.toMap()["id"] == profile(); });
-    m_settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-    m_settings.setValue("display/profile", "classic"); m_settings.sync(); emit displayChanged();
+    m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+    m_store.setValue("display/profile", "classic"); m_store.sync();
 }
 bool UserPreferences::isFavorite(double latitude, double longitude) const
 {

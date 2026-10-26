@@ -63,6 +63,7 @@ qt_add_qml_module(meteo_ui
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/ProfileFileCodec.cpp presentation/ProfileFileCodec.hpp
+        presentation/PreferencesStore.cpp presentation/PreferencesStore.hpp
         presentation/WeatherLayersModel.cpp presentation/WeatherLayersModel.hpp
         presentation/ThematicMapsModel.cpp presentation/ThematicMapsModel.hpp
         presentation/EditorialModel.cpp presentation/EditorialModel.hpp
