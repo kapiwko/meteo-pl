@@ -1511,6 +1511,7 @@ private slots:
         QQuickItem *details = nullptr, *temperature = nullptr;
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, details), Q_ARG(int, 0)) && details);
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
+        QCOMPARE(temperature->property("index").toInt(), 1);
         QVERIFY(!details->property("expanded").toBool());
         QVERIFY(temperature->property("expanded").toBool());
         QTRY_VERIFY(temperature->height() > 150);

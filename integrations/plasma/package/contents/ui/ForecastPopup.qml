@@ -67,7 +67,7 @@ PlasmaComponents.ScrollView {
         delegate: PlasmaExtras.ExpandableListItem {
             id: section
             required property var modelData
-            required index
+            required property int index
             objectName: "widgetSection-" + modelData.key
             property int legendOverride: -1
             title: modelData.title
