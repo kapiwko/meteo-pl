@@ -76,6 +76,17 @@ class BundleRuntimeTest(unittest.TestCase):
             self.assertTrue(all((root/name).exists() for name in keep))
             self.assertTrue(all(not (root/name).exists() for name in drop))
 
+    def test_absolute_sdk_alias_keeps_the_staged_copy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base=Path(directory);root=base/"bundle";sdk=base/"sdk";sdk.mkdir();(root/"lib").mkdir(parents=True)
+            (root/"bin").mkdir();(root/"bin/meteo-pl").write_bytes(b"\xcf\xfa\xed\xfetest")
+            library=sdk/"libused.1.2.dylib";library.write_bytes(b"\xcf\xfa\xed\xfetest")
+            staged=root/"lib/libused.1.2.dylib";staged.write_bytes(library.read_bytes())
+            (root/"lib/libused.1.dylib").symlink_to(library)
+            runtime.optimize_bundle(root,"macos",dependencies=lambda p,t:{"libused.1.dylib"} if p.name=="meteo-pl" else set())
+            self.assertTrue(staged.exists())
+            self.assertTrue(library.exists())
+
     def test_inspection_failure_leaves_the_entire_bundle_untouched(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);(root/"bin").mkdir();(root/"bin/meteo-pl.exe").write_bytes(b"MZtest")

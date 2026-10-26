@@ -101,9 +101,13 @@ def optimize_bundle(root, target, languages=("en", "pl"), dependencies=None):
             if not p.is_symlink():
                 continue
             real = p.resolve()
-            if real in binaries:
-                aliases.append((p, real))
-                by_name.setdefault(p.name.lower(), set()).add(real)
+            # Craft may copy an absolute SDK symlink before its macOS packager
+            # relocates it. Associate that alias with the staged copy, never
+            # inspect or modify the library outside our collection directory.
+            targets = {real} if real in binaries else by_name.get(real.name.lower(), set())
+            if targets:
+                aliases.append((p, set(targets)))
+                by_name.setdefault(p.name.lower(), set()).update(targets)
         read = dependencies or native_dependencies
         imports = {p: read(p, target) for p in binaries}
         gates = {p: plugin_gate(p.relative_to(root), target) for p in binaries - candidates}
@@ -131,8 +135,8 @@ def optimize_bundle(root, target, languages=("en", "pl"), dependencies=None):
         for p, gate in gates.items():
             if gate and p not in needed:
                 removed[p] = "unused-backends"
-        for alias, real in aliases:
-            if real in removed:
+        for alias, targets in aliases:
+            if targets.issubset(removed):
                 removed[alias] = "unreferenced-aliases"
         # Remove the resources and symlinks of unused frameworks as a unit.
         for p in candidates - needed:
