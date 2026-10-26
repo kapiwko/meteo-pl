@@ -75,12 +75,12 @@ Item {
             if (y < 0 || y >= count) continue;
             for (let x = firstX; x < firstX + columns; ++x) {
                 const wrapped = ((x % count) + count) % count;
-                const images = [{url: tileAddress(baseTileTemplate, wrapped, y, zoom), opacity: 1}];
+                const images = [{url: tileAddress(baseTileTemplate, wrapped, y, zoom), opacity: 1, shared: true}];
                 if (weatherLayer) {
                     const url = weatherLayer.tileUrl(wrapped, y, zoom).toString();
                     if (!url.length) return; // model's published runs are still loading
                     images.push({url: url, opacity: 0.85});
-                    if (labelTileTemplate.length) images.push({url: tileAddress(labelTileTemplate, wrapped, y, zoom), opacity: 1});
+                    if (labelTileTemplate.length) images.push({url: tileAddress(labelTileTemplate, wrapped, y, zoom), opacity: 1, shared: true});
                 }
                 tiles.push({x: x, y: y, images: images});
             }
@@ -121,11 +121,15 @@ Item {
         const urls = [];
         if (!weatherLayer || !front) return urls;
         const count = Math.pow(2, front.level);
-        for (let step = firstStep; step <= lastStep; step += stride)
+        const steps = Math.floor((lastStep - firstStep) / stride) + 1;
+        const current = Math.max(0, Math.min(steps - 1, Math.floor((weatherLayer.step - firstStep) / stride)));
+        for (let index = 0; index < steps; ++index) {
+            const step = firstStep + ((current + index) % steps) * stride;
             for (const tile of front.tiles) {
                 const x = ((tile.x % count) + count) % count;
                 urls.push(weatherLayer.tileUrlAtStep(x, tile.y, front.level, step).toString());
             }
+        }
         return urls;
     }
     Timer { id: requestDelay; interval: 90; onTriggered: root.loadFrame() }

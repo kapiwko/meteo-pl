@@ -25,7 +25,8 @@ ColumnLayout {
         function onChanged() { if (thematic.error.length) animate.checked=false; }
         function onReloadRequested() { picture.reload(); }
     }
-    readonly property string requestedLabel: catalog[layerIndex].name + I18n.i18n(" · run: ") + weather.formatTime(run, "ddd d MMM, HH:mm t") + " · +" + step + " h"
+    readonly property string requestedLabel: labelForStep(step)
+    function labelForStep(hour) { return catalog[layerIndex].name + I18n.i18n(" · run: ") + weather.formatTime(run, "ddd d MMM, HH:mm t") + " · +" + hour + " h"; }
     readonly property string animationKey: layerIndex + ":" + run
     readonly property real fitScale: picture.implicitWidth > 0 && picture.implicitHeight > 0 ? Math.min(imageScroll.availableWidth / picture.implicitWidth, imageScroll.availableHeight / picture.implicitHeight) : 1
     onAnimationKeyChanged: { animationCache.cancel(); if (animate.checked) prepareAnimation(); }
@@ -35,7 +36,7 @@ ColumnLayout {
     }
     ImagePreloader {
         id: animationCache
-        onFinished: MapImages.prefetch(root.urlForStep(root.nextStep()))
+        onFinished: picture.prepare(root.urlForStep(root.nextStep()), root.labelForStep(root.nextStep()))
         onFailed: animate.checked = false
     }
     function urlForStep(hour) { return thematic.urlForStep(hour).toString(); }
@@ -93,7 +94,7 @@ ColumnLayout {
                 height: implicitHeight > 0 ? implicitHeight * root.fitScale * root.imageScale : imageScroll.availableHeight
                 onFrameCommitted: {
                     thematic.imageReady(displayedSource);
-                    if (animate.checked) { root.prepareAnimation(); if (animationCache.ready) MapImages.prefetch(root.urlForStep(root.nextStep())); }
+                    if (animate.checked) { root.prepareAnimation(); if (animationCache.ready) picture.prepare(root.urlForStep(root.nextStep()), root.labelForStep(root.nextStep())); }
                 }
             }
         }
@@ -110,5 +111,5 @@ ColumnLayout {
         }
     }
     Label { text: I18n.i18n("ICM UW / meteo.pl thematic maps · selected run and forecast step"); font.pixelSize: 10; opacity: 0.7; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-    Timer { interval: 1300; repeat: true; running: animate.checked && animationCache.ready && !picture.loading && !picture.error.length && picture.displayedSource.toString().length > 0; onTriggered: root.step = root.nextStep() }
+    Timer { interval: 500; repeat: true; running: animate.checked && animationCache.ready && !picture.error.length && picture.displayedSource.toString().length > 0; onTriggered: if (!picture.loading) root.step = root.nextStep() }
 }

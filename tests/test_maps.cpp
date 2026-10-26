@@ -1,3 +1,4 @@
+#include <QSGRendererInterface>
 #include "network/ImageCache.hpp"
 #include "WeatherModel.hpp"
 #include "ImagePreloader.hpp"
@@ -107,6 +108,110 @@ private slots:
         QTRY_COMPARE(completed, 4);
         QVERIFY2(failure.isEmpty(), qPrintable(failure));
         QCOMPARE(server.requests.size(), 1);
+    }
+    void changingForecastStepReusesTheLiveBasemapAndLabels()
+    {
+        ImageServer server; server.cacheControl = "no-store";
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import pl.meteo.desktop
+            Item {
+                id: root
+                required property string endpoint
+                property alias map: map
+                property QtObject provider: QtObject {
+                    property int step: 1
+                    readonly property int revision: step
+                    readonly property string timeLabel: String(step)
+                    function tileUrl(x,y,z) { return root.endpoint + "forecast-" + step + "/" + z + "/" + x + "/" + y; }
+                    function tileUrlAtStep(x,y,z,hour) { return root.endpoint + "forecast-" + hour + "/" + z + "/" + x + "/" + y; }
+                }
+                TileMap {
+                    id: map
+                    anchors.fill: parent
+                    zoom: 3
+                    weatherLayer: root.provider
+                    baseTileTemplate: root.endpoint + "base/{z}/{x}/{y}"
+                    labelTileTemplate: root.endpoint + "labels/{z}/{x}/{y}"
+                }
+            }
+        )", {});
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"endpoint", server.url("").toString()}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(400,300); item->setParentItem(window.contentItem()); item->setSize({400,300}); window.show();
+        auto *map = object->property("map").value<QObject *>(); QVERIFY(map);
+        QTRY_VERIFY(map->property("hasFrame").toBool());
+        const auto requests = server.requests.size();
+        auto *first = map->property("front").value<QObject *>();
+        auto *provider = object->property("provider").value<QObject *>(); QVERIFY(provider);
+        provider->setProperty("step", 2);
+        QTRY_VERIFY(map->property("front").value<QObject *>() != first);
+        QVERIFY(server.requests.size() > requests);
+        for (qsizetype i = requests; i < server.requests.size(); ++i)
+            QVERIFY2(server.requests[i].path().startsWith("/forecast-2/"), qPrintable(server.requests[i].toString()));
+        QVariant urls;
+        QVERIFY(QMetaObject::invokeMethod(map, "animationUrls", Q_RETURN_ARG(QVariant, urls), Q_ARG(QVariant, 1), Q_ARG(QVariant, 3), Q_ARG(QVariant, 1)));
+        const auto prepared = urls.value<QJSValue>().toVariant().toList();
+        QVERIFY(prepared.first().toString().contains("forecast-2/"));
+        QVERIFY(prepared.last().toString().contains("forecast-1/"));
+    }
+    void preparedThematicFramesUseTwoImages()
+    {
+        ImageServer server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "BufferedImage");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"source", server.url("prepared-transparent")}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(200,200); item->setParentItem(window.contentItem()); item->setSize({200,200}); window.show();
+        QTRY_COMPARE(object->property("displayedSource").toUrl(), server.url("prepared-transparent"));
+        const auto background = object->property("backgroundColor").value<QColor>();
+        QTRY_COMPARE(window.grabWindow().pixelColor(40,40), background);
+        auto *first = object->property("front").value<QObject *>();
+        server.hold = true;
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "prepare", Q_ARG(QVariant, server.url("prepared-blue")), Q_ARG(QVariant, "Next")));
+        QTRY_COMPARE(server.held.size(), 1);
+        QVERIFY(!object->property("loading").toBool());
+        server.releaseAll();
+        auto *pending = object->property("pending").value<QObject *>(); QVERIFY(pending);
+        QTRY_COMPARE(pending->property("status").toInt(), 1);
+        QTRY_COMPARE(window.grabWindow().pixelColor(40,40), background);
+        const int requests = server.requests.size();
+        object->setProperty("source", server.url("prepared-blue"));
+        QCOMPARE(object->property("displayedSource").toUrl(), server.url("prepared-blue"));
+        QVERIFY(!object->property("loading").toBool());
+        QTRY_COMPARE(window.grabWindow().pixelColor(40,40), QColor(Qt::blue));
+        QCOMPARE(server.requests.size(), requests);
+        server.hold = false;
+        object->setProperty("source", server.url("prepared-green"));
+        QTRY_COMPARE(object->property("displayedSource").toUrl(), server.url("prepared-green"));
+        QCOMPARE(object->property("front").value<QObject *>(), first);
+        int images = 0;
+        for (auto *child : item->childItems()) if (child->metaObject()->indexOfProperty("originalSource") >= 0) ++images;
+        QCOMPARE(images, 2);
+        if (qEnvironmentVariableIsSet("METEO_REQUIRE_GPU"))
+            QVERIFY(window.rendererInterface()->graphicsApi() != QSGRendererInterface::Software);
+    }
+    void animationStartsWithItsPlaybackWindowWhileRemainingFramesLoad()
+    {
+        ImageServer server; server.hold = true; QVERIFY(server.listen(QHostAddress::LocalHost));
+        Meteo::ImageCache cache(m_cache.path()+"/animation-window");
+        ImagePreloader loader(nullptr, &cache); loader.setReadyCount(2);
+        QVariantList urls;
+        for (int i=0; i<9; ++i) urls.append(server.url("window-"+QString::number(i)));
+        QSignalSpy finished(&loader, &ImagePreloader::finished);
+        loader.start(urls); QTRY_COMPARE(server.held.size(),4);
+        server.releaseOne(); QTRY_COMPARE(loader.completed(),1); QVERIFY(!loader.ready());
+        server.releaseOne(); QTRY_COMPARE(loader.completed(),2);
+        QVERIFY(loader.ready() && loader.busy()); QVERIFY(finished.isEmpty());
+        server.hold = false; server.releaseAll(); QTRY_COMPARE(loader.completed(),9);
+        QVERIFY(loader.ready() && !loader.busy()); QCOMPARE(finished.size(),1);
+        QCOMPARE(server.requests.size(),9);
+        loader.cancel(); QVERIFY(!loader.ready());
     }
     void animationWaitsForEveryImageAndThenReplaysWithoutNetwork_data()
     {

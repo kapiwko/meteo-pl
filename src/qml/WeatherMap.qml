@@ -19,6 +19,8 @@ ColumnLayout {
     }
     ImagePreloader {
         id: animationCache
+        readyCount: map.front ? map.front.tiles.length * 3 : 0
+        onReadyChanged: if (ready) map.prefetchStep(root.nextStep())
         onFinished: map.prefetchStep(root.nextStep())
         onFailed: play.checked = false
     }
@@ -89,8 +91,8 @@ ColumnLayout {
             z: 3
             anchors.centerIn: parent
             spacing: 8
-            BusyIndicator { anchors.horizontalCenter: parent.horizontalCenter; running: layers.busy || map.loading || animationCache.busy; visible: running }
-            Label { visible: animationCache.busy; text: I18n.i18n("Preparing animation: ") + animationCache.completed + " / " + animationCache.total; padding: 8; background: Rectangle { radius: 4; color: Kirigami.Theme.backgroundColor } }
+            BusyIndicator { anchors.horizontalCenter: parent.horizontalCenter; running: layers.busy || map.loading || animationCache.busy && !animationCache.ready; visible: running }
+            Label { visible: animationCache.busy; text: (animationCache.ready ? I18n.i18n("Loading next frames: ") : I18n.i18n("Preparing animation: ")) + animationCache.completed + " / " + animationCache.total; padding: 8; background: Rectangle { radius: 4; color: Kirigami.Theme.backgroundColor } }
             ProgressBar { anchors.horizontalCenter: parent.horizontalCenter; width: 200; visible: animationCache.busy; from: 0; to: Math.max(1, animationCache.total); value: animationCache.completed }
         }
     }
@@ -117,6 +119,6 @@ ColumnLayout {
         Layout.preferredHeight: 130
         Image { source: legendToggle.checked ? MapImages.cached(layers.legendUrl) : ""; cache: false; asynchronous: true; fillMode: Image.PreserveAspectFit }
     }
-    Timer { interval: 1300; repeat: true; running: play.checked && animationCache.ready && !root.thematic && !layers.busy && !map.loading && map.hasFrame && !map.error.length; onTriggered: layers.step = root.nextStep() }
+    Timer { interval: 500; repeat: true; running: play.checked && animationCache.ready && !root.thematic && !layers.busy && map.hasFrame && !map.error.length; onTriggered: if (!map.loading) layers.step = root.nextStep() }
     }
 }

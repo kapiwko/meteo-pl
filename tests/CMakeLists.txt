@@ -131,6 +131,11 @@ set_tests_properties(gpu_geometry PROPERTIES
     LABELS "gpu;geometry"
 )
 
+add_test(NAME map_animation_gpu COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_maps> preparedThematicFramesUseTwoImages)
+set_tests_properties(map_animation_gpu PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 30 LABELS "gpu;animation")
+
 find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)
 add_test(NAME release_archives COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_release.py")
 set_tests_properties(release_archives PROPERTIES TIMEOUT 15)

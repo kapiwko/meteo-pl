@@ -62,7 +62,9 @@ Item {
                     required property var modelData
                     anchors.fill: parent
                     asynchronous: true
-                    cache: false
+                    // Base map and labels stay identical across forecast steps.
+                    // Sharing their live pixmaps also shares GPU textures.
+                    cache: Boolean(modelData.shared)
                     source: MapImages.cached(modelData.url)
                     opacity: modelData.opacity
                     onStatusChanged: tile.check()

@@ -39,7 +39,8 @@ public:
         if (!request.socket) return;
         const bool failure = statusCode != 200 || request.url.path().contains("error");
         const int code = failure ? (statusCode == 200 ? 404 : statusCode) : 200;
-        const QColor color = request.url.path().contains("blue") ? Qt::blue
+        const QColor color = request.url.path().contains("transparent") ? Qt::transparent
+            : request.url.path().contains("blue") ? Qt::blue
             : request.url.path().contains("green") ? Qt::green : Qt::red;
         QImage image(imageSize, QImage::Format_ARGB32);
         image.fill(color);

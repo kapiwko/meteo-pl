@@ -2189,3 +2189,6 @@ msgstr ""
 #: src/qml/EditorialView.qml:35
 msgid "yyyy-mm-dd"
 msgstr ""
+
+msgid "Loading next frames: "
+msgstr ""

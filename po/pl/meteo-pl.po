@@ -2282,3 +2282,6 @@ msgstr "rrrr-mm-dd"
 
 #~ msgid "Selected: "
 #~ msgstr "Wybrano: "
+
+msgid "Loading next frames: "
+msgstr "Wczytywanie kolejnych klatek: "
