@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 18:00+0100\n"
+"POT-Creation-Date: 2026-10-26 18:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -737,11 +737,6 @@ msgstr ""
 msgid "Fill:"
 msgstr ""
 
-#: src/qml/Meteogram.qml:519
-msgid ""
-"Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
-msgstr ""
-
 #: src/qml/LocationEditor.qml:56
 msgid "Find a place"
 msgstr ""
@@ -1075,6 +1070,10 @@ msgstr ""
 
 #: src/presentation/ForecastFields.cpp:18
 msgid "Mean precipitation in interval"
+msgstr ""
+
+#: src/presentation/ChartAnalysis.cpp:108
+msgid "Mean: total over %1 h. Maximum: total over %2 h."
 msgstr ""
 
 #: src/presentation/ForecastFields.cpp:30
@@ -1428,6 +1427,10 @@ msgstr ""
 
 #: src/presentation/ForecastFields.cpp:65
 msgid "Precipitation chance and storms"
+msgstr ""
+
+#: src/presentation/ChartAnalysis.cpp:107
+msgid "Precipitation totals over %1 h."
 msgstr ""
 
 #: src/presentation/ForecastFields.cpp:21

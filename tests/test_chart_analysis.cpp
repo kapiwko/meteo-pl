@@ -1,14 +1,88 @@
 #include "ChartAnalysis.hpp"
 #include "ChartConfiguration.hpp"
+#include "ChartDataBuilder.hpp"
 #include <QTest>
 #include <QFile>
 #include <QJSEngine>
 #include <cmath>
 #include <limits>
 
+namespace {
+QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
+{
+    QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");
+    if (!source.open(QIODevice::ReadOnly)) return engine.newErrorObject(QJSValue::GenericError, source.errorString());
+    auto script = QString::fromUtf8(source.readAll());
+    script.remove(0, script.indexOf('\n') + 1);
+    const auto loaded = engine.evaluate(script);
+    if (loaded.isError()) return loaded;
+    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(fields));
+    return engine.evaluate(QStringLiteral(R"JS(
+        (function() {
+            const rectangles=[], polygons=[], circles=[], ctx={}; let path=[];
+            for (const name of ["reset","save","restore","rect","clip","setLineDash","stroke","fillText","translate","rotate"])
+                ctx[name]=function(){};
+            ctx.beginPath=function(){path=[];};
+            ctx.moveTo=ctx.lineTo=function(x,y){path.push([x,y]);};
+            ctx.closePath=function(){path.closed=true;};
+            ctx.fill=function(){if(path.closed && this.fillStyle==="#123456") polygons.push(path.slice());};
+            ctx.fillRect=function(x,y,w,h){if(this.fillStyle==="#123456") rectangles.push({x:x,y:y,width:w,height:h});};
+            ctx.arc=function(x,y,r){circles.push({x:x,y:y,radius:r});};
+            const root={
+                leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
+                darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,
+                startTime:1800000000,endTime:1800021600,weather:{firstTimestamp:1800000000},nights:[],
+                fields:fieldsUnderTest,bounds:{low:0,high:10},rightBounds:{low:0,high:10},
+                ticks:function(){return [];},axisUnit:function(){return "";},
+                timeAxisLabels:function(){return {labels:[],days:[],midnights:[]};},
+                valid:function(v){return v!==null&&v!==undefined&&isFinite(v);},shown:function(){return true;},
+                layerOrder:function(){return 0;},seriesColor:function(){return "#123456";},isRightField:function(){return false;},drawGrid:function(){},
+                px:function(t){return (t-1800000000)/3600*100;},py:function(v){return 100-v;},
+                pointAt:function(points,time){return points.find(point=>point.time===time);}
+            };
+            paintChart(root,{width:600,height:120},ctx,false);
+            return {rectangles:rectangles,polygons:polygons,circles:circles};
+        })()
+    )JS"));
+}
+}
+
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void singlePrecipitationSampleUsesItsNativeInterval_data()
+    {
+        QTest::addColumn<int>("hours");
+        for (int hours : {1, 3, 6}) QTest::newRow(qPrintable(QString::number(hours))) << hours;
+    }
+    void singlePrecipitationSampleUsesItsNativeInterval()
+    {
+        QFETCH(int, hours);
+        Meteo::Forecast forecast;
+        forecast.series.insert("pcpttl_aver", {"mm", 1800000000, hours * 3600, {4.0}});
+        const auto points = buildChartSeries(forecast, {}).value("pcpttl_aver").toList();
+        QCOMPARE(points.first().toMap()["intervalFrom"].toLongLong(), 1800000000LL);
+        QCOMPARE(points.first().toMap()["intervalTo"].toLongLong(), 1800000000LL + hours * 3600);
+        QJSEngine engine;
+        const auto drawing = recordChart(engine, {QVariantMap{{"key", "pcpttl_aver"}, {"kind", "bars"}, {"points", points}}});
+        QVERIFY2(!drawing.isError(), qPrintable(drawing.toString()));
+        const auto rectangles = drawing.property("rectangles");
+        QCOMPARE(rectangles.property("length").toInt(), 1);
+        QCOMPARE(rectangles.property(0).property("x").toNumber(), 0.0);
+        QCOMPARE(rectangles.property(0).property("width").toNumber(), hours * 100.0);
+    }
+    void precipitationCaptionIgnoresUnrelatedSeriesAndReportsDifferentPeriods()
+    {
+        ChartAnalysis analysis;
+        const QVariantMap temperature{{"key", "airtmp_point"}, {"points", QVariantList{QVariantMap{{"interval", 3600}}}}};
+        const QVariantMap mean{{"key", "pcpttl_aver"}, {"points", QVariantList{QVariantMap{{"interval", 10800}}}}};
+        const QVariantMap maximum{{"key", "pcpttl_max"}, {"points", QVariantList{QVariantMap{{"interval", 3600}}}}};
+        QCOMPARE(analysis.precipitationCaption({temperature, mean}), QString("Precipitation totals over 3 h."));
+        QCOMPARE(analysis.precipitationCaption({mean, temperature}), analysis.precipitationCaption({temperature, mean}));
+        QCOMPARE(analysis.precipitationCaption({temperature, maximum, mean}),
+                 QString("Mean: total over 3 h. Maximum: total over 1 h."));
+        QCOMPARE(analysis.precipitationCaption({mean, maximum}), analysis.precipitationCaption({maximum, mean}));
+    }
     void cursorUsesPreparedSampleValuesAndTheirNativePositions()
     {
         QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");

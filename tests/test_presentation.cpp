@@ -1328,7 +1328,7 @@ private slots:
         const auto first = model.firstTimestamp();
         const auto points = [first](double value) {
             QVariantList result;
-            for (int i = 0; i < 4; ++i) result.append(QVariantMap{{"time", first + i * 3600}, {"value", value}});
+            for (int i = 0; i < 4; ++i) result.append(QVariantMap{{"time", first + i * 3600}, {"value", value}, {"interval", 3600}});
             return result;
         };
         const QVariantMap rain{{"key", "pcpttl_aver"}, {"label", "Rain"}, {"unit", "mm"}, {"color", "#00aa00"}, {"kind", "bars"}, {"points", points(1)}};

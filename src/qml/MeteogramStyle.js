@@ -168,6 +168,13 @@ function paintDirections(root, ctx, left, right, center) {
     }
 }
 
+function intervalBounds(point) {
+    const from = Number.isFinite(point.intervalFrom) ? point.intervalFrom : point.time;
+    const duration = Number.isFinite(point.interval) && point.interval > 0 ? point.interval : 0;
+    const to = Number.isFinite(point.intervalTo) && point.intervalTo >= from ? point.intervalTo : from + duration;
+    return {from: from, to: to, center: (from + to) / 2};
+}
+
 function paintChart(root, plot, ctx, withCursor) {
     const width = plot.width, height = plot.height; ctx.reset();
     const left = root.leftMargin, right = width - root.rightMargin;
@@ -235,8 +242,6 @@ function paintChart(root, plot, ctx, withCursor) {
         if (!root.shown(field) || ["hidden", "range", "direction", "type", "storm", "flash"].indexOf(field.kind) >= 0) continue;
         if (field.kind === "cloudArea" && field.key === "cldvlow_aver") continue;
         const isRight = root.isRightField(field);
-        const step = field.points.length > 1 ? field.points[1].time - field.points[0].time : 3600;
-        const barWidth = field.kind === "rightBars" ? 3 : Math.max(2, Math.abs(root.px(root.startTime + step) - left) * (field.kind === "barsBack" ? 0.9 : 0.8));
         ctx.strokeStyle = root.seriesColor(field); ctx.fillStyle = root.seriesColor(field); ctx.lineWidth = field.lineWidth === undefined ? 2 : field.lineWidth;
         ctx.setLineDash(field.lineStyle === "dotted" ? [1,3] : field.lineStyle === "dashed" || field.kind === "dashed" ? [4,3] : []);
         ctx.globalAlpha = field.opacity === undefined ? 1 : field.opacity;
@@ -255,15 +260,17 @@ function paintChart(root, plot, ctx, withCursor) {
         ctx.beginPath(); let started = false;
         for (const point of field.points) {
             if (!root.valid(point.value)) { started = false; continue; }
+            const interval = intervalBounds(point);
+            const barWidth = field.kind === "rightBars" ? 3 : Math.max(2, Math.abs(root.px(interval.to) - root.px(interval.from)) * (field.kind === "barsBack" ? 0.9 : 0.8));
             const isPrecipitationBar = field.key === "pcpttl_aver" || field.key === "pcpttl_max";
-            const x = root.px(point.time + (isPrecipitationBar || field.kind === "gusts" ? step / 2 : 0)), y = root.py(point.value, isRight);
+            const x = root.px(isPrecipitationBar || field.kind === "gusts" ? interval.center : point.time), y = root.py(point.value, isRight);
             if (field.kind === "cloudPoint" || field.kind === "points") {
                 if (field.kind === "cloudPoint" && point.value <= 0) continue;
                 ctx.beginPath(); ctx.arc(x, y, field.pointSize || (field.kind === "points" ? 2 : 3), 0, Math.PI * 2); ctx.fill();
             } else if (field.kind === "gusts") {
                 if (point.value <= 0) continue;
                 const gustY = Math.max(top, y);
-                ctx.beginPath(); ctx.moveTo(root.px(point.time), gustY); ctx.lineTo(root.px(point.time + step), gustY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(root.px(interval.from), gustY); ctx.lineTo(root.px(interval.to), gustY); ctx.stroke();
                 if (point.value > (isRight ? root.rightBounds.high : root.bounds.high)) { ctx.beginPath(); ctx.arc(x, top + 2, 2, 0, Math.PI * 2); ctx.fill(); }
             } else if (field.kind === "bars" || field.kind === "barsBack" || field.kind === "stems" || field.kind === "rightBars") {
                 if (isPrecipitationBar && field.precipitationColors !== false) {
@@ -282,8 +289,8 @@ function paintChart(root, plot, ctx, withCursor) {
                         ctx.beginPath(); ctx.arc(x, top + 2, 2, 0, Math.PI * 2); ctx.fill();
                     }
                 } else {
-                    const from = field.key === "pcpttl_aver" ? Math.floor(root.px(point.time)) : x - barWidth / 2;
-                    const to = field.key === "pcpttl_aver" ? Math.ceil(root.px(point.time + step)) : from + barWidth;
+                    const from = field.key === "pcpttl_aver" ? Math.floor(root.px(interval.from)) : x - barWidth / 2;
+                    const to = field.key === "pcpttl_aver" ? Math.ceil(root.px(interval.to)) : from + barWidth;
                     const zero = root.py(0, isRight);
                     ctx.fillRect(from, Math.min(y, zero), to - from, Math.abs(zero - y));
                 }

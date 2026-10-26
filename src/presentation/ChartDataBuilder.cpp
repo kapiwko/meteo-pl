@@ -16,6 +16,12 @@ QVariantMap buildChartSeries(const Meteo::Forecast &forecast, const QHash<QStrin
             const auto value = series.values[i];
             QVariantMap point{{"time", time}, {"value", value ? QVariant(*value * scales.value(it.key(), 1)) : QVariant()},
                               {"interval", series.interval}};
+            const auto timing = Meteo::quantityTiming(it.key());
+            const auto sample = Meteo::sampleSeries(series, time, timing);
+            point["sourceTimestamp"] = time;
+            point["sampling"] = Meteo::timingName(timing);
+            point["intervalFrom"] = sample && timing != Meteo::QuantityTiming::Instant ? QVariant(sample->intervalFrom) : QVariant();
+            point["intervalTo"] = sample && timing != Meteo::QuantityTiming::Instant ? QVariant(sample->intervalTo) : QVariant();
             if (it.key() == "pcpttl_aver" || it.key() == "pcpttl_max")
                 point["precipitationType"] = numberAt("pcpttl_type_max", time);
             if (it.key() == "storm_max" || it.key() == "flash_max") {

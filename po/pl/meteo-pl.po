@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 18:00+0100\n"
+"POT-Creation-Date: 2026-10-26 18:07+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -756,12 +756,6 @@ msgstr "Wypełnienie pod linią"
 msgid "Fill:"
 msgstr "Wypełnienie:"
 
-#: src/qml/Meteogram.qml:519
-msgid ""
-"Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
-msgstr ""
-"Wypełnienie: opad średni. Cienkie kreski: opad maksymalny. Suma w przedziale "
-
 #: src/qml/LocationEditor.qml:56
 msgid "Find a place"
 msgstr "Znajdź miejsce"
@@ -1100,6 +1094,10 @@ msgstr "Temperatura maksymalna"
 #: src/presentation/ForecastFields.cpp:18
 msgid "Mean precipitation in interval"
 msgstr "Opad średni w przedziale"
+
+#: src/presentation/ChartAnalysis.cpp:108
+msgid "Mean: total over %1 h. Maximum: total over %2 h."
+msgstr "Opad średni: suma z %1 h. Maksymalny: suma z %2 h."
 
 #: src/presentation/ForecastFields.cpp:30
 msgid "Medium clouds"
@@ -1459,6 +1457,10 @@ msgstr "Szansa opadu"
 #: src/presentation/ForecastFields.cpp:65
 msgid "Precipitation chance and storms"
 msgstr "Szansa opadu i burze"
+
+#: src/presentation/ChartAnalysis.cpp:107
+msgid "Precipitation totals over %1 h."
+msgstr "Sumy opadu w przedziałach %1 h."
 
 #: src/presentation/ForecastFields.cpp:21
 msgid "Precipitation type"
@@ -2222,6 +2224,12 @@ msgstr "czas lokalny systemu"
 #: src/qml/EditorialView.qml:35
 msgid "yyyy-mm-dd"
 msgstr "rrrr-mm-dd"
+
+#~ msgid ""
+#~ "Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
+#~ msgstr ""
+#~ "Wypełnienie: opad średni. Cienkie kreski: opad maksymalny. Suma w "
+#~ "przedziale "
 
 #~ msgid "Could not save preferences."
 #~ msgstr "Nie udało się zapisać ustawień."

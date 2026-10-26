@@ -26,4 +26,5 @@ public:
     Q_INVOKABLE QVariantMap precipitationAxis(double maximum) const;
     Q_INVOKABLE QVariantMap windAxis(double maximum, double scale) const;
     Q_INVOKABLE QVariantMap humidityAxis(double low, double high) const;
+    Q_INVOKABLE QString precipitationCaption(const QVariantList &fields) const;
 };

@@ -516,7 +516,7 @@ ColumnLayout {
     Label {
         visible: root.legendVisible && root.fields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")
         Layout.fillWidth: true
-        text: I18n.i18n("Fill: mean precipitation. Thin stems: maximum precipitation. Total over ") + (root.fields.length && root.fields[0].points.length > 1 ? (root.fields[0].points[1].time - root.fields[0].points[0].time) / 3600 : 1) + " h."
+        text: ChartAnalysis.precipitationCaption(root.fields)
         wrapMode: Text.WordWrap
         font.pixelSize: 10
         opacity: 0.65
