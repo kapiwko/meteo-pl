@@ -16,6 +16,7 @@ Na Windows lub macOS, w katalogu projektu:
 
 ```sh
 python -m pip install certifi
+python -m pip install pefile==2024.8.26 macholib==1.16.3
 python scripts/build-portable.py --target windows
 # Na macOS:
 python scripts/build-portable.py --target macos
@@ -44,6 +45,20 @@ Test odrzuca błędy ładowania QML. Raport Androida zapisuje brak testu uruchom
 na urządzeniu; samo utworzenie APK nie oznacza sprawdzenia działania na telefonie.
 Porównania CPU/GPU z [testów wizualnych](renderer-tests.md) są obecnie wykonywane
 na Linuksie, a nie na backendach D3D/Metal ani na telefonie.
+
+## Rozmiar paczek
+
+Przed archiwizacją `bundle_runtime.py` usuwa przykłady SDK, motywy kursorów,
+pluginy deweloperskie i nieużywane moduły QML. Dla Windows i macOS odczytuje
+zależności PE/Mach-O i zachowuje ich domknięcie, pluginy QML i platformy oraz
+biblioteki TLS ładowane dynamicznie. Backend multimediów, SQL lub syntezy mowy
+pozostaje, jeśli wymaga go zachowana biblioteka Qt. Usuwany jest wyłącznie
+roboczy zbiór plików paczki, a nie SDK Craft.
+
+Tłumaczenia zależności odpowiadają językom aplikacji: obecnie angielski i polski.
+Ikony Breeze, licencje i zasoby zachowanych bibliotek pozostają w paczce.
+`BUILD-REPORT.json` zawiera rozmiary przed i po tej operacji oraz listę usuniętych
+bibliotek. Gotowe archiwum nadal musi przejść test uruchomienia.
 
 ## Podpisy i publikowanie
 

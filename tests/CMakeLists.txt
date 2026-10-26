@@ -103,6 +103,8 @@ add_test(NAME release_archives COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_
 set_tests_properties(release_archives PROPERTIES TIMEOUT 15)
 add_test(NAME portable_packaging COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_portable.py")
 set_tests_properties(portable_packaging PROPERTIES TIMEOUT 15)
+add_test(NAME bundle_runtime COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test_bundle_runtime.py")
+set_tests_properties(bundle_runtime PROPERTIES TIMEOUT 15)
 
 # Qt may otherwise send diagnostics only to journald when stdout is captured.
 get_property(meteo_tests DIRECTORY PROPERTY TESTS)

@@ -164,6 +164,7 @@ def build(args):
     bootstrap = work / "craft-bootstrap"
     checkout("https://github.com/KDE/craft.git", CRAFT_REVISION, bootstrap)
     environment = build_environment(args.target)
+    environment["METEO_BUNDLE_REPORT"] = str(work / "bundle-runtime.json")
     # Craft's CA bundle is installed during bootstrap, so the first download
     # must use an existing trust store. Keep certificate verification enabled.
     certificates = ssl.get_default_verify_paths().cafile
@@ -218,6 +219,8 @@ def build(args):
               "blueprintsRevision": BLUEPRINTS_REVISION, "artifacts": [p.name for p in artifacts]}
     report["cacheUrl"] = args.cache_url or "https://files.kde.org/craft/Qt6/"
     report["bundleSmokeTest"] = "not-run" if args.target == "android" else "passed"
+    bundle_report = work / "bundle-runtime.json"
+    if bundle_report.exists(): report["bundleContents"] = json.loads(bundle_report.read_text())
     (dist / "BUILD-REPORT.json").write_text(json.dumps(report, indent=2) + "\n")
     artifacts.append(dist / "BUILD-REPORT.json")
     sums = []

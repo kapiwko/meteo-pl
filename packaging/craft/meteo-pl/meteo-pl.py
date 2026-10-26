@@ -1,4 +1,6 @@
 import os
+import importlib.util
+import json
 from pathlib import Path
 import info
 from CraftCore import CraftCore
@@ -41,6 +43,20 @@ class Package(CMakePackageBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.subinfo.options.configure.args += ["-DMETEO_BUILD_PLASMOID=OFF", "-DBUILD_TESTING=OFF"]
+
+    def preArchive(self):
+        source = Path(os.environ["METEO_SOURCE_DIR"])
+        spec = importlib.util.spec_from_file_location("meteo_bundle_runtime", source / "scripts/bundle_runtime.py")
+        runtime = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(runtime)
+        platform = CraftCore.compiler.platform
+        target = "android" if platform.isAndroid else "windows" if platform.isWindows else "macos"
+        languages = sorted({"en", *(p.parent.name for p in (source / "po").glob("*/meteo-pl.po"))})
+        report = runtime.optimize_bundle(self.archiveDir(), target, languages)
+        print("[bundle] " + json.dumps(report, sort_keys=True), flush=True)
+        if path := os.environ.get("METEO_BUNDLE_REPORT"):
+            Path(path).write_text(json.dumps(report, indent=2) + "\n")
+        return True
 
     def createPackage(self):
         self.defines["appname"] = "meteo-pl"
