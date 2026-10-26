@@ -88,7 +88,22 @@ def sign_android(apk, dist):
         run([tools / "apksigner", "sign", "--ks", key, "--ks-key-alias", "androiddebugkey",
              "--ks-pass", "pass:android", "--key-pass", "pass:android", "--out", result, aligned])
         run([tools / "apksigner", "verify", "--verbose", result])
-        return result
+    return result
+
+
+def check_android_icons(apk):
+    # A successful compile/signature check cannot detect a missing Android
+    # fallback theme. Verify real assets in the final APK before publishing it.
+    prefix = "assets/qml/org/kde/kirigami/breeze-internal/"
+    required = {"configure", "mark-location", "view-refresh", "office-chart-line",
+                "chronometer", "view-calendar", "globe", "dialog-messages",
+                "view-list-text", "dialog-close", "go-next", "open-menu-symbolic"}
+    with zipfile.ZipFile(apk) as archive:
+        icons = {Path(entry.filename).stem for entry in archive.infolist()
+                 if entry.filename.startswith(prefix + "icons/") and entry.file_size > 0}
+        if prefix + "index.theme" not in archive.namelist() or not required.issubset(icons):
+            raise RuntimeError(f"Android APK is missing its icon theme: {sorted(required - icons)}")
+    return len(icons)
 
 
 def check_packaged_desktop(target, packages, craft_root, environment):
@@ -143,6 +158,7 @@ def package_current_build(command, target, work, dist, craft_root, environment, 
             raise RuntimeError(f"Expected one current {suffix} package, found {packages}")
         if target == "android":
             signed = sign_android(packages[0], staging)
+            check_android_icons(signed)
             artifacts = [packages[0], signed] if include_alternatives else [signed]
         else:
             check_packaged_desktop(target, artifacts, craft_root, environment)

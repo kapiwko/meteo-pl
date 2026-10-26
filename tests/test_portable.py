@@ -28,10 +28,19 @@ class PortablePackagingTest(unittest.TestCase):
                 (configured[0]/"meteo.apk").write_bytes(b"current")
             def sign(apk,stage):
                 result=stage/"meteo-development.apk"; result.write_bytes(apk.read_bytes()+b"signed"); return result
-            with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign):
+            with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign), patch.object(portable,"check_android_icons") as check:
                 artifacts=portable.package_current_build(["craft"],"android",root,dist,root/"CraftRoot",{},prepare)
+                check.assert_called_once_with(configured[0]/"meteo-development.apk")
             self.assertEqual([p.name for p in artifacts],["meteo-development.apk"])
             self.assertFalse(configured[0].exists())
+
+    def test_android_cannot_publish_an_apk_without_its_icon_theme(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory)/"meteo.apk"
+            with zipfile.ZipFile(apk,"w") as archive:
+                archive.writestr("lib/arm64-v8a/libKF6IconThemes.so",b"library without icons")
+            with self.assertRaisesRegex(RuntimeError,"missing its icon theme"):
+                portable.check_android_icons(apk)
 
     def test_windows_smoke_uses_only_the_explicit_current_archive(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -85,7 +94,7 @@ class PortablePackagingTest(unittest.TestCase):
                         (destination/name).write_bytes(b"package")
                 def sign(apk,stage):
                     result=stage/"meteo-development.apk";result.write_bytes(b"signed");return result
-                with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign), patch.object(portable,"check_packaged_desktop"):
+                with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign), patch.object(portable,"check_packaged_desktop"), patch.object(portable,"check_android_icons"):
                     artifacts=portable.package_current_build(["craft"],target,root,dist,root/"CraftRoot",{},include_alternatives=True)
                 self.assertEqual(len(artifacts),2)
                 self.assertTrue(all(p.exists() for p in artifacts))
