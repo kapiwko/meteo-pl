@@ -1,10 +1,10 @@
 #include "PreferencesStore.hpp"
 #include "ChartConfiguration.hpp"
+#include "core/Locations.hpp"
 #include <QDataStream>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
-#include <cmath>
 
 PreferencesStore::PreferencesStore(QObject *parent)
     : QObject(parent),
@@ -98,8 +98,8 @@ void PreferencesStore::migrate()
             bool found = false;
             for (const auto &entry : places) {
                 const auto saved = entry.toMap();
-                if (std::abs(saved["latitude"].toDouble() - candidate["latitude"].toDouble()) < 0.000001 &&
-                    std::abs(saved["longitude"].toDouble() - candidate["longitude"].toDouble()) < 0.000001) {
+                if (Meteo::samePlace(saved["latitude"].toDouble(), saved["longitude"].toDouble(),
+                                     candidate["latitude"].toDouble(), candidate["longitude"].toDouble())) {
                     found = true;
                     break;
                 }

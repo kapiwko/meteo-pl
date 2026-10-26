@@ -64,6 +64,7 @@ public:
     Q_INVOKABLE void rememberPlace(const QString &name, double latitude, double longitude);
     Q_INVOKABLE void toggleFavorite(const QString &name, double latitude, double longitude);
     Q_INVOKABLE bool isFavorite(double latitude, double longitude) const;
+    Q_INVOKABLE QVariantMap placeAt(double latitude, double longitude) const;
     Q_INVOKABLE QString createProfile(const QString &name);
     Q_INVOKABLE QString duplicateProfile();
     Q_INVOKABLE void renameProfile(const QString &name);

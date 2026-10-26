@@ -161,14 +161,14 @@ ColumnLayout {
                 id: savedPlace
                 required property var modelData
                 width: ListView.view.width
-                highlighted: Math.abs(modelData.latitude-root.latitude) < 0.000001 && Math.abs(modelData.longitude-root.longitude) < 0.000001
+                highlighted: LocationRules.samePlace(modelData.latitude, modelData.longitude, root.latitude, root.longitude)
                 onClicked: root.selectPlace(modelData)
                 contentItem: RowLayout {
                     Label { text: savedPlace.modelData.name; Layout.fillWidth: true; elide: Text.ElideRight }
                     ToolButton {
                         icon.name: "edit-delete"
                         onClicked: {
-                            const selected = Math.abs(savedPlace.modelData.latitude-root.latitude) < 0.000001 && Math.abs(savedPlace.modelData.longitude-root.longitude) < 0.000001;
+                            const selected = LocationRules.samePlace(savedPlace.modelData.latitude, savedPlace.modelData.longitude, root.latitude, root.longitude);
                             UserPreferences.removePlace(savedPlace.modelData.latitude, savedPlace.modelData.longitude);
                             if (selected) {
                                 const first = UserPreferences.places[0];

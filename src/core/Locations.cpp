@@ -5,6 +5,10 @@
 #include <cmath>
 
 namespace Meteo {
+bool samePlace(double latitudeA, double longitudeA, double latitudeB, double longitudeB)
+{
+    return std::abs(latitudeA-latitudeB) < 0.000001 && std::abs(longitudeA-longitudeB) < 0.000001;
+}
 QVariantList parseLocations(const QJsonDocument &document)
 {
     QVariantList results;

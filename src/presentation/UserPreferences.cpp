@@ -3,6 +3,7 @@
 #include "ForecastFields.hpp"
 #include "ChartConfiguration.hpp"
 #include "ProfileFileCodec.hpp"
+#include "core/Locations.hpp"
 #include <QJsonDocument>
 #include <QSet>
 #include <cmath>
@@ -332,11 +333,15 @@ void UserPreferences::deleteProfile()
 }
 bool UserPreferences::isFavorite(double latitude, double longitude) const
 {
+    return !placeAt(latitude, longitude).isEmpty();
+}
+QVariantMap UserPreferences::placeAt(double latitude, double longitude) const
+{
     for (const auto &value : favorites()) {
         const auto place = value.toMap();
-        if (std::abs(place["latitude"].toDouble() - latitude) < 0.000001 && std::abs(place["longitude"].toDouble() - longitude) < 0.000001) return true;
+        if (Meteo::samePlace(place["latitude"].toDouble(), place["longitude"].toDouble(), latitude, longitude)) return place;
     }
-    return false;
+    return {};
 }
 void UserPreferences::savePlace(const QString &name, double latitude, double longitude)
 {
@@ -344,7 +349,7 @@ void UserPreferences::savePlace(const QString &name, double latitude, double lon
     auto places = favorites();
     for (auto &entry : places) {
         auto place = entry.toMap();
-        if (std::abs(place["latitude"].toDouble()-latitude) >= 0.000001 || std::abs(place["longitude"].toDouble()-longitude) >= 0.000001) continue;
+        if (!Meteo::samePlace(place["latitude"].toDouble(), place["longitude"].toDouble(), latitude, longitude)) continue;
         if (place["name"].toString() == name.trimmed()) return;
         place["name"] = name.trimmed(); entry = place;
         writePlaces("places/favorites", places); return;
@@ -358,7 +363,7 @@ void UserPreferences::removePlace(double latitude, double longitude)
     const auto count = places.size();
     places.removeIf([&](const QVariant &entry) {
         const auto place = entry.toMap();
-        return std::abs(place["latitude"].toDouble()-latitude) < 0.000001 && std::abs(place["longitude"].toDouble()-longitude) < 0.000001;
+        return Meteo::samePlace(place["latitude"].toDouble(), place["longitude"].toDouble(), latitude, longitude);
     });
     if (places.size() != count) writePlaces("places/favorites", places);
 }
@@ -369,7 +374,7 @@ void UserPreferences::rememberPlace(const QString &name, double latitude, double
     auto places = recentPlaces();
     places.removeIf([latitude, longitude](const QVariant &v) {
         const auto p = v.toMap();
-        return std::abs(p["latitude"].toDouble() - latitude) < 0.000001 && std::abs(p["longitude"].toDouble() - longitude) < 0.000001;
+        return Meteo::samePlace(p["latitude"].toDouble(), p["longitude"].toDouble(), latitude, longitude);
     });
     places.prepend(QVariantMap{{"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
     while (places.size() > 12) places.removeLast();
@@ -381,7 +386,7 @@ void UserPreferences::toggleFavorite(const QString &name, double latitude, doubl
     auto places = favorites();
     const bool removed = places.removeIf([latitude, longitude](const QVariant &v) {
         const auto p = v.toMap();
-        return std::abs(p["latitude"].toDouble() - latitude) < 0.000001 && std::abs(p["longitude"].toDouble() - longitude) < 0.000001;
+        return Meteo::samePlace(p["latitude"].toDouble(), p["longitude"].toDouble(), latitude, longitude);
     }) > 0;
     if (!removed) places.append(QVariantMap{{"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
     writePlaces("places/favorites", places);

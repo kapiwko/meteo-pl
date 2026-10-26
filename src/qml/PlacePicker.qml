@@ -28,7 +28,7 @@ ColumnLayout {
         model: UserPreferences.places
         textRole: "name"
         displayText: root.weather.locationName
-        currentIndex: model.findIndex(place => Math.abs(place.latitude-root.weather.latitude) < 0.000001 && Math.abs(place.longitude-root.weather.longitude) < 0.000001)
+        currentIndex: model.findIndex(place => LocationRules.samePlace(place.latitude, place.longitude, root.weather.latitude, root.weather.longitude))
         Accessible.name: I18n.i18n("My places · choose a forecast")
         onActivated: index => {
             const place = model[index];

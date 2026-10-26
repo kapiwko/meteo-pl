@@ -39,7 +39,7 @@ Item {
             result.push({name: markerName, latitude: markerLatitude, longitude: markerLongitude});
         return result;
     }
-    function sameCoordinates(lat1, lon1, lat2, lon2) { return Math.abs(lat1-lat2) < 0.000001 && Math.abs(lon1-lon2) < 0.000001; }
+    function sameCoordinates(lat1, lon1, lat2, lon2) { return LocationRules.samePlace(lat1, lon1, lat2, lon2); }
     function positionFor(lat, lon) {
         const rawX = (lon + 180) / 360 * worldSize - centerX;
         const dx = ((rawX + worldSize/2) % worldSize + worldSize) % worldSize - worldSize/2;
