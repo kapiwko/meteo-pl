@@ -106,16 +106,27 @@ endif()
 
 qt_add_executable(test_renderers test_renderers.cpp)
 target_link_libraries(test_renderers PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)
-add_test(NAME renderer_parity COMMAND test_renderers)
+# Qt 6.8's offscreen/GLX readback can corrupt the window header. Use a real
+# virtual X11 surface for RHI image checks when available; keep RHI mandatory.
+set(METEO_GPU_QPA offscreen)
+set(METEO_GPU_TEST_WRAPPER)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_program(METEO_XVFB_RUN xvfb-run)
+    if(METEO_XVFB_RUN)
+        set(METEO_GPU_QPA xcb)
+        set(METEO_GPU_TEST_WRAPPER "${METEO_XVFB_RUN}" --auto-servernum)
+    endif()
+endif()
+add_test(NAME renderer_parity COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_renderers>)
 set_tests_properties(renderer_parity PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 120
     LABELS "gpu;visual"
 )
 
-add_test(NAME gpu_geometry COMMAND test_presentation nativeGpuRendererDrawsClippedGeometry)
+add_test(NAME gpu_geometry COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_presentation> nativeGpuRendererDrawsClippedGeometry)
 set_tests_properties(gpu_geometry PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 30
     LABELS "gpu;geometry"
 )
