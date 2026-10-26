@@ -59,7 +59,9 @@ pozostają brakami. Sufiksy `_min`, `_max` i `_aver` często opisują statystyki
 przestrzenne sąsiednich węzłów, więc same nie określają semantyki czasowej
 ([opis systemu ICM](https://www.meteo.pl/faq-category/opis-systemu),
 [objaśnienia meteogramów](https://www.meteo.pl/jak-czytac-prognoze-pogody-czesc-i-meteogramy)).
-Reguły są przypisane jawnie do parametrów. `ChartDataBuilder`, odczyt i CSV
+Reguły są przypisane jawnie do parametrów. `ForecastFormatting` opisuje próbkę
+wspólnie dla odczytu i tabel godzinowych; sumy opadu pokazują źródłowy przedział
+także wtedy, gdy ta sama suma pojawia się w kilku wierszach. `ChartDataBuilder`, odczyt i CSV
 korzystają z tego samego kontraktu; odczyt podaje czas źródłowy lub przedział,
 a marker jest umieszczany przy odpowiadającej mu próbce.
 `ForecastAggregation` oblicza dni na oryginalnych przedziałach źródłowych,
@@ -73,12 +75,25 @@ listę dowolnych serii, przypisania do osi, opcjonalne granice osi oraz style
 kolorów, linii, punktów i wypełnień. `UserPreferences` przechowuje pełną
 konfigurację w nazwanych profilach. `PreferencesStore` jest właścicielem pliku INI,
 migracji i powiadomień o zmianach lokalnych oraz pochodzących z innych procesów.
+Mutacja obejmuje blokadę międzyprocesową, ponowny odczyt aktualnego pliku,
+zmianę wskazanej kolekcji i atomowy zapis. Powiadomienia i stan publiczny zmieniają
+się dopiero po powodzeniu; błąd trafia do standardowego komunikatu w ustawieniach.
+Niezależne operacje na miejscach i profilach zachowują obie zmiany. Przy jawnym
+zapisie i usunięciu tego samego miejsca wygrywa ostatnia zatwierdzona operacja.
 Stare listy kluczy są migrowane z zachowaniem profili i zapisanych miejsc.
-`WeatherModel::configuredCharts` wiąże konfigurację z dostępnymi seriami,
-przelicza jednostki i ustala automatyczne przypisanie do dwóch osi.
+`WeatherModel::configuredCharts` deleguje do `ChartDataBuilder`, który wiąże
+konfigurację z dostępnymi seriami i przypisuje jednostki do dwóch osi. Trzecia
+niezgodna jednostka w trybie automatycznym daje jawny komunikat konfliktu;
+konfiguracja pozostaje zachowana, a użytkownik wybiera osie. Builder łączy zakresy
+po dokładnych timestampach, zachowując luki, oraz scala przedziały burz i wyładowań.
+Geometria opadu korzysta z natywnego początku i końca każdej próbki.
 `ForecastPanel` składa widok według profilu. `Meteogram` używa rodzajów rysowania
 i skal z konfiguracji, a `MeteogramStyle.js` zawiera skale i palety ICM.
 `SeriesLegend` pokazuje tę samą próbkę w legendzie i w edytorze wyglądu.
+Katalog dozwolonych rendererów w `ChartConfiguration` ogranicza specjalne symbole
+do właściwych wielkości; edytor i normalizacja importowanych profili używają
+tego samego katalogu. Karty dni składa `DailyForecastView`, a wspólne metadane
+PNG przygotowuje `WeatherModel::chartExportMetadata`.
 `MeteogramStyle.paintChart` emituje wspólne polecenia rysowania. Domyślny
 `GpuPlot` zamienia je na trójkąty `QSGGeometryNode` z kolorami wierzchołków
 i przekazuje do RHI Qt Quick; etykiety są elementami `Text`, a warstwa ma
@@ -92,9 +107,13 @@ Wysokość wykresu dziedziczy ustawienie profilu, a następnie wartość ogóln�
 Globalna preferencja legendy określa stan początkowy; przycisk przy tytule
 przełącza ją lokalnie bez zapisywania w profilu. Dolny pasek `ForecastPanel`
 obsługuje zakres i powiększenie z minimalnym przedziałem 24 godzin.
-Wspólne okno `MeteoSettings` dla aplikacji i plasmoidu zawiera selektory
-profilu, okresu i uruchomienia modelu oraz edytor wyglądu i preferencje globalne.
-Otwiera je jeden przycisk „Ustawienia” w górnym pasku.
+Desktopowe `MeteoSettings` zawiera wybór profilu, okresu, startu modelu i
+preferencje globalne. Android używa stron ustawień w standardowym `StackView`.
+`ForecastSession` przechowuje stan pojedynczego okna i wybór w `QtCore.Settings`;
+korzystają z niego desktopowy `ForecastWindow` oraz mobilne `Mobile`.
+Podgląd przekazany z Plasma lub KRunner pozostaje tymczasowy do jawnego wyboru.
+Obliczenia ikony dnia/nocy, tła oraz wschodu/zachodu korzystają z `SolarCalendar`.
+Etykiety startów modelu powstają z timestampów w aktualnie wybranej strefie.
 `ChartExporter` przechwytuje wybrane wykresy osobno przez `QQuickItem::grabToImage`,
 niezależnie od pozycji przewijania, i składa PNG z podpisami i źródłem.
 Przejściowy tryb eksportu ukrywa przyciski i odczyt kursora bez zmiany układu.
@@ -193,10 +212,15 @@ Nie podąża za dowiązaniami. Czyszczenie resetuje także RAM obrazów i genera
 ich zapisów, aby starsze pobranie nie odtworzyło usuniętej zawartości.
 Ustawienia i zapisane profile pozostają w osobnym katalogu konfiguracji.
 
-Plasmoid po rozwinięciu ładuje `WidgetForecast` z kompaktowym podsumowaniem,
-równymi kolumnami dni i opcjonalnie jednym lub dwoma wykresami. Każda instancja
-wybiera profil, wykresy i okres niezależnie. Pełny `ForecastPanel` jest tworzony
-po przejściu do meteogramu.
+Plasmoid osadza `ForecastPopup` w standardowym kontenerze Plasma. Widok wykresów
+pokazuje wszystkie włączone wykresy wybranego profilu jako niezależnie zwijane
+sekcje; alternatywny widok pokazuje kompaktową prognozę dzienną. Własny profil,
+okres, zwinięcia, aktywne miejsce i filtr/kolejność miejsc należą do konfiguracji
+konkretnej instancji. Jednostki, UTC, katalog profili i zapisanych miejsc są wspólne.
+Natywne strony konfiguracji Plasma odpowiadają za widok i miejsca widgetu,
+a także dają dostęp do preferencji wspólnych. „Pokaż meteogram” uruchamia osobne
+pełne okno aplikacji. `WidgetForecast` pozostaje eksportowanym komponentem
+zgodności dla starszych konsumentów; bieżący host go nie ładuje.
 Ikona panelu odpowiada pogodzie; własna ikona SVG służy jako ikona aplikacji
 i zastępnik przy braku danych. Skrypt rejestracji wersji developerskiej zapisuje
 wpis desktop i ikonę użytkownika wskazujące na plik wykonywalny z katalogu budowy.
@@ -208,7 +232,10 @@ korzystają z lokalnego serwera TCP; testy interfejsu uruchamiają Qt w trybie
 `offscreen`, z syntetyczną prognozą. Test aplikacji używa `--smoke-test`, który
 wyłącza pobieranie. Test renderowania obejmuje wspólny panel używany przez obydwa
 frontendy. Jeśli dostępny jest `plasmawindowed`, zestaw zawiera także test
-uruchomienia pakietu plasmoidu. Zachowanie widgetu w panelu i zasobniku wymaga
+uruchomienia pakietu plasmoidu z odświeżaniem wyłączonym w kopii testowej.
+Test interakcji używa lokalnego serwera, a test dwóch rzeczywistych `ForecastPopup`
+sprawdza niezależne profile, zakresy i zwinięcia oraz wspólne jednostki i UTC.
+Zachowanie widgetu w panelu i zasobniku wymaga
 osobnego sprawdzenia w sesji Plasma.
 
 Testy map używają lokalnego serwera PNG z kontrolowanym opóźnieniem. Sprawdzają
@@ -219,6 +246,9 @@ przygotowanie animacji, anulowanie oraz dopasowanie szerokich map tematycznych.
 Testy renderowania sprawdzają także stykanie się słupków opadu, widoczność mgły
 nad chmurami i tło poniżej 0°C. Testy profili obejmują wybór serii, kolejność,
 zapis i odczyt; selektor oryginalnego meteogramu jest testowany lokalnie.
+Na Linuksie testy RHI korzystają z wirtualnego X11 przez `xvfb-run`, jeśli jest
+dostępny. Omija to uszkodzone przechwytywanie nagłówka okna w platformie
+`offscreen` Qt 6.8; backend RHI i tolerancje porównania pozostają wymagane.
 Osobne testy uruchamiają rzeczywiste RHI i programowy backend oraz sprawdzają
 semantykę geometrii, a nie tylko zgodność obu obrazów. CI instaluje każdą nową
 paczkę linuksową także w osobnym obrazie runtime bez kompilatora i nagłówków;

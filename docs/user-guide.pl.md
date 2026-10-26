@@ -90,13 +90,19 @@ kolory dla jasnego i ciemnego motywu, grubość i wzór linii, rozmiar punktów,
 krycie oraz przypisanie do osi. Kolor można wybrać z palety lub wpisać kod.
 Wygląd i opcjonalne granice obu osi zapisują się oddzielnie w każdym profilu.
 Domyślne wykresy są gotową konfiguracją używającą tego samego renderera.
+Tryb automatyczny dobiera dwie osie według jednostek. Trzecia niezgodna jednostka
+wyświetla komunikat: przypisz osie jawnie albo rozdziel serie na kilka wykresów.
+Specjalne symbole (np. wyładowania i kierunek wiatru) są dostępne tylko dla
+odpowiednich parametrów, również po imporcie profilu.
 Przyciski **Importuj…**, **Eksportuj profil…** i **Eksportuj zapisane…**
 przenoszą profile w pliku JSON, razem z wyglądem serii i zakresami osi.
 Wybór pliku korzysta ze standardowego okna środowiska: w KDE z dialogu KDE,
 a w środowisku używającym portalu z XDG Desktop Portal. Aplikacja używa
 `QApplication`, wymaganego przez natywną integrację dialogów KDE.
 Import dodaje nowe profile; zbieżne nazwy otrzymują numer, a istniejące
-profile pozostają zachowane. Eksport zapisanych obejmuje nazwane własne
+profile pozostają zachowane. Jeżeli zapis ustawień się nie powiedzie, aplikacja
+pokazuje błąd i zachowuje poprzednią konfigurację; import można ponowić.
+Eksport zapisanych obejmuje nazwane własne
 profile i zmodyfikowany „Własny układ”. Ulubione lokalizacje i ustawienia
 globalne, takie jak jednostka wiatru i UTC, nie są częścią pliku profili.
 Dotyczy to również wyboru renderera, wspólnego dla aplikacji i plasmoidu.

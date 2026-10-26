@@ -135,7 +135,10 @@ readings and application preferences. Desktop and Plasma retain their existing U
 
 Forecasts refresh hourly. **Refresh** requests fresh data immediately. If the
 network is unavailable, saved data remains visible with its retrieval time.
-Availability of individual parameters depends on the forecast model.
+Availability of individual parameters depends on the forecast model. Hourly rows
+show the source interval of precipitation totals, so a three-hour amount is never
+presented as a separate total for each hour. Custom charts support two automatic
+unit axes; a third incompatible unit prompts you to assign axes or split the chart.
 
 ## Build From Source
 
