@@ -7,6 +7,7 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     objectName: "readingSettings"
     spacing: Kirigami.Units.largeSpacing
+    PreferenceWriteNotice {}
     GroupBox {
         padding: Kirigami.Units.largeSpacing
         title: I18n.i18n("Parameter identification")

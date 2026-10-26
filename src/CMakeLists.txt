@@ -88,6 +88,8 @@ foreach(component MobilePageHeader MobileLocationPage MobileSettingsPage MobileF
 endforeach()
 set_source_files_properties(qml/ChartSaveDialog.qml PROPERTIES QT_RESOURCE_ALIAS ChartSaveDialog.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/ChartSaveDialog.qml)
+set_source_files_properties(qml/PreferenceWriteNotice.qml PROPERTIES QT_RESOURCE_ALIAS PreferenceWriteNotice.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/PreferenceWriteNotice.qml)
 target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)

@@ -16,6 +16,7 @@ GridLayout {
     columns: wide ? 2 : 1
     columnSpacing: Kirigami.Units.largeSpacing * 3
     rowSpacing: Kirigami.Units.largeSpacing
+    PreferenceWriteNotice { Layout.columnSpan: root.columns }
     ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing

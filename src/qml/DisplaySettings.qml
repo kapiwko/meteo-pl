@@ -15,6 +15,7 @@ ColumnLayout {
     property WeatherModel weather: null
     property string transferMessage: ""
     property bool transferFailed: false
+    PreferenceWriteNotice { visible: UserPreferences.error.length > 0 && !(transferNotice.visible && root.transferFailed) }
     readonly property var currentProfile: UserPreferences.profiles.find(profile => profile.id === UserPreferences.profile) || {name: ""}
     readonly property bool savedProfile: UserPreferences.profile.startsWith("user:")
     function transferResult(result, importing) {

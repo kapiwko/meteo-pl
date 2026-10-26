@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
+#include <QLockFile>
 #include <QProcess>
 #include <QQmlComponent>
 #include <QQmlEngine>
@@ -16,6 +17,61 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void failedCommitPreservesTheLastSnapshotAndAllowsRetry()
+    {
+        QTemporaryDir config;
+        QVERIFY(config.isValid());
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        PreferencesStore store;
+        store.setValue("display/profile", "basic");
+        QSignalSpy changed(&store, &PreferencesStore::displayChanged);
+        const auto path = store.fileName(), backup = path + ".backup";
+        QString error;
+        const bool saved = store.update([&] {
+            store.setValue("display/profile", "aviation");
+            QVERIFY(QFile::rename(path, backup));
+            QVERIFY(QDir().mkdir(path)); // Deterministic failure even with root permissions.
+        }, &error);
+        QVERIFY(QDir().rmdir(path));
+        QVERIFY(QFile::rename(backup, path));
+        QVERIFY(!saved);
+        QVERIFY(!error.isEmpty());
+        QCOMPARE(store.value("display/profile").toString(), "basic");
+        QCOMPARE(changed.count(), 0);
+        PreferencesStore reader;
+        QCOMPARE(reader.value("display/profile").toString(), "basic");
+        QVERIFY(store.update([&] { store.setValue("display/profile", "aviation"); }, &error));
+        QCOMPARE(changed.count(), 1);
+        QVERIFY(reader.sync());
+        QCOMPARE(reader.value("display/profile").toString(), "aviation");
+    }
+    void importReportsFailedPersistenceAndCanBeRetried()
+    {
+        QTemporaryDir config;
+        QVERIFY(config.isValid());
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        UserPreferences preferences;
+        const auto file = QUrl::fromLocalFile(config.filePath("profile.json"));
+        QVERIFY(preferences.exportProfiles(file)["ok"].toBool());
+        const auto before = preferences.profiles();
+        const auto selected = preferences.profile();
+        QSignalSpy errorChanged(&preferences, &UserPreferences::errorChanged);
+        QLockFile blocker(preferences.settingsFile() + ".mutation.lock");
+        QVERIFY(blocker.tryLock());
+        const auto result = preferences.importProfiles(file);
+        QVERIFY(!result["ok"].toBool());
+        QVERIFY(!result["error"].toString().isEmpty());
+        QCOMPARE(result["error"].toString(), preferences.error());
+        QCOMPARE(preferences.profiles(), before);
+        QCOMPARE(preferences.profile(), selected);
+        QCOMPARE(errorChanged.count(), 1);
+        blocker.unlock();
+        QVERIFY(preferences.importProfiles(file)["ok"].toBool());
+        QCOMPARE(preferences.profiles().size(), before.size() + 1);
+        QVERIFY(preferences.profile().startsWith("user:"));
+        QVERIFY(preferences.error().isEmpty());
+        QCOMPARE(errorChanged.count(), 2);
+    }
     void concurrentMutationsPreserveBothProcesses_data()
     {
         QTest::addColumn<QString>("operation");

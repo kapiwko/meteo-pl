@@ -21,6 +21,8 @@ ColumnLayout {
     readonly property bool savedPlace: locationName.trim().length > 0 && UserPreferences.places.some(place => LocationRules.samePlace(place.latitude, place.longitude, root.latitude, root.longitude))
     spacing: Kirigami.Units.largeSpacing
 
+    PreferenceWriteNotice {}
+
     function resetDraft(name, lat, lon, forecastModel) {
         locationName = name; latitude = lat; longitude = lon; model = forecastModel;
         searchField.text = ""; placeSearch.query = ""; positionError = "";

@@ -263,7 +263,7 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url)
         m_store.setValue("display/profile", selected);
     });
     if (!persisted)
-        return {{"ok", false}, {"error", Meteo::i18n("Could not save preferences.")}};
+        return {{"ok", false}, {"error", m_error}};
     return {{"ok", true}, {"count", imported->size()}};
 }
 void UserPreferences::saveLayout(const QString &id, const QVariantList &layout)
@@ -610,6 +610,18 @@ void UserPreferences::toggleFavorite(const QString &name, double latitude, doubl
     });
 }
 
-bool UserPreferences::change(const std::function<void()> &operation) { return m_store.update(operation); }
+bool UserPreferences::change(const std::function<void()> &operation)
+{
+    const bool nested = m_store.updating();
+    QString error;
+    const bool saved = m_store.update(operation, &error);
+    if (!nested) {
+        const auto message = saved ? QString() : Meteo::i18n("Could not save preferences: %1").arg(error);
+        if (message != m_error) { m_error = message; emit errorChanged(); }
+        // Re-evaluate edited controls against the last committed values.
+        if (!saved) emit displayChanged();
+    }
+    return saved;
+}
 
 QString UserPreferences::createProfile(const QString &name) { return createProfileFrom(name, profile()); }

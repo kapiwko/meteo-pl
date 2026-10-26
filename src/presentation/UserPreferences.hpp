@@ -29,8 +29,10 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_PROPERTY(QString renderer READ renderer WRITE setRenderer NOTIFY displayChanged)
     Q_PROPERTY(int chartHeight READ chartHeight WRITE setChartHeight NOTIFY displayChanged)
     Q_PROPERTY(int profileChartHeight READ profileChartHeight WRITE setProfileChartHeight NOTIFY displayChanged)
+    Q_PROPERTY(QString error READ error NOTIFY errorChanged)
   public:
     explicit UserPreferences(QObject *parent = nullptr);
+    QString error() const { return m_error; }
     QVariantList favorites() const;
     QVariantList recentPlaces() const;
     QString profile() const;
@@ -89,7 +91,9 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     QVariantList readPlaces(const QString &key) const;
     void writePlaces(const QString &key, const QVariantList &places);
     PreferencesStore m_store;
+    QString m_error;
   signals:
     void placesChanged();
     void displayChanged();
+    void errorChanged();
 };

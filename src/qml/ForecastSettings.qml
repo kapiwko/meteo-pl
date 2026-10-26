@@ -12,6 +12,7 @@ ColumnLayout {
     property real endTime: weather.lastTimestamp
     signal hoursSelected(int hours)
     spacing: Kirigami.Units.largeSpacing
+    PreferenceWriteNotice {}
     GroupBox {
         padding: Kirigami.Units.largeSpacing
         title: I18n.i18n("Current forecast")

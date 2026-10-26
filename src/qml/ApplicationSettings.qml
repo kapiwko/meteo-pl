@@ -12,6 +12,7 @@ ColumnLayout {
     Component.onCompleted: if (visible) CacheStorage.refresh()
     Connections { target: CacheStorage; function onCleared() { root.cacheCleared = true; } }
     spacing: Kirigami.Units.largeSpacing
+    PreferenceWriteNotice {}
     GroupBox {
         padding: Kirigami.Units.largeSpacing
         title: I18n.i18n("Charts")

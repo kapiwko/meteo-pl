@@ -18,6 +18,8 @@ ColumnLayout {
     readonly property var solar: weather.solarTimes
     spacing: Kirigami.Units.largeSpacing
 
+    PreferenceWriteNotice {}
+
     PlacePicker {
         id: placePicker
         visible: root.showPlacePicker
