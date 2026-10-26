@@ -221,19 +221,18 @@ function paintChart(root, plot, ctx, withCursor) {
         for (const label of axis.days) ctx.fillText(label.text, label.x, 12);
     }
     ctx.save(); ctx.beginPath(); ctx.rect(left, top, right - left, bottom - top); ctx.clip();
-    const ranges = root.fields.filter(f => f.kind === "range" && root.shown(f)).sort((a,b) => root.layerOrder(a) - root.layerOrder(b));
+    const fields = root.plotFields || root.fields;
+    const ranges = fields.filter(f => f.kind === "range" && root.shown(f)).sort((a,b) => root.layerOrder(a) - root.layerOrder(b));
     for (const range of ranges) {
-        const lower = range.lowerPoints || [], upper = range.points, isRight = root.isRightField(range);
+        const isRight = root.isRightField(range);
         ctx.fillStyle = root.seriesColor(range); ctx.globalAlpha = range.opacity === undefined ? 191 / 255 : range.opacity;
-        for (let i = 1; i < lower.length && i < upper.length; ++i) {
-            const a = lower[i - 1], b = lower[i], c = root.pointAt(upper, b.time), d = root.pointAt(upper, a.time);
-            if (!c || !d || c.time !== b.time || d.time !== a.time) continue;
-            if (![a.value,b.value,c.value,d.value].every(root.valid)) continue;
-            ctx.beginPath(); ctx.moveTo(root.px(a.time), root.py(a.value, isRight)); ctx.lineTo(root.px(b.time), root.py(b.value, isRight));
-            ctx.lineTo(root.px(c.time), root.py(c.value, isRight)); ctx.lineTo(root.px(d.time), root.py(d.value, isRight)); ctx.closePath(); ctx.fill();
+        for (const segment of range.rangeSegments || []) {
+            const a = segment.from, b = segment.to;
+            ctx.beginPath(); ctx.moveTo(root.px(a.time), root.py(a.lower, isRight)); ctx.lineTo(root.px(b.time), root.py(b.lower, isRight));
+            ctx.lineTo(root.px(b.time), root.py(b.upper, isRight)); ctx.lineTo(root.px(a.time), root.py(a.upper, isRight)); ctx.closePath(); ctx.fill();
         }
     }
-    const ordered = root.fields.map((field, index) => ({field: field, index: index}))
+    const ordered = fields.map((field, index) => ({field: field, index: index}))
         .sort((a,b) => root.layerOrder(a.field) - root.layerOrder(b.field) || a.index - b.index).map(entry => entry.field);
     ctx.globalAlpha = 1;
     for (const field of ordered)
@@ -247,11 +246,9 @@ function paintChart(root, plot, ctx, withCursor) {
         ctx.globalAlpha = field.opacity === undefined ? 1 : field.opacity;
         if (field.kind === "rangeStems") {
             ctx.beginPath();
-            for (const minimum of field.lowerPoints || []) {
-                const maximum = root.pointAt(field.points, minimum.time);
-                if (!maximum || maximum.time !== minimum.time || !root.valid(minimum.value) || !root.valid(maximum.value)) continue;
-                const x = root.px(minimum.time);
-                ctx.moveTo(x, root.py(minimum.value, isRight)); ctx.lineTo(x, root.py(maximum.value, isRight));
+            for (const pair of field.rangePairs || []) {
+                const x = root.px(pair.time);
+                ctx.moveTo(x, root.py(pair.lower, isRight)); ctx.lineTo(x, root.py(pair.upper, isRight));
             }
             ctx.stroke();
             continue;

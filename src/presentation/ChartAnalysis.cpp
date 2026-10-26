@@ -3,6 +3,7 @@
 #include <cmath>
 #include <limits>
 #include "core/Localization.hpp"
+#include "ChartDataBuilder.hpp"
 #include <QLocale>
 #include <QSet>
 
@@ -108,3 +109,5 @@ QString ChartAnalysis::precipitationCaption(const QVariantList &fields) const
     return Meteo::i18n("Mean: total over %1 h. Maximum: total over %2 h.")
         .arg(hours(periods.value("pcpttl_aver")), hours(periods.value("pcpttl_max")));
 }
+
+QVariantList ChartAnalysis::prepareRanges(const QVariantList &fields) const { return prepareChartRanges(fields); }

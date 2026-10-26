@@ -1,5 +1,6 @@
 #include "ChartDataBuilder.hpp"
 #include "core/ForecastSampling.hpp"
+#include <cmath>
 
 QVariantMap buildChartSeries(const Meteo::Forecast &forecast, const QHash<QString, double> &scales)
 {
@@ -31,6 +32,45 @@ QVariantMap buildChartSeries(const Meteo::Forecast &forecast, const QHash<QStrin
             points.append(point);
         }
         result.insert(it.key(), points);
+    }
+    return result;
+}
+
+QVariantList prepareChartRanges(const QVariantList &fields)
+{
+    QVariantList result;
+    const auto number = [](const QVariant &value) { return value.isValid() && !value.isNull() && std::isfinite(value.toDouble()); };
+    for (const auto &entry : fields) {
+        auto field = entry.toMap();
+        const auto kind = field.value("kind", field.value("render")).toString();
+        if ((kind == "range" || kind == "rangeStems") && !field.contains("rangeSegments")) {
+            const auto lower = field.value("lowerPoints").toList();
+            QMap<qint64, QVariant> upper;
+            for (const auto &point : field.value("points").toList()) {
+                const auto map = point.toMap(); upper.insert(map.value("time").toLongLong(), map.value("value"));
+            }
+            QVariantList segments, pairs;
+            QVariantMap previous;
+            bool connected = false;
+            for (const auto &value : lower) {
+                const auto point = value.toMap();
+                const auto time = point.value("time").toLongLong();
+                const auto high = upper.constFind(time);
+                if (high == upper.cend() || !number(*high) || !number(point.value("value"))) { connected = false; continue; }
+                const QVariantMap pair{{"time", time}, {"lower", point.value("value")}, {"upper", *high}};
+                pairs.append(pair);
+                if (connected && time > previous.value("time").toLongLong()) {
+                    bool gap = false;
+                    for (auto it = upper.upperBound(previous.value("time").toLongLong()); it != upper.end() && it.key() < time; ++it)
+                        if (!number(it.value())) { gap = true; break; }
+                    if (!gap) segments.append(QVariantMap{{"from", previous}, {"to", pair}});
+                }
+                previous = pair; connected = true;
+            }
+            field["rangeSegments"] = segments;
+            field["rangePairs"] = pairs;
+        }
+        result.append(field);
     }
     return result;
 }

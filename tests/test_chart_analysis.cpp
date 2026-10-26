@@ -16,15 +16,16 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
     script.remove(0, script.indexOf('\n') + 1);
     const auto loaded = engine.evaluate(script);
     if (loaded.isError()) return loaded;
-    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(fields));
+    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartRanges(fields)));
     return engine.evaluate(QStringLiteral(R"JS(
         (function() {
-            const rectangles=[], polygons=[], circles=[], ctx={}; let path=[];
+            const rectangles=[], polygons=[], circles=[], lines=[], ctx={}; let path=[];
             for (const name of ["reset","save","restore","rect","clip","setLineDash","stroke","fillText","translate","rotate"])
                 ctx[name]=function(){};
             ctx.beginPath=function(){path=[];};
             ctx.moveTo=ctx.lineTo=function(x,y){path.push([x,y]);};
             ctx.closePath=function(){path.closed=true;};
+            ctx.stroke=function(){if(this.strokeStyle==="#123456" && path.length) lines.push(path.slice());};
             ctx.fill=function(){if(path.closed && this.fillStyle==="#123456") polygons.push(path.slice());};
             ctx.fillRect=function(x,y,w,h){if(this.fillStyle==="#123456") rectangles.push({x:x,y:y,width:w,height:h});};
             ctx.arc=function(x,y,r){circles.push({x:x,y:y,radius:r});};
@@ -41,7 +42,7 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
                 pointAt:function(points,time){return points.find(point=>point.time===time);}
             };
             paintChart(root,{width:600,height:120},ctx,false);
-            return {rectangles:rectangles,polygons:polygons,circles:circles};
+            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines};
         })()
     )JS"));
 }
@@ -50,6 +51,49 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void rangesJoinNativeTimestampsAndPreserveGaps_data()
+    {
+        QTest::addColumn<QVariantList>("lower");
+        QTest::addColumn<QVariantList>("upper");
+        QTest::addColumn<int>("segments");
+        QTest::addColumn<int>("pairs");
+        const auto points = [](const QList<int> &hours, int missing = -1) {
+            QVariantList result;
+            for (int hour : hours) result.append(QVariantMap{{"time", 1800000000LL + hour * 3600},
+                {"value", hour == missing ? QVariant() : QVariant(hour + 1.0)}});
+            return result;
+        };
+        QTest::newRow("short upper") << points({0,1,2,3}) << points({2,3}) << 1 << 2;
+        QTest::newRow("short lower") << points({2,3}) << points({0,1,2,3}) << 1 << 2;
+        QTest::newRow("shifted equal lengths") << points({0,1,2,3}) << points({2,3,4,5}) << 1 << 2;
+        QTest::newRow("no common timestamps") << points({0,1}) << points({2,3}) << 0 << 0;
+        QTest::newRow("missing lower") << points({0,1,2,3},1) << points({0,1,2,3}) << 1 << 3;
+        QTest::newRow("missing upper") << points({0,1,2,3}) << points({0,1,2,3},1) << 1 << 3;
+        QTest::newRow("different intervals") << points({0,2,4}) << points({0,1,2,3,4}) << 2 << 3;
+        QTest::newRow("gap inside segment") << points({0,2}) << points({0,1,2},1) << 0 << 2;
+    }
+    void rangesJoinNativeTimestampsAndPreserveGaps()
+    {
+        QFETCH(QVariantList, lower); QFETCH(QVariantList, upper);
+        QFETCH(int, segments); QFETCH(int, pairs);
+        QVariantMap range{{"key", "airtmp_max"}, {"kind", "range"}, {"points", upper}, {"lowerPoints", lower}};
+        QJSEngine engine;
+        const auto drawing = recordChart(engine, {range});
+        QVERIFY2(!drawing.isError(), qPrintable(drawing.toString()));
+        QCOMPARE(drawing.property("polygons").property("length").toInt(), segments);
+        if (QByteArray(QTest::currentDataTag()) == "short upper") {
+            const auto polygon = drawing.property("polygons").property(0);
+            QCOMPARE(polygon.property(0).property(0).toNumber(), 200.0);
+            QCOMPARE(polygon.property(1).property(0).toNumber(), 300.0);
+        }
+        range["kind"] = "rangeStems";
+        QJSEngine stemsEngine;
+        const auto stems = recordChart(stemsEngine, {range});
+        QVERIFY2(!stems.isError(), qPrintable(stems.toString()));
+        const auto lines = stems.property("lines");
+        QCOMPARE(lines.property("length").toInt(), pairs ? 1 : 0);
+        if (pairs) QCOMPARE(lines.property(0).property("length").toInt(), pairs * 2);
+    }
     void singlePrecipitationSampleUsesItsNativeInterval_data()
     {
         QTest::addColumn<int>("hours");
