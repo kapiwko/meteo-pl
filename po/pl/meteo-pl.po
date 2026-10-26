@@ -342,7 +342,7 @@ msgid "Choose color"
 msgstr "Wybierz kolor"
 
 #: integrations/plasma/package/contents/ui/ForecastPopup.qml:61
-#: integrations/plasma/package/contents/ui/main.qml:33
+#: integrations/plasma/package/contents/ui/main.qml:43
 #: src/qml/ForecastPanel.qml:375 src/qml/MobileForecastPage.qml:35
 #: src/qml/PlacePicker.qml:22
 msgid "Choose location"
@@ -501,7 +501,7 @@ msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 "Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji."
 
-#: integrations/plasma/package/contents/ui/main.qml:55
+#: integrations/plasma/package/contents/ui/main.qml:65
 msgid "Could not open Meteo. Install the desktop application and try again."
 msgstr "Nie udało się otworzyć Meteo. Zainstaluj aplikację i spróbuj ponownie."
 
@@ -946,6 +946,11 @@ msgid ""
 msgstr ""
 "Nieprawidłowa definicja profilu lub nieznana seria. Nie zaimportowano "
 "żadnego profilu."
+
+#: integrations/plasma/package/contents/ui/main.qml:35
+#: integrations/plasma/package/contents/ui/main.qml:147
+msgid "Keep open"
+msgstr "Pozostaw otwarte"
 
 #: src/presentation/ReadingsExporter.cpp:26
 msgid "Key"
@@ -1539,8 +1544,8 @@ msgstr "Odczyt"
 
 #: apps/meteo/Main.qml:15
 #: integrations/plasma/package/contents/ui/ForecastPopup.qml:64
-#: integrations/plasma/package/contents/ui/main.qml:26
-#: integrations/plasma/package/contents/ui/main.qml:136
+#: integrations/plasma/package/contents/ui/main.qml:27
+#: integrations/plasma/package/contents/ui/main.qml:157
 #: src/qml/EditorialView.qml:25 src/qml/MobileForecastPage.qml:43
 msgid "Refresh"
 msgstr "Odśwież"
@@ -1730,8 +1735,8 @@ msgstr "Pokaż legendę"
 msgid "Show legends by default"
 msgstr "Domyślnie pokazuj legendę"
 
-#: integrations/plasma/package/contents/ui/main.qml:43
-#: integrations/plasma/package/contents/ui/main.qml:151
+#: integrations/plasma/package/contents/ui/main.qml:53
+#: integrations/plasma/package/contents/ui/main.qml:172
 msgid "Show meteogram"
 msgstr "Pokaż meteogram"
 
@@ -2084,6 +2089,10 @@ msgstr "Jednostka"
 #: src/qml/ApplicationSettings.qml:48
 msgid "Units and time"
 msgstr "Jednostki i czas"
+
+#: integrations/plasma/package/contents/ui/main.qml:147
+msgid "Unpin popup"
+msgstr "Odepnij okno"
 
 #: src/qml/ForecastInspector.qml:60
 msgid "Unpin reading"

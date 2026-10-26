@@ -42,6 +42,15 @@ QtObject {
         poll.stop();
         const frame = applet.fullRepresentationItem;
         require(frame && frame.collapseMarginsHint && frame.footer, "Missing native Plasma frame");
+        const pin = find(frame, "pinPopupButton");
+        const pinAction = action("pinPopupAction");
+        // plasmawindowed forces the initial native window to stay open.
+        // Exercise both transitions after that host initialization.
+        require(pin && pinAction && !configuration.pinned && !pin.checked, "Missing initial popup pin state");
+        pin.clicked();
+        require(configuration.pinned && pin.checked && !applet.hideOnWindowDeactivate, "Pin does not keep the native popup open");
+        pinAction.trigger();
+        require(!configuration.pinned && !pin.checked && applet.hideOnWindowDeactivate, "Context action does not unpin the popup");
         require(FixtureDriver.capture(frame), "Could not capture native container");
         if (callback) callback();
         FixtureDriver.report(true, "Native container, state and actions verified");

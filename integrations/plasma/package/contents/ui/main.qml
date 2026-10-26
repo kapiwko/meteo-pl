@@ -13,6 +13,7 @@ PlasmoidItem {
     id: root
     property string launchError: ""
     readonly property var weatherConfiguration: Plasmoid.configuration
+    hideOnWindowDeactivate: !weatherConfiguration.pinned
     switchWidth: Kirigami.Units.gridUnit * 24
     switchHeight: Kirigami.Units.gridUnit * 24
     toolTipMainText: forecastModel.locationName + " · " + forecastModel.temperatureText
@@ -27,6 +28,15 @@ PlasmoidItem {
             icon.name: "view-refresh"
             enabled: !forecastModel.busy && forecastModel.locationName.length > 0
             onTriggered: forecastModel.refresh()
+        },
+        PlasmaCore.Action {
+            id: pinAction
+            objectName: "pinPopupAction"
+            text: I18n.i18n("Keep open")
+            icon.name: "window-pin"
+            checkable: true
+            checked: root.weatherConfiguration.pinned
+            onTriggered: Plasmoid.configuration.pinned = checked
         },
         PlasmaCore.Action {
             objectName: "choosePlaceAction"
@@ -130,6 +140,17 @@ PlasmoidItem {
         header: PlasmaExtras.BasicPlasmoidHeading {
             leftPadding: Kirigami.Units.smallSpacing
             rightPadding: Kirigami.Units.smallSpacing
+            PlasmaComponents.ToolButton {
+                id: pinButton
+                objectName: "pinPopupButton"
+                icon.name: checked ? "window-unpin" : "window-pin"
+                text: checked ? I18n.i18n("Unpin popup") : I18n.i18n("Keep open")
+                display: AbstractButton.IconOnly
+                checkable: true
+                checked: root.weatherConfiguration.pinned
+                onClicked: pinAction.trigger()
+                PlasmaComponents.ToolTip { text: pinButton.text }
+            }
             PlasmaComponents.ToolButton {
                 id: refreshButton
                 icon.name: "view-refresh"

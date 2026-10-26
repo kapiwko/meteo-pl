@@ -338,7 +338,7 @@ msgid "Choose color"
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/ForecastPopup.qml:61
-#: integrations/plasma/package/contents/ui/main.qml:33
+#: integrations/plasma/package/contents/ui/main.qml:43
 #: src/qml/ForecastPanel.qml:375 src/qml/MobileForecastPage.qml:35
 #: src/qml/PlacePicker.qml:22
 msgid "Choose location"
@@ -490,7 +490,7 @@ msgstr ""
 msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/main.qml:55
+#: integrations/plasma/package/contents/ui/main.qml:65
 msgid "Could not open Meteo. Install the desktop application and try again."
 msgstr ""
 
@@ -922,6 +922,11 @@ msgstr ""
 #: src/presentation/ProfileFileCodec.cpp:46
 msgid ""
 "Invalid profile definition or unknown series. No profiles were imported."
+msgstr ""
+
+#: integrations/plasma/package/contents/ui/main.qml:35
+#: integrations/plasma/package/contents/ui/main.qml:147
+msgid "Keep open"
 msgstr ""
 
 #: src/presentation/ReadingsExporter.cpp:26
@@ -1510,8 +1515,8 @@ msgstr ""
 
 #: apps/meteo/Main.qml:15
 #: integrations/plasma/package/contents/ui/ForecastPopup.qml:64
-#: integrations/plasma/package/contents/ui/main.qml:26
-#: integrations/plasma/package/contents/ui/main.qml:136
+#: integrations/plasma/package/contents/ui/main.qml:27
+#: integrations/plasma/package/contents/ui/main.qml:157
 #: src/qml/EditorialView.qml:25 src/qml/MobileForecastPage.qml:43
 msgid "Refresh"
 msgstr ""
@@ -1701,8 +1706,8 @@ msgstr ""
 msgid "Show legends by default"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/main.qml:43
-#: integrations/plasma/package/contents/ui/main.qml:151
+#: integrations/plasma/package/contents/ui/main.qml:53
+#: integrations/plasma/package/contents/ui/main.qml:172
 msgid "Show meteogram"
 msgstr ""
 
@@ -2041,6 +2046,10 @@ msgstr ""
 
 #: src/qml/ApplicationSettings.qml:48
 msgid "Units and time"
+msgstr ""
+
+#: integrations/plasma/package/contents/ui/main.qml:147
+msgid "Unpin popup"
 msgstr ""
 
 #: src/qml/ForecastInspector.qml:60
