@@ -19,7 +19,7 @@ msgstr ""
 msgid " hours"
 msgstr " godzin"
 
-#: src/qml/WeatherMap.qml:98
+#: src/qml/WeatherMap.qml:112
 msgid " · ICM UW data"
 msgstr " · dane ICM UW"
 
@@ -143,7 +143,7 @@ msgstr ""
 "Przedział obejmuje północ. Opad jest dzielony między dni proporcjonalnie do "
 "czasu trwania."
 
-#: src/qml/ThematicMaps.qml:65 src/qml/WeatherMap.qml:46
+#: src/qml/ThematicMaps.qml:67 src/qml/WeatherMap.qml:57
 msgid "Animate"
 msgstr "Animuj"
 
@@ -222,7 +222,7 @@ msgstr "Dane CSV (*.csv)"
 msgid "Cache"
 msgstr "Pamięć podręczna"
 
-#: src/qml/ThematicMaps.qml:65 src/qml/WeatherMap.qml:46
+#: src/qml/ThematicMaps.qml:67 src/qml/WeatherMap.qml:57
 msgid "Cancel loading"
 msgstr "Anuluj ładowanie"
 
@@ -642,6 +642,10 @@ msgstr "Gotowy profil możesz zduplikować i edytować jako własny."
 msgid "Duplicate profile"
 msgstr "Duplikuj profil"
 
+#: src/qml/ThematicMaps.qml:58
+msgid "Earlier"
+msgstr "Wcześniej"
+
 #: src/qml/ForecastPanel.qml:413
 msgid "Earlier interval"
 msgstr "Wcześniejszy przedział"
@@ -741,11 +745,11 @@ msgstr "Znajdź miejsce"
 msgid "Find or add a place"
 msgstr "Znajdź lub dodaj miejsce"
 
-#: src/qml/ThematicMaps.qml:69
+#: src/qml/ThematicMaps.qml:71
 msgid "Fit"
 msgstr "Dopasuj"
 
-#: src/qml/ThematicMaps.qml:69
+#: src/qml/ThematicMaps.qml:71
 msgid "Fit the entire map to the view"
 msgstr "Dopasuj całą mapę do widoku"
 
@@ -850,7 +854,7 @@ msgstr "Godzinowo"
 msgid "Humidity and fog"
 msgstr "Wilgotność i mgła"
 
-#: src/qml/ThematicMaps.qml:110
+#: src/qml/ThematicMaps.qml:112
 msgid "ICM UW / meteo.pl thematic maps · selected run and forecast step"
 msgstr "Mapy tematyczne ICM UW / meteo.pl · wskazany start i krok prognozy"
 
@@ -886,7 +890,7 @@ msgstr "Importuj profile meteogramu"
 msgid "Import…"
 msgstr "Importuj…"
 
-#: src/qml/WeatherMap.qml:29
+#: src/qml/WeatherMap.qml:31 src/qml/WeatherMap.qml:39
 msgid "Interactive map"
 msgstr "Mapa interaktywna"
 
@@ -935,6 +939,10 @@ msgstr "Klucz"
 msgid "Last downloaded: "
 msgstr "Ostatnie pobranie: "
 
+#: src/qml/ThematicMaps.qml:61
+msgid "Later"
+msgstr "Później"
+
 #: src/qml/ForecastPanel.qml:434
 msgid "Later interval"
 msgstr "Późniejszy przedział"
@@ -971,7 +979,7 @@ msgstr "Lewa"
 msgid "Left axis"
 msgstr "Lewa oś"
 
-#: src/qml/OriginalMeteogram.qml:14 src/qml/WeatherMap.qml:97
+#: src/qml/OriginalMeteogram.qml:14 src/qml/WeatherMap.qml:111
 msgid "Legend"
 msgstr "Legenda"
 
@@ -1040,6 +1048,10 @@ msgstr "Długość geograficzna lokalizacji."
 msgid "Low clouds"
 msgstr "Chmury niskie"
 
+#: src/qml/WeatherMap.qml:38
+msgid "Map type"
+msgstr "Rodzaj mapy"
+
 #: src/qml/ForecastPanel.qml:337 src/qml/MobileForecastPage.qml:61
 msgid "Maps"
 msgstr "Mapy"
@@ -1087,7 +1099,7 @@ msgstr "Meteo · meteogramy ICM"
 msgid "Meteogram"
 msgstr "Meteogram"
 
-#: src/qml/WeatherMap.qml:89
+#: src/qml/WeatherMap.qml:103
 msgid "Meteogram for the selected point"
 msgstr "Meteogram dla wskazanego punktu"
 
@@ -1132,7 +1144,7 @@ msgstr "Brak temperatury lub daty uruchomienia modelu."
 msgid "Model"
 msgstr "Model"
 
-#: src/qml/WeatherMap.qml:98
+#: src/qml/WeatherMap.qml:112
 msgid "Model forecast "
 msgstr "Prognoza modelu "
 
@@ -1362,7 +1374,7 @@ msgstr "Parametry wskazanego wykresu"
 msgid "Partly cloudy"
 msgstr "Częściowe zachmurzenie"
 
-#: src/qml/ThematicMaps.qml:65 src/qml/WeatherMap.qml:46
+#: src/qml/ThematicMaps.qml:67 src/qml/WeatherMap.qml:57
 msgid "Pause"
 msgstr "Pauza"
 
@@ -1382,8 +1394,8 @@ msgstr "Miejsca w tym widżecie"
 msgid "Places:"
 msgstr "Miejsca:"
 
-#: src/qml/LocationEditor.qml:140 src/qml/WeatherMap.qml:67
-#: src/qml/WeatherMap.qml:91
+#: src/qml/LocationEditor.qml:140 src/qml/WeatherMap.qml:79
+#: src/qml/WeatherMap.qml:105
 msgid "Point on map"
 msgstr "Punkt na mapie"
 
@@ -1435,7 +1447,7 @@ msgstr "Rodzaj opadu"
 msgid "Precipitation: "
 msgstr "Opad: "
 
-#: src/qml/ThematicMaps.qml:102 src/qml/WeatherMap.qml:81
+#: src/qml/ThematicMaps.qml:104 src/qml/WeatherMap.qml:93
 msgid "Preparing animation: "
 msgstr "Przygotowywanie animacji: "
 
@@ -1536,7 +1548,7 @@ msgstr "Renderer:"
 msgid "Reset layout"
 msgstr "Wyczyść układ"
 
-#: src/qml/WeatherMap.qml:56
+#: src/qml/WeatherMap.qml:67
 msgid "Retry"
 msgstr "Ponów"
 
@@ -1947,7 +1959,7 @@ msgstr "Suma opadu dla całego dnia."
 msgid "Town or village name…"
 msgstr "Nazwa miasta lub wsi…"
 
-#: src/qml/WeatherMap.qml:30
+#: src/qml/WeatherMap.qml:32 src/qml/WeatherMap.qml:39
 msgid "UM / WAM thematic maps"
 msgstr "Mapy tematyczne UM / WAM"
 

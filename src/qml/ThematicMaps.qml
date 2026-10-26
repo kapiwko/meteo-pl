@@ -55,15 +55,17 @@ ColumnLayout {
     ComboBox { Layout.fillWidth: true; model: root.catalog; textRole: "name"; currentIndex: root.layerIndex; onActivated: index => { animate.checked = false; root.layerIndex = index; root.imageScale = 1; } }
     RowLayout {
         Layout.fillWidth: true
-        Button { text: "‹"; onClicked: { thematic.earlier(); } }
+        ToolButton { icon.name: "go-previous"; Accessible.name: I18n.i18n("Earlier"); onClicked: thematic.earlier() }
         Label { Layout.fillWidth: true; text: picture.displayedLabel || root.requestedLabel; wrapMode: Text.WordWrap }
         Button { text: I18n.i18n("Latest"); onClicked: root.latest() }
-        Button { text: "›"; enabled: thematic.canGoLater; onClicked: { thematic.later(); } }
+        ToolButton { icon.name: "go-next"; Accessible.name: I18n.i18n("Later"); enabled: thematic.canGoLater; onClicked: thematic.later() }
     }
-    RowLayout {
+    GridLayout {
+        id: animationControls
         Layout.fillWidth: true
+        columns: width < 500 ? 3 : 5
         Button { id: animate; text: checked ? animationCache.ready ? I18n.i18n("Pause") : I18n.i18n("Cancel loading") : I18n.i18n("Animate"); checkable: true; enabled: root.run > 0 && picture.displayedSource.toString().length > 0; onCheckedChanged: { if (checked) root.prepareAnimation(); else animationCache.cancel(); } }
-        Slider { Layout.fillWidth: true; from: root.intervalHours; to: thematic.lastStep; stepSize: root.intervalHours; value: root.step; onMoved: root.step = Math.round(value) }
+        Slider { Layout.fillWidth: true; Layout.columnSpan: animationControls.columns === 3 ? 2 : 1; Layout.minimumWidth: 60; from: root.intervalHours; to: thematic.lastStep; stepSize: root.intervalHours; value: root.step; onMoved: root.step = Math.round(value) }
         ToolButton { icon.name: "zoom-in"; onClicked: root.zoomImage(1.25, imageScroll.availableWidth / 2, imageScroll.availableHeight / 2) }
         ToolButton { icon.name: "zoom-out"; onClicked: root.zoomImage(0.8, imageScroll.availableWidth / 2, imageScroll.availableHeight / 2) }
         ToolButton { icon.name: "zoom-fit-best"; text: I18n.i18n("Fit"); display: AbstractButton.IconOnly; onClicked: root.imageScale = 1; ToolTip.text: I18n.i18n("Fit the entire map to the view"); ToolTip.visible: hovered }

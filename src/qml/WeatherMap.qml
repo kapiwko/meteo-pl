@@ -7,6 +7,7 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     required property WeatherModel weather
+    property bool mobileLayout: false
     property var picked: null
     property bool thematic: false
     readonly property string animationKey: [thematic, weather.model, layers.layerIndex, layers.runIndex, JSON.stringify(layers.runs), map.zoom, map.firstX, map.firstY, map.columns, map.rows].join(":")
@@ -25,9 +26,19 @@ ColumnLayout {
     function nextStep() { return layers.step >= layers.lastStep ? layers.firstStep : Math.min(layers.lastStep, layers.step + layers.stepHours); }
     signal locationSelected(string name, real latitude, real longitude)
     RowLayout {
+        visible: !root.mobileLayout
         Layout.fillWidth: true
         Button { text: I18n.i18n("Interactive map"); checkable: true; checked: !root.thematic; onClicked: root.thematic = false }
         Button { text: I18n.i18n("UM / WAM thematic maps"); checkable: true; checked: root.thematic; onClicked: root.thematic = true }
+    }
+    ComboBox {
+        objectName: "mobileMapType"
+        visible: root.mobileLayout
+        Layout.fillWidth: true
+        Accessible.name: I18n.i18n("Map type")
+        model: [I18n.i18n("Interactive map"), I18n.i18n("UM / WAM thematic maps")]
+        currentIndex: root.thematic ? 1 : 0
+        onActivated: index => root.thematic = index === 1
     }
     Loader { Layout.fillWidth: true; Layout.fillHeight: true; active: root.thematic; visible: active; sourceComponent: ThematicMaps { weather: root.weather } }
     ColumnLayout {
@@ -59,7 +70,8 @@ ColumnLayout {
         id: map
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.minimumHeight: 260
+        objectName: "weatherMapViewport"
+        Layout.minimumHeight: root.mobileLayout ? 160 : 260
         latitude: root.weather.latitude
         longitude: root.weather.longitude
         markerLatitude: root.picked ? root.picked.latitude : root.weather.latitude
@@ -82,9 +94,11 @@ ColumnLayout {
             ProgressBar { anchors.horizontalCenter: parent.horizontalCenter; width: 200; visible: animationCache.busy; from: 0; to: Math.max(1, animationCache.total); value: animationCache.completed }
         }
     }
-    RowLayout {
+    GridLayout {
         Layout.fillWidth: true
+        columns: width < 550 ? 1 : 2
         Button {
+            Layout.fillWidth: true
             visible: root.picked !== null
             text: I18n.i18n("Meteogram for the selected point")
             icon.name: "view-statistics"

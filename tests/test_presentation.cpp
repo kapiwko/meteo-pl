@@ -274,6 +274,17 @@ private slots:
         QVERIFY(forecast); click(forecast);
         QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
         QCOMPARE(panel->property("viewportEnd").toDouble() - panel->property("viewportStart").toDouble(), 24*3600.0);
+        auto *maps = findButton(findButton, navigation, "Maps");
+        QVERIFY(maps); click(maps);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 3);
+        QQuickItem *mapType = nullptr, *mapViewport = nullptr;
+        QTRY_VERIFY(mapType = find(find, page, "mobileMapType"));
+        QTRY_VERIFY(mapViewport = find(find, page, "weatherMapViewport"));
+        QTRY_VERIFY(mapViewport->height() >= 160);
+        QVERIFY(mapType->mapToScene({mapType->width(), 0}).x() <= window->width() + 1);
+        QVERIFY(mapViewport->mapToScene({0, mapViewport->height()}).y() <= navigation->mapToScene({0, 0}).y() + 1);
+        click(forecast);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
         QVERIFY(QMetaObject::invokeMethod(page, "openSettings"));
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         auto currentPage = [stack] { return stack->property("currentItem").value<QQuickItem *>(); };
