@@ -191,7 +191,7 @@ private slots:
     }
     void mobileNavigationAndSettingsUsePages()
     {
-        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));
         QQmlEngine engine;
         QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
@@ -245,6 +245,20 @@ private slots:
         QCOMPARE(places->property("width").toDouble(), double(window->width()));
         QVERIFY(QMetaObject::invokeMethod(places, "close"));
         QTRY_VERIFY(!places->property("visible").toBool());
+        auto *moreButton = find(find, page, "mobileMoreButton");
+        QVERIFY(moreButton); click(moreButton);
+        auto *more = page->findChild<QObject *>("mobileMoreSheet");
+        QVERIFY(more);
+        QTRY_VERIFY(more->property("opened").toBool());
+        QVERIFY(more->property("leftPadding").toDouble() > 0);
+        QVERIFY(more->property("topPadding").toDouble() > 0);
+        QVERIFY(more->property("height").toDouble() > more->property("topPadding").toDouble() + more->property("bottomPadding").toDouble());
+        QVERIFY(more->property("bottomPadding").toDouble() >= more->property("topPadding").toDouble());
+        window->resize(360, 700);
+        QTRY_VERIFY(more->property("height").toDouble() <= window->height() * 0.8);
+        window->resize(360, 800);
+        QVERIFY(QMetaObject::invokeMethod(more, "close"));
+        QTRY_VERIFY(!more->property("visible").toBool());
         QTRY_VERIFY(navigation->mapToScene({0, 0}).y() > window->height()/2);
         auto *desktopNavigation = find(find, page, "forecastNavigation");
         QVERIFY(desktopNavigation && !desktopNavigation->isVisible());
