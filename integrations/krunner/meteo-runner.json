@@ -1,0 +1,13 @@
+{
+  "KPlugin": {
+    "Name": "Meteo",
+    "Name[pl]": "Meteo",
+    "Description": "Weather forecasts for saved places and worldwide location search",
+    "Description[pl]": "Prognozy dla zapisanych miejsc i wyszukiwanie lokalizacji na świecie",
+    "Icon": "pl.meteo.desktop",
+    "License": "GPL-3.0-or-later",
+    "Authors": [{"Name": "Kamil Piwowarski", "Email": "kapiwko@gmail.com"}],
+    "EnabledByDefault": true
+  },
+  "X-Plasma-Runner-Min-Letter-Count": 5
+}

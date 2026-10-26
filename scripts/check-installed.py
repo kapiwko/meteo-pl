@@ -34,6 +34,12 @@ def main():
             raise RuntimeError("The installed application has an unexpected version")
         check([app,"--smoke-test"],env)
         check([sys.executable,str(Path(__file__).with_name("plasma-smoke.py")),"pl.meteo.desktop"],env)
+        plugins = {p.resolve() for lib in (Path('/usr/lib'), Path('/usr/lib64'))
+            for pattern in ('qt6/plugins/kf6/krunner/meteo_runner.so', '*/qt6/plugins/kf6/krunner/meteo_runner.so')
+            for p in lib.glob(pattern)}
+        if len(plugins) != 1: raise RuntimeError(f"Expected one installed KRunner plugin, found {plugins}")
+        dependencies = check(["ldd",str(plugins.pop())],env)
+        if 'not found' in dependencies.stdout: raise RuntimeError("An installed KRunner dependency is missing")
         check(["desktop-file-validate","/usr/share/applications/pl.meteo.desktop.desktop"],env)
     return 0
 if __name__=="__main__":raise SystemExit(main())

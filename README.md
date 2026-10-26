@@ -89,6 +89,14 @@ This affects only that widget; names and coordinates remain shared with the app.
 Weather details and each chart expand independently using Plasma's native list
 controls. Their expanded state is remembered for each widget.
 
+### KRunner
+
+On Linux, type **pogoda Gdańsk**, **weather London**, or **meteo** in KRunner.
+Saved places are matched locally, including names typed without Polish accents.
+New places use the same worldwide search and disk cache as the application.
+Selecting a result opens a full Meteo window for that location. The plugin can
+be disabled with `-DMETEO_BUILD_KRUNNER=OFF` when configuring the build.
+
 You can also preview the installed widget in its own window:
 
 ```bash
@@ -120,6 +128,7 @@ Qt modules: Core, Network, Qml, Quick, QuickControls2, Positioning, Widgets and
 Test. KDE dependencies: Kirigami, Notifications, KI18n and QQC2 Desktop Style.
 GNU gettext tools are required to compile translations. The
 widget additionally requires Plasma 6 and its QML modules.
+The optional Linux search plugin requires the KF6 Runner development package.
 
 ```bash
 git clone https://github.com/kapiwko/meteo-pl.git

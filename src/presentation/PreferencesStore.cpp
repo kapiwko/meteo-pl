@@ -27,6 +27,12 @@ PreferencesStore::PreferencesStore(QObject *parent)
         sync();
     });
 }
+QVariantList PreferencesStore::savedPlacesSnapshot()
+{
+    // Independent read-only QSettings instance: safe in KRunner's match thread.
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("meteo-pl"), QStringLiteral("desktop"));
+    return QJsonDocument::fromJson(settings.value("places/favorites").toByteArray()).toVariant().toList();
+}
 QVariant PreferencesStore::value(const QString &key, const QVariant &fallback) const
 {
     return m_settings.value(key, fallback);

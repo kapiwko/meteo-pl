@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 08:59+0100\n"
+"POT-Creation-Date: 2026-10-26 09:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -308,7 +308,7 @@ msgstr ""
 msgid "Choose color"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:61
 #: integrations/plasma/package/contents/ui/main.qml:33
 #: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:21
 msgid "Choose location"
@@ -727,6 +727,10 @@ msgstr ""
 
 #: src/presentation/WeatherModel.cpp:224
 msgid "Forecast for "
+msgstr ""
+
+#: integrations/krunner/MeteoRunner.cpp:35
+msgid "Forecast for %1"
 msgstr ""
 
 #: src/qml/LocationEditor.qml:207
@@ -1171,7 +1175,7 @@ msgstr ""
 msgid "No forecast"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:61
 msgid "No forecast available"
 msgstr ""
 
@@ -1225,6 +1229,14 @@ msgstr ""
 #: src/presentation/ExportNotifications.cpp:21
 #: src/presentation/ExportNotifications.cpp:22
 msgid "Open"
+msgstr ""
+
+#: integrations/krunner/MeteoRunner.cpp:49
+msgid "Open Meteo"
+msgstr ""
+
+#: integrations/krunner/MeteoRunner.cpp:20
+msgid "Open Meteo or choose a saved place"
 msgstr ""
 
 #: src/qml/ForecastPanel.qml:111
@@ -1410,7 +1422,7 @@ msgid "Readings"
 msgstr ""
 
 #: apps/meteo/Main.qml:57
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:63
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:64
 #: integrations/plasma/package/contents/ui/main.qml:26
 #: integrations/plasma/package/contents/ui/main.qml:140
 #: src/qml/EditorialView.qml:25
@@ -1489,6 +1501,10 @@ msgstr ""
 msgid "Save selected charts"
 msgstr ""
 
+#: integrations/krunner/MeteoRunner.cpp:36
+msgid "Saved place"
+msgstr ""
+
 #: src/presentation/ForecastFields.cpp:25
 #: src/presentation/ForecastFields.cpp:66
 msgid "Sea level pressure"
@@ -1562,6 +1578,11 @@ msgstr ""
 msgid "Show a shorter interval"
 msgstr ""
 
+#: integrations/krunner/MeteoRunner.cpp:18
+#: integrations/krunner/MeteoRunner.cpp:19
+msgid "Show a weather forecast for a place"
+msgstr ""
+
 #: integrations/plasma/package/contents/ui/configPlaces.qml:31
 msgid "Show all saved places, including new ones"
 msgstr ""
@@ -1574,7 +1595,7 @@ msgstr ""
 msgid "Show forecast: "
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:86
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:89
 #: src/qml/Meteogram.qml:258
 msgid "Show legend"
 msgstr ""
@@ -1646,12 +1667,12 @@ msgstr ""
 msgid "Storms and lightning"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:119
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:122
 #: src/qml/ForecastHeader.qml:68
 msgid "Sunrise"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:120
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:123
 #: src/qml/ForecastHeader.qml:69
 msgid "Sunset"
 msgstr ""

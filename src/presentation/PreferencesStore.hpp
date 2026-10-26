@@ -18,6 +18,7 @@ public:
     void remove(const QString &key);
     QString fileName() const;
     void sync();
+    static QVariantList savedPlacesSnapshot();
 signals:
     void placesChanged();
     void displayChanged();

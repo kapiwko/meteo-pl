@@ -93,7 +93,7 @@ def main():
     except Exception:
         record_runtime_result(directory,result|{"status":"failed"})
         raise
-    record_runtime_result(directory,result|{"status":"passed","checks":["version","app-startup","plasma-startup","desktop-entry"]})
+    record_runtime_result(directory,result|{"status":"passed","checks":["version","app-startup","plasma-startup","krunner-dependencies","desktop-entry"]})
     return 0
 
 
