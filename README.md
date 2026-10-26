@@ -122,6 +122,13 @@ the first installation for Plasma to discover the module.
 5. Enable the pipette in the chart status bar to inspect values. Click a chart
    to pin the reading; use **Export…** to save selected charts together.
 
+On Android, Material controls follow the system theme. The bottom bar switches
+between **Forecast**, **Maps** and **News**. Forecast contains the meteogram,
+hourly and daily views; News contains synoptic commentary and articles. Tap the
+place name in the app bar to switch saved places. The overflow menu opens
+location search and full-page settings, grouped into forecast, profiles,
+readings and application preferences. Desktop and Plasma retain their existing UI.
+
 Forecasts refresh hourly. **Refresh** requests fresh data immediately. If the
 network is unavailable, saved data remains visible with its retrieval time.
 Availability of individual parameters depends on the forecast model.

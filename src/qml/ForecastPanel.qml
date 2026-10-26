@@ -11,6 +11,7 @@ Item {
     required property WeatherModel weather
     property int viewMode: 0
     property bool touchMode: Kirigami.Settings.isMobile
+    property bool mobileLayout: false
     property real viewportStart: weather.firstTimestamp
     property real viewportEnd: weather.lastTimestamp
     property real documentFirst: 0
@@ -32,6 +33,7 @@ Item {
     property url exportedFile
     readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
     signal configureRequested()
+    signal settingsRequested()
     signal exportReported()
     signal locationSelected(string name, real latitude, real longitude)
     readonly property var selectedChart: visibleCharts.find(chart => chart.key === selectedGroup)
@@ -54,7 +56,10 @@ Item {
         return weather.configuredCharts(UserPreferences.chartLayout);
     }
 
-    function openSettings() { settingsDialog.open(); }
+    function openSettings() {
+        if (mobileLayout) settingsRequested();
+        else if (settingsDialog.item) settingsDialog.item.open();
+    }
     function chooseExport() {
         if (chartExporter.busy || !chartRepeater) return;
         const items = [];
@@ -274,6 +279,7 @@ Item {
         Kirigami.NavigationTabBar {
             id: navigation
             objectName: "forecastNavigation"
+            visible: !root.mobileLayout
             Layout.fillWidth: true
             maximumContentWidth: root.width
             spacing: Kirigami.Units.smallSpacing
@@ -347,16 +353,24 @@ Item {
             spacing: 10
             ForecastHeader {
                 id: forecastHeader
+                visible: !root.mobileLayout
                 Layout.fillWidth: true
                 weather: root.weather
                 onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
             }
-            Kirigami.InlineMessage { visible: root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
+            Loader {
+                id: mobileHeader
+                Layout.fillWidth: true
+                active: root.mobileLayout
+                visible: active
+                sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false }
+            }
+            Kirigami.InlineMessage { visible: !root.mobileLayout && root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.archive; text: I18n.i18n("Archived model run. Chart dates and times refer to the selected forecast."); type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.stale; text: I18n.i18n("The forecast may be outdated. Last downloaded: ") + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.PlaceholderMessage {
                 Layout.fillWidth: true
-                visible: !root.weather.hasData && !forecastHeader.loading
+                visible: !root.weather.hasData && !(root.mobileLayout ? mobileHeader.item && mobileHeader.item.loading : forecastHeader.loading)
                 icon.name: "mark-location"
                 text: I18n.i18n("No forecast")
                 explanation: I18n.i18n("Choose a place to download its meteogram.")
@@ -676,12 +690,17 @@ Item {
         onPointerLeft: closeProbe.restart()
         onClosed: { root.selectedTime = 0; root.pinned = false; }
     }
-    MeteoSettings {
+    Loader {
         id: settingsDialog
-        weather: root.weather
-        showTimeRange: root.viewMode === 0
-        startTime: root.viewportStart
-        endTime: root.viewportEnd
-        onHoursSelected: hours => root.setHours(hours)
+        active: !root.mobileLayout
+        sourceComponent: Component {
+            MeteoSettings {
+                weather: root.weather
+                showTimeRange: root.viewMode === 0
+                startTime: root.viewportStart
+                endTime: root.viewportEnd
+                onHoursSelected: hours => root.setHours(hours)
+            }
+        }
     }
 }

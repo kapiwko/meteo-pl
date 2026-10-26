@@ -33,7 +33,7 @@ private slots:
         QVERIFY(m_cache.isValid());
         QCoreApplication::setOrganizationName("MeteoTest");
         QCoreApplication::setApplicationName("MeteoTest");
-        QQuickStyle::setStyle("org.kde.desktop");
+        QQuickStyle::setStyle(qEnvironmentVariable("METEO_TEST_STYLE", "org.kde.desktop"));
         qputenv("XDG_CACHE_HOME", m_cache.path().toUtf8());
         qputenv("XDG_CONFIG_HOME", (m_cache.path() + "/config").toUtf8());
         const auto hash = QCryptographicHash::hash("um4_60:52.229700:21.012200", QCryptographicHash::Sha256).toHex();
@@ -188,6 +188,128 @@ private slots:
         QTRY_COMPARE(span(), fullSpan);
         QCOMPARE(start(), double(weather.firstTimestamp()));
         QTest::qWait(100); // Drain the final touch release before destroying its window.
+    }
+    void mobileNavigationAndSettingsUsePages()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        const QVariantMap startupForecast{{"locationName", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}, {"model", "um4_60"}};
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", startupForecast}, {"width", 360}, {"height", 800}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *weather = object->findChild<WeatherModel *>();
+        QVERIFY(weather);
+        QVERIFY(!weather->autoRefresh());
+        weather->refresh(false);
+        QVERIFY(weather->hasData());
+        auto *window = qobject_cast<QQuickWindow *>(object.data());
+        QVERIFY(window);
+        const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
+            if (parent->objectName() == name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        const auto findButton = [](auto &&self, QQuickItem *parent, const QString &text) -> QQuickItem * {
+            if (parent->isVisible() && parent->property("text").toString() == text && parent->property("checkable").isValid()) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, text)) return found;
+            return nullptr;
+        };
+        const auto click = [window](QQuickItem *button) {
+            QTRY_VERIFY(button->isVisible() && button->width() > 0
+                && button->mapToScene({button->width()/2, button->height()/2}).x() >= 0
+                && button->mapToScene({button->width()/2, button->height()/2}).x() < window->width()
+                && button->mapToScene({button->width()/2, button->height()/2}).y() >= 0
+                && button->mapToScene({button->width()/2, button->height()/2}).y() < window->height());
+            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, button->mapToScene({button->width()/2, button->height()/2}).toPoint());
+        };
+        QQuickItem *page = nullptr, *navigation = nullptr;
+        QTRY_VERIFY(page = find(find, window->contentItem(), "mobileForecastPage"));
+        QTRY_VERIFY(navigation = find(find, page, "mobileNavigation"));
+        QTRY_COMPARE(navigation->property("count").toInt(), 3);
+        auto *stack = page->property("navigationStack").value<QObject *>();
+        QVERIFY(stack);
+        auto *panel = page->property("panel").value<QObject *>();
+        QVERIFY(panel);
+        QQuickItem *placeButton = nullptr;
+        QTRY_VERIFY(placeButton = find(find, page, "mobilePlaceButton"));
+        click(placeButton);
+        auto *places = page->findChild<QObject *>("mobilePlacesSheet");
+        QVERIFY(places);
+        QTRY_VERIFY(places->property("opened").toBool());
+        auto *sheetBody = places->property("contentItem").value<QQuickItem *>();
+        QVERIFY(sheetBody);
+        auto *addPlace = findButton(findButton, sheetBody, "Find or add a place");
+        QVERIFY(addPlace);
+        QVERIFY(places->property("height").toDouble() >= addPlace->height());
+        QCOMPARE(places->property("width").toDouble(), double(window->width()));
+        QVERIFY(QMetaObject::invokeMethod(places, "close"));
+        QTRY_VERIFY(!places->property("visible").toBool());
+        QTRY_VERIFY(navigation->mapToScene({0, 0}).y() > window->height()/2);
+        auto *desktopNavigation = find(find, page, "forecastNavigation");
+        QVERIFY(desktopNavigation && !desktopNavigation->isVisible());
+        auto *zoom = find(find, page, "chartZoomSlider");
+        QVERIFY(zoom && !zoom->isVisible());
+        QVERIFY(QMetaObject::invokeMethod(panel, "setHours", Q_ARG(QVariant, 24)));
+        auto *days = findButton(findButton, page, "Days");
+        QVERIFY(days); click(days);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
+        auto *news = findButton(findButton, navigation, "News");
+        QVERIFY(news); click(news);
+        QTRY_COMPARE(page->property("destination").toInt(), 2);
+        auto *articles = findButton(findButton, page, "Articles");
+        QVERIFY(articles); click(articles);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 5);
+        auto *forecast = findButton(findButton, navigation, "Forecast");
+        QVERIFY(forecast); click(forecast);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
+        QCOMPARE(panel->property("viewportEnd").toDouble() - panel->property("viewportStart").toDouble(), 24*3600.0);
+        QVERIFY(QMetaObject::invokeMethod(page, "openSettings"));
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        auto currentPage = [stack] { return stack->property("currentItem").value<QQuickItem *>(); };
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsPage");
+        QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QTest::keySequence(window, QKeySequence(QKeySequence::Back));
+        QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QTRY_VERIFY(qAbs(page->mapToScene({0, 0}).x()) < 1);
+        QVERIFY(QMetaObject::invokeMethod(page, "openSettings"));
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsPage");
+        QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QQuickItem *application = nullptr;
+        QTRY_VERIFY(application = find(find, currentPage(), "mobileSettingsSection-3"));
+        click(application);
+        QTRY_COMPARE(stack->property("depth").toInt(), 3);
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsDetail-3");
+        QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QQuickItem *renderer = nullptr;
+        QTRY_VERIFY(renderer = find(find, currentPage(), "rendererSetting"));
+        QTRY_VERIFY(renderer->width() > 100);
+        QVERIFY(renderer->mapToScene({renderer->width(),0}).x() <= window->width() + 1);
+        QQuickItem *back = nullptr;
+        QTRY_VERIFY(back = find(find, currentPage(), "mobileBackButton"));
+        click(back);
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsPage");
+        QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QTRY_VERIFY(back = find(find, currentPage(), "mobileBackButton"));
+        click(back);
+        QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QVERIFY(QMetaObject::invokeMethod(page, "chooseLocation"));
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileLocationPage");
+        QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QQuickItem *show = nullptr;
+        QTRY_VERIFY(show = find(find, currentPage(), "mobileShowForecastButton"));
+        QVERIFY(show->isEnabled());
+        click(show);
+        QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QTRY_VERIFY(qAbs(page->mapToScene({0, 0}).x()) < 1);
+        auto *columns = stack->property("columnView").value<QObject *>();
+        QVERIFY(columns);
+        QTRY_VERIFY(!columns->property("moving").toBool());
+        QVERIFY(!window->grabWindow().isNull());
+        if (const auto path = qEnvironmentVariable("METEO_MOBILE_SCREENSHOT"); !path.isEmpty()) QVERIFY(window->grabWindow().save(path));
     }
     void windDirectionChartRendersArrows_data()
     {

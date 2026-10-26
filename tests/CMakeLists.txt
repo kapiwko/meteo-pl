@@ -57,6 +57,14 @@ if(METEO_BUILD_PLASMOID)
 endif()
 add_test(NAME presentation COMMAND test_presentation)
 set_tests_properties(presentation PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
+add_test(NAME mobile_material_ui COMMAND test_presentation mobileNavigationAndSettingsUsePages)
+set_tests_properties(mobile_material_ui PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 60)
+add_test(NAME mobile_material_dark_ui COMMAND test_presentation mobileNavigationAndSettingsUsePages)
+set_tests_properties(mobile_material_dark_ui PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QT_QUICK_CONTROLS_MATERIAL_THEME=Dark;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 60)
 
 qt_add_executable(test_maps test_maps.cpp)
 target_link_libraries(test_maps PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::QuickControls2)

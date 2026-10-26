@@ -65,7 +65,11 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.setInitialProperties({{QStringLiteral("smokeTest"), smokeTest}, {QStringLiteral("startupForecast"), startupForecast}});
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
+#ifdef Q_OS_ANDROID
+    engine.loadFromModule(QStringLiteral("pl.meteo.app"), QStringLiteral("Mobile"));
+#else
     engine.loadFromModule(QStringLiteral("pl.meteo.app"), QStringLiteral("Main"));
+#endif
     if (engine.rootObjects().isEmpty())
         return 1;
     if (smokeTest)

@@ -8,6 +8,8 @@ ColumnLayout {
     id: root
     required property WeatherModel weather
     property bool showDays: true
+    property bool showPlacePicker: true
+    readonly property bool loading: weatherSymbol.loading
     property var places: UserPreferences.places
     function chooseLocation() { placePicker.chooseLocation(); }
     signal locationSelected(string name, real latitude, real longitude)
@@ -17,6 +19,7 @@ ColumnLayout {
 
     PlacePicker {
         id: placePicker
+        visible: root.showPlacePicker
         Layout.fillWidth: true
         weather: root.weather
         places: root.places
