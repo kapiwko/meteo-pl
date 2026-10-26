@@ -127,7 +127,7 @@ def check_packaged_desktop(target, packages, craft_root, environment):
             if mounted: run(["hdiutil", "detach", mount])
 
 
-def package_current_build(command, target, work, dist, craft_root, environment, prepare=None):
+def package_current_build(command, target, work, dist, craft_root, environment, prepare=None, include_alternatives=False):
     # Keep previous releases outside the artifact selection and smoke test.
     # Publish only after the package from this invocation has passed verification.
     with tempfile.TemporaryDirectory(prefix="packages-", dir=work) as temporary:
@@ -142,9 +142,14 @@ def package_current_build(command, target, work, dist, craft_root, environment, 
         if len(packages) != 1:
             raise RuntimeError(f"Expected one current {suffix} package, found {packages}")
         if target == "android":
-            artifacts.append(sign_android(packages[0], staging))
+            signed = sign_android(packages[0], staging)
+            artifacts = [packages[0], signed] if include_alternatives else [signed]
         else:
             check_packaged_desktop(target, artifacts, craft_root, environment)
+            if target == "windows" and not include_alternatives:
+                artifacts = [p for p in artifacts if p.suffix == ".exe"]
+                if len(artifacts) != 1:
+                    raise RuntimeError(f"Expected one current Windows installer, found {artifacts}")
         published = []
         for artifact in artifacts:
             destination = dist / artifact.name
@@ -212,13 +217,15 @@ def build(args):
                 print(result.stdout + result.stderr)
                 if QML_ERRORS.search(result.stdout + result.stderr): raise RuntimeError("QML smoke test failed")
             smoke = "passed"
-    artifacts = package_current_build(command, args.target, work, dist, craft_root, environment, prepare)
+    artifacts = package_current_build(command, args.target, work, dist, craft_root, environment, prepare, args.include_alternatives)
     report = {"version": (ROOT / "VERSION").read_text().strip(), "target": args.target,
               "architecture": "arm64-v8a" if args.target == "android" else platform.machine(),
               "smokeTest": smoke, "releaseSigned": False, "bootstrapRevision": CRAFT_REVISION,
               "blueprintsRevision": BLUEPRINTS_REVISION, "artifacts": [p.name for p in artifacts]}
     report["cacheUrl"] = args.cache_url or "https://files.kde.org/craft/Qt6/"
     report["bundleSmokeTest"] = "not-run" if args.target == "android" else "passed"
+    report["artifactBytes"] = {p.name: p.stat().st_size for p in artifacts}
+    report["includeAlternatives"] = args.include_alternatives
     bundle_report = work / "bundle-runtime.json"
     if bundle_report.exists(): report["bundleContents"] = json.loads(bundle_report.read_text())
     (dist / "BUILD-REPORT.json").write_text(json.dumps(report, indent=2) + "\n")
@@ -251,6 +258,7 @@ def android_container(args):
              image, "python3", "scripts/build-portable.py", "--target", "android", "--inside-sdk",
              "--work-dir", "/work", "--craft-root", "/work/CraftRoot", "--dist-dir", "/out"]
         if args.cache_url: command += ["--cache-url", args.cache_url]
+        if args.include_alternatives: command.append("--include-alternatives")
         run(command)
 
 
@@ -262,6 +270,8 @@ def main():
     parser.add_argument("--dist-dir", type=Path)
     parser.add_argument("--cache-url", default=os.environ.get("METEO_CRAFT_CACHE_URL"), help="Alternative HTTPS mirror of the KDE craft/Qt6/ cache")
     parser.add_argument("--inside-sdk", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--include-alternatives", action="store_true",
+                        help="Also publish the Windows portable ZIP or unsigned Android APK")
     args = parser.parse_args()
     if args.cache_url:
         url = urlsplit(args.cache_url)

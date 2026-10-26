@@ -30,7 +30,7 @@ class PortablePackagingTest(unittest.TestCase):
                 result=stage/"meteo-development.apk"; result.write_bytes(apk.read_bytes()+b"signed"); return result
             with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign):
                 artifacts=portable.package_current_build(["craft"],"android",root,dist,root/"CraftRoot",{},prepare)
-            self.assertEqual([p.name for p in artifacts],["meteo.apk","meteo-development.apk"])
+            self.assertEqual([p.name for p in artifacts],["meteo-development.apk"])
             self.assertFalse(configured[0].exists())
 
     def test_windows_smoke_uses_only_the_explicit_current_archive(self):
@@ -63,16 +63,32 @@ class PortablePackagingTest(unittest.TestCase):
                 directory = Path(setting.split("=", 1)[1])
                 self.assertNotEqual(directory, dist)
                 (directory/"meteo-0.2.zip").write_bytes(b"current")
+                (directory/"meteo-0.2.exe").write_bytes(b"installer")
             def check(target, packages, craft_root, environment):
-                self.assertEqual([p.name for p in packages], ["meteo-0.2.zip"])
+                self.assertEqual([p.name for p in packages], ["meteo-0.2.exe", "meteo-0.2.zip"])
                 self.assertFalse((dist/"meteo-0.2.zip").exists())
                 verified.extend(packages)
             with patch.object(portable, "run", side_effect=run), patch.object(portable, "check_packaged_desktop", side_effect=check):
                 artifacts = portable.package_current_build(["craft"], "windows", root, dist, root/"CraftRoot", {})
-            self.assertEqual(artifacts, [dist/"meteo-0.2.zip"])
-            self.assertEqual(artifacts[0].read_bytes(), b"current")
+            self.assertEqual(artifacts, [dist/"meteo-0.2.exe"])
+            self.assertEqual(artifacts[0].read_bytes(), b"installer")
             self.assertEqual(old.read_bytes(), b"old")
             self.assertFalse(verified[0].exists())
+
+    def test_alternative_packages_remain_available_explicitly(self):
+        for target in ("windows", "android"):
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as temporary:
+                root=Path(temporary); dist=root/"dist"; dist.mkdir()
+                def package(command,**kwargs):
+                    destination=Path(next(arg.split("=",1)[1] for arg in command if str(arg).startswith("[Packager]Destination=")))
+                    for name in (("meteo.exe","meteo.zip") if target=="windows" else ("meteo.apk",)):
+                        (destination/name).write_bytes(b"package")
+                def sign(apk,stage):
+                    result=stage/"meteo-development.apk";result.write_bytes(b"signed");return result
+                with patch.object(portable,"run",side_effect=package), patch.object(portable,"sign_android",side_effect=sign), patch.object(portable,"check_packaged_desktop"):
+                    artifacts=portable.package_current_build(["craft"],target,root,dist,root/"CraftRoot",{},include_alternatives=True)
+                self.assertEqual(len(artifacts),2)
+                self.assertTrue(all(p.exists() for p in artifacts))
 
     def test_desktop_build_ignores_preinstalled_android_sdk(self):
         sdk={"ANDROID_SDK_ROOT":"/sdk","ANDROID_NDK":"/ndk","ANDROID_HOME":"/sdk","PATH":"/native/bin"}
