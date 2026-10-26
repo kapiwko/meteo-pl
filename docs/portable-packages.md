@@ -7,7 +7,7 @@ wyłączony na tych platformach.
 | Platforma | Środowisko budowania | Wynik |
 | --- | --- | --- |
 | Windows x64 | Windows, Visual Studio 2022, Python ≥ 3.11 | instalator NSIS `.exe` |
-| macOS | macOS, Xcode Command Line Tools, Python ≥ 3.11 | `.dmg` z aplikacją `.app`, architektura komputera budującego |
+| macOS | macOS, Xcode z macOS SDK ≥ 15, Python ≥ 3.11 | `.dmg` z aplikacją `.app`, architektura komputera budującego |
 | Android arm64 | Linux z Dockerem, oficjalny obraz SDK KDE/Qt 6.11 | instalowalny `-development.apk` |
 
 ## Budowanie
