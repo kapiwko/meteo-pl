@@ -1,3 +1,5 @@
+# Older Runner SDKs export ConfigCore in their interface without importing it.
+find_package(KF6Config REQUIRED)
 find_package(KF6Runner REQUIRED)
 add_library(meteo_runner_logic STATIC MeteoRunner.cpp MeteoRunner.hpp RunnerQuery.cpp RunnerQuery.hpp)
 target_link_libraries(meteo_runner_logic PUBLIC meteo_ui KF6::Runner)
