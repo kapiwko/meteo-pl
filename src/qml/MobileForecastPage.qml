@@ -57,8 +57,8 @@ Kirigami.Page {
         currentIndex: root.destination
         onCurrentIndexChanged: if (currentIndex >= 0) root.showDestination(currentIndex)
         MaterialStyle.Material.background: Kirigami.Theme.backgroundColor
-        TabButton { text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
-        TabButton { text: I18n.i18n("Maps"); icon.name: "globe"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
+        TabButton { text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
+        TabButton { text: I18n.i18n("Maps"); icon.name: "globe"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
         TabButton { text: I18n.i18n("News"); icon.name: "view-list-text"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
     }
     ColumnLayout {
@@ -132,7 +132,7 @@ Kirigami.Page {
             spacing: 0
             ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("Location and model"); icon.name: "mark-location"; onClicked: { moreSheet.close(); root.chooseLocation(); } }
             ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("Settings"); icon.name: "configure"; onClicked: { moreSheet.close(); root.openSettings(); } }
-            ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; onClicked: { moreSheet.close(); about.open(); } }
+            ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onClicked: { moreSheet.close(); about.open(); } }
         }
     }
     MeteoAbout { id: about; weather: root.weather }

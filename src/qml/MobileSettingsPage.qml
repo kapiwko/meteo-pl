@@ -46,7 +46,7 @@ Kirigami.ScrollablePage {
                 onClicked: root.navigationStack.push(sectionPage, {section: index})
             }
         }
-        ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; onClicked: about.open() }
+        ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onClicked: about.open() }
     }
     MeteoAbout { id: about; weather: root.weather }
     Component {
