@@ -80,14 +80,10 @@ PlasmoidItem {
         if (keys.indexOf("*") < 0 && keys.indexOf(key) < 0) Plasmoid.configuration.visiblePlaces = keys.concat([key]);
     }
     function rememberSection(key, expanded) {
-        if (key === "details") {
-            if (weatherConfiguration.detailsExpanded !== expanded) Plasmoid.configuration.detailsExpanded = expanded;
-        } else {
-            const collapsed = Array.from(weatherConfiguration.collapsedCharts).filter(entry => entry !== key);
-            if (!expanded) collapsed.push(key);
-            if (JSON.stringify(collapsed) !== JSON.stringify(Array.from(weatherConfiguration.collapsedCharts)))
-                Plasmoid.configuration.collapsedCharts = collapsed;
-        }
+        const collapsed = Array.from(weatherConfiguration.collapsedCharts).filter(entry => entry !== key);
+        if (!expanded) collapsed.push(key);
+        if (JSON.stringify(collapsed) !== JSON.stringify(Array.from(weatherConfiguration.collapsedCharts)))
+            Plasmoid.configuration.collapsedCharts = collapsed;
     }
     SavedPlaceSelection {
         id: placeSelection
@@ -186,7 +182,6 @@ PlasmoidItem {
                 weather: forecastModel
                 places: placeSelection.places
                 showCharts: false
-                detailsExpanded: root.weatherConfiguration.detailsExpanded
                 onSectionToggled: (key, expanded) => root.rememberSection(key, expanded)
                 onConfigureRequested: Plasmoid.internalAction("configure").trigger()
                 onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
@@ -199,7 +194,6 @@ PlasmoidItem {
                 places: placeSelection.places
                 profile: root.weatherConfiguration.chartProfile
                 hours: root.weatherConfiguration.chartHours
-                detailsExpanded: root.weatherConfiguration.detailsExpanded
                 collapsedCharts: Array.from(root.weatherConfiguration.collapsedCharts)
                 onSectionToggled: (key, expanded) => root.rememberSection(key, expanded)
                 onConfigureRequested: Plasmoid.internalAction("configure").trigger()

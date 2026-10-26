@@ -3,7 +3,6 @@
 // when available, without redeclaring and shadowing it.
 import QtQuick
 import QtQuick.Controls as QQC2
-import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.extras as PlasmaExtras
@@ -16,7 +15,6 @@ PlasmaComponents.ScrollView {
     property bool showCharts: true
     property string profile: "classic"
     property int hours: 24
-    property bool detailsExpanded: false
     property var collapsedCharts: []
     property real clockTime: Date.now() / 1000
     signal locationSelected(string name, real latitude, real longitude)
@@ -38,8 +36,7 @@ PlasmaComponents.ScrollView {
     contentItem: ListView {
         id: sections
         objectName: "widgetSections"
-        model: root.weather.hasData ? [{key: "details", title: I18n.i18n("Weather details")}]
-            .concat(root.showCharts ? selection.charts : []) : []
+        model: root.weather.hasData && root.showCharts ? selection.charts : []
         spacing: Kirigami.Units.smallSpacing
         currentIndex: -1
         cacheBuffer: 1000
@@ -73,17 +70,15 @@ PlasmaComponents.ScrollView {
             objectName: "widgetSection-" + modelData.key
             property int legendOverride: -1
             title: modelData.title
-            subtitle: modelData.key === "details" ? root.weather.modelName
-                : root.weather.formatTime(selection.startTime, "ddd HH:mm") + " – " + root.weather.formatTime(selection.endTime, "ddd HH:mm")
-            icon: modelData.key === "details" ? "weather-clear" : "view-statistics"
+            subtitle: root.weather.formatTime(selection.startTime, "ddd HH:mm") + " – " + root.weather.formatTime(selection.endTime, "ddd HH:mm")
+            icon: "view-statistics"
             onItemExpanded: root.sectionToggled(modelData.key, true)
             onItemCollapsed: root.sectionToggled(modelData.key, false)
             Component.onCompleted: {
                 if ("index" in section) section.index = Qt.binding(() => model.index);
-                if (modelData.key === "details" ? root.detailsExpanded : root.collapsedCharts.indexOf(modelData.key) < 0) expand();
+                if (root.collapsedCharts.indexOf(modelData.key) < 0) expand();
             }
-            defaultActionButtonVisible: modelData.key !== "details"
-            defaultActionButtonAction: modelData.key === "details" ? null : legendAction
+            defaultActionButtonAction: legendAction
             QQC2.Action {
                 id: legendAction
                 icon.name: "dialog-information-symbolic"
@@ -92,7 +87,7 @@ PlasmaComponents.ScrollView {
                 checked: section.legendOverride < 0 ? UserPreferences.showLegend : Boolean(section.legendOverride)
                 onTriggered: section.legendOverride = checked ? 1 : 0
             }
-            customExpandedViewContent: modelData.key === "details" ? detailsContent : chartContent
+            customExpandedViewContent: chartContent
             Component {
                 id: chartContent
                 Meteogram {
@@ -107,23 +102,6 @@ PlasmaComponents.ScrollView {
                     startTime: selection.startTime
                     endTime: selection.endTime
                     nights: UserPreferences.showNight ? root.weather.nightIntervals : []
-                }
-            }
-            Component {
-                id: detailsContent
-                Item {
-                    implicitHeight: details.implicitHeight + Kirigami.Units.largeSpacing
-                    Kirigami.FormLayout {
-                        id: details
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        PlasmaComponents.Label { Kirigami.FormData.label: I18n.i18n("Pressure"); text: root.weather.pressureText }
-                        PlasmaComponents.Label { Kirigami.FormData.label: I18n.i18n("Wind"); text: root.weather.windText }
-                        PlasmaComponents.Label { Kirigami.FormData.label: I18n.i18n("Sunrise"); text: root.weather.solarTimes.sunriseText || "—" }
-                        PlasmaComponents.Label { Kirigami.FormData.label: I18n.i18n("Sunset"); text: root.weather.solarTimes.sunsetText || "—" }
-                        PlasmaComponents.Label { Kirigami.FormData.label: I18n.i18n("Model run"); text: root.weather.runText; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                    }
                 }
             }
         }

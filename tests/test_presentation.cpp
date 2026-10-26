@@ -1491,6 +1491,42 @@ private slots:
         QTRY_VERIFY(qAbs(content->implicitHeight() - collapsed) < 2);
         QMetaObject::invokeMethod(dialog, "close");
     }
+    void compactWidgetHeaderShowsUsefulFactsWithoutExpanding()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "CompactForecast");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> header(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"showDays", false}}));
+        QVERIFY2(header, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(620, 200);
+        auto *item = qobject_cast<QQuickItem *>(header.data());
+        item->setParentItem(window.contentItem()); window.show();
+        auto *facts = header->findChild<QQuickItem *>("compactForecastFacts");
+        auto *sunrise = header->findChild<QQuickItem *>("compactSunrise");
+        auto *sunset = header->findChild<QQuickItem *>("compactSunset");
+        QVERIFY(facts && sunrise && sunset);
+        for (const int width : {620, 400}) {
+            item->setSize(QSizeF(width, 150));
+            QTRY_VERIFY(item->implicitHeight() <= 150);
+            QTRY_VERIFY(facts->isVisible() && sunrise->isVisible() && sunset->isVisible());
+            QVERIFY(facts->property("text").toString().contains(weather.windText()));
+            QVERIFY(facts->property("text").toString().contains(weather.pressureText()));
+            QTRY_VERIFY(facts->mapToItem(item, {facts->width(), 0}).x() <= sunrise->mapToItem(item, {0, 0}).x());
+            QVERIFY(sunset->mapToItem(item, {sunset->width(), 0}).x() <= width);
+            QCOMPARE(sunrise->property("time").toString(), weather.solarTimes()["sunriseText"].toString());
+            QCOMPARE(sunset->property("time").toString(), weather.solarTimes()["sunsetText"].toString());
+        }
+        weather.setUtc(true);
+        QCOMPARE(sunrise->property("time").toString(), weather.solarTimes()["sunriseText"].toString());
+        QCOMPARE(sunset->property("time").toString(), weather.solarTimes()["sunsetText"].toString());
+        weather.setLatitude(50.8661);
+        QVERIFY(!weather.hasData());
+        QVERIFY(!facts->isVisible() && !sunrise->isVisible() && !sunset->isVisible());
+    }
 #ifdef METEO_TEST_PLASMA
     void nativeWidgetSectionsExpandAndCollapseIndependently()
     {
@@ -1511,19 +1547,22 @@ private slots:
         QVERIFY(list);
         const auto configured = weather.configuredCharts(defaultChartLayout("classic"));
         QVERIFY(configured.size() > 2);
-        const int sectionCount = 1 + configured.size();
+        const int sectionCount = configured.size();
         QTRY_COMPARE(list->property("count").toInt(), sectionCount);
-        QQuickItem *details = nullptr, *temperature = nullptr;
-        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, details), Q_ARG(int, 0)) && details);
-        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
-        if (temperature->metaObject()->indexOfProperty("index") >= 0) QCOMPARE(temperature->property("index").toInt(), 1);
-        QVERIFY(!details->property("expanded").toBool());
+        QQuickItem *temperature = nullptr, *precipitation = nullptr;
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 0)) && temperature);
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, precipitation), Q_ARG(int, 1)) && precipitation);
+        if (precipitation->metaObject()->indexOfProperty("index") >= 0) QCOMPARE(precipitation->property("index").toInt(), 1);
+        QCOMPARE(temperature->objectName(), "widgetSection-temperature");
+        QCOMPARE(precipitation->objectName(), "widgetSection-precipitation");
         QVERIFY(temperature->property("expanded").toBool());
         QTRY_VERIFY(temperature->height() > 150);
         QVERIFY(QMetaObject::invokeMethod(temperature, "collapse"));
         QTRY_VERIFY(temperature->height() < 100);
-        QVERIFY(QMetaObject::invokeMethod(details, "expand"));
-        QTRY_VERIFY(details->height() > 100);
+        QVERIFY(QMetaObject::invokeMethod(precipitation, "collapse"));
+        QTRY_VERIFY(precipitation->height() < 100);
+        QVERIFY(QMetaObject::invokeMethod(precipitation, "expand"));
+        QTRY_VERIFY(precipitation->height() > 150);
         QVERIFY(!temperature->property("expanded").toBool());
         QVERIFY(QMetaObject::invokeMethod(temperature, "expand"));
         QTRY_VERIFY(temperature->height() > 150);
@@ -1558,12 +1597,12 @@ private slots:
         auto *list = popup->findChild<QObject *>("widgetSections");
         auto *bar = popup->findChild<QObject *>("widgetVerticalScrollBar");
         QVERIFY(list && bar);
-        QTRY_COMPARE(list->property("count").toInt(), 2);
+        QTRY_COMPARE(list->property("count").toInt(), 1);
         auto *footer = list->property("footerItem").value<QQuickItem *>();
         QVERIFY(footer && !footer->isVisible());
         QCOMPARE(footer->height(), 0);
         QQuickItem *temperature = nullptr;
-        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 0)) && temperature);
         QTRY_VERIFY(item->implicitHeight() > 720);
         QTRY_VERIFY(!bar->property("visible").toBool());
         item->setHeight(300);
@@ -1593,9 +1632,9 @@ private slots:
         item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
         auto *list = popup->findChild<QObject *>("widgetSections");
         QVERIFY(list);
-        QTRY_COMPARE(list->property("count").toInt(), collapsed.size() + 1);
+        QTRY_COMPARE(list->property("count").toInt(), collapsed.size());
         QTest::qWait(100);
-        for (const int index : {2, 4, 1, 7, 0}) {
+        for (const int index : {2, 4, 1, 6, 0}) {
             QQuickItem *row = nullptr;
             QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, row), Q_ARG(int, index)) && row);
             const auto position = row->mapToScene(QPointF(row->width() / 3, row->height() / 2)).toPoint();

@@ -16,7 +16,7 @@ QtObject {
     property bool sawLocationLoading: false
     readonly property int expectedSectionCount: {
         const revision = weather.dataRevision;
-        return 1 + weather.configuredCharts(UserPreferences.chartLayoutForProfile(configuration.chartProfile)).length;
+        return weather.configuredCharts(UserPreferences.chartLayoutForProfile(configuration.chartProfile)).length;
     }
     property Timer poll: Timer { interval: 50; running: true; repeat: true; onTriggered: probe.tick() }
     Component.onCompleted: {
@@ -94,17 +94,16 @@ QtObject {
                 sawLocationLoading = true;
             }
             if (!weather.hasData || weather.busy || sections.count !== expectedSectionCount) return;
-            const details = find(frame, "widgetSection-details");
             const temperature = find(frame, "widgetSection-temperature");
             const precipitation = find(frame, "widgetSection-precipitation");
-            if (!details || !temperature || !precipitation) return;
+            if (!temperature || !precipitation) return;
             if (phase === 0) {
-                require(!details.expanded && temperature.expanded, "Incorrect default section state");
+                require(temperature.expanded && precipitation.expanded, "Incorrect default section state");
                 phase = 1;
-                details.expand(); temperature.collapse();
-                FixtureDriver.keyClick(details, Qt.Key_Space);
+                temperature.collapse(); precipitation.collapse();
+                FixtureDriver.keyClick(precipitation, Qt.Key_Space);
             } else if (phase === 1 && ticks > 12 && temperature.height < 100) {
-                require(!details.expanded && precipitation.expanded, "Keyboard or independent collapse failed");
+                require(!temperature.expanded && precipitation.expanded, "Keyboard or independent collapse failed");
                 require(configuration.collapsedCharts.indexOf("temperature") >= 0, "Collapsed section was not saved");
                 configuration.placeOrder = ["54.352000,18.646600", "52.229700,21.012200"];
                 phase = 2;

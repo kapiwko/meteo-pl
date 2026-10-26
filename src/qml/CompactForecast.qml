@@ -12,6 +12,7 @@ ColumnLayout {
     function chooseLocation() { placePicker.chooseLocation(); }
     signal locationSelected(string name, real latitude, real longitude)
     readonly property var days: showDays ? weather.dailyForecast.slice(0, 7) : []
+    readonly property var solar: weather.solarTimes
     spacing: Kirigami.Units.largeSpacing
 
     PlacePicker {
@@ -41,12 +42,34 @@ ColumnLayout {
                 font: Kirigami.Theme.smallFont
                 wrapMode: Text.WordWrap
             }
+            Label {
+                objectName: "compactForecastFacts"
+                Layout.fillWidth: true
+                visible: root.weather.hasData
+                text: I18n.i18n("Wind ") + root.weather.windText + I18n.i18n(" · Pressure ") + root.weather.pressureText
+                color: Kirigami.Theme.disabledTextColor
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
+            }
         }
         ColumnLayout {
-            spacing: Kirigami.Units.smallSpacing / 2
             visible: root.weather.hasData
-            Label { text: I18n.i18n("Wind"); color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont }
-            Label { text: root.weather.windText; font.bold: true }
+            spacing: Kirigami.Units.smallSpacing
+            SolarEvent {
+                objectName: "compactSunrise"
+                title: I18n.i18n("Sunrise")
+                time: root.solar.sunriseText || "—"
+                icon: "icons/sunrise.svg"
+                visible: !root.solar.status
+            }
+            SolarEvent {
+                objectName: "compactSunset"
+                title: I18n.i18n("Sunset")
+                time: root.solar.sunsetText || "—"
+                icon: "icons/sunset.svg"
+                visible: !root.solar.status
+            }
+            Label { text: root.solar.status || ""; visible: text.length > 0; wrapMode: Text.WordWrap; Layout.maximumWidth: 100 }
         }
     }
     Kirigami.InlineMessage { objectName: "forecastErrorMessage"; Layout.fillWidth: true; text: root.weather.error; visible: text.length > 0; type: Kirigami.MessageType.Warning }
@@ -86,5 +109,26 @@ ColumnLayout {
                 Label { Layout.fillWidth: true; text: day.modelData.rain === null ? "—" : (day.modelData.rainEstimated ? "≈ " : "") + Number(day.modelData.rain).toLocaleString(Qt.locale(), 'f', 1) + " mm"; elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
             }
         }
+    }
+    component SolarEvent: RowLayout {
+        id: event
+        required property string title
+        required property string time
+        required property string icon
+        spacing: Kirigami.Units.smallSpacing
+        Accessible.role: Accessible.StaticText
+        Accessible.name: title + I18n.i18n(": ") + time + (root.weather.utc ? " UTC" : "")
+        ToolTip.visible: eventHover.hovered
+        ToolTip.text: title + " · " + (root.solar.dateLabel || "") + I18n.i18n(" · approximate time · ") + (root.weather.utc ? "UTC" : I18n.i18n("system local time"))
+        HoverHandler { id: eventHover }
+        Kirigami.Icon {
+            source: Qt.resolvedUrl(event.icon)
+            isMask: true
+            color: Kirigami.Theme.neutralTextColor
+            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            Accessible.ignored: true
+        }
+        Label { text: event.time; font.bold: true; Accessible.ignored: true }
     }
 }
