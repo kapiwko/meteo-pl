@@ -594,38 +594,9 @@ Item {
     }
     Component {
         id: hourlyComponent
-        ScrollView {
-            id: hourScroll
-            clip: true
-            contentWidth: Math.max(availableWidth, 890)
-            Column {
-                width: hourScroll.contentWidth
-                Row {
-                    Repeater {
-                        model: [I18n.i18n("Time"), I18n.i18n("Temp."), I18n.i18n("Feels like"), I18n.i18n("Precip. mm"), I18n.i18n("Chance %"), I18n.i18n("Wind ") + root.weather.windUnit, I18n.i18n("Gusts"), "hPa", I18n.i18n("Clouds %")]
-                        delegate: Label { required property string modelData; width: modelData === I18n.i18n("Time") ? 122 : 95; text: modelData; font.bold: true; padding: 8 }
-                    }
-                }
-                Repeater {
-                    model: root.weather.hourlyForecast
-                    delegate: ItemDelegate {
-                        id: hourRow
-                        required property var modelData
-                        required property int index
-                        width: parent.width
-                        implicitHeight: 38
-                        onClicked: { root.pinned = false; root.showProbe(modelData.time, mapToItem(null, width/2, 0), "", true); root.pinned = true; }
-                        background: Rectangle { color: hourRow.index % 2 ? Kirigami.Theme.alternateBackgroundColor : "transparent" }
-                        contentItem: Row {
-                            Label { width: 110; text: root.weather.formatTime(hourRow.modelData.time, "ddd HH:mm"); font.bold: true }
-                            Repeater {
-                                model: ["airtmp_point", "wchill_point", "pcpttl_aver", "pcpttlprob_point", "wind10_sd_true_prev_point", "wind_gust_max", "slpres_point", "cldtot_aver"]
-                                delegate: Label { required property string modelData; width: 95; text: root.number(hourRow.modelData[modelData], ["pcpttl_aver"].indexOf(modelData) >= 0 ? 1 : 0) }
-                            }
-                        }
-                    }
-                }
-            }
+        HourlyForecastTable {
+            weather: root.weather
+            onReadingRequested: (timestamp, position) => { root.pinned = false; root.showProbe(timestamp, position, "", true); root.pinned = true; }
         }
     }
     Component {

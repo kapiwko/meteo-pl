@@ -54,6 +54,7 @@ qt_add_qml_module(meteo_ui
         presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
         presentation/ChartDataBuilder.cpp presentation/ChartDataBuilder.hpp
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
+        presentation/ForecastFormatting.cpp presentation/ForecastFormatting.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp
         presentation/ReadingsExporter.cpp presentation/ReadingsExporter.hpp
@@ -91,6 +92,8 @@ set_source_files_properties(qml/ChartSaveDialog.qml PROPERTIES QT_RESOURCE_ALIAS
 qt_target_qml_sources(meteo_ui QML_FILES qml/ChartSaveDialog.qml)
 set_source_files_properties(qml/PreferenceWriteNotice.qml PROPERTIES QT_RESOURCE_ALIAS PreferenceWriteNotice.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/PreferenceWriteNotice.qml)
+set_source_files_properties(qml/HourlyForecastTable.qml PROPERTIES QT_RESOURCE_ALIAS HourlyForecastTable.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/HourlyForecastTable.qml)
 target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)

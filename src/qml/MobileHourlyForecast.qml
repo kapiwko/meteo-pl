@@ -51,14 +51,28 @@ ListView {
                         {label: I18n.i18n("Gusts"), field: "wind_gust_max", unit: root.weather.windUnit},
                         {label: I18n.i18n("Pressure"), field: "slpres_point", unit: "hPa"}
                     ]
-                    delegate: Label {
+                    delegate: ColumnLayout {
+                        id: cell
                         required property var modelData
+                        readonly property var sample: hour.modelData.cells[modelData.field]
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
-                        text: modelData.label + I18n.i18n(": ") + root.number(hour.modelData[modelData.field], modelData.unit)
-                        font: Kirigami.Theme.smallFont
-                        color: Kirigami.Theme.disabledTextColor
-                        wrapMode: Text.WordWrap
+                        spacing: 0
+                        Label {
+                            Layout.fillWidth: true
+                            text: cell.modelData.label + I18n.i18n(": ") + cell.sample.value
+                            font: Kirigami.Theme.smallFont
+                            color: Kirigami.Theme.disabledTextColor
+                            wrapMode: Text.WordWrap
+                        }
+                        Label {
+                            Layout.fillWidth: true
+                            visible: text.length > 0
+                            text: cell.sample.intervalLabel
+                            font: Kirigami.Theme.smallFont
+                            color: Kirigami.Theme.disabledTextColor
+                            wrapMode: Text.WordWrap
+                        }
                     }
                 }
             }

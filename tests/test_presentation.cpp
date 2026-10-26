@@ -1593,6 +1593,17 @@ private slots:
         QCOMPARE(rain["intervalFrom"].toLongLong(),first);
         QCOMPARE(rain["intervalTo"].toLongLong(),first+10800);
         QCOMPARE(rain["sampling"].toString(),"intervalTotal");
+        const auto hours = model.hourlyForecast();
+        for (int i = 0; i < 3; ++i) {
+            const auto cell = hours[i].toMap()["cells"].toMap()["pcpttl_aver"].toMap();
+            QCOMPARE(cell, rain);
+            QCOMPARE(cell["intervalLabel"].toString(), model.formatTime(first, "HH:mm") + "–" + model.formatTime(first + 10800, "HH:mm"));
+            QCOMPARE(hours[i].toMap()["pcpttl_aver"].toDouble(), 1.0);
+        }
+        const auto missing = hours[6].toMap()["cells"].toMap()["pcpttl_aver"].toMap();
+        QVERIFY(!missing["number"].isValid());
+        QCOMPARE(missing["value"].toString(), QStringLiteral("—"));
+        QCOMPARE(missing["intervalTo"].toLongLong(), first + 32400);
         const auto bars = model.series()["pcpttl_aver"].toList();
         QCOMPARE(bars[0].toMap()["precipitationType"].toDouble(),2.0);
         QCOMPARE(bars[1].toMap()["precipitationType"].toDouble(),3.0);

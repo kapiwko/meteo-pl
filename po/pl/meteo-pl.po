@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 18:46+0100\n"
+"POT-Creation-Date: 2026-10-26 19:00+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -56,7 +56,7 @@ msgstr[0] "Wybrano %1 wykres"
 msgstr[1] "Wybrano %1 wykresy"
 msgstr[2] "Wybrano %1 wykresów"
 
-#: src/presentation/WeatherModel.cpp:452
+#: src/presentation/WeatherModel.cpp:432
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 
@@ -84,7 +84,7 @@ msgid "72 hours"
 msgstr "72 godziny"
 
 #: src/qml/CompactForecast.qml:127 src/qml/ForecastHeader.qml:82
-#: src/qml/MobileHourlyForecast.qml:58
+#: src/qml/MobileHourlyForecast.qml:63
 msgid ": "
 msgstr " słońca: "
 
@@ -144,7 +144,7 @@ msgstr "Wszystkie parametry"
 msgid "All saved profiles…"
 msgstr "Wszystkie zapisane profile…"
 
-#: src/qml/ForecastPanel.qml:673
+#: src/qml/ForecastPanel.qml:644
 msgid ""
 "An interval crosses midnight. Its precipitation is shared between days in "
 "proportion to duration."
@@ -245,9 +245,9 @@ msgstr "Anuluj ładowanie"
 msgid "Category"
 msgstr "Kategoria"
 
-#: src/qml/ForecastPanel.qml:605
-msgid "Chance %"
-msgstr "Szansa %"
+#: src/qml/HourlyForecastTable.qml:17
+msgid "Chance"
+msgstr "Szansa opadu"
 
 #: src/qml/ForecastPanel.qml:227
 msgid "Chart appearance, series visibility and legends will be preserved."
@@ -366,7 +366,7 @@ msgstr ""
 msgid "Classic ICM"
 msgstr "Klasyczny ICM"
 
-#: src/presentation/WeatherModel.cpp:403
+#: src/presentation/WeatherModel.cpp:383
 msgid "Clear"
 msgstr "Słonecznie"
 
@@ -422,20 +422,17 @@ msgstr "Punkty chmur"
 msgid "Cloud tops"
 msgstr "Wierzchołki chmur"
 
-#: src/qml/ForecastInspector.qml:24 src/qml/MobileHourlyForecast.qml:49
+#: src/qml/ForecastInspector.qml:24 src/qml/HourlyForecastTable.qml:21
+#: src/qml/MobileHourlyForecast.qml:49
 msgid "Clouds"
 msgstr "Chmury"
-
-#: src/qml/ForecastPanel.qml:605
-msgid "Clouds %"
-msgstr "Chmury %"
 
 #: src/presentation/WeatherLayersModel.cpp:38
 #: src/presentation/WeatherLayersModel.cpp:45
 msgid "Clouds and precipitation"
 msgstr "Chmury i opady"
 
-#: src/presentation/WeatherModel.cpp:303
+#: src/presentation/ForecastFormatting.cpp:26
 msgid "Code %1"
 msgstr "Kod %1"
 
@@ -742,7 +739,7 @@ msgstr "Eksportuję…"
 msgid "Export…"
 msgstr "Eksportuj…"
 
-#: src/qml/ForecastPanel.qml:605 src/qml/MobileHourlyForecast.qml:46
+#: src/qml/HourlyForecastTable.qml:15 src/qml/MobileHourlyForecast.qml:46
 msgid "Feels like"
 msgstr "Odczuw."
 
@@ -787,7 +784,7 @@ msgstr "Pokrycie mgłą"
 msgid "Forecast"
 msgstr "Prognoza"
 
-#: src/presentation/WeatherModel.cpp:205
+#: src/presentation/WeatherModel.cpp:206
 msgid "Forecast for "
 msgstr "Prognoza na "
 
@@ -840,11 +837,11 @@ msgstr "Temperatura gruntu min–max"
 msgid "Gust above scale"
 msgstr "Poryw powyżej skali"
 
-#: src/qml/ForecastPanel.qml:605 src/qml/MobileHourlyForecast.qml:51
+#: src/qml/HourlyForecastTable.qml:19 src/qml/MobileHourlyForecast.qml:51
 msgid "Gusts"
 msgstr "Porywy"
 
-#: src/qml/ForecastPanel.qml:677
+#: src/qml/ForecastPanel.qml:648
 msgid "Gusts: "
 msgstr "Porywy: "
 
@@ -923,7 +920,7 @@ msgstr "Koniec przedziału"
 msgid "Interval start"
 msgstr "Początek przedziału"
 
-#: src/presentation/WeatherModel.cpp:311
+#: src/presentation/ForecastFormatting.cpp:37
 msgid "Interval: %1–%2"
 msgstr "Przedział: %1–%2"
 
@@ -976,7 +973,7 @@ msgstr "Najnowszy"
 msgid "Latest available"
 msgstr "Najnowszy dostępny"
 
-#: src/presentation/WeatherModel.cpp:332
+#: src/presentation/WeatherModel.cpp:308
 msgid "Latest forecast"
 msgstr "Najnowsza prognoza"
 
@@ -1262,7 +1259,7 @@ msgstr "Nowy wykres"
 msgid "News"
 msgstr "Aktualności"
 
-#: src/presentation/WeatherModel.cpp:399
+#: src/presentation/WeatherModel.cpp:379
 msgid "No cloud cover data"
 msgstr "Brak danych o zachmurzeniu"
 
@@ -1278,7 +1275,7 @@ msgstr "Brak prognozy"
 msgid "No forecast available"
 msgstr "Brak dostępnej prognozy"
 
-#: src/presentation/WeatherModel.cpp:203
+#: src/presentation/WeatherModel.cpp:204
 msgid "No forecast for the current hour"
 msgstr "Brak prognozy na bieżącą godzinę"
 
@@ -1317,7 +1314,7 @@ msgstr ""
 msgid "No valid reading time."
 msgstr "Brak prawidłowego czasu odczytu."
 
-#: src/presentation/WeatherModel.cpp:301
+#: src/presentation/ForecastFormatting.cpp:24
 msgid "None"
 msgstr "Brak"
 
@@ -1358,7 +1355,7 @@ msgstr "Oryginalny meteogram ICM"
 msgid "Outdoors"
 msgstr "Na zewnątrz"
 
-#: src/presentation/WeatherModel.cpp:403
+#: src/presentation/WeatherModel.cpp:383
 msgid "Overcast"
 msgstr "Pochmurno"
 
@@ -1395,7 +1392,7 @@ msgstr "Parametry"
 msgid "Parameters of the indicated chart"
 msgstr "Parametry wskazanego wykresu"
 
-#: src/presentation/WeatherModel.cpp:403
+#: src/presentation/WeatherModel.cpp:383
 msgid "Partly cloudy"
 msgstr "Częściowe zachmurzenie"
 
@@ -1432,23 +1429,20 @@ msgstr "Promień punktu:"
 msgid "Points"
 msgstr "Punkty"
 
-#: src/presentation/WeatherModel.cpp:444
+#: src/presentation/WeatherModel.cpp:424
 msgid "Polar day"
 msgstr "Dzień polarny"
 
-#: src/presentation/WeatherModel.cpp:444
+#: src/presentation/WeatherModel.cpp:424
 msgid "Polar night"
 msgstr "Noc polarna"
 
-#: src/presentation/WeatherModel.cpp:395
+#: src/presentation/WeatherModel.cpp:375
 msgid "Possible thunderstorms"
 msgstr "Możliwe burze"
 
-#: src/qml/ForecastPanel.qml:605
-msgid "Precip. mm"
-msgstr "Opad mm"
-
-#: src/qml/ForecastInspector.qml:22 src/qml/MobileHourlyForecast.qml:47
+#: src/qml/ForecastInspector.qml:22 src/qml/HourlyForecastTable.qml:16
+#: src/qml/MobileHourlyForecast.qml:47
 msgid "Precipitation"
 msgstr "Opady"
 
@@ -1472,7 +1466,7 @@ msgstr "Sumy opadu w przedziałach %1 h."
 msgid "Precipitation type"
 msgstr "Rodzaj opadu"
 
-#: src/qml/ForecastPanel.qml:668
+#: src/qml/ForecastPanel.qml:639
 msgid "Precipitation: "
 msgstr "Opad: "
 
@@ -1517,11 +1511,11 @@ msgstr "Wyeksportowano profili: "
 msgid "Profiles imported: "
 msgstr "Zaimportowano profili: "
 
-#: src/presentation/WeatherModel.cpp:301
+#: src/presentation/ForecastFormatting.cpp:24
 msgid "Rain"
 msgstr "Deszcz"
 
-#: src/presentation/WeatherModel.cpp:398
+#: src/presentation/WeatherModel.cpp:378
 msgid "Rainfall"
 msgstr "Opady deszczu"
 
@@ -1601,7 +1595,7 @@ msgstr "Prawa oś"
 msgid "Sample time"
 msgstr "Czas próbki"
 
-#: src/presentation/WeatherModel.cpp:310
+#: src/presentation/ForecastFormatting.cpp:35
 msgid "Sample: %1"
 msgstr "Próbka: %1"
 
@@ -1747,15 +1741,16 @@ msgstr "Pokaż meteogram"
 msgid "Show:"
 msgstr "Pokazuj:"
 
-#: src/presentation/WeatherModel.cpp:302 src/presentation/WeatherModel.cpp:397
+#: src/presentation/ForecastFormatting.cpp:25
+#: src/presentation/WeatherModel.cpp:377
 msgid "Sleet"
 msgstr "Deszcz ze śniegiem"
 
-#: src/presentation/WeatherModel.cpp:302
+#: src/presentation/ForecastFormatting.cpp:25
 msgid "Snow"
 msgstr "Śnieg"
 
-#: src/presentation/WeatherModel.cpp:396
+#: src/presentation/WeatherModel.cpp:376
 msgid "Snowfall"
 msgstr "Opady śniegu"
 
@@ -1823,7 +1818,7 @@ msgstr "Synoptyk"
 msgid "Synoptic commentary"
 msgstr "Komentarz synoptyka"
 
-#: src/qml/ForecastPanel.qml:605
+#: src/qml/HourlyForecastTable.qml:14
 msgid "Temp."
 msgstr "Temp."
 
@@ -1867,7 +1862,7 @@ msgstr "Plik nie zawiera poprawnego dokumentu JSON."
 msgid "The file must contain between 1 and 100 profiles."
 msgstr "Plik musi zawierać od 1 do 100 profili."
 
-#: src/qml/ForecastPanel.qml:674
+#: src/qml/ForecastPanel.qml:645
 msgid "The forecast covers part of this day. Missing intervals are excluded."
 msgstr "Prognoza obejmuje część dnia. Brakujące przedziały nie są wliczane."
 
@@ -1963,7 +1958,7 @@ msgstr ""
 msgid "This point is outside the UM4 area. Choose the GFS model."
 msgstr "Ten punkt leży poza obszarem UM4. Wybierz model GFS."
 
-#: src/qml/ForecastPanel.qml:605 src/qml/ForecastPanel.qml:606
+#: src/qml/HourlyForecastTable.qml:26
 msgid "Time"
 msgstr "Czas"
 
@@ -1992,7 +1987,7 @@ msgstr "Zachmurzenie całkowite"
 msgid "Total on disk:"
 msgstr "Razem na dysku:"
 
-#: src/qml/ForecastPanel.qml:674
+#: src/qml/ForecastPanel.qml:645
 msgid "Total precipitation for this day."
 msgstr "Suma opadu dla całego dnia."
 
@@ -2154,7 +2149,6 @@ msgid "Wind"
 msgstr "Wiatr"
 
 #: src/qml/CompactForecast.qml:56 src/qml/ForecastHeader.qml:57
-#: src/qml/ForecastPanel.qml:605
 msgid "Wind "
 msgstr "Wiatr "
 
@@ -2234,6 +2228,15 @@ msgstr "czas lokalny systemu"
 #: src/qml/EditorialView.qml:35
 msgid "yyyy-mm-dd"
 msgstr "rrrr-mm-dd"
+
+#~ msgid "Chance %"
+#~ msgstr "Szansa %"
+
+#~ msgid "Clouds %"
+#~ msgstr "Chmury %"
+
+#~ msgid "Precip. mm"
+#~ msgstr "Opad mm"
 
 #~ msgid ""
 #~ "Fill: mean precipitation. Thin stems: maximum precipitation. Total over "

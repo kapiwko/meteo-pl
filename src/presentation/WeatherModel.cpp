@@ -5,6 +5,7 @@
 #include "ChartDataBuilder.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
+#include "ForecastFormatting.hpp"
 
 #include <QLocale>
 #include <cmath>
@@ -285,36 +286,11 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
     QVariantList details;
     if (!m_forecast || !std::isfinite(timestamp)) return details;
     const auto time = qint64(nearestTimestamp(timestamp));
-    const QStringList directions{"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"};
+    const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
     for (const auto &field : forecastFields()) {
-        const auto it = m_forecast->series.constFind(field.key);
-        if (it == m_forecast->series.cend()) continue;
-        const auto sample = Meteo::sampleForecast(*m_forecast, field.key, time);
-        const auto value = sample ? sample->value : std::nullopt;
-        const auto scale = displayScale(field.key, field.scale);
-        const auto unit = field.unit == "m/s" ? m_windUnit : field.unit;
-        QString text = value ? QLocale().toString(*value * scale, 'f', field.decimals) + (unit.isEmpty() ? QString() : ' ' + unit) : QStringLiteral("—");
-        if (field.kind == "direction" && value) text += " · " + directions[(qRound(*value / 22.5) % 16 + 16) % 16];
-        if (field.kind == "type" && value) {
-            // Precipitation categories used by the upstream client.
-            const int code = qRound(*value);
-            text = code == 0 ? Meteo::i18n("None") : code == 1 ? Meteo::i18n("Rain")
-                : code == 2 ? Meteo::i18n("Snow") : code == 3 ? Meteo::i18n("Sleet")
-                : Meteo::i18n("Code %1").arg(code);
-        }
-        const bool instant = sample && sample->timing == Meteo::QuantityTiming::Instant;
-        const auto source = sample ? QVariant(sample->sourceTimestamp) : QVariant();
-        const auto from = sample && !instant ? QVariant(sample->intervalFrom) : QVariant();
-        const auto to = sample && !instant ? QVariant(sample->intervalTo) : QVariant();
-        const auto sourceText = !sample ? QString() : instant
-            ? Meteo::i18n("Sample: %1").arg(formatTime(sample->sourceTimestamp, QStringLiteral("d MMM HH:mm")))
-            : Meteo::i18n("Interval: %1–%2").arg(formatTime(sample->intervalFrom, QStringLiteral("d MMM HH:mm")),
-                                               formatTime(sample->intervalTo, QStringLiteral("d MMM HH:mm")));
-        details.append(QVariantMap{{"key", field.key}, {"label", field.label}, {"value", text}, {"group", field.group},
-            {"number", value ? QVariant(*value * scale) : QVariant()}, {"unit", unit}, {"color", field.color},
-            {"darkColor", forecastDarkColor(field.color, field.key)}, {"sourceTimestamp", source},
-            {"intervalFrom", from}, {"intervalTo", to}, {"sampleText", sourceText},
-            {"sampling", Meteo::timingName(Meteo::quantityTiming(field.key))}});
+        if (!m_forecast->series.contains(field.key)) continue;
+        details.append(formatForecastSample(*m_forecast, field, time,
+            displayScale(field.key, field.scale), m_windUnit, zone));
     }
     return details;
 }
@@ -366,11 +342,15 @@ QVariantList WeatherModel::hourlyForecast() const
     for (qsizetype i = 0; i < base.values.size(); ++i) {
         const auto time = base.firstTimestamp + i * base.interval;
         QVariantMap values{{"time", time}, {"label", formatTime(time, QStringLiteral("ddd HH:mm"))}};
+        QVariantMap cells;
+        const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
         for (const auto &field : forecastFields()) {
-            const auto sample = Meteo::sampleForecast(*m_forecast, field.key, time);
-            const auto value = sample ? sample->value : std::nullopt;
-            values.insert(field.key, value ? QVariant(*value * displayScale(field.key, field.scale)) : QVariant());
+            const auto cell = formatForecastSample(*m_forecast, field, time,
+                displayScale(field.key, field.scale), m_windUnit, zone);
+            values.insert(field.key, cell.value("number"));
+            cells.insert(field.key, cell);
         }
+        values.insert("cells", cells);
         rows.append(values);
     }
     return rows;
