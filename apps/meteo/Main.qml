@@ -8,6 +8,8 @@ import pl.meteo.desktop
 Kirigami.ApplicationWindow {
     id: window
     property bool smokeTest: false
+    property var startupForecast: ({})
+    property bool startupReady: false
     width: 860
     height: 900
     minimumWidth: Kirigami.Settings.isMobile ? 320 : 400
@@ -29,7 +31,7 @@ Kirigami.ApplicationWindow {
         latitude: settings.latitude
         longitude: settings.longitude
         model: settings.model
-        autoRefresh: !window.smokeTest && settings.locationName.length > 0
+        autoRefresh: window.startupReady && !window.smokeTest && settings.locationName.length > 0
         windUnit: UserPreferences.windUnit
         utc: UserPreferences.utc
     }
@@ -38,7 +40,14 @@ Kirigami.ApplicationWindow {
         if (name.length) settings.model = LocationRules.modelFor(latitude, longitude, settings.model);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
-    SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude) }
+    Component.onCompleted: {
+        if (startupForecast.locationName !== undefined) {
+            settings.model = startupForecast.model;
+            selectLocation(startupForecast.locationName, startupForecast.latitude, startupForecast.longitude);
+        }
+        startupReady = true;
+    }
+    SavedPlaceSelection { weather: window.startupReady ? forecastModel : null; onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude) }
     pageStack.initialPage: Kirigami.Page {
         padding: 0
         title: I18n.i18n("Meteogram")

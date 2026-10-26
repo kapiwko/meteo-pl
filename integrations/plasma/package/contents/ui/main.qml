@@ -5,11 +5,13 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.extras as PlasmaExtras
 import pl.meteo.desktop
 
 PlasmoidItem {
     id: root
-    property bool showMeteogram: false
+    property string launchError: ""
     readonly property var weatherConfiguration: Plasmoid.configuration
     switchWidth: Kirigami.Units.gridUnit * 24
     switchHeight: Kirigami.Units.gridUnit * 24
@@ -57,64 +59,99 @@ PlasmoidItem {
             Label { text: forecastModel.temperatureText }
         }
     }
-    fullRepresentation: Item {
+    fullRepresentation: PlasmaExtras.Representation {
         id: fullView
-        readonly property ForecastPanel chartView: forecastView.item as ForecastPanel
+        readonly property bool charts: root.weatherConfiguration.popupView === "charts"
         Layout.minimumWidth: Kirigami.Units.gridUnit * 20
-        Layout.minimumHeight: Kirigami.Units.gridUnit * (root.showMeteogram ? 18 : 12)
-        Layout.preferredWidth: Kirigami.Units.gridUnit * (root.showMeteogram ? 34 : root.weatherConfiguration.popupView === "charts" ? 30 : 24)
-        Layout.preferredHeight: root.showMeteogram ? Kirigami.Units.gridUnit * 38 : Math.min(Screen.height * 0.85, overviewContent.implicitHeight + Kirigami.Units.largeSpacing * 2)
-        implicitHeight: Layout.preferredHeight
-        ColumnLayout {
-            id: overviewContent
-            anchors.fill: parent
-            anchors.margins: Kirigami.Units.largeSpacing
-            spacing: Kirigami.Units.largeSpacing
-            RowLayout {
-                Layout.fillWidth: true
-                ToolButton { icon.name: "go-previous"; text: I18n.i18n("Weather"); visible: root.showMeteogram; onClicked: root.showMeteogram = false }
-                Kirigami.Heading { text: "Meteo"; level: 3; Layout.fillWidth: true }
-                ToolButton { icon.name: "view-refresh"; text: I18n.i18n("Refresh"); display: AbstractButton.IconOnly; enabled: !forecastModel.busy; onClicked: forecastModel.refresh(); ToolTip.text: text; ToolTip.visible: hovered }
-                ToolButton { icon.name: "configure"; text: root.showMeteogram ? I18n.i18n("Settings") : I18n.i18n("Widget settings"); display: AbstractButton.IconOnly; onClicked: root.showMeteogram ? displayDialog.open() : Plasmoid.internalAction("configure").trigger(); ToolTip.text: text; ToolTip.visible: hovered }
+        Layout.minimumHeight: Kirigami.Units.gridUnit * 14
+        Layout.maximumHeight: Screen.height * 0.85
+        implicitWidth: Kirigami.Units.gridUnit * (charts ? 30 : 24)
+        implicitHeight: Math.min(Screen.height * 0.85,
+            Math.max(Kirigami.Units.gridUnit * 18, contentPane.implicitHeight
+                + (header.visible ? header.implicitHeight : 0) + footer.implicitHeight))
+        collapseMarginsHint: true
+
+        header: PlasmaExtras.BasicPlasmoidHeading {
+            leftPadding: Kirigami.Units.smallSpacing
+            rightPadding: Kirigami.Units.smallSpacing
+            PlasmaComponents.ToolButton {
+                id: refreshButton
+                icon.name: "view-refresh"
+                text: I18n.i18n("Refresh")
+                display: AbstractButton.IconOnly
+                enabled: !forecastModel.busy
+                onClicked: forecastModel.refresh()
+                PlasmaComponents.ToolTip { text: refreshButton.text }
             }
-            Loader {
-                id: forecastView
-                Layout.fillWidth: true
-                Layout.fillHeight: root.showMeteogram || root.weatherConfiguration.popupView === "charts"
-                Layout.preferredHeight: implicitHeight
-                sourceComponent: root.showMeteogram ? details : root.weatherConfiguration.popupView === "charts" ? widgetCharts : overview
-            }
-            Component { id: overview; CompactForecast { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude) } }
-            Component {
-                id: widgetCharts
-                WidgetForecast {
-                    weather: forecastModel
-                    profile: root.weatherConfiguration.chartProfile
-                    chartKeys: Array.from(root.weatherConfiguration.chartKeys)
-                    hours: root.weatherConfiguration.chartHours
-                    onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
-                }
-            }
-            Component {
-                id: details
-                ForecastPanel {
-                    weather: forecastModel
-                    onConfigureRequested: Plasmoid.internalAction("configure").trigger()
-                    onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
-                }
-            }
-            Button { Layout.alignment: Qt.AlignHCenter; visible: !root.showMeteogram; text: I18n.i18n("Show meteogram"); icon.name: "view-statistics"; onClicked: root.showMeteogram = true }
         }
-        MeteoSettings {
-            id: displayDialog
-            parent: fullView
-            width: Math.min(parent.width - 24, 650)
-            height: Math.min(parent.height - 24, 680)
-            weather: forecastModel
-            showTimeRange: fullView.chartView !== null && fullView.chartView.viewMode === 0
-            startTime: fullView.chartView ? fullView.chartView.viewportStart : forecastModel.firstTimestamp
-            endTime: fullView.chartView ? fullView.chartView.viewportEnd : forecastModel.lastTimestamp
-            onHoursSelected: hours => { if (fullView.chartView) fullView.chartView.setHours(hours); }
+        footer: PlasmaExtras.PlasmoidHeading {
+            position: ToolBar.Footer
+            leftPadding: Kirigami.Units.smallSpacing
+            rightPadding: Kirigami.Units.smallSpacing
+            contentItem: RowLayout {
+                Item { Layout.fillWidth: true }
+                PlasmaComponents.Button {
+                    objectName: "openMeteogramButton"
+                    text: I18n.i18n("Show meteogram")
+                    icon.name: "window-new"
+                    onClicked: {
+                        if (ApplicationLauncher.openForecast(forecastModel.locationName, forecastModel.latitude,
+                            forecastModel.longitude, forecastModel.model)) {
+                            root.launchError = "";
+                            root.expanded = false;
+                        } else {
+                            root.launchError = I18n.i18n("Could not open Meteo. Install the desktop application and try again.");
+                        }
+                    }
+                }
+            }
+        }
+        contentItem: Pane {
+            id: contentPane
+            padding: Kirigami.Units.largeSpacing
+            background: null
+            contentItem: ColumnLayout {
+                spacing: Kirigami.Units.largeSpacing
+                Kirigami.InlineMessage {
+                    Layout.fillWidth: true
+                    visible: text.length > 0
+                    text: root.launchError
+                    type: Kirigami.MessageType.Error
+                    showCloseButton: true
+                    onVisibleChanged: if (!visible) root.launchError = ""
+                }
+                Loader {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    sourceComponent: fullView.charts ? widgetCharts : overview
+                }
+            }
+        }
+        Component {
+            id: overview
+            PlasmaComponents.ScrollView {
+                id: overviewScroll
+                implicitHeight: dailyForecast.implicitHeight
+                contentWidth: availableWidth
+                clip: true
+                PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
+                CompactForecast {
+                    id: dailyForecast
+                    width: overviewScroll.availableWidth
+                    weather: forecastModel
+                    onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
+                }
+            }
+        }
+        Component {
+            id: widgetCharts
+            WidgetForecast {
+                weather: forecastModel
+                profile: root.weatherConfiguration.chartProfile
+                chartKeys: Array.from(root.weatherConfiguration.chartKeys)
+                hours: root.weatherConfiguration.chartHours
+                onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
+            }
         }
     }
 }

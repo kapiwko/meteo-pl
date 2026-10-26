@@ -1300,6 +1300,23 @@ private slots:
         editor->setProperty("latitude", 91);
         QVERIFY(!editor->property("valid").toBool());
     }
+    void desktopWindowStartsAtTheLocationRequestedByTheWidget()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        const QVariantMap location{{"locationName", "Kielce"}, {"latitude", 50.8661}, {"longitude", 20.6286}, {"model", "um4_120"}};
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", location}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *weather = object->findChild<WeatherModel *>();
+        QVERIFY(weather);
+        QCOMPARE(weather->locationName(), "Kielce");
+        QCOMPARE(weather->latitude(), 50.8661);
+        QCOMPARE(weather->longitude(), 20.6286);
+        QCOMPARE(weather->model(), "um4_120");
+        QVERIFY(!weather->autoRefresh());
+        QVERIFY(object->property("startupReady").toBool());
+    }
     void locationDialogUsesInsetContentAndFitsNarrowWindows()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));

@@ -6,6 +6,7 @@
 #include "LegacyMeteogramModel.hpp"
 #include "UserPreferences.hpp"
 #include "ReadingsExporter.hpp"
+#include "ApplicationLauncher.hpp"
 #include "ChartConfiguration.hpp"
 #include "core/Locations.hpp"
 #include "core/WebLink.hpp"
@@ -15,6 +16,7 @@
 #include <QFile>
 #include <QCryptographicHash>
 #include <QSignalSpy>
+#include <QScopeGuard>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
@@ -41,6 +43,41 @@ private slots:
         QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
         settings.clear();
         settings.sync();
+    }
+    void opensTheDesktopApplicationWithTheWidgetLocation()
+    {
+#ifndef Q_OS_UNIX
+        QSKIP("The Plasma application handoff runs on Unix.");
+#else
+        QTemporaryDir files;
+        QVERIFY(files.isValid());
+        const auto output = files.filePath("arguments");
+        QFile executable(files.filePath("meteo-pl"));
+        QVERIFY(executable.open(QIODevice::WriteOnly));
+        executable.write("#!/bin/sh\nprintf '%s\\n' \"$@\" > \"" + output.toUtf8() + "\"\n");
+        executable.close();
+        QVERIFY(executable.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner));
+        const auto oldPath = qgetenv("PATH");
+        const auto restorePath = qScopeGuard([&] { qputenv("PATH", oldPath); });
+        qputenv("PATH", files.path().toUtf8());
+        ApplicationLauncher launcher;
+        const auto name = QStringLiteral("Gdańsk \"centrum\"; $(echo test)");
+        QVERIFY(launcher.openForecast(name, 54.352, 18.6466, "um4_120"));
+        const auto captured = [&] {
+            QFile file(output);
+            return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()).split('\n') : QStringList{};
+        };
+        QTRY_COMPARE(captured().size(), 9);
+        const auto args = captured();
+        QCOMPARE(args[0], "--location"); QCOMPARE(args[1], name);
+        QCOMPARE(args[2], "--latitude"); QCOMPARE(args[3].toDouble(), 54.352);
+        QCOMPARE(args[4], "--longitude"); QCOMPARE(args[5].toDouble(), 18.6466);
+        QCOMPARE(args[6], "--model"); QCOMPARE(args[7], "um4_120");
+        QVERIFY(!launcher.openForecast(name, 91, 18, "um4_60"));
+        QVERIFY(!launcher.openForecast(name, 54, 18, "unknown"));
+        QVERIFY(executable.remove());
+        QVERIFY(!launcher.openForecast(name, 54, 18, "um4_60"));
+#endif
     }
     void readingCsvPreservesUnitsMissingValuesAndQuotedPolishText()
     {

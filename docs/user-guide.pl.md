@@ -219,7 +219,8 @@ Widok po rozwinięciu domyślnie pokazuje temperaturę i opady na najbliższe 24
 W konfiguracji plasmoidu, w karcie **Widok widgetu**, wybierz profil, jeden lub dwa
 wykresy i okres 12/24/48/72 godzin lub całą prognozę. Możesz też wybrać zwarty
 widok prognozy dziennej. Każdy widget zachowuje własną konfigurację;
-**Pokaż meteogram** otwiera pełny widok w tym samym plasmoidzie. Ikona panelu
+Widok widgetu jest osadzony w standardowym kontenerze Plasmy.
+**Pokaż meteogram** otwiera osobne, pełne okno aplikacji dla wybranej lokalizacji. Ikona panelu
 odzwierciedla pogodę; przy braku danych używana jest własna ikona Meteo.
 Samo `kpackagetool6 -i integrations/plasma/package` nie instaluje biblioteki C++;
 potrzebna jest także instalacja modułu `pl.meteo.desktop` przez CMake.

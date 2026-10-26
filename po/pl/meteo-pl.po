@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 01:27+0100\n"
+"POT-Creation-Date: 2026-10-26 08:30+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -58,7 +58,7 @@ msgstr[2] "Wybrano %1 wykresów"
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 
-#: src/presentation/UserPreferences.cpp:386
+#: src/presentation/UserPreferences.cpp:306
 msgid "%1 — copy"
 msgstr "%1 — kopia"
 
@@ -110,7 +110,7 @@ msgstr "Temperatura powietrza min–max"
 msgid "All"
 msgstr "Wszystkie"
 
-#: src/presentation/UserPreferences.cpp:198
+#: src/presentation/UserPreferences.cpp:118
 msgid "All charts"
 msgstr "Wszystkie wykresy"
 
@@ -177,7 +177,7 @@ msgstr "Automatycznie"
 msgid "Automatic by unit"
 msgstr "Automatycznie według jednostki"
 
-#: src/presentation/UserPreferences.cpp:198
+#: src/presentation/UserPreferences.cpp:118
 msgid "Aviation"
 msgstr "Lotniczy"
 
@@ -193,7 +193,7 @@ msgstr "Wróć do artykułów"
 msgid "Bars"
 msgstr "Słupki"
 
-#: src/presentation/UserPreferences.cpp:198
+#: src/presentation/UserPreferences.cpp:118
 msgid "Basic"
 msgstr "Podstawowy"
 
@@ -270,7 +270,7 @@ msgstr "Wykresy w profilu"
 msgid "Charts:"
 msgstr "Wykresy:"
 
-#: apps/meteo/main.cpp:43
+#: apps/meteo/main.cpp:45
 msgid "Check QML startup without downloading data."
 msgstr "Sprawdź uruchomienie QML bez pobierania danych."
 
@@ -321,7 +321,7 @@ msgid ""
 msgstr ""
 "Wybierz jeden lub dwa wykresy. Ich wygląd pochodzi z wybranego profilu."
 
-#: src/presentation/UserPreferences.cpp:198
+#: src/presentation/UserPreferences.cpp:118
 msgid "Classic ICM"
 msgstr "Klasyczny ICM"
 
@@ -461,6 +461,10 @@ msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 "Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji."
 
+#: integrations/plasma/package/contents/ui/main.qml:102
+msgid "Could not open Meteo. Install the desktop application and try again."
+msgstr "Nie udało się otworzyć Meteo. Zainstaluj aplikację i spróbuj ponownie."
+
 #: src/presentation/ProfileFileCodec.cpp:81
 msgid "Could not open the file: "
 msgstr "Nie udało się otworzyć pliku: "
@@ -523,8 +527,8 @@ msgstr "Własna wysokość tego wykresu"
 msgid "Custom interval"
 msgstr "Własny zakres"
 
-#: src/presentation/UserPreferences.cpp:198
-#: src/presentation/UserPreferences.cpp:232
+#: src/presentation/UserPreferences.cpp:118
+#: src/presentation/UserPreferences.cpp:152
 msgid "Custom layout"
 msgstr "Własny układ"
 
@@ -735,6 +739,10 @@ msgstr "Prognoza na "
 msgid "Forecast model"
 msgstr "Model prognozy"
 
+#: apps/meteo/main.cpp:49
+msgid "Forecast model to display."
+msgstr "Model wyświetlanej prognozy."
+
 #: src/qml/ApplicationSettings.qml:68 src/qml/MeteoAbout.qml:53
 msgid "Forecasts:"
 msgstr "Prognozy:"
@@ -908,6 +916,10 @@ msgstr "Najnowsza prognoza"
 msgid "Latitude (°N):"
 msgstr "Szerokość (°N):"
 
+#: apps/meteo/main.cpp:47
+msgid "Latitude of the location."
+msgstr "Szerokość geograficzna lokalizacji."
+
 #: src/qml/SeriesSettings.qml:141
 msgid "Layer order:"
 msgstr "Kolejność w warstwie:"
@@ -964,7 +976,7 @@ msgstr "Ustalanie pozycji…"
 msgid "Location"
 msgstr "Lokalizacja"
 
-#: apps/meteo/Main.qml:62
+#: apps/meteo/Main.qml:71
 msgid "Location and model"
 msgstr "Lokalizacja i model"
 
@@ -972,9 +984,17 @@ msgstr "Lokalizacja i model"
 msgid "Location lookup timed out. You can choose a point on the map."
 msgstr "Upłynął czas ustalania pozycji. Możesz wybrać punkt z mapy."
 
+#: apps/meteo/main.cpp:46
+msgid "Location to display."
+msgstr "Nazwa wyświetlanej lokalizacji."
+
 #: src/qml/LocationEditor.qml:255
 msgid "Longitude (°E):"
 msgstr "Długość (°E):"
+
+#: apps/meteo/main.cpp:48
+msgid "Longitude of the location."
+msgstr "Długość geograficzna lokalizacji."
 
 #: src/presentation/ForecastFields.cpp:29
 msgid "Low clouds"
@@ -1012,11 +1032,11 @@ msgstr "Opad średni w przedziale"
 msgid "Medium clouds"
 msgstr "Chmury średnie"
 
-#: apps/meteo/main.cpp:29
+#: apps/meteo/main.cpp:31
 msgid "Meteo · ICM meteograms"
 msgstr "Meteo · meteogramy ICM"
 
-#: apps/meteo/Main.qml:44 src/qml/ForecastPanel.qml:73
+#: apps/meteo/Main.qml:53 src/qml/ForecastPanel.qml:73
 #: src/qml/ForecastPanel.qml:319
 msgid "Meteogram"
 msgstr "Meteogram"
@@ -1139,7 +1159,7 @@ msgid "Near-ground temperature"
 msgstr "Temperatura przy gruncie"
 
 #: src/presentation/ChartConfiguration.cpp:158
-#: src/presentation/UserPreferences.cpp:314
+#: src/presentation/UserPreferences.cpp:234
 msgid "New chart"
 msgstr "Nowy wykres"
 
@@ -1223,7 +1243,7 @@ msgstr "Otwórz folder"
 msgid "Original ICM meteogram"
 msgstr "Oryginalny meteogram ICM"
 
-#: src/presentation/UserPreferences.cpp:198
+#: src/presentation/UserPreferences.cpp:118
 msgid "Outdoors"
 msgstr "Na zewnątrz"
 
@@ -1385,7 +1405,7 @@ msgstr "Zakres odczytu"
 msgid "Readings"
 msgstr "Odczyt"
 
-#: apps/meteo/Main.qml:48 integrations/plasma/package/contents/ui/main.qml:77
+#: apps/meteo/Main.qml:57 integrations/plasma/package/contents/ui/main.qml:79
 #: src/qml/EditorialView.qml:25
 msgid "Refresh"
 msgstr "Odśwież"
@@ -1507,8 +1527,7 @@ msgstr "Wygląd serii"
 msgid "Series color"
 msgstr "Kolor serii"
 
-#: apps/meteo/Main.qml:47 integrations/plasma/package/contents/ui/main.qml:78
-#: src/qml/MeteoSettings.qml:16
+#: apps/meteo/Main.qml:56 src/qml/MeteoSettings.qml:16
 msgid "Settings"
 msgstr "Ustawienia"
 
@@ -1532,7 +1551,7 @@ msgstr "Pokaż dłuższy przedział"
 msgid "Show a shorter interval"
 msgstr "Pokaż krótszy przedział"
 
-#: apps/meteo/Main.qml:74
+#: apps/meteo/Main.qml:83
 msgid "Show forecast"
 msgstr "Pokaż prognozę"
 
@@ -1548,7 +1567,7 @@ msgstr "Pokaż legendę"
 msgid "Show legends by default"
 msgstr "Domyślnie pokazuj legendę"
 
-#: integrations/plasma/package/contents/ui/main.qml:106
+#: integrations/plasma/package/contents/ui/main.qml:94
 msgid "Show meteogram"
 msgstr "Pokaż meteogram"
 
@@ -1585,6 +1604,12 @@ msgid ""
 "Source: ICM UW / meteo.pl · original image with the author's annotations"
 msgstr ""
 "Źródło: ICM UW / meteo.pl · oryginalny obraz wraz z oznaczeniami autora"
+
+#: apps/meteo/main.cpp:60
+msgid ""
+"Specify a location name, valid coordinates and a supported model together."
+msgstr ""
+"Podaj razem nazwę lokalizacji, prawidłowe współrzędne i obsługiwany model."
 
 #: src/qml/SeriesSettings.qml:22
 msgid "Storm indicator"
@@ -1935,10 +1960,6 @@ msgstr "WAM · okres szczytowy fali"
 msgid "WAM · significant wave height"
 msgstr "WAM · wysokość fali znacznej"
 
-#: integrations/plasma/package/contents/ui/main.qml:75
-msgid "Weather"
-msgstr "Pogoda"
-
 #: src/qml/DisplaySettings.qml:260
 msgid ""
 "When combining different units, assign series to the left or right axis. "
@@ -1946,10 +1967,6 @@ msgid ""
 msgstr ""
 "Przy łączeniu różnych jednostek przypisz serie do lewej lub prawej osi. "
 "Puste granice oznaczają skalę automatyczną."
-
-#: integrations/plasma/package/contents/ui/main.qml:78
-msgid "Widget settings"
-msgstr "Ustawienia widgetu"
 
 #: integrations/plasma/package/contents/config/config.qml:12
 msgid "Widget view"
@@ -2013,7 +2030,7 @@ msgstr "czas lokalny"
 msgid "meteo.pl articles"
 msgstr "Artykuły meteo.pl"
 
-#: apps/meteo/main.cpp:40
+#: apps/meteo/main.cpp:42
 msgid "meteo.pl meteograms for the KDE desktop"
 msgstr "Meteogramy meteo.pl dla pulpitu KDE"
 
@@ -2032,6 +2049,12 @@ msgstr "czas lokalny systemu"
 #: src/qml/EditorialView.qml:35
 msgid "yyyy-mm-dd"
 msgstr "rrrr-mm-dd"
+
+#~ msgid "Widget settings"
+#~ msgstr "Ustawienia widgetu"
+
+#~ msgid "Weather"
+#~ msgstr "Pogoda"
 
 #~ msgid ""
 #~ "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · downloaded: "
