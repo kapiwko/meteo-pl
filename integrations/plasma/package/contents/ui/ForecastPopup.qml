@@ -1,4 +1,6 @@
-pragma ComponentBehavior: Bound
+// Plasma before 6.6 reads index from the delegate context; newer versions
+// expose a native index property. Keep that context and bind the native slot
+// when available, without redeclaring and shadowing it.
 import QtQuick
 import QtQuick.Controls as QQC2
 import QtQuick.Layouts
@@ -67,8 +69,7 @@ PlasmaComponents.ScrollView {
         }
         delegate: PlasmaExtras.ExpandableListItem {
             id: section
-            required property var modelData
-            required property int index
+            readonly property var modelData: model.modelData
             objectName: "widgetSection-" + modelData.key
             property int legendOverride: -1
             title: modelData.title
@@ -78,6 +79,7 @@ PlasmaComponents.ScrollView {
             onItemExpanded: root.sectionToggled(modelData.key, true)
             onItemCollapsed: root.sectionToggled(modelData.key, false)
             Component.onCompleted: {
+                if ("index" in section) section.index = Qt.binding(() => model.index);
                 if (modelData.key === "details" ? root.detailsExpanded : root.collapsedCharts.indexOf(modelData.key) < 0) expand();
             }
             defaultActionButtonVisible: modelData.key !== "details"

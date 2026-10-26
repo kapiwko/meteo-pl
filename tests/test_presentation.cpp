@@ -1516,7 +1516,7 @@ private slots:
         QQuickItem *details = nullptr, *temperature = nullptr;
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, details), Q_ARG(int, 0)) && details);
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
-        QCOMPARE(temperature->property("index").toInt(), 1);
+        if (temperature->metaObject()->indexOfProperty("index") >= 0) QCOMPARE(temperature->property("index").toInt(), 1);
         QVERIFY(!details->property("expanded").toBool());
         QVERIFY(temperature->property("expanded").toBool());
         QTRY_VERIFY(temperature->height() > 150);
@@ -1575,6 +1575,44 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(temperature, "expand"));
         QTRY_VERIFY(temperature->height() > 760);
         QTRY_VERIFY(!bar->property("visible").toBool());
+    }
+    void nativeWidgetHighlightFollowsHoveredSection()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QStringList collapsed;
+        for (const auto &chart : weather.configuredCharts(defaultChartLayout("classic"))) collapsed.append(chart.toMap()["key"].toString());
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/ForecastPopup.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> popup(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"collapsedCharts", collapsed}}));
+        QVERIFY2(popup, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(640, 1000);
+        auto *item = qobject_cast<QQuickItem *>(popup.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        auto *list = popup->findChild<QObject *>("widgetSections");
+        QVERIFY(list);
+        QTRY_COMPARE(list->property("count").toInt(), collapsed.size() + 1);
+        QTest::qWait(100);
+        for (const int index : {2, 4, 1, 7, 0}) {
+            QQuickItem *row = nullptr;
+            QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, row), Q_ARG(int, index)) && row);
+            const auto position = row->mapToScene(QPointF(row->width() / 3, row->height() / 2)).toPoint();
+            QTest::mouseMove(&window, position);
+            QTRY_COMPARE_WITH_TIMEOUT(list->property("currentIndex").toInt(), index, 1000);
+            QCOMPARE(list->property("currentItem").value<QQuickItem *>(), row);
+        }
+        QQuickItem *clicked = nullptr;
+        QVERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, clicked), Q_ARG(int, 4)));
+        QVERIFY(clicked);
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier,
+            clicked->mapToScene(QPointF(clicked->width() / 3, clicked->height() / 2)).toPoint());
+        QTRY_COMPARE(list->property("currentIndex").toInt(), 4);
+        QVERIFY(clicked->property("expanded").toBool());
+        clicked->forceActiveFocus();
+        QTest::keyClick(&window, Qt::Key_Down);
+        QTRY_COMPARE(list->property("currentIndex").toInt(), 5);
     }
 #endif
     void widgetPlaceSettingsValidateSelectionAndReorderPlaces()
