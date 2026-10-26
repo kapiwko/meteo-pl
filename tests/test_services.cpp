@@ -8,6 +8,7 @@
 #include "ReadingsExporter.hpp"
 #include "ChartConfiguration.hpp"
 #include "core/Locations.hpp"
+#include "core/WebLink.hpp"
 #include "network/MeteoMapSource.hpp"
 #include <QJsonObject>
 #include <QJsonArray>
@@ -69,6 +70,16 @@ private slots:
         QCOMPARE(file.readAll(), original);
         QVERIFY(!exporter.saveCsv(QUrl("https://example.org/out.csv"), readings, metadata)["ok"].toBool());
         QVERIFY(!exporter.saveCsv(QUrl::fromLocalFile(files.filePath("missing/out.csv")), readings, metadata)["ok"].toBool());
+    }
+    void articleLinksShareOneWebNavigationPolicy()
+    {
+        const QUrl base("https://www.meteo.pl/articles/current");
+        QCOMPARE(Meteo::resolveWebLink(QUrl("../other"),base),QUrl("https://www.meteo.pl/other"));
+        QCOMPARE(Meteo::resolveWebLink(QUrl("https://example.test/item"),base),QUrl("https://example.test/item"));
+        QCOMPARE(Meteo::resolveWebLink(QUrl("//example.test/item"),base),QUrl("https://example.test/item"));
+        QCOMPARE(Meteo::resolveWebLink(QUrl("related"),QUrl("/article")),QUrl("https://www.meteo.pl/related"));
+        for (const auto &url : {"", "javascript:alert(1)", "file:///tmp/example", "data:text/plain,text", "mailto:test@example.test", "https://"})
+            QVERIFY(Meteo::resolveWebLink(QUrl(url),base).isEmpty());
     }
     void parsesVillagesAndDisambiguatesRegions()
     {

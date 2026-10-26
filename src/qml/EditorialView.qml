@@ -67,7 +67,7 @@ ColumnLayout {
                 font.pixelSize: 15
                 background: null
                 ResponsiveImages { document: articleBody.textDocument; maximumWidth: articleBody.width - articleBody.leftPadding - articleBody.rightPadding }
-                onLinkActivated: link => { if (link.startsWith("https://") || link.startsWith("http://")) Qt.openUrlExternally(link); }
+                onLinkActivated: link => WebLinks.open(link, root.selectedArticle && root.selectedArticle.url ? root.selectedArticle.url : "https://www.meteo.pl/")
             }
             Repeater {
                 model: !root.commentary && !root.selectedArticle ? feed.articles : []
@@ -88,7 +88,7 @@ ColumnLayout {
                 }
             }
             Button { visible: !root.commentary && !root.selectedArticle; text: I18n.i18n("Load older articles"); enabled: !feed.busy; onClicked: feed.more() }
-            Button { visible: root.selectedArticle !== null; text: I18n.i18n("Read on meteo.pl"); icon.name: "internet-web-browser"; onClicked: if (root.selectedArticle) Qt.openUrlExternally(root.selectedArticle.url) }
+            Button { visible: root.selectedArticle !== null; text: I18n.i18n("Read on meteo.pl"); icon.name: "internet-web-browser"; onClicked: if (root.selectedArticle) WebLinks.open(root.selectedArticle.url) }
             Label { text: I18n.i18n("Source: ICM UW / meteo.pl"); opacity: 0.65; font.pixelSize: 11 }
         }
     }

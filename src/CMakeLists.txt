@@ -5,6 +5,7 @@ add_library(meteo_core STATIC
     core/EditorialContent.cpp core/EditorialContent.hpp
     core/Localization.cpp core/Localization.hpp
     core/Locations.cpp core/Locations.hpp
+    core/WebLink.cpp core/WebLink.hpp
     network/MeteoClient.cpp network/MeteoClient.hpp
     network/JsonRequest.cpp network/JsonRequest.hpp
     network/DiskCacheBudget.cpp network/DiskCacheBudget.hpp
@@ -45,6 +46,7 @@ qt_add_qml_module(meteo_ui
     VERSION 1.0
     SOURCES presentation/WeatherModel.cpp presentation/WeatherModel.hpp
         presentation/I18n.hpp
+        presentation/WebLinks.hpp
         presentation/LocationRules.hpp
         presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
         presentation/ChartDataBuilder.cpp presentation/ChartDataBuilder.hpp
