@@ -3,6 +3,7 @@ add_library(meteo_core STATIC
     core/Forecast.cpp core/Forecast.hpp
     core/ForecastAggregation.cpp core/ForecastAggregation.hpp
     core/ForecastSampling.cpp core/ForecastSampling.hpp
+    core/SolarCalendar.cpp core/SolarCalendar.hpp
     core/EditorialContent.cpp core/EditorialContent.hpp
     core/Localization.cpp core/Localization.hpp
     core/Locations.cpp core/Locations.hpp

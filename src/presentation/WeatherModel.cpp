@@ -9,26 +9,9 @@
 #include <QLocale>
 #include <cmath>
 #include <QTimeZone>
-#include <numbers>
+#include "core/SolarCalendar.hpp"
 #include <QUrlQuery>
 
-namespace {
-bool nightAt(qint64 timestamp, double latitude, double longitude)
-{
-    constexpr double rad = std::numbers::pi / 180.0;
-    const auto time = QDateTime::fromSecsSinceEpoch(timestamp, QTimeZone::UTC);
-    const double gamma = 2 * std::numbers::pi / 365 * (time.date().dayOfYear() - 1 + (time.time().hour() - 12.0) / 24);
-    const double declination = 0.006918 - 0.399912 * std::cos(gamma) + 0.070257 * std::sin(gamma)
-        - 0.006758 * std::cos(2 * gamma) + 0.000907 * std::sin(2 * gamma) - 0.002697 * std::cos(3 * gamma) + 0.00148 * std::sin(3 * gamma);
-    const double equation = 229.18 * (0.000075 + 0.001868 * std::cos(gamma) - 0.032077 * std::sin(gamma)
-        - 0.014615 * std::cos(2 * gamma) - 0.040849 * std::sin(2 * gamma));
-    const double minutes = time.time().hour() * 60 + time.time().minute() + equation + 4 * longitude;
-    const double hourAngle = (minutes / 4 - 180) * rad;
-    const double elevation = std::asin(std::sin(latitude * rad) * std::sin(declination)
-        + std::cos(latitude * rad) * std::cos(declination) * std::cos(hourAngle)) / rad;
-    return elevation < -0.833;
-}
-}
 
 WeatherModel::WeatherModel(QObject *parent, QUrl endpoint) : QObject(parent), m_repository(nullptr,std::move(endpoint))
 {
@@ -238,8 +221,8 @@ QString WeatherModel::weatherIcon() const
         return QStringLiteral("weather-overcast");
     if (*clouds > 0.25)
         return QStringLiteral("weather-clouds");
-    const auto hour = QDateTime::fromSecsSinceEpoch(summaryTimestamp()).time().hour();
-    return hour < 6 || hour >= 19 ? QStringLiteral("weather-clear-night") : QStringLiteral("weather-clear");
+    return Meteo::nightAt(summaryTimestamp(), m_latitude, m_longitude)
+        ? QStringLiteral("weather-clear-night") : QStringLiteral("weather-clear");
 }
 
 void WeatherModel::setRequestedRun(double value)
@@ -464,12 +447,8 @@ QVariantList WeatherModel::calendarDays(double from, double to) const
     QVariantList result;
     if (!std::isfinite(from) || !std::isfinite(to) || to <= from || to - from > 366 * 86400.0) return result;
     const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
-    auto date = QDateTime::fromSecsSinceEpoch(qint64(from), zone).date();
-    const auto last = QDateTime::fromSecsSinceEpoch(qint64(to) - 1, zone).date();
-    for (; date <= last; date = date.addDays(1)) {
-        result.append(QVariantMap{{"start", date.startOfDay(zone).toSecsSinceEpoch()},
-            {"end", date.addDays(1).startOfDay(zone).toSecsSinceEpoch()}});
-    }
+    for (const auto &span : Meteo::calendarSpans(qint64(from), qint64(to), zone))
+        result.append(QVariantMap{{"start", span.start}, {"end", span.end}});
     return result;
 }
 
@@ -477,14 +456,8 @@ QVariantList WeatherModel::nightIntervals() const
 {
     QVariantList result;
     if (!m_forecast) return result;
-    qint64 start = 0;
-    const auto end = m_forecast->lastTimestamp();
-    for (auto time = m_forecast->firstTimestamp(); time <= end; time += 900) {
-        const bool night = nightAt(time, m_latitude, m_longitude);
-        if (night && !start) start = time;
-        if (!night && start) { result.append(QVariantMap{{"start", start}, {"end", time}}); start = 0; }
-    }
-    if (start) result.append(QVariantMap{{"start", start}, {"end", end}});
+    for (const auto &span : Meteo::nightsBetween(m_forecast->firstTimestamp(), m_forecast->lastTimestamp(), m_latitude, m_longitude))
+        result.append(QVariantMap{{"start", span.start}, {"end", span.end}});
     return result;
 }
 
@@ -494,22 +467,14 @@ QVariantMap WeatherModel::solarTimes() const
     const auto zone = m_utc ? QTimeZone::utc() : QTimeZone::systemTimeZone();
     const auto timestamp = summaryTimestamp();
     const auto day = QDateTime::fromSecsSinceEpoch(timestamp ? timestamp : m_forecast->firstTimestamp(), zone).date();
-    const auto start = day.startOfDay(zone).toSecsSinceEpoch();
-    const auto end = day.addDays(1).startOfDay(zone).toSecsSinceEpoch();
-    bool previous = nightAt(start, m_latitude, m_longitude);
-    qint64 sunrise = 0, sunset = 0;
-    for (auto time = start + 60; time < end; time += 60) {
-        const auto night = nightAt(time, m_latitude, m_longitude);
-        if (previous && !night) sunrise = time;
-        if (!previous && night) sunset = time;
-        previous = night;
-    }
+    const auto events = Meteo::solarEvents(day, zone, m_latitude, m_longitude);
+    const auto sunrise = events.sunrise.value_or(0), sunset = events.sunset.value_or(0);
     return {{"date", day.toString(Qt::ISODate)}, {"dateLabel", QLocale().toString(day, QStringLiteral("d MMM"))},
         {"today", day == QDateTime::currentDateTimeUtc().toTimeZone(zone).date()},
         {"sunrise", sunrise}, {"sunset", sunset},
         {"sunriseText", sunrise ? formatTime(sunrise, "HH:mm") : QStringLiteral("—")},
         {"sunsetText", sunset ? formatTime(sunset, "HH:mm") : QStringLiteral("—")},
-        {"status", !sunrise && !sunset ? (previous ? Meteo::i18n("Polar night") : Meteo::i18n("Polar day")) : QString()}};
+        {"status", !sunrise && !sunset ? (events.polarNight ? Meteo::i18n("Polar night") : Meteo::i18n("Polar day")) : QString()}};
 }
 
 QString WeatherModel::sunTimes() const
