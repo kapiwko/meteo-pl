@@ -4,30 +4,38 @@
 #include <QObject>
 #include <QSettings>
 #include <QTimer>
+#include <functional>
 
 // Owns the existing INI schema and its cross-process change notifications.
 // UserPreferences remains the QML facade for editing profiles and places.
 class METEO_UI_EXPORT PreferencesStore : public QObject
 {
     Q_OBJECT
-public:
+  public:
     explicit PreferencesStore(QObject *parent = nullptr);
     QVariant value(const QString &key, const QVariant &fallback = {}) const;
     bool contains(const QString &key) const;
     void setValue(const QString &key, const QVariant &value);
     void remove(const QString &key);
     QString fileName() const;
-    void sync();
+    bool sync();
+    bool update(const std::function<void()> &operation, QString *error = nullptr);
+    bool updating() const { return m_updating; }
     static QVariantList savedPlacesSnapshot();
-signals:
+  signals:
     void placesChanged();
     void displayChanged();
 
-private:
+  private:
     void migrate();
+    void publish(QVariantMap values);
+    void watchFile();
     QByteArray placesSnapshot() const;
     QByteArray displaySnapshot() const;
-    QSettings m_settings;
+    QString m_fileName;
+    QVariantMap m_values;
+    QVariantMap m_pending;
+    bool m_updating = false;
     QFileSystemWatcher m_watcher;
     QTimer m_reload;
     QByteArray m_places;

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 12:39+0100\n"
+"POT-Creation-Date: 2026-10-26 17:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -61,7 +61,7 @@ msgstr[1] ""
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:306
+#: src/presentation/UserPreferences.cpp:483
 msgid "%1 — copy"
 msgstr ""
 
@@ -128,7 +128,7 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:118
+#: src/presentation/UserPreferences.cpp:178
 msgid "All charts"
 msgstr ""
 
@@ -195,7 +195,7 @@ msgstr ""
 msgid "Automatic by unit"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:118
+#: src/presentation/UserPreferences.cpp:179
 msgid "Aviation"
 msgstr ""
 
@@ -215,7 +215,7 @@ msgstr ""
 msgid "Bars"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:118
+#: src/presentation/UserPreferences.cpp:179
 msgid "Basic"
 msgstr ""
 
@@ -350,7 +350,7 @@ msgid ""
 "the Location page."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:118
+#: src/presentation/UserPreferences.cpp:178
 msgid "Classic ICM"
 msgstr ""
 
@@ -455,6 +455,10 @@ msgstr ""
 msgid "Could not create PNG: "
 msgstr ""
 
+#: src/presentation/PreferencesStore.cpp:171
+msgid "Could not create the preferences directory."
+msgstr ""
+
 #: src/presentation/CacheStorage.cpp:68
 msgid "Could not delete all cached files. Try again."
 msgstr ""
@@ -498,8 +502,16 @@ msgid ""
 "Could not prepare all animation frames. Try again or choose an earlier run."
 msgstr ""
 
+#: src/presentation/PreferencesStore.cpp:76
+msgid "Could not prepare preferences for saving."
+msgstr ""
+
 #: src/presentation/ChartExporter.cpp:142
 msgid "Could not prepare the chart image."
+msgstr ""
+
+#: src/presentation/PreferencesStore.cpp:45
+msgid "Could not read preferences."
 msgstr ""
 
 #: src/network/ImageCache.cpp:231
@@ -513,6 +525,10 @@ msgstr ""
 #: src/presentation/ChartExporter.cpp:128
 #: src/presentation/ChartExporter.cpp:132
 msgid "Could not save PNG: "
+msgstr ""
+
+#: src/presentation/UserPreferences.cpp:266
+msgid "Could not save preferences."
 msgstr ""
 
 #: src/presentation/ProfileFileCodec.cpp:99
@@ -547,8 +563,8 @@ msgstr ""
 msgid "Custom interval"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:118
-#: src/presentation/UserPreferences.cpp:152
+#: src/presentation/UserPreferences.cpp:180
+#: src/presentation/UserPreferences.cpp:217
 msgid "Custom layout"
 msgstr ""
 
@@ -1208,7 +1224,7 @@ msgid "Near-ground temperature"
 msgstr ""
 
 #: src/presentation/ChartConfiguration.cpp:158
-#: src/presentation/UserPreferences.cpp:234
+#: src/presentation/UserPreferences.cpp:352
 msgid "New chart"
 msgstr ""
 
@@ -1304,7 +1320,7 @@ msgstr ""
 msgid "Original ICM meteogram"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:118
+#: src/presentation/UserPreferences.cpp:180
 msgid "Outdoors"
 msgstr ""
 
@@ -1420,6 +1436,10 @@ msgstr ""
 
 #: src/qml/ForecastPanel.qml:668
 msgid "Precipitation: "
+msgstr ""
+
+#: src/presentation/PreferencesStore.cpp:178
+msgid "Preferences are being changed by another process. Try again."
 msgstr ""
 
 #: src/qml/ThematicMaps.qml:104 src/qml/WeatherMap.qml:93
@@ -1826,6 +1846,10 @@ msgstr ""
 
 #: src/qml/DisplaySettings.qml:149
 msgid "The name and chart changes are saved automatically."
+msgstr ""
+
+#: src/presentation/PreferencesStore.cpp:54
+msgid "The preferences file is invalid."
 msgstr ""
 
 #: src/presentation/ProfileFileCodec.cpp:22

@@ -6,7 +6,8 @@
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
-class METEO_UI_EXPORT UserPreferences : public QObject {
+class METEO_UI_EXPORT UserPreferences : public QObject
+{
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
@@ -28,7 +29,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject {
     Q_PROPERTY(QString renderer READ renderer WRITE setRenderer NOTIFY displayChanged)
     Q_PROPERTY(int chartHeight READ chartHeight WRITE setChartHeight NOTIFY displayChanged)
     Q_PROPERTY(int profileChartHeight READ profileChartHeight WRITE setProfileChartHeight NOTIFY displayChanged)
-public:
+  public:
     explicit UserPreferences(QObject *parent = nullptr);
     QVariantList favorites() const;
     QVariantList recentPlaces() const;
@@ -79,13 +80,16 @@ public:
     Q_INVOKABLE void removeSeries(const QString &chart, const QString &field);
     Q_INVOKABLE QVariantMap exportProfiles(const QUrl &file, bool allSaved = false) const;
     Q_INVOKABLE QVariantMap importProfiles(const QUrl &file);
-private:
-    void saveLayout(const QVariantList &layout);
+
+  private:
+    bool change(const std::function<void()> &operation);
+    void saveLayout(const QString &profile, const QVariantList &layout);
+    QString createProfileFrom(const QString &name, const QString &sourceProfile);
     QVariantList savedProfiles() const;
     QVariantList readPlaces(const QString &key) const;
     void writePlaces(const QString &key, const QVariantList &places);
     PreferencesStore m_store;
-signals:
+  signals:
     void placesChanged();
     void displayChanged();
 };
