@@ -25,10 +25,8 @@ WeatherModel::WeatherModel(QObject *parent, QUrl endpoint) : QObject(parent), m_
     connect(&m_clockTimer, &QTimer::timeout, this, &WeatherModel::updateCurrentTime);
     m_clockTimer.start();
     connect(&m_repository, &Meteo::ForecastRepository::runsReceived, this, [this](const QList<qint64> &runs) {
-        m_runs.clear();
-        m_runs.append(QVariantMap{{"timestamp", 0}, {"label", Meteo::i18n("Latest forecast")}});
-        for (const auto run : runs)
-            m_runs.append(QVariantMap{{"timestamp", run}, {"label", formatTime(run, QStringLiteral("ddd d MMM · HH:mm t"))}});
+        m_runs = {0};
+        m_runs.append(runs);
         emit runsChanged();
     });
     connect(&m_repository, &Meteo::ForecastRepository::catalogFailed, this, [this](const QString &error) { m_error=error; emit stateChanged(); });
@@ -251,6 +249,7 @@ void WeatherModel::setUtc(bool value)
     ++m_dataRevision;
     emit dataChanged();
     emit stateChanged();
+    emit runsChanged();
 }
 
 double WeatherModel::displayScale(const QString &key, double baseScale) const
@@ -323,6 +322,15 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
 void WeatherModel::loadRuns()
 {
     m_repository.loadRuns(m_model);
+}
+
+QVariantList WeatherModel::availableRuns() const
+{
+    QVariantList result;
+    for (const auto timestamp : m_runs)
+        result.append(QVariantMap{{"timestamp", timestamp}, {"label", timestamp
+            ? formatTime(timestamp, QStringLiteral("ddd d MMM · HH:mm t")) : Meteo::i18n("Latest forecast")}});
+    return result;
 }
 
 QUrl WeatherModel::originalLookupUrl() const

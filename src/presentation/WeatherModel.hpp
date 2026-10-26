@@ -72,7 +72,7 @@ public:
     QVariantList dailyForecast() const;
     QVariantList hourlyForecast() const;
     QVariantList nightIntervals() const;
-    QVariantList availableRuns() const { return m_runs; }
+    QVariantList availableRuns() const;
     double requestedRun() const { return m_requestedRun; }
     bool archive() const { return m_requestedRun > 0; }
     QString windUnit() const { return m_windUnit; }
@@ -129,7 +129,7 @@ private:
     std::optional<Meteo::Forecast> m_forecast;
     QVariantMap m_series;
     quint64 m_dataRevision = 0;
-    QVariantList m_runs;
+    QList<qint64> m_runs;
     qint64 m_requestedRun = 0;
     QString m_windUnit = QStringLiteral("m/s");
     bool m_utc = false;

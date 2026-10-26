@@ -25,12 +25,65 @@
 #include <functional>
 
 #include "ServiceFixture.hpp"
+#include "WeatherModel.hpp"
+#include <QQmlComponent>
+#include <QQmlEngine>
+#include <ctime>
 
 class ServicesTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_config;
     QTemporaryDir m_cache;
 private slots:
+    void runLabelsFollowUtcWithoutRefetchingTheCatalog()
+    {
+        const auto previousZone = qgetenv("TZ");
+        const auto restore = qScopeGuard([&] {
+            if (previousZone.isNull()) qunsetenv("TZ"); else qputenv("TZ", previousZone);
+#ifdef Q_OS_UNIX
+            tzset();
+#endif
+        });
+        qputenv("TZ", "Europe/Warsaw");
+#ifdef Q_OS_UNIX
+        tzset();
+#endif
+        ServiceFixture server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [](const QUrl &) { return QByteArray(R"({"um4_60":[1792908000,1792886400]})"); };
+        WeatherModel weather(nullptr, server.endpoint()); weather.setAutoRefresh(false);
+        weather.loadRuns();
+        QTRY_COMPARE(weather.availableRuns().size(), 3);
+        const auto local = weather.availableRuns();
+        const auto timestamp = local[1].toMap()["timestamp"].toLongLong();
+        weather.setRequestedRun(timestamp);
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQml
+            import pl.meteo.desktop
+            QtObject {
+                required property WeatherModel weather
+                readonly property string label: weather.availableRuns.length > 1 ? weather.availableRuns[1].label : ""
+            }
+        )", {});
+        QScopedPointer<QObject> binding(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}}));
+        QVERIFY2(binding, qPrintable(component.errorString()));
+        QCOMPARE(binding->property("label").toString(), local[1].toMap()["label"].toString());
+        QSignalSpy changed(&weather, &WeatherModel::runsChanged);
+        const auto requests = server.requests.size();
+        weather.setUtc(true);
+        QCOMPARE(changed.count(), 1);
+        const auto utc = weather.availableRuns();
+        QCOMPARE(utc[1].toMap()["timestamp"], local[1].toMap()["timestamp"]);
+        QCOMPARE(utc[2].toMap()["timestamp"], local[2].toMap()["timestamp"]);
+        QCOMPARE(qint64(weather.requestedRun()), timestamp);
+        QCOMPARE(binding->property("label").toString(), weather.formatTime(timestamp, "ddd d MMM · HH:mm t"));
+        if (QTimeZone::systemTimeZone().offsetFromUtc(QDateTime::fromSecsSinceEpoch(timestamp)) != 0)
+            QVERIFY(binding->property("label").toString() != local[1].toMap()["label"].toString());
+        QTest::qWait(50);
+        QCOMPARE(server.requests.size(), requests);
+    }
     void initTestCase()
     {
         QVERIFY(m_config.isValid());
