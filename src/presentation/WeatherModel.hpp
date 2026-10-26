@@ -84,6 +84,7 @@ public:
     void setWindUnit(const QString &value);
     void setUtc(bool value);
     Q_INVOKABLE QVariantList detailsAt(double timestamp) const;
+    Q_INVOKABLE QVariantMap chartExportMetadata(const QString &title, double first, double last) const;
     Q_INVOKABLE QVariantList configuredCharts(const QVariantList &layout) const;
     Q_INVOKABLE QVariantList calendarDays(double from, double to) const;
     Q_INVOKABLE double nearestTimestamp(double timestamp) const;

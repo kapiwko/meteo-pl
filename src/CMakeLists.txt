@@ -131,3 +131,6 @@ install(FILES
     "${QT_QML_OUTPUT_DIRECTORY}/pl/meteo/desktop/meteo_ui.qmltypes"
     DESTINATION "${METEO_QML_INSTALL_DIR}"
 )
+
+set_source_files_properties(qml/DailyForecastView.qml PROPERTIES QT_RESOURCE_ALIAS DailyForecastView.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/DailyForecastView.qml)

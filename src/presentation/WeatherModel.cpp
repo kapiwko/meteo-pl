@@ -295,6 +295,17 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
     return details;
 }
 
+QVariantMap WeatherModel::chartExportMetadata(const QString &title, double first, double last) const
+{
+    return {{"title", locationName() + " · " + title},
+            {"details", modelName() + Meteo::i18n(" · model run: ") + runText() + "\n"
+                + formatTime(first, "d MMM yyyy HH:mm") + " – " + formatTime(last, "d MMM yyyy HH:mm")
+                + (utc() ? " UTC" : Meteo::i18n(" · local time")) + "\n"
+                + QString::number(latitude(), 'f', 4) + "°, " + QString::number(longitude(), 'f', 4) + "°"},
+            {"source", "ICM UW / meteo.pl · https://www.meteo.pl/ · UM: Met Office · "
+                + Meteo::i18n("Downloaded: %1").arg(updatedText())}};
+}
+
 void WeatherModel::loadRuns()
 {
     m_repository.loadRuns(m_model);
