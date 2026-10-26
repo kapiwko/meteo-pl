@@ -10,7 +10,7 @@ QtObject {
     property var startupForecast: ({})
     property bool temporaryLocation: startupForecast.locationName !== undefined
     property bool startupReady: false
-    property Settings settings: Settings {
+    property Settings settingsStore: Settings {
         id: settings
         objectName: "locationSettings"
         category: "Location"
