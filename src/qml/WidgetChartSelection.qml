@@ -5,7 +5,6 @@ QtObject {
     id: root
     required property WeatherModel weather
     property string profile: "classic"
-    property var chartKeys: ["temperature", "precipitation"]
     property int hours: 24
     property real clockTime: Date.now() / 1000
     readonly property real startTime: hours === 0 ? weather.firstTimestamp : Math.max(weather.firstTimestamp,
@@ -14,8 +13,6 @@ QtObject {
     readonly property var charts: {
         if (!weather.hasData || !Object.keys(weather.series).length) return [];
         const revision = UserPreferences.chartLayout;
-        const available = weather.configuredCharts(UserPreferences.chartLayoutForProfile(profile));
-        const selected = chartKeys.map(key => available.find(chart => chart.key === key)).filter(chart => chart !== undefined).slice(0, 2);
-        return selected.length ? selected : available.slice(0, 2);
+        return weather.configuredCharts(UserPreferences.chartLayoutForProfile(profile));
     }
 }

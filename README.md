@@ -78,9 +78,9 @@ Start **Meteo** from your application launcher, or run `meteo-pl`.
 
 After installing a Linux package, open **Add Widgets…**, find **Meteo** and drag
 it onto your desktop or panel. Its panel icon follows the forecast weather.
-By default, the popup shows temperature and precipitation charts for the next
-24 hours. Open the widget settings → **Widget view** to choose a profile, one
-or two charts, and a 12/24/48/72-hour interval or the entire forecast. You can
+By default, the popup shows every enabled chart in the Classic ICM profile for
+the next 24 hours. Open the widget settings → **Widget view** to choose a profile
+and a 12/24/48/72-hour interval or the entire forecast. You can
 also choose a compact daily forecast. The popup uses Plasma's standard container;
 **Show meteogram** opens the full application in a separate window for the selected location.
 Each widget keeps its own view configuration independently of the application.

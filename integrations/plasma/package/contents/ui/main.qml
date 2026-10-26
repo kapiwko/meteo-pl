@@ -198,7 +198,6 @@ PlasmoidItem {
                 weather: forecastModel
                 places: placeSelection.places
                 profile: root.weatherConfiguration.chartProfile
-                chartKeys: Array.from(root.weatherConfiguration.chartKeys)
                 hours: root.weatherConfiguration.chartHours
                 detailsExpanded: root.weatherConfiguration.detailsExpanded
                 collapsedCharts: Array.from(root.weatherConfiguration.collapsedCharts)

@@ -13,7 +13,6 @@ PlasmaComponents.ScrollView {
     property var places: UserPreferences.places
     property bool showCharts: true
     property string profile: "classic"
-    property var chartKeys: ["temperature", "precipitation"]
     property int hours: 24
     property bool detailsExpanded: false
     property var collapsedCharts: []
@@ -30,7 +29,6 @@ PlasmaComponents.ScrollView {
         id: selection
         weather: root.weather
         profile: root.profile
-        chartKeys: root.chartKeys
         hours: root.hours
         clockTime: root.clockTime
     }

@@ -8,7 +8,6 @@ ColumnLayout {
     id: root
     required property WeatherModel weather
     property string profile: "classic"
-    property var chartKeys: ["temperature", "precipitation"]
     property int hours: 24
     property var places: UserPreferences.places
     function chooseLocation() { summary.chooseLocation(); }
@@ -21,7 +20,6 @@ ColumnLayout {
         id: selection
         weather: root.weather
         profile: root.profile
-        chartKeys: root.chartKeys
         hours: root.hours
         clockTime: root.clockTime
     }

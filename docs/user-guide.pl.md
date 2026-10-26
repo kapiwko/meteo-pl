@@ -219,9 +219,10 @@ sudo cmake --install build/release
 Następnie dodaj **Meteo · meteogram ICM** w oknie „Dodaj elementy interfejsu”
 Plasma. Nowa sesja Plasma zapewni wykrycie nowego modułu QML.
 Ustawienia widgetu są niezależne dla każdej instancji.
-Widok po rozwinięciu domyślnie pokazuje temperaturę i opady na najbliższe 24 godziny.
-W konfiguracji plasmoidu, w karcie **Widok widgetu**, wybierz profil, jeden lub dwa
-wykresy i okres 12/24/48/72 godzin lub całą prognozę. Możesz też wybrać zwarty
+Widok po rozwinięciu domyślnie pokazuje wszystkie wykresy profilu Klasyczny ICM na najbliższe 24 godziny.
+W konfiguracji plasmoidu, w karcie **Widok widgetu**, wybierz profil
+i okres 12/24/48/72 godzin lub całą prognozę. Widget pokazuje wszystkie włączone
+wykresy profilu, każdy w osobno zwijanej sekcji. Możesz też wybrać zwarty
 widok prognozy dziennej. Każdy widget zachowuje własną konfigurację;
 Widok widgetu jest osadzony w standardowym kontenerze Plasmy.
 **Pokaż meteogram** otwiera osobne, pełne okno aplikacji dla wybranej lokalizacji. Ikona panelu

@@ -64,21 +64,21 @@ msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 msgid "%1 — copy"
 msgstr "%1 — kopia"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:74
+#: integrations/plasma/package/contents/ui/configAppearance.qml:51
 msgid "12 hours"
 msgstr "12 godzin"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:74
+#: integrations/plasma/package/contents/ui/configAppearance.qml:51
 #: src/qml/ForecastSettings.qml:39
 msgid "24 hours"
 msgstr "24 godziny"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:75
+#: integrations/plasma/package/contents/ui/configAppearance.qml:52
 #: src/qml/ForecastSettings.qml:39
 msgid "48 hours"
 msgstr "48 godzin"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:75
+#: integrations/plasma/package/contents/ui/configAppearance.qml:52
 #: src/qml/ForecastSettings.qml:39
 msgid "72 hours"
 msgstr "72 godziny"
@@ -119,6 +119,10 @@ msgstr "Wszystkie"
 #: src/presentation/UserPreferences.cpp:118
 msgid "All charts"
 msgstr "Wszystkie wykresy"
+
+#: integrations/plasma/package/contents/ui/configAppearance.qml:43
+msgid "All enabled charts from this profile are shown as collapsible sections."
+msgstr "Wszystkie włączone wykresy tego profilu są pokazywane jako zwijane sekcje."
 
 #: src/qml/ReadingSettings.qml:24
 msgid "All parameters"
@@ -247,7 +251,7 @@ msgstr "Nazwa wykresu"
 msgid "Chart profile"
 msgstr "Profil wykresów"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:36
+#: integrations/plasma/package/contents/ui/configAppearance.qml:33
 #: src/qml/ForecastSettings.qml:21
 msgid "Chart profile:"
 msgstr "Profil wykresów:"
@@ -272,7 +276,7 @@ msgstr "Wyeksportowano wykresy"
 msgid "Charts in profile"
 msgstr "Wykresy w profilu"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:48
+#: integrations/plasma/package/contents/ui/configAppearance.qml:41
 msgid "Charts:"
 msgstr "Wykresy:"
 
@@ -313,7 +317,7 @@ msgstr "Wybierz wykresy do wspólnego obrazu PNG."
 msgid "Choose color"
 msgstr "Wybierz kolor"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:61
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:59
 #: integrations/plasma/package/contents/ui/main.qml:33
 #: src/qml/ForecastPanel.qml:357 src/qml/PlacePicker.qml:21
 msgid "Choose location"
@@ -322,12 +326,6 @@ msgstr "Wybierz lokalizację"
 #: src/qml/LocationEditor.qml:115
 msgid "Choose on map"
 msgstr "Wybierz na mapie"
-
-#: integrations/plasma/package/contents/ui/configAppearance.qml:65
-msgid ""
-"Choose one or two charts. Their appearance comes from the selected profile."
-msgstr ""
-"Wybierz jeden lub dwa wykresy. Ich wygląd pochodzi z wybranego profilu."
 
 #: integrations/plasma/package/contents/ui/configPlaces.qml:80
 msgid ""
@@ -552,7 +550,7 @@ msgstr "Własny układ"
 msgid "Custom name and coordinates"
 msgstr "Własna nazwa i współrzędne"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:31
+#: integrations/plasma/package/contents/ui/configAppearance.qml:28
 msgid "Daily forecast"
 msgstr "Prognoza dzienna"
 
@@ -652,12 +650,12 @@ msgstr ""
 msgid "Enter a valid date in yyyy-mm-dd format."
 msgstr "Podaj poprawną datę w formacie rrrr-mm-dd."
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:75
+#: integrations/plasma/package/contents/ui/configAppearance.qml:52
 #: src/qml/ForecastPanel.qml:457 src/qml/ForecastSettings.qml:39
 msgid "Entire forecast"
 msgstr "Cała prognoza"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:29
+#: integrations/plasma/package/contents/ui/configAppearance.qml:26
 msgid "Expanded view:"
 msgstr "Widok po rozwinięciu:"
 
@@ -1056,8 +1054,9 @@ msgstr "Chmury średnie"
 msgid "Meteo · ICM meteograms"
 msgstr "Meteo · meteogramy ICM"
 
-#: apps/meteo/Main.qml:53 src/qml/ForecastPanel.qml:76
-#: src/qml/ForecastPanel.qml:322
+#: apps/meteo/Main.qml:53
+#: integrations/plasma/package/contents/ui/configAppearance.qml:28
+#: src/qml/ForecastPanel.qml:76 src/qml/ForecastPanel.qml:322
 msgid "Meteogram"
 msgstr "Meteogram"
 
@@ -1203,7 +1202,7 @@ msgstr "Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."
 msgid "No forecast"
 msgstr "Brak prognozy"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:61
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:59
 msgid "No forecast available"
 msgstr "Brak dostępnej prognozy"
 
@@ -1455,7 +1454,7 @@ msgid "Readings"
 msgstr "Odczyt"
 
 #: apps/meteo/Main.qml:57
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:64
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:62
 #: integrations/plasma/package/contents/ui/main.qml:26
 #: integrations/plasma/package/contents/ui/main.qml:140
 #: src/qml/EditorialView.qml:25
@@ -1568,10 +1567,6 @@ msgstr "Wybierz przynajmniej jedno miejsce."
 msgid "Select between 1 and 50 charts to export."
 msgstr "Wybierz od 1 do 50 wykresów do eksportu."
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:31
-msgid "Selected charts"
-msgstr "Wybrane wykresy"
-
 #: src/qml/ForecastPanel.qml:96
 msgid "Selected charts saved."
 msgstr "Zapisano wybrane wykresy."
@@ -1633,7 +1628,7 @@ msgstr "Pokaż prognozę"
 msgid "Show forecast: "
 msgstr "Pokaż prognozę: "
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:89
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:87
 #: src/qml/Meteogram.qml:299
 msgid "Show legend"
 msgstr "Pokaż legendę"
@@ -1707,12 +1702,12 @@ msgstr "Burze / wyładowania"
 msgid "Storms and lightning"
 msgstr "Burze i wyładowania"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:122
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:120
 #: src/qml/ForecastHeader.qml:68
 msgid "Sunrise"
 msgstr "Wschód"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:123
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:121
 #: src/qml/ForecastHeader.qml:69
 msgid "Sunset"
 msgstr "Zachód"
@@ -1869,7 +1864,7 @@ msgstr "Ten punkt leży poza obszarem UM4. Wybierz model GFS."
 msgid "Time"
 msgstr "Czas"
 
-#: integrations/plasma/package/contents/ui/configAppearance.qml:72
+#: integrations/plasma/package/contents/ui/configAppearance.qml:49
 #: src/qml/ForecastSettings.qml:33
 msgid "Time interval:"
 msgstr "Zakres czasu:"
@@ -2038,7 +2033,7 @@ msgstr "WAM · okres szczytowy fali"
 msgid "WAM · significant wave height"
 msgstr "WAM · wysokość fali znacznej"
 
-#: integrations/plasma/package/contents/ui/ForecastPopup.qml:41
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:39
 msgid "Weather details"
 msgstr "Szczegóły pogody"
 
@@ -2131,6 +2126,15 @@ msgstr "czas lokalny systemu"
 #: src/qml/EditorialView.qml:35
 msgid "yyyy-mm-dd"
 msgstr "rrrr-mm-dd"
+
+#~ msgid ""
+#~ "Choose one or two charts. Their appearance comes from the selected "
+#~ "profile."
+#~ msgstr ""
+#~ "Wybierz jeden lub dwa wykresy. Ich wygląd pochodzi z wybranego profilu."
+
+#~ msgid "Selected charts"
+#~ msgstr "Wybrane wykresy"
 
 #~ msgid "Widget settings"
 #~ msgstr "Ustawienia widgetu"

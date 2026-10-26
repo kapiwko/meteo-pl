@@ -12,6 +12,10 @@ QtObject {
     property int phase: 0
     property int ticks: 0
     property bool sawLoading: false
+    readonly property int expectedSectionCount: {
+        const revision = weather.dataRevision;
+        return 1 + weather.configuredCharts(UserPreferences.chartLayoutForProfile(configuration.chartProfile)).length;
+    }
     property Timer poll: Timer { interval: 50; running: true; repeat: true; onTriggered: probe.tick() }
     Component.onCompleted: {
         FixtureDriver.prepare();
@@ -73,14 +77,14 @@ QtObject {
                 return;
             }
             if (scenario === "cached") {
-                if (!weather.error.length || !weather.hasData || sections.count !== 3) return;
+                if (!weather.error.length || !weather.hasData || sections.count !== expectedSectionCount) return;
                 require(weather.usingCache, "Network error discarded cached data");
                 const warning = find(frame, "forecastErrorMessage");
                 require(warning && warning.visible, "Offline cache has no visible status");
                 const button = find(frame, "openMeteogramButton");
                 finish(() => button.clicked()); return;
             }
-            if (!weather.hasData || weather.busy || sections.count !== 3) return;
+            if (!weather.hasData || weather.busy || sections.count !== expectedSectionCount) return;
             const details = find(frame, "widgetSection-details");
             const temperature = find(frame, "widgetSection-temperature");
             const precipitation = find(frame, "widgetSection-precipitation");

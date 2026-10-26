@@ -8,7 +8,6 @@
     <entry name="model" type="String"><default>um4_60</default></entry>
     <entry name="popupView" type="String"><default>charts</default></entry>
     <entry name="chartProfile" type="String"><default>classic</default></entry>
-    <entry name="chartKeys" type="StringList"><default>temperature,precipitation</default></entry>
     <entry name="chartHours" type="Int"><default>24</default><min>0</min><max>240</max></entry>
     <entry name="visiblePlaces" type="StringList"><default>*</default></entry>
     <entry name="placeOrder" type="StringList"><default></default></entry>

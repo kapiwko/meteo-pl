@@ -1504,7 +1504,10 @@ private slots:
         item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
         auto *list = popup->findChild<QObject *>("widgetSections");
         QVERIFY(list);
-        QTRY_COMPARE(list->property("count").toInt(), 3);
+        const auto configured = weather.configuredCharts(defaultChartLayout("classic"));
+        QVERIFY(configured.size() > 2);
+        const int sectionCount = 1 + configured.size();
+        QTRY_COMPARE(list->property("count").toInt(), sectionCount);
         QQuickItem *details = nullptr, *temperature = nullptr;
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, details), Q_ARG(int, 0)) && details);
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
@@ -1518,6 +1521,10 @@ private slots:
         QVERIFY(!temperature->property("expanded").toBool());
         QVERIFY(QMetaObject::invokeMethod(temperature, "expand"));
         QTRY_VERIFY(temperature->height() > 150);
+        QVERIFY(QMetaObject::invokeMethod(list, "positionViewAtEnd"));
+        QQuickItem *last = nullptr;
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, last), Q_ARG(int, sectionCount - 1)) && last);
+        QCOMPARE(last->objectName(), "widgetSection-" + configured.last().toMap()["key"].toString());
     }
 #endif
     void widgetPlaceSettingsValidateSelectionAndReorderPlaces()
@@ -1560,25 +1567,29 @@ private slots:
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> object(component.createWithInitialProperties({
             {"weather", QVariant::fromValue(&model)}, {"profile", id}, {"hours", 24},
-            {"clockTime", model.firstTimestamp() + 3600.0},
-            {"chartKeys", QStringList{"temperature", "wind"}}}));
+            {"clockTime", model.firstTimestamp() + 3600.0}}));
         QVERIFY2(object, qPrintable(component.errorString()));
         model.refresh(false); // The popup is created before its forecast arrives.
         QVERIFY(model.hasData());
         const auto prepared = model.configuredCharts(preferences->chartLayoutForProfile(id));
-        QVERIFY(prepared.size() >= 2);
-        const auto widgetCharts = qvariant_cast<QJSValue>(object->property("charts")).toVariant().toList();
-        QCOMPARE(widgetCharts.size(), 2);
+        QVERIFY(prepared.size() > 2);
+        const auto chartsValue = object->property("charts");
+        const auto widgetCharts = chartsValue.metaType() == QMetaType::fromType<QJSValue>()
+            ? chartsValue.value<QJSValue>().toVariant().toList() : chartsValue.toList();
+        QCOMPARE(widgetCharts, prepared);
         auto *repeater = object->findChild<QObject *>("widgetChartRepeater");
         QVERIFY(repeater);
-        QCOMPARE(repeater->property("count").toInt(), 2);
+        QCOMPARE(repeater->property("count").toInt(), prepared.size());
         auto *root = qobject_cast<QQuickItem *>(object.data());
         QQuickWindow window;
         window.resize(540, 660);
         root->setParentItem(window.contentItem()); root->setSize(window.size()); window.show();
         QQuickItem *temperature = nullptr, *wind = nullptr;
+        int windIndex = -1;
+        for (qsizetype i = 0; i < prepared.size(); ++i) if (prepared[i].toMap()["key"] == "wind") windIndex = i;
+        QVERIFY(windIndex >= 0);
         QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 0)));
-        QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem *, wind), Q_ARG(int, 1)));
+        QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem *, wind), Q_ARG(int, windIndex)));
         QVERIFY(temperature); QVERIFY(wind);
         QCOMPARE(temperature->objectName(), "chart-temperature");
         QCOMPARE(wind->objectName(), "chart-wind");
@@ -1598,14 +1609,13 @@ private slots:
         object->setProperty("hours", 0);
         QCOMPARE(object->property("startTime").toLongLong(), model.firstTimestamp());
         QCOMPARE(object->property("endTime").toLongLong(), model.lastTimestamp());
-        object->setProperty("chartKeys", QStringList{"wind"});
-        QTRY_COMPARE(repeater->property("count").toInt(), 1);
-        QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem *, wind), Q_ARG(int, 0)));
-        QVERIFY(wind);
-        QCOMPARE(wind->objectName(), "chart-wind");
+        preferences->setProfile(id);
+        preferences->setChartEnabled("wind", false);
+        preferences->setProfile("basic");
+        QTRY_COMPARE(repeater->property("count").toInt(), prepared.size() - 1);
         QCOMPARE(preferences->profile(), "basic");
     }
-    void widgetConfigurationValidatesOneOrTwoCharts()
+    void widgetConfigurationUsesAllEnabledProfileCharts()
     {
         QQmlEngine engine;
         QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configAppearance.qml")));
@@ -1613,12 +1623,9 @@ private slots:
         QScopedPointer<QObject> object(component.create());
         QVERIFY2(object, qPrintable(component.errorString()));
         QVERIFY(object->property("isSaveAllowed").toBool());
-        object->setProperty("cfg_chartKeys", QStringList{"wind"});
+        QVERIFY(object->property("chartCatalog").value<QJSValue>().toVariant().toList().size() > 2);
+        object->setProperty("cfg_chartProfile", "basic");
         QVERIFY(object->property("isSaveAllowed").toBool());
-        object->setProperty("cfg_chartKeys", QStringList{});
-        QVERIFY(!object->property("isSaveAllowed").toBool());
-        object->setProperty("cfg_chartKeys", QStringList{"temperature", "precipitation", "wind"});
-        QVERIFY(!object->property("isSaveAllowed").toBool());
         object->setProperty("cfg_popupView", "forecast");
         QVERIFY(object->property("isSaveAllowed").toBool());
     }
