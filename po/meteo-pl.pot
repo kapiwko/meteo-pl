@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 01:10+0100\n"
+"POT-Creation-Date: 2026-10-26 01:27+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -55,11 +55,11 @@ msgid_plural "%1 charts selected"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/presentation/WeatherModel.cpp:583
+#: src/presentation/WeatherModel.cpp:520
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:412
+#: src/presentation/UserPreferences.cpp:386
 msgid "%1 — copy"
 msgstr ""
 
@@ -279,8 +279,8 @@ msgstr ""
 msgid "Choose a local PNG file."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:226
-#: src/presentation/UserPreferences.cpp:253
+#: src/presentation/ProfileFileCodec.cpp:78
+#: src/presentation/ProfileFileCodec.cpp:90
 msgid "Choose a local file."
 msgstr ""
 
@@ -321,7 +321,7 @@ msgstr ""
 msgid "Classic ICM"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:516
+#: src/presentation/WeatherModel.cpp:453
 msgid "Clear"
 msgstr ""
 
@@ -390,7 +390,7 @@ msgstr ""
 msgid "Clouds and precipitation"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:384
+#: src/presentation/WeatherModel.cpp:321
 msgid "Code %1"
 msgstr ""
 
@@ -452,7 +452,7 @@ msgstr ""
 msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:255
+#: src/presentation/ProfileFileCodec.cpp:81
 msgid "Could not open the file: "
 msgstr ""
 
@@ -478,7 +478,7 @@ msgstr ""
 msgid "Could not save PNG: "
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:247
+#: src/presentation/ProfileFileCodec.cpp:99
 msgid "Could not save the file: "
 msgstr ""
 
@@ -511,7 +511,7 @@ msgid "Custom interval"
 msgstr ""
 
 #: src/presentation/UserPreferences.cpp:198
-#: src/presentation/UserPreferences.cpp:233
+#: src/presentation/UserPreferences.cpp:232
 msgid "Custom layout"
 msgstr ""
 
@@ -709,7 +709,7 @@ msgstr ""
 msgid "Forecast"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:288
+#: src/presentation/WeatherModel.cpp:224
 msgid "Forecast for "
 msgstr ""
 
@@ -831,15 +831,15 @@ msgstr ""
 msgid "Interval start"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:392
+#: src/presentation/WeatherModel.cpp:329
 msgid "Interval: %1–%2"
 msgstr ""
 
-#: src/core/Forecast.cpp:97
+#: src/core/Forecast.cpp:98
 msgid "Invalid forecast timeline."
 msgstr ""
 
-#: src/core/Forecast.cpp:109
+#: src/core/Forecast.cpp:110
 msgid "Invalid forecast values."
 msgstr ""
 
@@ -847,13 +847,13 @@ msgstr ""
 msgid "Invalid map image URL."
 msgstr ""
 
-#: src/core/Forecast.cpp:82 src/network/JsonRequest.cpp:108
+#: src/core/Forecast.cpp:83 src/network/JsonRequest.cpp:108
 #: src/presentation/EditorialModel.cpp:27
 #: src/presentation/WeatherLayersModel.cpp:14
 msgid "Invalid meteo.pl response format."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:281
+#: src/presentation/ProfileFileCodec.cpp:46
 msgid ""
 "Invalid profile definition or unknown series. No profiles were imported."
 msgstr ""
@@ -878,7 +878,7 @@ msgstr ""
 msgid "Latest available"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:55 src/presentation/WeatherModel.cpp:68
+#: src/presentation/WeatherModel.cpp:46
 msgid "Latest forecast"
 msgstr ""
 
@@ -1036,7 +1036,7 @@ msgstr ""
 msgid "Min–max range: stems"
 msgstr ""
 
-#: src/core/Forecast.cpp:119
+#: src/core/Forecast.cpp:120
 msgid "Missing temperature or model run date."
 msgstr ""
 
@@ -1115,15 +1115,15 @@ msgid "Near-ground temperature"
 msgstr ""
 
 #: src/presentation/ChartConfiguration.cpp:158
-#: src/presentation/UserPreferences.cpp:340
+#: src/presentation/UserPreferences.cpp:314
 msgid "New chart"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:512
+#: src/presentation/WeatherModel.cpp:449
 msgid "No cloud cover data"
 msgstr ""
 
-#: src/network/MeteoClient.cpp:85
+#: src/network/MeteoClient.cpp:81
 msgid "No current run is available for the selected model."
 msgstr ""
 
@@ -1131,7 +1131,7 @@ msgstr ""
 msgid "No forecast"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:286
+#: src/presentation/WeatherModel.cpp:222
 msgid "No forecast for the current hour"
 msgstr ""
 
@@ -1166,7 +1166,7 @@ msgstr ""
 msgid "No valid reading time."
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:382
+#: src/presentation/WeatherModel.cpp:319
 msgid "None"
 msgstr ""
 
@@ -1199,7 +1199,7 @@ msgstr ""
 msgid "Outdoors"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:516
+#: src/presentation/WeatherModel.cpp:453
 msgid "Overcast"
 msgstr ""
 
@@ -1231,7 +1231,7 @@ msgstr ""
 msgid "Parameters of the indicated chart"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:516
+#: src/presentation/WeatherModel.cpp:453
 msgid "Partly cloudy"
 msgstr ""
 
@@ -1260,15 +1260,15 @@ msgstr ""
 msgid "Points"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:575
+#: src/presentation/WeatherModel.cpp:512
 msgid "Polar day"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:575
+#: src/presentation/WeatherModel.cpp:512
 msgid "Polar night"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:508
+#: src/presentation/WeatherModel.cpp:445
 msgid "Possible thunderstorms"
 msgstr ""
 
@@ -1329,11 +1329,11 @@ msgstr ""
 msgid "Profiles imported: "
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:382
+#: src/presentation/WeatherModel.cpp:319
 msgid "Rain"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:511
+#: src/presentation/WeatherModel.cpp:448
 msgid "Rainfall"
 msgstr ""
 
@@ -1402,7 +1402,7 @@ msgstr ""
 msgid "Sample time"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:391
+#: src/presentation/WeatherModel.cpp:328
 msgid "Sample: %1"
 msgstr ""
 
@@ -1528,15 +1528,15 @@ msgstr ""
 msgid "Show:"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:383 src/presentation/WeatherModel.cpp:510
+#: src/presentation/WeatherModel.cpp:320 src/presentation/WeatherModel.cpp:447
 msgid "Sleet"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:383
+#: src/presentation/WeatherModel.cpp:320
 msgid "Snow"
 msgstr ""
 
-#: src/presentation/WeatherModel.cpp:509
+#: src/presentation/WeatherModel.cpp:446
 msgid "Snowfall"
 msgstr ""
 
@@ -1630,11 +1630,11 @@ msgstr ""
 msgid "The chart was closed during export."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:260
+#: src/presentation/ProfileFileCodec.cpp:26
 msgid "The file does not contain a valid JSON document."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:266
+#: src/presentation/ProfileFileCodec.cpp:32
 msgid "The file must contain between 1 and 100 profiles."
 msgstr ""
 
@@ -1666,7 +1666,8 @@ msgstr ""
 msgid "The name and chart changes are saved automatically."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:256
+#: src/presentation/ProfileFileCodec.cpp:22
+#: src/presentation/ProfileFileCodec.cpp:83
 msgid "The profile file is too large (maximum 16 MiB)."
 msgstr ""
 
@@ -1679,7 +1680,7 @@ msgstr ""
 msgid "The request timed out. Try again."
 msgstr ""
 
-#: src/core/Forecast.cpp:73 src/network/MeteoClient.cpp:57
+#: src/core/Forecast.cpp:74 src/network/MeteoClient.cpp:57
 msgid "The server response is too large."
 msgstr ""
 
@@ -1711,7 +1712,7 @@ msgid ""
 "This is a draft layout. Duplicate the profile to save it with your own name."
 msgstr ""
 
-#: src/network/MeteoClient.cpp:68
+#: src/data/ForecastRepository.cpp:76 src/network/MeteoClient.cpp:68
 msgid ""
 "This location is outside the model area. Choose GFS for locations outside "
 "Central Europe."
@@ -1738,7 +1739,7 @@ msgstr ""
 msgid "Too many images are waiting to load. Try again."
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:244
+#: src/presentation/ProfileFileCodec.cpp:63
 msgid "Too many profiles in one file. Export them separately."
 msgstr ""
 
@@ -1854,7 +1855,7 @@ msgstr ""
 msgid "Unpin reading"
 msgstr ""
 
-#: src/presentation/UserPreferences.cpp:263
+#: src/presentation/ProfileFileCodec.cpp:29
 msgid "Unsupported profile file format or version."
 msgstr ""
 

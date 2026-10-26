@@ -31,6 +31,10 @@ qt_add_executable(test_services test_services.cpp)
 target_link_libraries(test_services PRIVATE meteo_ui Qt6::Test)
 add_test(NAME services COMMAND test_services)
 
+qt_add_executable(test_profile_codec test_profile_codec.cpp)
+target_link_libraries(test_profile_codec PRIVATE meteo_ui Qt6::Test)
+add_test(NAME profile_codec COMMAND test_profile_codec)
+
 qt_add_executable(test_preferences test_preferences.cpp)
 target_link_libraries(test_preferences PRIVATE meteo_ui Qt6::Test)
 add_test(NAME preferences COMMAND test_preferences)
