@@ -1006,6 +1006,12 @@ private slots:
         auto *exporter = object->findChild<ChartExporter *>("chartExporter");
         QVERIFY(exporter);
         QSignalSpy saved(exporter, &ChartExporter::saved), failed(exporter, &ChartExporter::failed);
+        // The category change rebuilds the grid. Export only after the scene
+        // has processed its layout, while keeping exporter revision checks on.
+        QSignalSpy frames(&window, &QQuickWindow::afterAnimating);
+        window.requestUpdate();
+        QTRY_VERIFY(frames.count() >= 2);
+        QCOMPARE(readings->height(), readings->implicitHeight());
         const auto pngPath = QDir(directory).filePath("meteo-reading-all.png");
         QVERIFY(QMetaObject::invokeMethod(object.data(), "exportReadingsToFile", Q_RETURN_ARG(QVariant, accepted),
             Q_ARG(QVariant, QUrl::fromLocalFile(pngPath)), Q_ARG(QVariant, QStringLiteral("png"))));
