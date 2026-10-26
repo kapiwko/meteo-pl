@@ -19,7 +19,9 @@ kirigami_package_breeze_icons(ICONS
     go-down go-next go-previous go-up help-about image-png internet-web-browser
     list-add list-remove map-globe mark-location media-playback-pause
     media-playback-start office-chart-line overflow-menu pin text-csv view-calendar
-    view-list-text view-refresh view-statistics weather-few-clouds
-    weather-none-available window-pin zoom-fit-best zoom-in zoom-out)
+    view-list-text view-refresh view-statistics weather-clear weather-clear-night
+    weather-clouds weather-few-clouds weather-none-available weather-overcast
+    weather-showers weather-snow weather-snow-rain weather-storm
+    window-pin zoom-fit-best zoom-in zoom-out)
 install(FILES "${BREEZEICONS_DIR}/COPYING-ICONS" "${BREEZEICONS_DIR}/COPYING.LIB"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/meteo-pl/breeze-icons")

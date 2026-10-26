@@ -97,7 +97,10 @@ def check_android_icons(apk):
     prefix = "assets/qml/org/kde/kirigami/breeze-internal/"
     required = {"configure", "mark-location", "view-refresh", "office-chart-line",
                 "chronometer", "view-calendar", "globe", "dialog-messages",
-                "view-list-text", "dialog-close", "go-next", "open-menu-symbolic"}
+                "view-list-text", "dialog-close", "go-next", "open-menu-symbolic",
+                "weather-clear", "weather-clear-night", "weather-clouds",
+                "weather-few-clouds", "weather-none-available", "weather-overcast",
+                "weather-showers", "weather-snow", "weather-snow-rain", "weather-storm"}
     with zipfile.ZipFile(apk) as archive:
         icons = {Path(entry.filename).stem for entry in archive.infolist()
                  if entry.filename.startswith(prefix + "icons/") and entry.file_size > 0}

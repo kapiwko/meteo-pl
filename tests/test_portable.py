@@ -54,6 +54,25 @@ class PortablePackagingTest(unittest.TestCase):
                 archive.writestr("lib/arm64-v8a/libqml_QtQuick_Controls_Material_qtquickcontrols2materialstyleplugin_arm64-v8a.so", b"style")
             portable.check_android_style(apk)
 
+    def test_android_requires_dynamically_selected_weather_icons(self):
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory)/"meteo.apk"
+            prefix = "assets/qml/org/kde/kirigami/breeze-internal/"
+            icons = {"configure", "mark-location", "view-refresh", "office-chart-line",
+                     "chronometer", "view-calendar", "globe", "dialog-messages",
+                     "view-list-text", "dialog-close", "go-next", "open-menu-symbolic",
+                     "weather-clear", "weather-clear-night", "weather-clouds",
+                     "weather-few-clouds", "weather-none-available", "weather-overcast",
+                     "weather-snow", "weather-snow-rain", "weather-storm"}
+            with zipfile.ZipFile(apk,"w") as archive:
+                archive.writestr(prefix+"index.theme", "[Icon Theme]")
+                for icon in icons: archive.writestr(prefix+"icons/48/"+icon+".svg", "<svg/>")
+            with self.assertRaisesRegex(RuntimeError,"weather-showers"):
+                portable.check_android_icons(apk)
+            with zipfile.ZipFile(apk,"a") as archive:
+                archive.writestr(prefix+"icons/48/weather-showers.svg", "<svg/>")
+            self.assertEqual(portable.check_android_icons(apk),len(icons)+1)
+
     def test_windows_smoke_uses_only_the_explicit_current_archive(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
