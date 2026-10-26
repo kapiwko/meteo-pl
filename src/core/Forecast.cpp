@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <functional>
 
 namespace Meteo {
 namespace {
@@ -122,12 +123,20 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
 
 std::optional<qint64> latestRun(const QByteArray &json, const QString &model)
 {
-    if (!knownModel(model))
-        return std::nullopt;
-    const auto values = QJsonDocument::fromJson(json).object().value(model).toArray();
-    qint64 newest = 0;
-    for (const auto &value : values)
-        newest = std::max(newest, timestampValue(value));
-    return newest > 0 ? std::optional<qint64>(newest) : std::nullopt;
+    const auto runs=availableRuns(QJsonDocument::fromJson(json),model);
+    return runs && !runs->isEmpty() ? std::optional<qint64>(runs->first()) : std::nullopt;
+}
+std::optional<QList<qint64>> availableRuns(const QJsonDocument &document,const QString &model)
+{
+    if (!knownModel(model) || !document.isObject() || !document.object().value(model).isArray()) return std::nullopt;
+    const auto values=document.object().value(model).toArray();
+    if (values.size()>1024) return std::nullopt;
+    QList<qint64> runs;
+    for (const auto &value:values) {
+        const auto timestamp=timestampValue(value);
+        if (timestamp>0 && timestamp<=253402300799LL && !runs.contains(timestamp)) runs.append(timestamp);
+    }
+    std::sort(runs.begin(),runs.end(),std::greater<>());
+    return runs;
 }
 } // namespace Meteo

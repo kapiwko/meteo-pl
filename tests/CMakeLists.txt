@@ -6,6 +6,10 @@ qt_add_executable(test_client test_client.cpp)
 target_link_libraries(test_client PRIVATE meteo_core Qt6::Test)
 add_test(NAME client COMMAND test_client)
 
+qt_add_executable(test_repository test_repository.cpp)
+target_link_libraries(test_repository PRIVATE meteo_core Qt6::Test)
+add_test(NAME repository COMMAND test_repository)
+
 qt_add_executable(test_disk_cache test_disk_cache.cpp)
 target_link_libraries(test_disk_cache PRIVATE meteo_core Qt6::Test)
 add_test(NAME disk_cache COMMAND test_disk_cache)

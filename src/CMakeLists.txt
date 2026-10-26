@@ -1,4 +1,5 @@
 add_library(meteo_core STATIC
+    data/ForecastRepository.cpp data/ForecastRepository.hpp
     core/Forecast.cpp core/Forecast.hpp
     core/ForecastAggregation.cpp core/ForecastAggregation.hpp
     core/ForecastSampling.cpp core/ForecastSampling.hpp

@@ -2,8 +2,7 @@
 #include "MeteoUiExport.hpp"
 
 #include "core/Forecast.hpp"
-#include "network/MeteoClient.hpp"
-#include "network/JsonRequest.hpp"
+#include "data/ForecastRepository.hpp"
 #include <QTimer>
 #include <QVariantMap>
 #include <QtQml/qqmlregistration.h>
@@ -46,7 +45,7 @@ class METEO_UI_EXPORT WeatherModel : public QObject {
     Q_PROPERTY(QString sunTimes READ sunTimes NOTIFY stateChanged)
     Q_PROPERTY(QVariantMap solarTimes READ solarTimes NOTIFY stateChanged)
 public:
-    explicit WeatherModel(QObject *parent = nullptr);
+    explicit WeatherModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://devmgramapi.meteo.pl")));
     quint64 dataRevision() const { return m_dataRevision; }
     double latitude() const { return m_latitude; }
     double longitude() const { return m_longitude; }
@@ -109,15 +108,12 @@ private slots:
 private:
     void resetLocation();
     void apply(const Meteo::Forecast &forecast);
-    QString cachePath() const;
     bool loadCache();
-    void saveCache(const QByteArray &json) const;
     qint64 summaryTimestamp() const;
     QString valueText(const QString &key, const QString &suffix, double scale = 1) const;
     double displayScale(const QString &key, double baseScale) const;
 
-    Meteo::MeteoClient m_client;
-    Meteo::JsonRequest m_runsRequest;
+    Meteo::ForecastRepository m_repository;
     QTimer m_debounce;
     QTimer m_refreshTimer;
     QTimer m_clockTimer;

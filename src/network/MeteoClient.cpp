@@ -72,15 +72,11 @@ void MeteoClient::fetch(double latitude, double longitude, const QString &model,
     auto request = requestFor(m_endpoint.resolved(QUrl(QStringLiteral("/meteorograms/available"))));
     m_policy.configure(request);
     readReply(m_network.get(request), generation, [this, latitude, longitude, model, generation, requestedRun](const QByteArray &body) {
-        QList<qint64> runs;
-        for (const auto &value : QJsonDocument::fromJson(body).object().value(model).toArray()) {
-            const auto timestamp = value.isString() ? value.toString().toLongLong() : value.toInteger();
-            if (timestamp > 0 && !runs.contains(timestamp)) runs.append(timestamp);
-        }
-        std::sort(runs.begin(), runs.end(), std::greater<>());
+        const auto runs=availableRuns(QJsonDocument::fromJson(body),model).value_or(QList<qint64>());
         emit runsReceived(runs);
+        if (generation != m_generation) return;
         const auto run = requestedRun > 0 && runs.contains(requestedRun) ? std::optional<qint64>(requestedRun)
-            : requestedRun > 0 ? std::nullopt : latestRun(body, model);
+            : requestedRun > 0 || runs.isEmpty() ? std::nullopt : std::optional<qint64>(runs.first());
         if (!run) {
             emit failed(Meteo::i18n("No current run is available for the selected model."));
             return;

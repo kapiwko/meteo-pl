@@ -1,41 +1,12 @@
 #include "network/MeteoClient.hpp"
 #include "network/JsonRequest.hpp"
 #include <QElapsedTimer>
-#include "Fixture.hpp"
+#include "ClientFixture.hpp"
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTest>
 
-class HttpFixture : public QTcpServer {
-public:
-    QList<QByteArray> requests;
-    int status = 200;
-    QByteArray available = R"({"um4_60":[100,300,200]})";
-    HttpFixture()
-    {
-        connect(this, &QTcpServer::newConnection, this, [this] {
-            while (hasPendingConnections()) {
-                auto *socket = nextPendingConnection();
-                connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
-                connect(socket, &QTcpSocket::readyRead, socket, [this, socket, buffer = QByteArray()]() mutable {
-                    buffer += socket->readAll();
-                    const auto headerEnd = buffer.indexOf("\r\n\r\n");
-                    if (headerEnd < 0) return;
-                    int contentLength = 0;
-                    for (const auto &line : buffer.left(headerEnd).split('\n'))
-                        if (line.toLower().startsWith("content-length:")) contentLength = line.mid(15).trimmed().toInt();
-                    if (buffer.size() < headerEnd + 4 + contentLength) return;
-                    requests.append(buffer);
-                    const auto body = buffer.startsWith("GET ") ? available : forecastFixture();
-                    socket->write("HTTP/1.1 " + QByteArray::number(status) + " Result\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: " + QByteArray::number(body.size()) + "\r\n\r\n" + body);
-                    socket->disconnectFromHost();
-                });
-            }
-        });
-    }
-    QUrl endpoint() const { return QUrl(QStringLiteral("http://127.0.0.1:%1").arg(serverPort())); }
-};
 
 class ClientTest : public QObject {
     Q_OBJECT
@@ -78,6 +49,24 @@ private slots:
         QVERIFY(failed.first().first().toString().contains("timed out"));
         QTest::qWait(100);
         QCOMPARE(failed.count(),1);
+    }
+    void changingLocationFromTheRunListCannotPostTheOldQuery()
+    {
+        HttpFixture server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        Meteo::MeteoClient client(nullptr,server.endpoint());
+        bool switched=false;
+        connect(&client,&Meteo::MeteoClient::runsReceived,this,[&] {
+            if (switched) return;
+            switched=true;
+            client.fetch(50.8661,20.6286,"um4_60");
+        });
+        QSignalSpy received(&client,&Meteo::MeteoClient::received);
+        client.fetch(52.2297,21.0122,"um4_60");
+        QTRY_COMPARE(received.count(),1);
+        QCOMPARE(server.requests.size(),3);
+        const auto body=server.requests.last().mid(server.requests.last().indexOf("\r\n\r\n")+4);
+        QCOMPARE(QJsonDocument::fromJson(body).object()["point"].toObject()["lat"].toString(),"50.866100");
     }
     void requestsNewestRunAndCoordinates()
     {

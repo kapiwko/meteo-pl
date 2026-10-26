@@ -3,19 +3,10 @@
 #include "core/ForecastAggregation.hpp"
 #include "core/ForecastSampling.hpp"
 #include "ChartDataBuilder.hpp"
-#include "network/DiskCacheBudget.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 
-#include <QCryptographicHash>
-#include <QDir>
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QLocale>
-#include <QSaveFile>
-#include <QStandardPaths>
 #include <cmath>
 #include <QTimeZone>
 #include <numbers>
@@ -39,7 +30,7 @@ bool nightAt(qint64 timestamp, double latitude, double longitude)
 }
 }
 
-WeatherModel::WeatherModel(QObject *parent) : QObject(parent)
+WeatherModel::WeatherModel(QObject *parent, QUrl endpoint) : QObject(parent), m_repository(nullptr,std::move(endpoint))
 {
     m_debounce.setSingleShot(true);
     m_debounce.setInterval(0);
@@ -50,43 +41,23 @@ WeatherModel::WeatherModel(QObject *parent) : QObject(parent)
     m_clockTimer.setInterval(60000);
     connect(&m_clockTimer, &QTimer::timeout, this, &WeatherModel::updateCurrentTime);
     m_clockTimer.start();
-    connect(&m_client, &Meteo::MeteoClient::runsReceived, this, [this](const QList<qint64> &runs) {
+    connect(&m_repository, &Meteo::ForecastRepository::runsReceived, this, [this](const QList<qint64> &runs) {
         m_runs.clear();
         m_runs.append(QVariantMap{{"timestamp", 0}, {"label", Meteo::i18n("Latest forecast")}});
         for (const auto run : runs)
             m_runs.append(QVariantMap{{"timestamp", run}, {"label", formatTime(run, QStringLiteral("ddd d MMM · HH:mm t"))}});
         emit runsChanged();
     });
-    connect(&m_runsRequest, &Meteo::JsonRequest::received, this, [this](const QJsonDocument &document) {
-        QList<qint64> runs;
-        for (const auto &value : document.object().value(m_model).toArray()) {
-            const auto run = value.isString() ? value.toString().toLongLong() : value.toInteger();
-            if (run > 0 && !runs.contains(run)) runs.append(run);
-        }
-        std::sort(runs.begin(), runs.end(), std::greater<>());
-        m_runs.clear();
-        m_runs.append(QVariantMap{{"timestamp", 0}, {"label", Meteo::i18n("Latest forecast")}});
-        for (const auto run : runs)
-            m_runs.append(QVariantMap{{"timestamp", run}, {"label", formatTime(run, QStringLiteral("ddd d MMM · HH:mm t"))}});
-        emit runsChanged();
-    });
-    connect(&m_runsRequest, &Meteo::JsonRequest::failed, this, [this](const QString &error) { m_error = error; emit stateChanged(); });
-    connect(&m_client, &Meteo::MeteoClient::received, this, [this](const QByteArray &json) {
-        QString error;
-        const auto forecast = Meteo::parseForecast(json, &error);
-        m_busy = false;
-        if (forecast) {
-            m_updated = QDateTime::currentDateTimeUtc();
-            m_usingCache = false;
-            m_error.clear();
-            apply(*forecast);
-            saveCache(json);
-        } else {
-            m_error = error;
-        }
+    connect(&m_repository, &Meteo::ForecastRepository::catalogFailed, this, [this](const QString &error) { m_error=error; emit stateChanged(); });
+    connect(&m_repository, &Meteo::ForecastRepository::received, this, [this](const Meteo::ForecastSnapshot &snapshot) {
+        m_busy=false;
+        m_updated=snapshot.fetchedAt;
+        m_usingCache=snapshot.usingCache;
+        m_error.clear();
+        apply(snapshot.forecast);
         emit stateChanged();
     });
-    connect(&m_client, &Meteo::MeteoClient::failed, this, [this](const QString &error) {
+    connect(&m_repository, &Meteo::ForecastRepository::failed, this, [this](const QString &error) {
         m_busy = false;
         m_error = error;
         m_usingCache = hasData();
@@ -126,7 +97,7 @@ void WeatherModel::setModel(const QString &value)
     m_model = value;
     m_requestedRun = 0;
     m_runs.clear();
-    m_runsRequest.cancel();
+    m_repository.cancel();
     emit runsChanged();
     resetLocation();
 }
@@ -142,7 +113,7 @@ void WeatherModel::setAutoRefresh(bool value)
     } else {
         m_refreshTimer.stop();
         m_debounce.stop();
-        m_client.cancel();
+        m_repository.cancel();
         m_busy = false;
         emit stateChanged();
     }
@@ -151,7 +122,7 @@ void WeatherModel::setAutoRefresh(bool value)
 
 void WeatherModel::resetLocation()
 {
-    m_client.cancel();
+    m_repository.cancel();
     m_busy = false;
     m_forecast.reset();
     m_series.clear();
@@ -181,7 +152,7 @@ void WeatherModel::refresh(bool force)
     m_busy = true;
     m_error.clear();
     emit stateChanged();
-    m_client.fetch(m_latitude, m_longitude, m_model, m_requestedRun);
+    m_repository.fetch({m_latitude,m_longitude,m_model,m_requestedRun});
 }
 
 void WeatherModel::apply(const Meteo::Forecast &forecast)
@@ -194,49 +165,14 @@ void WeatherModel::apply(const Meteo::Forecast &forecast)
     emit dataChanged();
 }
 
-QString WeatherModel::cachePath() const
-{
-    const auto identity = m_model + ':' + QString::number(m_latitude, 'f', 6) + ':' + QString::number(m_longitude, 'f', 6);
-    const auto hash = QCryptographicHash::hash(identity.toUtf8(), QCryptographicHash::Sha256).toHex();
-    return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
-        + QStringLiteral("/meteo-pl/") + QString::fromLatin1(hash)
-        + (m_requestedRun > 0 ? QStringLiteral("-%1").arg(m_requestedRun) : QString()) + QStringLiteral(".json");
-}
-
 bool WeatherModel::loadCache()
 {
-    QFile file(cachePath());
-    if (!file.open(QIODevice::ReadOnly) || file.size() > 3 * 1024 * 1024)
-        return false;
-    const auto envelope = QJsonDocument::fromJson(file.readAll()).object();
-    if (envelope.value("model").toString() != m_model || envelope.value("latitude").toDouble() != m_latitude
-        || envelope.value("longitude").toDouble() != m_longitude
-        || envelope.value("requestedRun").toInteger() != m_requestedRun)
-        return false;
-    const auto updated = QDateTime::fromString(envelope.value("savedAt").toString(), Qt::ISODate);
-    if (!updated.isValid() || updated > QDateTime::currentDateTimeUtc())
-        return false;
-    const auto parsed = Meteo::parseForecast(envelope.value("payload").toString().toUtf8());
-    if (!parsed)
-        return false;
-    Meteo::touchCacheEntry(file.fileName());
-    apply(*parsed);
-    m_updated = updated;
-    m_usingCache = true;
+    const auto snapshot=m_repository.cached({m_latitude,m_longitude,m_model,m_requestedRun});
+    if (!snapshot) return false;
+    m_updated=snapshot->fetchedAt;
+    m_usingCache=snapshot->usingCache;
+    apply(snapshot->forecast);
     return true;
-}
-
-void WeatherModel::saveCache(const QByteArray &json) const
-{
-    const auto path = cachePath();
-    QDir().mkpath(QFileInfo(path).absolutePath());
-    QSaveFile file(path);
-    if (!file.open(QIODevice::WriteOnly))
-        return;
-    const QJsonObject envelope{{"model", m_model}, {"latitude", m_latitude}, {"longitude", m_longitude}, {"requestedRun", m_requestedRun},
-                               {"savedAt", m_updated.toString(Qt::ISODate)}, {"payload", QString::fromUtf8(json)}};
-    file.write(QJsonDocument(envelope).toJson(QJsonDocument::Compact));
-    if (file.commit()) Meteo::pruneDiskCache(QFileInfo(path).absolutePath(),{QStringLiteral("*.json")},Meteo::forecastCacheBudget,path);
 }
 
 bool WeatherModel::stale() const
@@ -308,7 +244,8 @@ QString WeatherModel::weatherIcon() const
 
 void WeatherModel::setRequestedRun(double value)
 {
-    const auto run = std::isfinite(value) && value > 0 ? qint64(value) : 0;
+    if (!std::isfinite(value) || value<0 || value>253402300799.0) return;
+    const auto run = qint64(value);
     if (m_requestedRun == run) return;
     m_requestedRun = run;
     resetLocation();
@@ -402,7 +339,7 @@ QVariantList WeatherModel::detailsAt(double timestamp) const
 
 void WeatherModel::loadRuns()
 {
-    m_runsRequest.get(QUrl(QStringLiteral("https://devmgramapi.meteo.pl/meteorograms/available")), 300);
+    m_repository.loadRuns(m_model);
 }
 
 QUrl WeatherModel::originalLookupUrl() const

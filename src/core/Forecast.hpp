@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QDateTime>
 #include <QMap>
+#include <QJsonDocument>
 #include <QString>
 #include <QVector>
 #include <optional>
@@ -31,5 +32,6 @@ struct Forecast {
 [[nodiscard]] QString modelLabel(const QString &model);
 [[nodiscard]] std::optional<Forecast> parseForecast(const QByteArray &json, QString *error = nullptr);
 [[nodiscard]] std::optional<qint64> latestRun(const QByteArray &json, const QString &model);
+[[nodiscard]] std::optional<QList<qint64>> availableRuns(const QJsonDocument &document, const QString &model);
 
 } // namespace Meteo
