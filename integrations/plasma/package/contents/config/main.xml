@@ -12,5 +12,7 @@
     <entry name="chartHours" type="Int"><default>24</default><min>0</min><max>240</max></entry>
     <entry name="visiblePlaces" type="StringList"><default>*</default></entry>
     <entry name="placeOrder" type="StringList"><default></default></entry>
+    <entry name="detailsExpanded" type="Bool"><default>false</default></entry>
+    <entry name="collapsedCharts" type="StringList"><default></default></entry>
   </group>
 </kcfg>

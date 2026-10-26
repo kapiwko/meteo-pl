@@ -86,6 +86,8 @@ The widget's context menu provides **Refresh**, **Show meteogram** and Plasma's
 standard configuration action; these are also available from its header menu.
 In **Places in this widget**, select and reorder a subset of your saved places.
 This affects only that widget; names and coordinates remain shared with the app.
+Weather details and each chart expand independently using Plasma's native list
+controls. Their expanded state is remembered for each widget.
 
 You can also preview the installed widget in its own window:
 

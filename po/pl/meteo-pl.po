@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 08:50+0100\n"
+"POT-Creation-Date: 2026-10-26 08:59+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -311,6 +311,7 @@ msgstr "Wybierz wykresy do wspólnego obrazu PNG."
 msgid "Choose color"
 msgstr "Wybierz kolor"
 
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
 #: integrations/plasma/package/contents/ui/main.qml:33
 #: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:21
 msgid "Choose location"
@@ -330,7 +331,9 @@ msgstr ""
 msgid ""
 "Choose the places and their order for this widget. Manage saved places on "
 "the Location page."
-msgstr "Wybierz miejsca i ich kolejność w tym widżecie. Zapisanymi miejscami zarządzisz na karcie Lokalizacja."
+msgstr ""
+"Wybierz miejsca i ich kolejność w tym widżecie. Zapisanymi miejscami "
+"zarządzisz na karcie Lokalizacja."
 
 #: src/presentation/UserPreferences.cpp:118
 msgid "Classic ICM"
@@ -712,7 +715,7 @@ msgstr "Wypełnienie pod linią"
 msgid "Fill:"
 msgstr "Wypełnienie:"
 
-#: src/qml/Meteogram.qml:437
+#: src/qml/Meteogram.qml:439
 msgid ""
 "Fill: mean precipitation. Thin stems: maximum precipitation. Total over "
 msgstr ""
@@ -774,7 +777,7 @@ msgstr "GFS: prognoza dla całego świata."
 msgid "GPU · Qt Quick scene graph (default)"
 msgstr "GPU · scena Qt Quick (domyślnie)"
 
-#: src/qml/Meteogram.qml:290
+#: src/qml/Meteogram.qml:292
 msgid "Ground min–max"
 msgstr "Grunt min–max"
 
@@ -787,7 +790,7 @@ msgstr "Temperatura gruntu"
 msgid "Ground temperature min–max"
 msgstr "Temperatura gruntu min–max"
 
-#: src/qml/Meteogram.qml:331
+#: src/qml/Meteogram.qml:333
 msgid "Gust above scale"
 msgstr "Poryw powyżej skali"
 
@@ -799,7 +802,7 @@ msgstr "Porywy"
 msgid "Gusts: "
 msgstr "Porywy: "
 
-#: src/qml/Meteogram.qml:256
+#: src/qml/Meteogram.qml:258
 msgid "Hide legend"
 msgstr "Ukryj legendę"
 
@@ -1023,7 +1026,7 @@ msgstr "Maksimum"
 msgid "Maximum feels like"
 msgstr "Odczuwalna maksymalna"
 
-#: src/qml/Meteogram.qml:331
+#: src/qml/Meteogram.qml:333
 msgid "Maximum precipitation above scale"
 msgstr "Opad max powyżej skali"
 
@@ -1077,7 +1080,7 @@ msgstr "Temperatura minimalna"
 msgid "Minimum visibility"
 msgstr "Widzialność minimalna"
 
-#: src/qml/Meteogram.qml:290
+#: src/qml/Meteogram.qml:292
 msgid "Min–max range"
 msgstr "Zakres min–max"
 
@@ -1193,6 +1196,10 @@ msgstr "Serwer nie udostępnia aktualnego uruchomienia wybranego modelu."
 #: src/qml/ForecastPanel.qml:352 src/qml/WeatherSymbol.qml:14
 msgid "No forecast"
 msgstr "Brak prognozy"
+
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:60
+msgid "No forecast available"
+msgstr "Brak dostępnej prognozy"
 
 #: src/presentation/WeatherModel.cpp:222
 msgid "No forecast for the current hour"
@@ -1432,8 +1439,10 @@ msgstr "Zakres odczytu"
 msgid "Readings"
 msgstr "Odczyt"
 
-#: apps/meteo/Main.qml:57 integrations/plasma/package/contents/ui/main.qml:26
-#: integrations/plasma/package/contents/ui/main.qml:130
+#: apps/meteo/Main.qml:57
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:63
+#: integrations/plasma/package/contents/ui/main.qml:26
+#: integrations/plasma/package/contents/ui/main.qml:140
 #: src/qml/EditorialView.qml:25
 msgid "Refresh"
 msgstr "Odśwież"
@@ -1595,7 +1604,8 @@ msgstr "Pokaż prognozę"
 msgid "Show forecast: "
 msgstr "Pokaż prognozę: "
 
-#: src/qml/Meteogram.qml:256
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:86
+#: src/qml/Meteogram.qml:258
 msgid "Show legend"
 msgstr "Pokaż legendę"
 
@@ -1604,7 +1614,7 @@ msgid "Show legends by default"
 msgstr "Domyślnie pokazuj legendę"
 
 #: integrations/plasma/package/contents/ui/main.qml:43
-#: integrations/plasma/package/contents/ui/main.qml:145
+#: integrations/plasma/package/contents/ui/main.qml:155
 msgid "Show meteogram"
 msgstr "Pokaż meteogram"
 
@@ -1660,7 +1670,7 @@ msgstr "Intensywność burzy"
 msgid "Storms"
 msgstr "Burze"
 
-#: src/qml/Meteogram.qml:290
+#: src/qml/Meteogram.qml:292
 msgid "Storms / lightning"
 msgstr "Burze / wyładowania"
 
@@ -1668,10 +1678,12 @@ msgstr "Burze / wyładowania"
 msgid "Storms and lightning"
 msgstr "Burze i wyładowania"
 
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:119
 #: src/qml/ForecastHeader.qml:68
 msgid "Sunrise"
 msgstr "Wschód"
 
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:120
 #: src/qml/ForecastHeader.qml:69
 msgid "Sunset"
 msgstr "Zachód"
@@ -1997,6 +2009,10 @@ msgstr "WAM · okres szczytowy fali"
 msgid "WAM · significant wave height"
 msgstr "WAM · wysokość fali znacznej"
 
+#: integrations/plasma/package/contents/ui/ForecastPopup.qml:41
+msgid "Weather details"
+msgstr "Szczegóły pogody"
+
 #: src/qml/DisplaySettings.qml:260
 msgid ""
 "When combining different units, assign series to the left or right axis. "
@@ -2055,7 +2071,7 @@ msgstr ""
 "Gotowy profil możesz zduplikować. Edycja jego wykresów tworzy roboczy "
 "„Własny układ”."
 
-#: src/qml/Meteogram.qml:221
+#: src/qml/Meteogram.qml:222
 msgid "fraction"
 msgstr "frakcja"
 
@@ -2075,7 +2091,7 @@ msgstr "Meteogramy meteo.pl dla pulpitu KDE"
 msgid "no data"
 msgstr "brak danych"
 
-#: src/qml/Meteogram.qml:220
+#: src/qml/Meteogram.qml:221
 msgid "octas"
 msgstr "oktanty"
 

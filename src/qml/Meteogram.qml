@@ -14,6 +14,7 @@ ColumnLayout {
     property var chartConfiguration: ({})
     property int legendOverride: -1
     property bool exportMode: false
+    property bool showHeading: true
     property bool identificationEnabled: false
     readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
@@ -248,6 +249,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
+        visible: root.showHeading
         Label { text: root.title; font.bold: true; Layout.maximumWidth: Math.max(0, parent.width - 40); elide: Text.ElideRight }
         AbstractButton {
             id: legendToggle

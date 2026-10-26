@@ -79,6 +79,16 @@ PlasmoidItem {
         const keys = Array.from(weatherConfiguration.visiblePlaces);
         if (keys.indexOf("*") < 0 && keys.indexOf(key) < 0) Plasmoid.configuration.visiblePlaces = keys.concat([key]);
     }
+    function rememberSection(key, expanded) {
+        if (key === "details") {
+            if (weatherConfiguration.detailsExpanded !== expanded) Plasmoid.configuration.detailsExpanded = expanded;
+        } else {
+            const collapsed = Array.from(weatherConfiguration.collapsedCharts).filter(entry => entry !== key);
+            if (!expanded) collapsed.push(key);
+            if (JSON.stringify(collapsed) !== JSON.stringify(Array.from(weatherConfiguration.collapsedCharts)))
+                Plasmoid.configuration.collapsedCharts = collapsed;
+        }
+    }
     SavedPlaceSelection {
         id: placeSelection
         weather: forecastModel
@@ -172,30 +182,28 @@ PlasmoidItem {
         }
         Component {
             id: overview
-            PlasmaComponents.ScrollView {
-                id: overviewScroll
-                function chooseLocation() { dailyForecast.chooseLocation(); }
-                implicitHeight: dailyForecast.implicitHeight
-                contentWidth: availableWidth
-                clip: true
-                PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
-                CompactForecast {
-                    id: dailyForecast
-                    width: overviewScroll.availableWidth
-                    weather: forecastModel
-                    places: placeSelection.places
-                    onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
-                }
+            ForecastPopup {
+                weather: forecastModel
+                places: placeSelection.places
+                showCharts: false
+                detailsExpanded: root.weatherConfiguration.detailsExpanded
+                onSectionToggled: (key, expanded) => root.rememberSection(key, expanded)
+                onConfigureRequested: Plasmoid.internalAction("configure").trigger()
+                onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
             }
         }
         Component {
             id: widgetCharts
-            WidgetForecast {
+            ForecastPopup {
                 weather: forecastModel
                 places: placeSelection.places
                 profile: root.weatherConfiguration.chartProfile
                 chartKeys: Array.from(root.weatherConfiguration.chartKeys)
                 hours: root.weatherConfiguration.chartHours
+                detailsExpanded: root.weatherConfiguration.detailsExpanded
+                collapsedCharts: Array.from(root.weatherConfiguration.collapsedCharts)
+                onSectionToggled: (key, expanded) => root.rememberSection(key, expanded)
+                onConfigureRequested: Plasmoid.internalAction("configure").trigger()
                 onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
             }
         }

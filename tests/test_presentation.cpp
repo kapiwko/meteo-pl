@@ -1359,6 +1359,40 @@ private slots:
         QTRY_VERIFY(qAbs(content->implicitHeight() - collapsed) < 2);
         QMetaObject::invokeMethod(dialog, "close");
     }
+#ifdef METEO_TEST_PLASMA
+    void nativeWidgetSectionsExpandAndCollapseIndependently()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        WeatherModel weather;
+        weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/ForecastPopup.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> popup(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)},
+            {"clockTime", weather.firstTimestamp() + 3600}}));
+        QVERIFY2(popup, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(540, 720);
+        auto *item = qobject_cast<QQuickItem *>(popup.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        auto *list = popup->findChild<QObject *>("widgetSections");
+        QVERIFY(list);
+        QTRY_COMPARE(list->property("count").toInt(), 3);
+        QQuickItem *details = nullptr, *temperature = nullptr;
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, details), Q_ARG(int, 0)) && details);
+        QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, temperature), Q_ARG(int, 1)) && temperature);
+        QVERIFY(!details->property("expanded").toBool());
+        QVERIFY(temperature->property("expanded").toBool());
+        QTRY_VERIFY(temperature->height() > 150);
+        QVERIFY(QMetaObject::invokeMethod(temperature, "collapse"));
+        QTRY_VERIFY(temperature->height() < 100);
+        QVERIFY(QMetaObject::invokeMethod(details, "expand"));
+        QTRY_VERIFY(details->height() > 100);
+        QVERIFY(!temperature->property("expanded").toBool());
+        QVERIFY(QMetaObject::invokeMethod(temperature, "expand"));
+        QTRY_VERIFY(temperature->height() > 150);
+    }
+#endif
     void widgetPlaceSettingsValidateSelectionAndReorderPlaces()
     {
         QQmlEngine engine;
