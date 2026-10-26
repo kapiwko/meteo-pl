@@ -8,6 +8,41 @@ class PlacesTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void widgetsFilterAndOrderTheSharedPlacesIndependently()
+    {
+        QTemporaryDir directory;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        UserPreferences preferences;
+        preferences.savePlace("Kielce", 50.8661, 20.6286);
+        preferences.savePlace("Gdańsk", 54.352, 18.6466);
+        preferences.savePlace("Warszawa", 52.2297, 21.0122);
+        const auto kielce = SavedPlaceController::placeKey(50.8661, 20.6286);
+        const auto gdansk = SavedPlaceController::placeKey(54.352, 18.6466);
+        SavedPlaceController first, second;
+        first.setPreferences(&preferences); second.setPreferences(&preferences);
+        first.setVisibleKeys({kielce, gdansk}); first.setOrderKeys({gdansk, kielce});
+        second.setVisibleKeys({kielce});
+        QCOMPARE(first.places().size(), 2);
+        QCOMPARE(first.places().first().toMap()["name"].toString(), "Gdańsk");
+        QCOMPARE(second.places().size(), 1);
+        WeatherModel weather; weather.setAutoRefresh(false);
+        first.setWeather(&weather);
+        connect(&first, &SavedPlaceController::locationSelected, &weather, [&](const QString &name, double lat, double lon) {
+            weather.setLocationName(name); weather.setLatitude(lat); weather.setLongitude(lon);
+        });
+        first.componentComplete();
+        QCOMPARE(weather.locationName(), "Gdańsk");
+        preferences.savePlace("Gdańsk centrum", 54.352, 18.6466);
+        QTRY_COMPARE(weather.locationName(), "Gdańsk centrum");
+        first.setVisibleKeys({kielce});
+        QTRY_COMPARE(weather.locationName(), "Kielce");
+        preferences.removePlace(50.8661, 20.6286);
+        QTRY_VERIFY(weather.locationName().isEmpty());
+        QVERIFY(second.places().isEmpty());
+        QCOMPARE(preferences.favorites().size(), 2);
+        first.setVisibleKeys({"*"});
+        QTRY_COMPARE(weather.locationName(), "Gdańsk centrum");
+    }
     void threeViewsKeepIndependentSelectionsAndFollowCollectionChanges()
     {
         QTemporaryDir directory;

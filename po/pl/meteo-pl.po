@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 08:30+0100\n"
+"POT-Creation-Date: 2026-10-26 08:50+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -88,6 +88,10 @@ msgstr " słońca: "
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:28
 msgid "About"
 msgstr "O aplikacji"
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:81
+msgid "Add a place on the Location page first."
+msgstr "Najpierw dodaj miejsce na karcie Lokalizacja."
 
 #: src/qml/DisplaySettings.qml:157
 msgid "Add chart"
@@ -307,7 +311,8 @@ msgstr "Wybierz wykresy do wspólnego obrazu PNG."
 msgid "Choose color"
 msgstr "Wybierz kolor"
 
-#: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:14
+#: integrations/plasma/package/contents/ui/main.qml:33
+#: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:21
 msgid "Choose location"
 msgstr "Wybierz lokalizację"
 
@@ -320,6 +325,12 @@ msgid ""
 "Choose one or two charts. Their appearance comes from the selected profile."
 msgstr ""
 "Wybierz jeden lub dwa wykresy. Ich wygląd pochodzi z wybranego profilu."
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:80
+msgid ""
+"Choose the places and their order for this widget. Manage saved places on "
+"the Location page."
+msgstr "Wybierz miejsca i ich kolejność w tym widżecie. Zapisanymi miejscami zarządzisz na karcie Lokalizacja."
 
 #: src/presentation/UserPreferences.cpp:118
 msgid "Classic ICM"
@@ -461,7 +472,7 @@ msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 "Nie udało się odnaleźć oryginalnego meteogramu ICM dla tej lokalizacji."
 
-#: integrations/plasma/package/contents/ui/main.qml:102
+#: integrations/plasma/package/contents/ui/main.qml:55
 msgid "Could not open Meteo. Install the desktop application and try again."
 msgstr "Nie udało się otworzyć Meteo. Zainstaluj aplikację i spróbuj ponownie."
 
@@ -600,7 +611,7 @@ msgstr "Pobrano: %1"
 msgid "Downloading forecast"
 msgstr "Pobieranie prognozy"
 
-#: src/qml/CompactForecast.qml:35 src/qml/ForecastHeader.qml:49
+#: src/qml/CompactForecast.qml:39 src/qml/ForecastHeader.qml:49
 msgid "Downloading forecast…"
 msgstr "Pobieranie prognozy…"
 
@@ -1122,9 +1133,17 @@ msgstr "Przenieś wykres niżej"
 msgid "Move chart up"
 msgstr "Przenieś wykres wyżej"
 
+#: integrations/plasma/package/contents/ui/configPlaces.qml:69
+msgid "Move down"
+msgstr ""
+
 #: src/qml/ForecastPanel.qml:487
 msgid "Move the visible time interval"
 msgstr "Przesuń widoczny przedział czasu"
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:60
+msgid "Move up"
+msgstr ""
 
 #: src/qml/LocationEditor.qml:39
 msgid "My location"
@@ -1134,7 +1153,7 @@ msgstr "Moja pozycja"
 msgid "My places"
 msgstr "Moje miejsca"
 
-#: src/qml/PlacePicker.qml:32
+#: src/qml/PlacePicker.qml:40
 msgid "My places · choose a forecast"
 msgstr "Moje miejsca · wybierz prognozę"
 
@@ -1295,6 +1314,14 @@ msgstr "Przypnij odczyt"
 msgid "Place:"
 msgstr "Miejsce:"
 
+#: integrations/plasma/package/contents/config/config.qml:12
+msgid "Places in this widget"
+msgstr "Miejsca w tym widżecie"
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:37
+msgid "Places:"
+msgstr "Miejsca:"
+
 #: src/qml/LocationEditor.qml:140 src/qml/WeatherMap.qml:67
 #: src/qml/WeatherMap.qml:91
 msgid "Point on map"
@@ -1405,7 +1432,8 @@ msgstr "Zakres odczytu"
 msgid "Readings"
 msgstr "Odczyt"
 
-#: apps/meteo/Main.qml:57 integrations/plasma/package/contents/ui/main.qml:79
+#: apps/meteo/Main.qml:57 integrations/plasma/package/contents/ui/main.qml:26
+#: integrations/plasma/package/contents/ui/main.qml:130
 #: src/qml/EditorialView.qml:25
 msgid "Refresh"
 msgstr "Odśwież"
@@ -1499,6 +1527,10 @@ msgstr "Wyszukaj miejscowość"
 msgid "Search outside Poland too"
 msgstr "Szukaj także poza Polską"
 
+#: integrations/plasma/package/contents/ui/configPlaces.qml:88
+msgid "Select at least one place."
+msgstr "Wybierz przynajmniej jedno miejsce."
+
 #: src/presentation/ChartExporter.cpp:44
 msgid "Select between 1 and 50 charts to export."
 msgstr "Wybierz od 1 do 50 wykresów do eksportu."
@@ -1551,6 +1583,10 @@ msgstr "Pokaż dłuższy przedział"
 msgid "Show a shorter interval"
 msgstr "Pokaż krótszy przedział"
 
+#: integrations/plasma/package/contents/ui/configPlaces.qml:31
+msgid "Show all saved places, including new ones"
+msgstr "Pokazuj wszystkie zapisane miejsca, również nowe"
+
 #: apps/meteo/Main.qml:83
 msgid "Show forecast"
 msgstr "Pokaż prognozę"
@@ -1567,7 +1603,8 @@ msgstr "Pokaż legendę"
 msgid "Show legends by default"
 msgstr "Domyślnie pokazuj legendę"
 
-#: integrations/plasma/package/contents/ui/main.qml:94
+#: integrations/plasma/package/contents/ui/main.qml:43
+#: integrations/plasma/package/contents/ui/main.qml:145
 msgid "Show meteogram"
 msgstr "Pokaż meteogram"
 
@@ -1968,7 +2005,7 @@ msgstr ""
 "Przy łączeniu różnych jednostek przypisz serie do lewej lub prawej osi. "
 "Puste granice oznaczają skalę automatyczną."
 
-#: integrations/plasma/package/contents/config/config.qml:12
+#: integrations/plasma/package/contents/config/config.qml:17
 msgid "Widget view"
 msgstr "Widok widgetu"
 

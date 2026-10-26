@@ -84,6 +84,8 @@ also choose a compact daily forecast. The popup uses Plasma's standard container
 Each widget keeps its own view configuration independently of the application.
 The widget's context menu provides **Refresh**, **Show meteogram** and Plasma's
 standard configuration action; these are also available from its header menu.
+In **Places in this widget**, select and reorder a subset of your saved places.
+This affects only that widget; names and coordinates remain shared with the app.
 
 You can also preview the installed widget in its own window:
 

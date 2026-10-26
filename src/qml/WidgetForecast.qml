@@ -10,6 +10,8 @@ ColumnLayout {
     property string profile: "classic"
     property var chartKeys: ["temperature", "precipitation"]
     property int hours: 24
+    property var places: UserPreferences.places
+    function chooseLocation() { summary.chooseLocation(); }
     property real clockTime: Date.now() / 1000
     signal locationSelected(string name, real latitude, real longitude)
     readonly property real startTime: hours === 0 ? weather.firstTimestamp : Math.max(weather.firstTimestamp,
@@ -25,9 +27,11 @@ ColumnLayout {
     spacing: Kirigami.Units.largeSpacing
     Timer { interval: 60000; running: true; repeat: true; onTriggered: root.clockTime = Date.now() / 1000 }
     CompactForecast {
+        id: summary
         Layout.fillWidth: true
         Layout.fillHeight: false
         weather: root.weather
+        places: root.places
         showDays: false
         onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
     }

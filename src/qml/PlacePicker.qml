@@ -8,24 +8,32 @@ ColumnLayout {
     id: root
     required property WeatherModel weather
     property bool centered: false
+    property var places: UserPreferences.places
+    function chooseLocation() {
+        if (places.length > 1) {
+            selector.forceActiveFocus();
+            selector.popup.open();
+        }
+    }
     signal locationSelected(string name, real latitude, real longitude)
     Kirigami.Heading {
         objectName: "forecastLocationName"
         text: root.weather.locationName.length ? root.weather.locationName : I18n.i18n("Choose location")
-        visible: UserPreferences.places.length < 2
+        visible: root.places.length < 2
         level: 2
         Layout.fillWidth: true
         elide: Text.ElideRight
         horizontalAlignment: root.centered ? Text.AlignHCenter : Text.AlignLeft
     }
     ComboBox {
+        id: selector
         objectName: "headerLocationSelector"
-        visible: UserPreferences.places.length > 1
+        visible: root.places.length > 1
         Layout.fillWidth: true
         Layout.minimumWidth: 0
         Layout.maximumWidth: 320
         Layout.alignment: root.centered ? Qt.AlignHCenter : Qt.AlignLeft
-        model: UserPreferences.places
+        model: root.places
         textRole: "name"
         displayText: root.weather.locationName
         currentIndex: model.findIndex(place => LocationRules.samePlace(place.latitude, place.longitude, root.weather.latitude, root.weather.longitude))

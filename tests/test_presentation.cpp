@@ -1359,6 +1359,28 @@ private slots:
         QTRY_VERIFY(qAbs(content->implicitHeight() - collapsed) < 2);
         QMetaObject::invokeMethod(dialog, "close");
     }
+    void widgetPlaceSettingsValidateSelectionAndReorderPlaces()
+    {
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        preferences->savePlace("Kielce", 50.8661, 20.6286);
+        preferences->savePlace("Gdańsk", 54.352, 18.6466);
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configPlaces.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> settings(component.createWithInitialProperties({
+            {"cfg_visiblePlaces", QStringList{"54.352000,18.646600", "50.866100,20.628600"}},
+            {"cfg_placeOrder", QStringList{"54.352000,18.646600", "50.866100,20.628600"}}}));
+        QVERIFY2(settings, qPrintable(component.errorString()));
+        QVERIFY(settings->property("isSaveAllowed").toBool());
+        QVERIFY(QMetaObject::invokeMethod(settings.data(), "move", Q_ARG(QVariant, 0), Q_ARG(QVariant, 1)));
+        const auto order = qvariant_cast<QJSValue>(settings->property("cfg_placeOrder")).toVariant().toStringList();
+        QCOMPARE(order[0], "50.866100,20.628600");
+        QCOMPARE(order[1], "54.352000,18.646600");
+        settings->setProperty("cfg_visiblePlaces", QStringList{});
+        QVERIFY(!settings->property("isSaveAllowed").toBool());
+        settings->setProperty("cfg_visiblePlaces", QStringList{"*"});
+        QVERIFY(settings->property("isSaveAllowed").toBool());
+    }
     void widgetChartsKeepTheirOwnProfileAndTimeRange()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|Detected anchors).*")));

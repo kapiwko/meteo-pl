@@ -8,13 +8,17 @@ ColumnLayout {
     id: root
     required property WeatherModel weather
     property bool showDays: true
+    property var places: UserPreferences.places
+    function chooseLocation() { placePicker.chooseLocation(); }
     signal locationSelected(string name, real latitude, real longitude)
     readonly property var days: showDays ? weather.dailyForecast.slice(0, 7) : []
     spacing: Kirigami.Units.largeSpacing
 
     PlacePicker {
+        id: placePicker
         Layout.fillWidth: true
         weather: root.weather
+        places: root.places
         onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
     }
     RowLayout {

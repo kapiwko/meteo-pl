@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-26 08:30+0100\n"
+"POT-Creation-Date: 2026-10-26 08:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -88,6 +88,10 @@ msgstr ""
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:28
 msgid "About"
+msgstr ""
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:81
+msgid "Add a place on the Location page first."
 msgstr ""
 
 #: src/qml/DisplaySettings.qml:157
@@ -304,7 +308,8 @@ msgstr ""
 msgid "Choose color"
 msgstr ""
 
-#: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:14
+#: integrations/plasma/package/contents/ui/main.qml:33
+#: src/qml/ForecastPanel.qml:354 src/qml/PlacePicker.qml:21
 msgid "Choose location"
 msgstr ""
 
@@ -315,6 +320,12 @@ msgstr ""
 #: integrations/plasma/package/contents/ui/configAppearance.qml:65
 msgid ""
 "Choose one or two charts. Their appearance comes from the selected profile."
+msgstr ""
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:80
+msgid ""
+"Choose the places and their order for this widget. Manage saved places on "
+"the Location page."
 msgstr ""
 
 #: src/presentation/UserPreferences.cpp:118
@@ -452,7 +463,7 @@ msgstr ""
 msgid "Could not find the original ICM meteogram for this location."
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/main.qml:102
+#: integrations/plasma/package/contents/ui/main.qml:55
 msgid "Could not open Meteo. Install the desktop application and try again."
 msgstr ""
 
@@ -585,7 +596,7 @@ msgstr ""
 msgid "Downloading forecast"
 msgstr ""
 
-#: src/qml/CompactForecast.qml:35 src/qml/ForecastHeader.qml:49
+#: src/qml/CompactForecast.qml:39 src/qml/ForecastHeader.qml:49
 msgid "Downloading forecast…"
 msgstr ""
 
@@ -1098,8 +1109,16 @@ msgstr ""
 msgid "Move chart up"
 msgstr ""
 
+#: integrations/plasma/package/contents/ui/configPlaces.qml:69
+msgid "Move down"
+msgstr ""
+
 #: src/qml/ForecastPanel.qml:487
 msgid "Move the visible time interval"
+msgstr ""
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:60
+msgid "Move up"
 msgstr ""
 
 #: src/qml/LocationEditor.qml:39
@@ -1110,7 +1129,7 @@ msgstr ""
 msgid "My places"
 msgstr ""
 
-#: src/qml/PlacePicker.qml:32
+#: src/qml/PlacePicker.qml:40
 msgid "My places · choose a forecast"
 msgstr ""
 
@@ -1267,6 +1286,14 @@ msgstr ""
 msgid "Place:"
 msgstr ""
 
+#: integrations/plasma/package/contents/config/config.qml:12
+msgid "Places in this widget"
+msgstr ""
+
+#: integrations/plasma/package/contents/ui/configPlaces.qml:37
+msgid "Places:"
+msgstr ""
+
 #: src/qml/LocationEditor.qml:140 src/qml/WeatherMap.qml:67
 #: src/qml/WeatherMap.qml:91
 msgid "Point on map"
@@ -1377,7 +1404,8 @@ msgstr ""
 msgid "Readings"
 msgstr ""
 
-#: apps/meteo/Main.qml:57 integrations/plasma/package/contents/ui/main.qml:79
+#: apps/meteo/Main.qml:57 integrations/plasma/package/contents/ui/main.qml:26
+#: integrations/plasma/package/contents/ui/main.qml:130
 #: src/qml/EditorialView.qml:25
 msgid "Refresh"
 msgstr ""
@@ -1471,6 +1499,10 @@ msgstr ""
 msgid "Search outside Poland too"
 msgstr ""
 
+#: integrations/plasma/package/contents/ui/configPlaces.qml:88
+msgid "Select at least one place."
+msgstr ""
+
 #: src/presentation/ChartExporter.cpp:44
 msgid "Select between 1 and 50 charts to export."
 msgstr ""
@@ -1523,6 +1555,10 @@ msgstr ""
 msgid "Show a shorter interval"
 msgstr ""
 
+#: integrations/plasma/package/contents/ui/configPlaces.qml:31
+msgid "Show all saved places, including new ones"
+msgstr ""
+
 #: apps/meteo/Main.qml:83
 msgid "Show forecast"
 msgstr ""
@@ -1539,7 +1575,8 @@ msgstr ""
 msgid "Show legends by default"
 msgstr ""
 
-#: integrations/plasma/package/contents/ui/main.qml:94
+#: integrations/plasma/package/contents/ui/main.qml:43
+#: integrations/plasma/package/contents/ui/main.qml:145
 msgid "Show meteogram"
 msgstr ""
 
@@ -1925,7 +1962,7 @@ msgid ""
 "Empty bounds use automatic scaling."
 msgstr ""
 
-#: integrations/plasma/package/contents/config/config.qml:12
+#: integrations/plasma/package/contents/config/config.qml:17
 msgid "Widget view"
 msgstr ""
 

@@ -29,6 +29,16 @@ PlasmoidItem {
             onTriggered: forecastModel.refresh()
         },
         PlasmaCore.Action {
+            objectName: "choosePlaceAction"
+            text: I18n.i18n("Choose location")
+            icon.name: "mark-location"
+            visible: placeSelection.places.length > 1
+            onTriggered: {
+                root.expanded = true;
+                Qt.callLater(() => { if (root.fullRepresentationItem) root.fullRepresentationItem.chooseLocation(); });
+            }
+        },
+        PlasmaCore.Action {
             objectName: "openForecastAction"
             text: I18n.i18n("Show meteogram")
             icon.name: "window-new"
@@ -58,13 +68,25 @@ PlasmoidItem {
         utc: UserPreferences.utc
     }
     function selectLocation(name, latitude, longitude) {
+        if (name.length) includePlace(placeSelection.placeKey(latitude, longitude));
         Plasmoid.configuration.locationName = name;
         Plasmoid.configuration.latitude = latitude;
         Plasmoid.configuration.longitude = longitude;
         if (name.length) Plasmoid.configuration.model = LocationRules.modelFor(latitude, longitude, Plasmoid.configuration.model);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
-    SavedPlaceSelection { weather: forecastModel; onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude) }
+    function includePlace(key) {
+        const keys = Array.from(weatherConfiguration.visiblePlaces);
+        if (keys.indexOf("*") < 0 && keys.indexOf(key) < 0) Plasmoid.configuration.visiblePlaces = keys.concat([key]);
+    }
+    SavedPlaceSelection {
+        id: placeSelection
+        weather: forecastModel
+        visibleKeys: root.weatherConfiguration.visiblePlaces
+        orderKeys: root.weatherConfiguration.placeOrder
+        onIncludePlaceRequested: key => root.includePlace(key)
+        onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
+    }
     compactRepresentation: MouseArea {
         implicitWidth: compactRow.implicitWidth
         implicitHeight: Kirigami.Units.iconSizes.smallMedium
@@ -88,6 +110,7 @@ PlasmoidItem {
     }
     fullRepresentation: PlasmaExtras.Representation {
         id: fullView
+        function chooseLocation() { if (forecastView.item) forecastView.item.chooseLocation(); }
         readonly property bool charts: root.weatherConfiguration.popupView === "charts"
         Layout.minimumWidth: Kirigami.Units.gridUnit * 20
         Layout.minimumHeight: Kirigami.Units.gridUnit * 14
@@ -140,6 +163,7 @@ PlasmoidItem {
                     onVisibleChanged: if (!visible) root.launchError = ""
                 }
                 Loader {
+                    id: forecastView
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     sourceComponent: fullView.charts ? widgetCharts : overview
@@ -150,6 +174,7 @@ PlasmoidItem {
             id: overview
             PlasmaComponents.ScrollView {
                 id: overviewScroll
+                function chooseLocation() { dailyForecast.chooseLocation(); }
                 implicitHeight: dailyForecast.implicitHeight
                 contentWidth: availableWidth
                 clip: true
@@ -158,6 +183,7 @@ PlasmoidItem {
                     id: dailyForecast
                     width: overviewScroll.availableWidth
                     weather: forecastModel
+                    places: placeSelection.places
                     onLocationSelected: (name, latitude, longitude) => root.selectLocation(name, latitude, longitude)
                 }
             }
@@ -166,6 +192,7 @@ PlasmoidItem {
             id: widgetCharts
             WidgetForecast {
                 weather: forecastModel
+                places: placeSelection.places
                 profile: root.weatherConfiguration.chartProfile
                 chartKeys: Array.from(root.weatherConfiguration.chartKeys)
                 hours: root.weatherConfiguration.chartHours
