@@ -83,7 +83,10 @@ odinstalowania. Do stałych aktualizacji trzeba użyć własnego, niezmiennego
 klucza wydania. Niepodpisany plik do własnego podpisu jest dostępny przez
 `--include-alternatives`. Narzędzie nie publikuje w Google Play, Microsoft Store ani App Store.
 
-Port Androida korzysta z mobilnego stylu Breeze i zawiera uprawnienia sieci,
+Port Androida korzysta ze stylu Material (Material 3 w Qt Quick Controls),
+z jasnym lub ciemnym motywem systemowym. Paczka sprawdza obecność pluginu
+Material przed publikacją APK. Ikony nadal pochodzą z Breeze.
+Manifest zawiera uprawnienia sieci,
 lokalizacji i powiadomień w manifeście. Eksport i import przez Android Storage
 Access Framework oraz uprawnienia czasu wykonania wymagają osobnej weryfikacji
 na urządzeniu; manifest nie zastępuje takiego testu.

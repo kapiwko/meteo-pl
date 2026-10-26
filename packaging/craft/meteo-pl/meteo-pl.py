@@ -30,9 +30,7 @@ class subinfo(info.infoclass):
         self.runtimeDependencies["kde/frameworks/tier1/breeze-icons"] = None
         self.runtimeDependencies["kde/frameworks/tier3/kiconthemes"] = None
         self.runtimeDependencies["kde/frameworks/tier3/knotifications"] = None
-        if CraftCore.compiler.platform.isAndroid:
-            self.runtimeDependencies["kde/plasma/qqc2-breeze-style"] = None
-        else:
+        if not CraftCore.compiler.platform.isAndroid:
             self.runtimeDependencies["kde/frameworks/tier3/qqc2-desktop-style"] = None
             self.runtimeDependencies["kde/plasma/breeze"] = None
         if CraftCore.compiler.platform.isWindows:

@@ -106,6 +106,13 @@ def check_android_icons(apk):
     return len(icons)
 
 
+def check_android_style(apk):
+    with zipfile.ZipFile(apk) as archive:
+        if not any("/libqml_QtQuick_Controls_Material_qtquickcontrols2materialstyleplugin_" in name
+                   and name.endswith(".so") for name in archive.namelist()):
+            raise RuntimeError("Android APK is missing the Material controls style")
+
+
 def check_packaged_desktop(target, packages, craft_root, environment):
     clean = environment.copy()
     for key in ("KDEROOT", "QML_IMPORT_PATH", "QML2_IMPORT_PATH", "QT_PLUGIN_PATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
@@ -159,6 +166,7 @@ def package_current_build(command, target, work, dist, craft_root, environment, 
         if target == "android":
             signed = sign_android(packages[0], staging)
             check_android_icons(signed)
+            check_android_style(signed)
             artifacts = [packages[0], signed] if include_alternatives else [signed]
         else:
             check_packaged_desktop(target, artifacts, craft_root, environment)
@@ -242,6 +250,7 @@ def build(args):
     report["bundleSmokeTest"] = "not-run" if args.target == "android" else "passed"
     report["artifactBytes"] = {p.name: p.stat().st_size for p in artifacts}
     report["includeAlternatives"] = args.include_alternatives
+    if args.target == "android": report["controlsStyle"] = "Material"
     bundle_report = work / "bundle-runtime.json"
     if bundle_report.exists(): report["bundleContents"] = json.loads(bundle_report.read_text())
     (dist / "BUILD-REPORT.json").write_text(json.dumps(report, indent=2) + "\n")

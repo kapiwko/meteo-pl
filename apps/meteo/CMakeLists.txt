@@ -39,6 +39,9 @@ if(NOT ANDROID)
     install(FILES pl.meteo.desktop.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
 endif()
 if(ANDROID)
+    qt_add_resources(meteo-pl "android_controls" PREFIX "/"
+        BASE "${PROJECT_SOURCE_DIR}/packaging/android"
+        FILES "${PROJECT_SOURCE_DIR}/packaging/android/qtquickcontrols2.conf")
     include("${PROJECT_SOURCE_DIR}/packaging/android/BreezeIcons.cmake")
     include(ECMAddAndroidApk)
     math(EXPR METEO_ANDROID_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 1000000 + ${PROJECT_VERSION_MINOR} * 1000 + ${PROJECT_VERSION_PATCH}")
