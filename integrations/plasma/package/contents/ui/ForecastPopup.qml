@@ -27,6 +27,7 @@ PlasmaComponents.ScrollView {
     PlasmaComponents.ScrollBar.vertical.objectName: "widgetVerticalScrollBar"
     WidgetChartSelection {
         id: selection
+        objectName: "widgetChartSelection"
         weather: root.weather
         profile: root.profile
         hours: root.hours

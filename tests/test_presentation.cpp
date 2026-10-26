@@ -1945,6 +1945,89 @@ private slots:
         QTRY_VERIFY(QMetaObject::invokeMethod(list, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, last), Q_ARG(int, sectionCount - 1)) && last);
         QCOMPARE(last->objectName(), "widgetSection-" + configured.last().toMap()["key"].toString());
     }
+    void nativeWidgetInstancesKeepLocalChartsAndShareDisplayPreferences()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto oldProfile = preferences->profile();
+        const auto oldUnit = preferences->windUnit();
+        const auto oldUtc = preferences->utc();
+        preferences->setProfile("classic");
+        const auto firstProfile = preferences->createProfile("First popup");
+        preferences->setChartOptions("temperature", {{"title", "First temperature"}, {"height", 130}});
+        const auto secondProfile = preferences->createProfile("Second popup");
+        preferences->setChartOptions("temperature", {{"title", "Second temperature"}, {"height", 170}});
+        preferences->setProfile("basic");
+        const auto restore = qScopeGuard([&] {
+            for (const auto &id : {firstProfile, secondProfile}) { preferences->setProfile(id); preferences->deleteProfile(); }
+            preferences->setProfile(oldProfile); preferences->setWindUnit(oldUnit); preferences->setUtc(oldUtc);
+        });
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import pl.meteo.desktop
+            import "../integrations/plasma/package/contents/ui" as Widget
+            Item {
+                required property string firstProfile
+                required property string secondProfile
+                width: 1100; height: 720
+                WeatherModel { id: a; objectName: "firstPopupWeather"; autoRefresh: false; windUnit: UserPreferences.windUnit; utc: UserPreferences.utc }
+                WeatherModel { id: b; objectName: "secondPopupWeather"; autoRefresh: false; windUnit: UserPreferences.windUnit; utc: UserPreferences.utc }
+                Widget.ForecastPopup { objectName: "firstPopup"; width: 540; height: 720; weather: a; profile: parent.firstProfile; hours: 24; clockTime: a.firstTimestamp + 3600 }
+                Widget.ForecastPopup { objectName: "secondPopup"; x: 550; width: 540; height: 720; weather: b; profile: parent.secondProfile; hours: 48; clockTime: b.firstTimestamp + 3600 }
+            }
+        )", QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/tests/popup-host.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> host(component.createWithInitialProperties({{"firstProfile", firstProfile}, {"secondProfile", secondProfile}}));
+        QVERIFY2(host, qPrintable(component.errorString()));
+        auto *a = host->findChild<WeatherModel *>("firstPopupWeather");
+        auto *b = host->findChild<WeatherModel *>("secondPopupWeather");
+        QVERIFY(a && b); a->refresh(false); b->refresh(false);
+        QVERIFY(a->hasData() && b->hasData());
+        QQuickWindow window; window.resize(1100, 720);
+        qobject_cast<QQuickItem *>(host.data())->setParentItem(window.contentItem()); window.show();
+        auto *first = host->findChild<QObject *>("firstPopup");
+        auto *second = host->findChild<QObject *>("secondPopup");
+        auto *selectionA = first->findChild<QObject *>("widgetChartSelection");
+        auto *selectionB = second->findChild<QObject *>("widgetChartSelection");
+        QVERIFY(selectionA && selectionB);
+        const auto span = [](QObject *selection) { return selection->property("endTime").toDouble() - selection->property("startTime").toDouble(); };
+        const double secondSpan = std::min(48.0 * 3600, double(b->lastTimestamp() - b->firstTimestamp()));
+        QCOMPARE(span(selectionA), 24.0 * 3600); QCOMPARE(span(selectionB), secondSpan);
+        const auto charts = [](QObject *selection) {
+            const auto value = selection->property("charts");
+            return value.metaType() == QMetaType::fromType<QJSValue>() ? value.value<QJSValue>().toVariant().toList() : value.toList();
+        };
+        const auto chartsB = charts(selectionB);
+        first->setProperty("hours", 12);
+        QCOMPARE(span(selectionA), 12.0 * 3600); QCOMPARE(span(selectionB), secondSpan);
+        preferences->setProfile(firstProfile);
+        preferences->setChartOptions("temperature", {{"title", "Updated first temperature"}});
+        preferences->setProfile("basic");
+        QTRY_COMPARE(charts(selectionA).first().toMap()["title"].toString(), "Updated first temperature");
+        QCOMPARE(charts(selectionB), chartsB);
+        QCOMPARE(charts(selectionB).first().toMap()["title"].toString(), "Second temperature");
+        auto *sectionsA = first->findChild<QObject *>("widgetSections");
+        auto *sectionsB = second->findChild<QObject *>("widgetSections");
+        QQuickItem *rowA = nullptr, *rowB = nullptr;
+        QTRY_VERIFY(QMetaObject::invokeMethod(sectionsA, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, rowA), Q_ARG(int, 0)) && rowA);
+        QTRY_VERIFY(QMetaObject::invokeMethod(sectionsB, "itemAtIndex", Q_RETURN_ARG(QQuickItem *, rowB), Q_ARG(int, 0)) && rowB);
+        QSignalSpy toggled(first, SIGNAL(sectionToggled(QString,bool)));
+        QVERIFY(QMetaObject::invokeMethod(rowA, "collapse"));
+        QTRY_VERIFY(!rowA->property("expanded").toBool());
+        QVERIFY(rowB->property("expanded").toBool());
+        QVERIFY(!toggled.isEmpty());
+        preferences->setWindUnit(oldUnit == "km/h" ? "m/s" : "km/h");
+        preferences->setUtc(!oldUtc);
+        QTRY_COMPARE(a->windUnit(), preferences->windUnit());
+        QTRY_COMPARE(b->windUnit(), preferences->windUnit());
+        QCOMPARE(a->utc(), !oldUtc); QCOMPARE(b->utc(), !oldUtc);
+        QCOMPARE(first->property("profile").toString(), firstProfile);
+        QCOMPARE(second->property("profile").toString(), secondProfile);
+        QCOMPARE(span(selectionA), 12.0 * 3600); QCOMPARE(span(selectionB), secondSpan);
+        QCOMPARE(preferences->profile(), "basic");
+    }
     void nativeWidgetScrollsOnlyWhenContentExceedsAvailableHeight()
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
