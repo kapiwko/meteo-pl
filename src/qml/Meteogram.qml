@@ -16,6 +16,7 @@ ColumnLayout {
     property bool exportMode: false
     property bool showHeading: true
     property bool identificationEnabled: false
+    property bool touchNavigationEnabled: false
     // The desktop panel shares its exporter and status message across charts.
     // Standalone charts (including Plasma) use the same native save workflow.
     property var exportHandler: null
@@ -62,6 +63,8 @@ ColumnLayout {
     signal probeLeft()
     signal pinRequested(real timestamp, point position)
     signal zoomRequested(real factor, real center)
+    signal rangeRequested(real first, real last)
+    signal resetRangeRequested()
     spacing: 6
     objectName: "chart-" + groupKey
 
@@ -463,7 +466,7 @@ ColumnLayout {
             hoverEnabled: root.identificationEnabled
             cursorShape: root.identificationEnabled ? Qt.CrossCursor : Qt.ArrowCursor
             onPositionChanged: mouse => {
-                if (!root.identificationEnabled || chartContextMenu.visible) return;
+                if (!root.identificationEnabled || chartContextMenu.visible || gestures.active) return;
                 if (mouse.x < root.leftMargin || mouse.x > width - root.rightMargin) return;
                 const time = root.startTime + (mouse.x - root.leftMargin) / Math.max(1, width - root.leftMargin - root.rightMargin) * (root.endTime - root.startTime);
                 root.probeMoved(root.weather.nearestTimestamp(time), mapToItem(null, mouse.x, mouse.y));
@@ -486,6 +489,20 @@ ColumnLayout {
                     root.zoomRequested(wheel.angleDelta.y > 0 ? 0.7 : 1.4, center); wheel.accepted = true;
                 } else wheel.accepted = false;
             }
+        }
+        ChartGestures {
+            id: gestures
+            enabled: root.touchNavigationEnabled && !root.exportMode
+            x: root.leftMargin
+            y: root.topMargin
+            width: Math.max(1, plot.width - root.leftMargin - root.rightMargin)
+            height: Math.max(1, plot.height - root.topMargin - root.bottomMargin)
+            startTime: root.startTime
+            endTime: root.endTime
+            maximumSpan: Math.max(0, root.weather.lastTimestamp - root.weather.firstTimestamp)
+            minimumSpan: Math.min(24 * 3600, maximumSpan)
+            onRangeRequested: (first, last) => root.rangeRequested(first, last)
+            onResetRequested: root.resetRangeRequested()
         }
     }
     Kirigami.InlineMessage {

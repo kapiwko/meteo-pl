@@ -115,6 +115,80 @@ private slots:
         model.setLocationName("");
         QVERIFY(!indicator->property("running").toBool());
     }
+    void touchGesturesNavigateChartsWithoutBlockingVerticalScrolling()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|Binding loop|Cannot read|Cannot assign).*"));
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastPanel");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> panel(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"touchMode", true}}));
+        QVERIFY2(panel, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(600, 900);
+        auto *item = qobject_cast<QQuickItem *>(panel.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
+            if (parent->objectName() == name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        QQuickItem *plot = nullptr, *scroll = nullptr;
+        QTRY_VERIFY(plot = find(find, item, "plot-temperature"));
+        QTRY_VERIFY(scroll = find(find, item, "meteogramScrollView"));
+        auto *flickable = scroll->property("contentItem").value<QQuickItem *>();
+        QVERIFY(flickable);
+        auto *zoom = find(find, item, "chartZoomSlider");
+        auto *time = find(find, item, "chartTimeSlider");
+        QVERIFY(zoom && time && !zoom->isVisible() && !time->isVisible());
+        QTest::qWait(100);
+        const auto start = [&] { return panel->property("viewportStart").toDouble(); };
+        const auto span = [&] { return panel->property("viewportEnd").toDouble() - start(); };
+        const double fullSpan = span();
+        static auto *device = QTest::createTouchDevice();
+        auto touch = QTest::touchEvent(&window, device, false);
+        const auto center = plot->mapToScene({plot->width() / 2, plot->height() / 2}).toPoint();
+        touch.press(0, center - QPoint(60, 0)).press(1, center + QPoint(60, 0)).commit();
+        for (int i = 1; i <= 6; ++i) {
+            touch.move(0, center - QPoint(60 + 12*i, 0)).move(1, center + QPoint(60 + 12*i, 0)).commit();
+            QTest::qWait(20);
+        }
+        touch.release(0, center - QPoint(132, 0)).release(1, center + QPoint(132, 0)).commit();
+        QTRY_VERIFY(span() < fullSpan * 0.8);
+        QVERIFY(span() >= 24 * 3600);
+        QVERIFY(start() >= weather.firstTimestamp());
+        QVERIFY(panel->property("viewportEnd").toDouble() <= weather.lastTimestamp());
+        QVERIFY(qAbs(flickable->property("contentY").toDouble()) < 1);
+        const double pinchedSpan = span(), pinchedStart = start();
+        touch.press(0, center).commit();
+        for (int i = 1; i <= 5; ++i) {
+            touch.move(0, center + QPoint(12*i, 0)).commit();
+            QTest::qWait(20);
+        }
+        touch.release(0, center + QPoint(60, 0)).commit();
+        QTRY_VERIFY(start() < pinchedStart - 60);
+        QVERIFY(qAbs(span() - pinchedSpan) < 1);
+        const double draggedStart = start();
+        touch.press(0, center).commit();
+        for (int i = 1; i <= 5; ++i) {
+            touch.move(0, center - QPoint(0, 16*i)).commit();
+            QTest::qWait(20);
+        }
+        touch.release(0, center - QPoint(0, 80)).commit();
+        QTRY_VERIFY(flickable->property("contentY").toDouble() > 20);
+        QVERIFY(qAbs(start() - draggedStart) < 1);
+        QVERIFY(qAbs(span() - pinchedSpan) < 1);
+        QVERIFY(QMetaObject::invokeMethod(flickable, "cancelFlick"));
+        flickable->setProperty("contentY", 0);
+        QTest::qWait(100);
+        touch.press(0, center).commit(); touch.release(0, center).commit();
+        QTest::qWait(60);
+        touch.press(0, center).commit(); touch.release(0, center).commit();
+        QTRY_COMPARE(span(), fullSpan);
+        QCOMPARE(start(), double(weather.firstTimestamp()));
+        QTest::qWait(100); // Drain the final touch release before destroying its window.
+    }
     void windDirectionChartRendersArrows_data()
     {
         QTest::addColumn<QString>("renderer");

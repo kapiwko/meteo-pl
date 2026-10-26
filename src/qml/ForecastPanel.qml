@@ -10,6 +10,7 @@ Item {
     id: root
     required property WeatherModel weather
     property int viewMode: 0
+    property bool touchMode: Kirigami.Settings.isMobile
     property real viewportStart: weather.firstTimestamp
     property real viewportEnd: weather.lastTimestamp
     property real documentFirst: 0
@@ -222,6 +223,11 @@ Item {
     }
     function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
     function resetRange() { viewportStart = weather.firstTimestamp; viewportEnd = weather.lastTimestamp; }
+    function setRange(first, last) {
+        const span = Math.min(weather.lastTimestamp - weather.firstTimestamp, Math.max(minimumViewportSpan, last - first));
+        viewportStart = Math.max(weather.firstTimestamp, Math.min(weather.lastTimestamp - span, first));
+        viewportEnd = viewportStart + span;
+    }
     function setHours(hours) {
         if (hours === 0) { resetRange(); return; }
         const duration = Math.min(hours * 3600, weather.lastTimestamp - weather.firstTimestamp);
@@ -378,7 +384,7 @@ Item {
                     spacing: 0
                     GridLayout {
                         Layout.fillWidth: true
-                        columns: width < 680 ? 1 : 2
+                        columns: root.touchMode || width >= 680 ? 2 : 1
                         columnSpacing: 12
                         rowSpacing: 0
                         RowLayout {
@@ -386,6 +392,7 @@ Item {
                             spacing: 2
                             ToolButton {
                                 objectName: "earlierTimeButton"
+                                visible: !root.touchMode
                                 icon.name: "go-previous"
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial && root.viewportStart > root.weather.firstTimestamp + 1
@@ -407,6 +414,7 @@ Item {
                             }
                             ToolButton {
                                 icon.name: "go-next"
+                                visible: !root.touchMode
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial && root.viewportEnd < root.weather.lastTimestamp - 1
                                 Accessible.name: I18n.i18n("Later interval")
@@ -419,6 +427,7 @@ Item {
                             spacing: 2
                             ToolButton {
                                 icon.name: "zoom-out"
+                                visible: !root.touchMode
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial
                                 Accessible.name: I18n.i18n("Show a longer interval")
@@ -428,6 +437,7 @@ Item {
                             Slider {
                                 id: zoomSlider
                                 objectName: "chartZoomSlider"
+                                visible: !root.touchMode
                                 Layout.fillWidth: true
                                 Layout.minimumWidth: 70
                                 Layout.preferredWidth: 120
@@ -444,6 +454,7 @@ Item {
                             }
                             ToolButton {
                                 icon.name: "zoom-in"
+                                visible: !root.touchMode
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.span > root.minimumViewportSpan + 1
                                 Accessible.name: I18n.i18n("Show a shorter interval")
@@ -452,6 +463,7 @@ Item {
                             }
                             ToolButton {
                                 icon.name: "zoom-fit-best"
+                                visible: !root.touchMode
                                 implicitWidth: 28; implicitHeight: 28
                                 enabled: chartStatus.partial
                                 Accessible.name: I18n.i18n("Entire forecast")
@@ -461,17 +473,19 @@ Item {
                             ToolButton {
                                 objectName: "identificationButton"
                                 icon.name: "color-picker"
-                                implicitWidth: 28; implicitHeight: 28
+                                implicitWidth: root.touchMode ? 44 : 28; implicitHeight: implicitWidth
                                 checkable: true
                                 checked: root.identificationEnabled
                                 onClicked: root.identificationEnabled = checked
                                 Accessible.name: I18n.i18n("Parameter identification mode")
-                                ToolTip.text: checked ? I18n.i18n("Disable parameter identification") : I18n.i18n("Identify parameters · move the cursor over a chart")
+                                ToolTip.text: checked ? I18n.i18n("Disable parameter identification") : root.touchMode ? I18n.i18n("Identify parameters · tap a chart") : I18n.i18n("Identify parameters · move the cursor over a chart")
                                 ToolTip.visible: hovered
                             }
                             ToolButton {
                                 text: chartExporter.busy ? I18n.i18n("Exporting…") : I18n.i18n("Export…")
                                 icon.name: "document-export"
+                                display: root.touchMode ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
+                                implicitHeight: root.touchMode ? 44 : implicitContentHeight + topPadding + bottomPadding
                                 enabled: !chartExporter.busy && root.visibleCharts.length > 0
                                 Accessible.name: I18n.i18n("Export selected charts to PNG")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
@@ -482,7 +496,7 @@ Item {
                     Slider {
                         objectName: "chartTimeSlider"
                         Layout.fillWidth: true
-                        visible: chartStatus.partial
+                        visible: chartStatus.partial && !root.touchMode
                         implicitHeight: 22
                         from: root.weather.firstTimestamp
                         to: Math.max(from, root.weather.lastTimestamp - chartStatus.span)
@@ -515,6 +529,7 @@ Item {
         id: chartsComponent
         ScrollView {
             id: chartsScroll
+            objectName: "meteogramScrollView"
             contentWidth: availableWidth
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -537,6 +552,7 @@ Item {
                         endTime: root.viewportEnd
                         selectedTime: root.selectedTime
                         identificationEnabled: root.identificationEnabled
+                        touchNavigationEnabled: true
                         exportHandler: chart => root.saveCharts([chart])
                         nights: UserPreferences.showNight ? root.weather.nightIntervals : []
                         onProbeMoved: (timestamp, position) => root.showProbe(timestamp, position, groupKey)
@@ -546,6 +562,8 @@ Item {
                             else { root.showProbe(timestamp, position, groupKey, true); root.pinned = true; }
                         }
                         onZoomRequested: (factor, center) => root.zoom(factor, center)
+                        onRangeRequested: (first, last) => root.setRange(first, last)
+                        onResetRangeRequested: root.resetRange()
                     }
                 }
             }

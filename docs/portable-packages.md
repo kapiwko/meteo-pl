@@ -88,6 +88,38 @@ lokalizacji i powiadomień w manifeście. Eksport i import przez Android Storage
 Access Framework oraz uprawnienia czasu wykonania wymagają osobnej weryfikacji
 na urządzeniu; manifest nie zastępuje takiego testu.
 
+Ikony używane przez aplikację i standardowe komponenty są dołączane przez
+`kirigami_package_breeze_icons()` z przypiętego wydania Breeze. Pakowanie sprawdza
+obecność motywu i podstawowych ikon w gotowym APK, przed jego publikacją.
+
+## Lokalne uruchamianie Androida
+
+Uruchom istniejący emulator (nazwy sprawdzisz przez `emulator -list-avds`):
+
+```sh
+~/Android/Sdk/emulator/emulator -avd Medium_Phone_API_35 -gpu host -qemu -cpu host
+```
+
+Opcja procesora jest przydatna dla APK ARM64 uruchamianego przez translację
+w obrazie x86_64: domyślny procesor wirtualny może nie udostępniać AES.
+Obraz musi obsługiwać ARM64; sprawdź `adb shell getprop ro.product.cpu.abilist`.
+Telefon ARM64 z włączonym debugowaniem USB nie wymaga emulatora.
+
+Po zbudowaniu APK:
+
+```sh
+~/Android/Sdk/platform-tools/adb install -r dist/android/meteo-pl-arm64-v8a-development.apk
+~/Android/Sdk/platform-tools/adb shell am start -n pl.meteo.desktop/org.qtproject.qt.android.bindings.QtActivity
+```
+
+Przy zmianie klucza podpisującego poprzedni testowy APK wymaga odinstalowania;
+usuwa to jego lokalne ustawienia. Przy kilku urządzeniach dodaj `adb -s SERIAL`.
+
+Na wykresie rozsuń lub zsuń dwa palce, aby zmienić skalę czasu; przesuwaj palcem
+w poziomie, aby zmienić okres. Ruch pionowy przewija listę wykresów.
+Podwójne dotknięcie przywraca całą prognozę. Minimalny zakres pozostaje równy
+24 godzinom (lub całej prognozie, jeśli jest krótsza).
+
 ## GitHub Actions
 
 Workflow `portable-packages.yml` uruchamia natywne zadania Windows i macOS oraz

@@ -80,6 +80,8 @@ qt_add_qml_module(meteo_ui
 )
 set_source_files_properties(qml/WidgetChartSelection.qml PROPERTIES QT_RESOURCE_ALIAS WidgetChartSelection.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/WidgetChartSelection.qml)
+set_source_files_properties(qml/ChartGestures.qml PROPERTIES QT_RESOURCE_ALIAS ChartGestures.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/ChartGestures.qml)
 set_source_files_properties(qml/ChartSaveDialog.qml PROPERTIES QT_RESOURCE_ALIAS ChartSaveDialog.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/ChartSaveDialog.qml)
 target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)

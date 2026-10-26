@@ -19,6 +19,8 @@ without leaving your desktop.
 
 - Interactive charts for temperature, precipitation, wind, pressure, clouds,
   visibility, fog and storm indicators, with an optional parameter probe.
+  On touchscreens, pinch to zoom, swipe horizontally to move through time,
+  and double-tap to restore the full forecast. Vertical swipes scroll the charts.
 - UM4 forecasts for Poland and Central Europe, and global GFS forecasts.
 - A shared list of saved places: search for a town, choose a point on the map,
   enter coordinates or use the system location service.
