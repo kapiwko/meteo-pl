@@ -64,7 +64,7 @@ ColumnLayout {
     GridLayout {
         id: animationControls
         Layout.fillWidth: true
-        columns: width < 500 ? 3 : 5
+        columns: root.width < 500 ? 3 : 5
         Button { id: animate; text: checked ? animationCache.ready ? I18n.i18n("Pause") : I18n.i18n("Cancel loading") : I18n.i18n("Animate"); checkable: true; enabled: root.run > 0 && picture.displayedSource.toString().length > 0; onCheckedChanged: { if (checked) root.prepareAnimation(); else animationCache.cancel(); } }
         Slider { Layout.fillWidth: true; Layout.columnSpan: animationControls.columns === 3 ? 2 : 1; Layout.minimumWidth: 60; from: root.intervalHours; to: thematic.lastStep; stepSize: root.intervalHours; value: root.step; onMoved: root.step = Math.round(value) }
         ToolButton { icon.name: "zoom-in"; onClicked: root.zoomImage(1.25, imageScroll.availableWidth / 2, imageScroll.availableHeight / 2) }
