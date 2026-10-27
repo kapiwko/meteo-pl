@@ -554,6 +554,7 @@ Item {
         ScrollView {
             id: chartsScroll
             objectName: "meteogramScrollView"
+            implicitWidth: 0
             contentWidth: availableWidth
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
