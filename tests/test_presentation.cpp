@@ -13,6 +13,7 @@
 #include <QQmlProperty>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QPointer>
 #include <QQuickStyle>
 #include <QSGRendererInterface>
 #include <QQuickTextDocument>
@@ -408,6 +409,29 @@ private slots:
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsPage");
         QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
+        QQuickItem *profilesEntry = nullptr;
+        QTRY_VERIFY(profilesEntry = find(find, currentPage(), "mobileSettingsSection-1"));
+        click(profilesEntry);
+        QTRY_COMPARE(stack->property("depth").toInt(), 3);
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsDetail-1");
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        QQuickItem *profileEditor = nullptr;
+        QTRY_VERIFY(profileEditor = find(find, currentPage(), "meteogramDisplaySettings"));
+        QQuickItem *profileActions = nullptr;
+        QTRY_VERIFY(profileActions = find(find, currentPage(), "profileActionsButton"));
+        click(profileActions);
+        QPointer<QObject> profileMenu = object->findChild<QObject *>("profileActionsMenu");
+        QVERIFY(profileMenu);
+        QTRY_VERIFY(profileMenu->property("opened").toBool());
+        const auto depthBeforeMenuBack = stack->property("depth").toInt();
+        QTest::keyClick(window, Qt::Key_Back);
+        const auto depthAfterMenuBack = stack->property("depth").toInt();
+        QCOMPARE(depthAfterMenuBack, depthBeforeMenuBack);
+        QTRY_VERIFY(profileMenu && !profileMenu->property("visible").toBool());
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileSettingsPage");
         QTRY_VERIFY(back = find(find, currentPage(), "mobileBackButton"));
         click(back);
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
@@ -1381,15 +1405,24 @@ private slots:
             QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier,
                 control->mapToScene({control->width()/2, control->height()/2}).toPoint());
         };
+        auto *actions = object->findChild<QQuickItem *>("profileActionsButton");
+        auto *menu = object->findChild<QObject *>("profileActionsMenu");
+        QVERIFY(actions && menu);
+        const auto trigger = [&](QQuickItem *control) {
+            click(actions);
+            if (!QTest::qWaitFor([&] { return menu->property("opened").toBool(); })) return false;
+            click(control);
+            return QTest::qWaitFor([&] { return !menu->property("visible").toBool(); });
+        };
         const auto count = preferences->profiles().size();
-        click(duplicate);
+        QVERIFY(trigger(duplicate));
         QTRY_VERIFY(preferences->profile().startsWith("user:"));
         QCOMPARE(preferences->profiles().size(), count + 1);
         QVERIFY(remove->isEnabled()); QVERIFY(!name->property("readOnly").toBool());
         name->setProperty("text", "Profil testowy");
         QVERIFY(QMetaObject::invokeMethod(name, "editingFinished"));
         QCOMPARE(preferences->profiles().last().toMap()["name"].toString(), "Profil testowy");
-        click(remove);
+        QVERIFY(trigger(remove));
         QTRY_COMPARE(preferences->profile(), "classic");
         QCOMPARE(preferences->profiles().size(), count);
         auto *reset = object->findChild<QQuickItem *>("profileRestoreButton");
@@ -1401,17 +1434,19 @@ private slots:
         auto *ground = object->findChild<QObject *>("addChart-ground");
         QVERIFY(ground);
         QVERIFY(QMetaObject::invokeMethod(ground, "triggered"));
-        auto *menu = object->findChild<QObject *>("addChartMenu");
-        QVERIFY(menu);
-        QTRY_VERIFY(!menu->property("visible").toBool());
+        auto *chartMenu = object->findChild<QObject *>("addChartMenu");
+        QVERIFY(chartMenu);
+        QTRY_VERIFY(!chartMenu->property("visible").toBool());
         QTRY_COMPARE(preferences->chartLayout().size(), factory.size() + 1);
         QCOMPARE(preferences->profile(), "classic");
         QTRY_VERIFY(reset->isEnabled());
-        click(reset);
+        QVERIFY(trigger(reset));
         QTRY_COMPARE(preferences->chartLayout(), factory);
         QTRY_VERIFY(!reset->isEnabled());
-        click(remove);
+        QVERIFY(trigger(remove));
         QTRY_COMPARE(preferences->profiles().size(), count - 1);
+        click(actions);
+        QTRY_VERIFY(menu->property("opened").toBool());
         QTRY_VERIFY(recover->isVisible());
         click(recover);
         QTRY_COMPARE(preferences->profiles().size(), count);
