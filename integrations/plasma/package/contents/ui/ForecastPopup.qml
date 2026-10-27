@@ -3,6 +3,7 @@
 // when available, without redeclaring and shadowing it.
 import QtQuick
 import QtQuick.Controls as QQC2
+import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.extras as PlasmaExtras
@@ -46,13 +47,29 @@ PlasmaComponents.ScrollView {
         highlight: PlasmaExtras.Highlight {}
         highlightMoveDuration: Kirigami.Units.shortDuration
         highlightResizeDuration: Kirigami.Units.shortDuration
-        header: CompactForecast {
+        header: ColumnLayout {
             width: sections.width
-            weather: root.weather
-            places: root.places
-            showDays: !root.showCharts
-            onAddLocationRequested: root.configureRequested()
-            onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
+            spacing: Kirigami.Units.largeSpacing
+            function chooseLocation() { summary.chooseLocation(); }
+            CompactForecast {
+                id: summary
+                Layout.fillWidth: true
+                weather: root.weather
+                places: root.places
+                showDays: !root.showCharts
+                onAddLocationRequested: root.configureRequested()
+                onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
+            }
+            PlasmaComponents.Label {
+                objectName: "widgetForecastPeriod"
+                Layout.fillWidth: true
+                visible: root.weather.hasData && root.showCharts
+                text: root.weather.formatTime(selection.startTime, "ddd d MMM HH:mm") + " – "
+                    + root.weather.formatTime(selection.endTime, "ddd d MMM HH:mm") + (root.weather.utc ? " UTC" : "")
+                color: Kirigami.Theme.disabledTextColor
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
+            }
         }
         footer: PlasmaExtras.PlaceholderMessage {
             width: sections.width
@@ -72,7 +89,6 @@ PlasmaComponents.ScrollView {
             objectName: "widgetSection-" + modelData.key
             property int legendOverride: -1
             title: modelData.title
-            subtitle: root.weather.formatTime(selection.startTime, "ddd HH:mm") + " – " + root.weather.formatTime(selection.endTime, "ddd HH:mm")
             icon: "view-statistics"
             onItemExpanded: root.sectionToggled(modelData.key, true)
             onItemCollapsed: root.sectionToggled(modelData.key, false)
