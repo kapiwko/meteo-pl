@@ -1498,6 +1498,85 @@ private slots:
         QTRY_COMPARE(preferences->profiles().size(), count);
         QVERIFY(!preferences->hasDeletedProfiles());
     }
+    void responsiveSettingsAndForecastControls_data()
+    {
+        QTest::addColumn<int>("width");
+        QTest::newRow("narrow") << 420;
+        QTest::newRow("medium") << 720;
+        QTest::newRow("wide") << 1280;
+    }
+    void responsiveSettingsAndForecastControls()
+    {
+        QFETCH(int, width);
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.data());
+        QVERIFY(window);
+        window->resize(width, 1000);
+        auto *weather = object->findChild<WeatherModel *>();
+        QVERIFY(weather);
+        weather->refresh(false);
+        QVERIFY(weather->hasData());
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        preferences->setProfile("basic");
+        auto *exportButton = object->findChild<QQuickItem *>("chartExportButton");
+        QVERIFY(exportButton);
+        QTRY_VERIFY(exportButton->height() >= 20);
+        const auto fits = [](QQuickItem *item, QQuickItem *container) {
+            const auto x = item->mapToItem(container, {0, 0}).x();
+            return item->width() > 0 && x >= -1 && x + item->width() <= container->width() + 1;
+        };
+        const auto items = [&](const QString &name) {
+            QList<QQuickItem *> result;
+            const auto visit = [&](const auto &self, QQuickItem *parent) -> void {
+                for (auto *child : parent->childItems()) {
+                    if (child->objectName() == name) result.append(child);
+                    self(self, child);
+                }
+            };
+            visit(visit, window->contentItem());
+            return result;
+        };
+        QTRY_VERIFY(fits(exportButton, window->contentItem()));
+        QObject *panel = nullptr;
+        for (auto *candidate : object->findChildren<QObject *>())
+            if (QByteArray(candidate->metaObject()->className()).startsWith("ForecastPanel_")) { panel = candidate; break; }
+        QVERIFY(panel);
+        panel->setProperty("viewMode", 2);
+        QTRY_VERIFY(!items("forecastDayCard").isEmpty());
+        for (auto *card : items("forecastDayCard")) {
+            QTRY_VERIFY(fits(card, window->contentItem()));
+        }
+        panel->setProperty("viewMode", 0);
+        QVERIFY(QMetaObject::invokeMethod(panel, "openSettings"));
+        auto *dialog = object->findChild<QObject *>("meteoSettingsDialog");
+        QVERIFY(dialog);
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        auto *content = qvariant_cast<QQuickItem *>(dialog->property("contentItem"));
+        QVERIFY(content);
+        auto *display = object->findChild<QObject *>("meteogramDisplaySettings");
+        QVERIFY(display);
+        display->setProperty("expandedChart", "temperature");
+        for (int section = 0; section < 4; ++section) {
+            dialog->setProperty("section", section);
+            if (section == 1) display->setProperty("expandedSeries", "temperature/airtmp_point");
+            QTest::qWait(120);
+            for (const auto &name : {"profileNameField", "profileActionsButton",
+                     "seriesColor-temperature-airtmp_point-color", "seriesColor-temperature-airtmp_point-darkColor",
+                     "chartBound-temperature-leftMin", "chartBound-temperature-leftMax",
+                     "chartBound-temperature-rightMin", "chartBound-temperature-rightMax",
+                     "settingsTimeRange", "probeModeSetting", "rendererSetting", "settingsFilePath"}) {
+                if (QByteArray(name).startsWith("seriesColor-") && section != 1) continue;
+                auto *control = items(QString::fromLatin1(name)).value(0);
+                QVERIFY2(control, name);
+                if (control->isVisible()) QTRY_VERIFY2(fits(control, content), name);
+            }
+        }
+    }
     void timeLabelsFitNarrowChartsWithoutOverlapping()
     {
         WeatherModel model;
