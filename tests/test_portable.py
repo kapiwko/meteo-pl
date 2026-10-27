@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import zipfile
+import xml.etree.ElementTree as ET
 from unittest.mock import patch
 from types import SimpleNamespace
 
@@ -15,6 +16,13 @@ spec.loader.exec_module(portable)
 
 
 class PortablePackagingTest(unittest.TestCase):
+    def test_android_manifest_routes_system_back_to_qt(self):
+        manifest = ET.parse(portable.ROOT / "packaging/android/AndroidManifest.xml.in")
+        application = manifest.getroot().find("application")
+        self.assertIsNotNone(application)
+        attribute = "{http://schemas.android.com/apk/res/android}enableOnBackInvokedCallback"
+        self.assertEqual(application.get(attribute), "false")
+
     def test_android_output_is_set_before_cmake_configures_the_package(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary); dist=root/"dist"; dist.mkdir()
