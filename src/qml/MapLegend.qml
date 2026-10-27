@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-Frame {
+Pane {
     id: root
     objectName: "mapLegend"
     required property MapLegendModel legend
