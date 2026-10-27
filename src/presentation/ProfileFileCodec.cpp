@@ -42,7 +42,7 @@ std::optional<QVariantList> ProfileFileCodec::decode(const QByteArray &bytes, QS
         bool valid =
             !name.isEmpty() && entry["charts"].isArray() && source.size() <= 50 && charts.size() == source.size();
         for (qsizetype i = 0; valid && i < source.size(); ++i) {
-            const auto series = source[i].toObject()["series"];
+            const QJsonValue series = source.at(i).toObject().value("series");
             valid = series.isArray() && charts[i].toMap()["series"].toList().size() == series.toArray().size();
         }
         if (!valid)
