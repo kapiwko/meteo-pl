@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-27 15:24+0100\n"
+"POT-Creation-Date: 2026-10-27 18:40+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -47,7 +47,7 @@ msgstr " · odczyt parametrów · "
 msgid " · run: "
 msgstr " · start: "
 
-#: src/presentation/UserPreferences.cpp:609
+#: src/presentation/UserPreferences.cpp:613
 msgid "%1 (old)"
 msgstr "%1 (stary)"
 
@@ -62,7 +62,7 @@ msgstr[2] "Wybrano %1 wykresów"
 msgid "%1 · sunrise ≈ %2 · sunset ≈ %3"
 msgstr "%1 · wschód ≈ %2 · zachód ≈ %3"
 
-#: src/presentation/UserPreferences.cpp:538
+#: src/presentation/UserPreferences.cpp:542
 msgid "%1 — copy"
 msgstr "%1 — kopia"
 
@@ -125,15 +125,12 @@ msgid "Add series"
 msgstr "Dodaj serię"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/basic.json resources/profiles/classic.json
 msgid "Air temperature"
 msgstr "Temperatura powietrza"
 
-#: resources/charts/catalog.json resources/profiles/aviation.json
-#: resources/profiles/basic.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/charts/catalog.json resources/profiles/basic.json
+#: resources/profiles/classic.json
 msgid "Air temperature min–max"
 msgstr "Temperatura powietrza min–max"
 
@@ -141,10 +138,6 @@ msgstr "Temperatura powietrza min–max"
 #: src/qml/ForecastPanel.qml:122 src/qml/ForecastPanel.qml:195
 msgid "All"
 msgstr "Wszystkie"
-
-#: resources/profiles/full.json
-msgid "All charts"
-msgstr "Wszystkie wykresy"
 
 #: integrations/plasma/package/contents/ui/configAppearance.qml:43
 msgid "All enabled charts from this profile are shown as collapsible sections."
@@ -226,10 +219,6 @@ msgstr ""
 msgid "Automatic by unit"
 msgstr "Automatycznie według jednostki"
 
-#: resources/profiles/aviation.json
-msgid "Aviation"
-msgstr "Lotniczy"
-
 #: src/qml/DisplaySettings.qml:275
 msgid "Axis range"
 msgstr "Zakres osi"
@@ -245,10 +234,6 @@ msgstr "Wróć do artykułów"
 #: src/qml/SeriesSettings.qml:19
 msgid "Bars"
 msgstr "Słupki"
-
-#: resources/profiles/basic.json
-msgid "Basic"
-msgstr "Podstawowy"
 
 #: src/qml/ForecastPanel.qml:147
 msgid "CSV data (*.csv)"
@@ -411,32 +396,27 @@ msgid "Close reading"
 msgstr "Zamknij odczyt"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Cloud base · >0.1 octas"
 msgstr "Podstawa chmur · >0,1 okt."
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Cloud base · >2.5 octas"
 msgstr "Podstawa chmur · >2,5 okt."
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Cloud base · >4.5 octas"
 msgstr "Podstawa chmur · >4,5 okt."
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Cloud base · >6.5 octas"
 msgstr "Podstawa chmur · >6,5 okt."
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Cloud base · >7.9 octas"
 msgstr "Podstawa chmur · >7,9 okt."
 
@@ -444,14 +424,11 @@ msgstr "Podstawa chmur · >7,9 okt."
 msgid "Cloud cover"
 msgstr "Pokrycie chmur"
 
-#: resources/charts/catalog.json resources/profiles/aviation.json
-#: resources/profiles/basic.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/charts/catalog.json resources/profiles/classic.json
 msgid "Cloud cover and fog"
 msgstr "Zachmurzenie i mgła"
 
-#: resources/charts/catalog.json resources/profiles/aviation.json
-#: resources/profiles/classic.json resources/profiles/full.json
+#: resources/charts/catalog.json resources/profiles/classic.json
 msgid "Cloud heights and visibility"
 msgstr "Pionowy zasięg chmur i widzialność"
 
@@ -460,8 +437,7 @@ msgid "Cloud points"
 msgstr "Punkty chmur"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Cloud tops"
 msgstr "Wierzchołki chmur"
 
@@ -506,7 +482,7 @@ msgstr "Prawa autorskie:"
 msgid "Could not create PNG: "
 msgstr "Nie można utworzyć PNG: "
 
-#: src/presentation/PreferencesStore.cpp:171
+#: src/presentation/PreferencesStore.cpp:181
 msgid "Could not create the preferences directory."
 msgstr "Nie udało się utworzyć katalogu ustawień."
 
@@ -560,7 +536,7 @@ msgstr ""
 "Nie udało się przygotować wszystkich klatek animacji. Spróbuj ponownie lub "
 "wybierz wcześniejszy start."
 
-#: src/presentation/PreferencesStore.cpp:76
+#: src/presentation/PreferencesStore.cpp:86
 msgid "Could not prepare preferences for saving."
 msgstr "Nie udało się przygotować ustawień do zapisu."
 
@@ -568,7 +544,7 @@ msgstr "Nie udało się przygotować ustawień do zapisu."
 msgid "Could not prepare the chart image."
 msgstr "Nie udało się przygotować obrazu wykresu."
 
-#: src/presentation/PreferencesStore.cpp:45
+#: src/presentation/PreferencesStore.cpp:55
 msgid "Could not read preferences."
 msgstr "Nie udało się odczytać ustawień."
 
@@ -587,7 +563,7 @@ msgstr ""
 msgid "Could not save PNG: "
 msgstr "Nie można zapisać PNG: "
 
-#: src/presentation/UserPreferences.cpp:713
+#: src/presentation/UserPreferences.cpp:717
 msgid "Could not save preferences: %1"
 msgstr "Nie udało się zapisać ustawień: %1"
 
@@ -624,7 +600,7 @@ msgid "Custom interval"
 msgstr "Własny zakres"
 
 #: src/presentation/UserPreferences.cpp:198
-#: src/presentation/UserPreferences.cpp:246
+#: src/presentation/UserPreferences.cpp:250
 msgid "Custom layout"
 msgstr "Własny układ"
 
@@ -673,9 +649,7 @@ msgid "Deselect all"
 msgstr "Odznacz wszystkie"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Dew point"
 msgstr "Punkt rosy"
 
@@ -789,9 +763,7 @@ msgid "Feels like min–max"
 msgstr "Odczuwalna min–max"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/basic.json resources/profiles/classic.json
 msgid "Feels like temperature"
 msgstr "Temperatura odczuwalna"
 
@@ -820,9 +792,7 @@ msgid "Fog and humidity"
 msgstr "Mgła i wilgotność"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Fog cover"
 msgstr "Pokrycie mgłą"
 
@@ -876,9 +846,7 @@ msgstr "Grunt min–max"
 msgid "Ground temperature"
 msgstr "Temperatura gruntu"
 
-#: resources/charts/catalog.json resources/profiles/aviation.json
-#: resources/profiles/basic.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/charts/catalog.json resources/profiles/classic.json
 msgid "Ground temperature min–max"
 msgstr "Temperatura gruntu min–max"
 
@@ -918,7 +886,7 @@ msgstr "Poziome kreski"
 msgid "Hourly"
 msgstr "Godzinowo"
 
-#: resources/charts/catalog.json resources/profiles/full.json
+#: resources/charts/catalog.json
 msgid "Humidity and fog"
 msgstr "Wilgotność i mgła"
 
@@ -1074,8 +1042,7 @@ msgid "Lightning"
 msgstr "Wyładowania"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Lightning indicator"
 msgstr "Wskaźnik wyładowań"
 
@@ -1153,9 +1120,7 @@ msgid "Maximum precipitation above scale"
 msgstr "Opad max powyżej skali"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Maximum precipitation in interval"
 msgstr "Opad maksymalny w przedziale"
 
@@ -1164,9 +1129,7 @@ msgid "Maximum temperature"
 msgstr "Temperatura maksymalna"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/basic.json resources/profiles/classic.json
 msgid "Mean precipitation in interval"
 msgstr "Opad średni w przedziale"
 
@@ -1214,8 +1177,7 @@ msgid "Minimum temperature"
 msgstr "Temperatura minimalna"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Minimum visibility"
 msgstr "Widzialność minimalna"
 
@@ -1319,7 +1281,7 @@ msgstr "Przy gruncie · maksimum"
 msgid "Near ground · minimum"
 msgstr "Przy gruncie · minimum"
 
-#: resources/charts/catalog.json resources/profiles/full.json
+#: resources/charts/catalog.json
 msgid "Near-ground temperature"
 msgstr "Temperatura przy gruncie"
 
@@ -1427,10 +1389,6 @@ msgstr "Otwórz folder"
 msgid "Original ICM meteogram"
 msgstr "Oryginalny meteogram ICM"
 
-#: resources/profiles/outdoor.json
-msgid "Outdoors"
-msgstr "Na zewnątrz"
-
 #: src/presentation/WeatherModel.cpp:392
 msgid "Overcast"
 msgstr "Pochmurno"
@@ -1522,9 +1480,7 @@ msgstr "Możliwe burze"
 msgid "Precipitation"
 msgstr "Opady"
 
-#: resources/charts/catalog.json resources/profiles/aviation.json
-#: resources/profiles/basic.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/charts/catalog.json resources/profiles/classic.json
 msgid "Precipitation and humidity"
 msgstr "Opady i wilgotność"
 
@@ -1532,9 +1488,7 @@ msgstr "Opady i wilgotność"
 msgid "Precipitation chance"
 msgstr "Szansa opadu"
 
-#: resources/charts/catalog.json resources/profiles/aviation.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/charts/catalog.json resources/profiles/classic.json
 msgid "Precipitation chance and storms"
 msgstr "Szansa opadu i burze"
 
@@ -1550,7 +1504,7 @@ msgstr "Rodzaj opadu"
 msgid "Precipitation: "
 msgstr "Opad: "
 
-#: src/presentation/PreferencesStore.cpp:178
+#: src/presentation/PreferencesStore.cpp:188
 msgid "Preferences are being changed by another process. Try again."
 msgstr "Inny proces zmienia ustawienia. Spróbuj ponownie."
 
@@ -1565,8 +1519,7 @@ msgid "Pressure"
 msgstr "Ciśnienie"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/profiles/basic.json resources/profiles/classic.json
 msgid "Probability of precipitation"
 msgstr "Prawdopodobieństwo opadu"
 
@@ -1593,6 +1546,10 @@ msgstr "Wyeksportowano profili: "
 #: src/qml/DisplaySettings.qml:23
 msgid "Profiles imported: "
 msgstr "Zaimportowano profili: "
+
+#: resources/profiles/basic.json
+msgid "Quick forecast"
+msgstr "Skrót prognozy"
 
 #: src/presentation/ForecastFormatting.cpp:27
 #: src/presentation/MapLegendModel.cpp:117
@@ -1636,9 +1593,7 @@ msgid "Refresh legend"
 msgstr "Odśwież legendę"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Relative humidity"
 msgstr "Wilgotność względna"
 
@@ -1732,8 +1687,7 @@ msgid "Saved place"
 msgstr "Zapisane miejsce"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
+#: resources/profiles/classic.json
 msgid "Sea level pressure"
 msgstr "Ciśnienie na poziomie morza"
 
@@ -1880,8 +1834,7 @@ msgid "Storm indicator"
 msgstr "Wskaźnik burzy"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/classic.json
-#: resources/profiles/full.json resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Storm intensity"
 msgstr "Intensywność burzy"
 
@@ -1893,7 +1846,7 @@ msgstr "Burze"
 msgid "Storms / lightning"
 msgstr "Burze / wyładowania"
 
-#: resources/charts/catalog.json resources/profiles/full.json
+#: resources/charts/catalog.json
 msgid "Storms and lightning"
 msgstr "Burze i wyładowania"
 
@@ -1997,7 +1950,7 @@ msgstr ""
 msgid "The name and chart changes are saved automatically."
 msgstr "Nazwa i zmiany wykresów zapisują się automatycznie."
 
-#: src/presentation/PreferencesStore.cpp:54
+#: src/presentation/PreferencesStore.cpp:64
 msgid "The preferences file is invalid."
 msgstr "Plik ustawień jest nieprawidłowy."
 
@@ -2078,9 +2031,7 @@ msgid "Too many profiles in one file. Export them separately."
 msgstr "Za dużo profili w jednym pliku. Wyeksportuj je osobno."
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/classic.json
 msgid "Total cloud cover"
 msgstr "Zachmurzenie całkowite"
 
@@ -2274,16 +2225,12 @@ msgid "Wind direction"
 msgstr "Kierunek wiatru"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/basic.json resources/profiles/classic.json
 msgid "Wind direction · from"
 msgstr "Kierunek wiatru · skąd wieje"
 
 #: resources/charts/catalog.json resources/charts/fields.json
-#: resources/profiles/aviation.json resources/profiles/basic.json
-#: resources/profiles/classic.json resources/profiles/full.json
-#: resources/profiles/outdoor.json
+#: resources/profiles/basic.json resources/profiles/classic.json
 msgid "Wind gusts"
 msgstr "Porywy wiatru"
 
@@ -2342,6 +2289,18 @@ msgstr "czas lokalny systemu"
 #: src/qml/EditorialView.qml:35
 msgid "yyyy-mm-dd"
 msgstr "rrrr-mm-dd"
+
+#~ msgid "All charts"
+#~ msgstr "Wszystkie wykresy"
+
+#~ msgid "Aviation"
+#~ msgstr "Lotniczy"
+
+#~ msgid "Basic"
+#~ msgstr "Podstawowy"
+
+#~ msgid "Outdoors"
+#~ msgstr "Na zewnątrz"
 
 #~ msgid "Duplicate a preset to edit your own copy."
 #~ msgstr "Gotowy profil możesz zduplikować i edytować jako własny."

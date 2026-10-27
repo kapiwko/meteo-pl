@@ -169,7 +169,7 @@ private slots:
             QCOMPARE(persisted.favorites().size(), 3);
             QCOMPARE(persisted.recentPlaces().size(), 2);
         } else if (operation == "profiles") {
-            QCOMPARE(persisted.profiles().size(), 9); // Five presets, two original and two concurrent profiles.
+            QCOMPARE(persisted.profiles().size(), builtinChartProfiles().size() + 4);
         } else if (operation == "edits") {
             for (int i = 0; i < 2; ++i)
                 QCOMPARE(persisted.chartLayoutForProfile(profiles[i]).first().toMap()["title"].toString(),
@@ -220,7 +220,7 @@ private slots:
         QCOMPARE(bindings->property("utc").toBool(), true);
         QCOMPARE(bindings->property("legend").toBool(), true);
         QCOMPARE(bindings->property("chartHeight").toInt(), 262);
-        QCOMPARE(bindings->property("profile").toString(), "full");
+        QCOMPARE(bindings->property("profile").toString(), "basic");
         QCOMPARE(bindings->property("places").toInt(), 1);
         QCOMPARE(display.count(), 1);
         QCOMPARE(places.count(), 1);
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
         settings.setValue("display/utc", true);
         settings.setValue("display/showLegend", true);
         settings.setValue("display/chartHeight", 262);
-        settings.setValue("display/profile", "full");
+        settings.setValue("display/profile", "basic");
         settings.setValue("places/favorites", QByteArray(R"([{"name":"Kielce","latitude":50.8661,"longitude":20.6286}])"));
         settings.sync();
         return settings.status() == QSettings::NoError ? 0 : 1;

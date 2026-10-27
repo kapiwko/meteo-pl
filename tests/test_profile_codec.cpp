@@ -16,7 +16,7 @@ private slots:
     void bundledPresetsUseTheImportFormatWithoutDisabledTemplates()
     {
         const auto presets = builtinChartProfiles();
-        QVERIFY(presets.size() >= 5);
+        QCOMPARE(presets.size(), 2);
         QSet<QString> ids;
         for (const auto &value : presets) {
             const auto preset = value.toMap();
@@ -52,8 +52,12 @@ private slots:
                 }
             }
         }
-        QVERIFY(defaultChartLayout("basic").size() < defaultChartLayout("classic").size());
-        QVERIFY(defaultChartLayout("aviation") != defaultChartLayout("classic"));
+        const auto quick = defaultChartLayout("basic");
+        QCOMPARE(quick.size(), 3);
+        QStringList quickKeys;
+        for (const auto &chart : quick) quickKeys.append(chart.toMap()["key"].toString());
+        QCOMPARE(quickKeys, (QStringList{"temperature", "precipitation", "wind"}));
+        QVERIFY(quick.first().toMap()["series"].toList().size() < defaultChartLayout("classic").first().toMap()["series"].toList().size());
     }
     void templatesOutsideTheClassicPresetRemainImportable()
     {

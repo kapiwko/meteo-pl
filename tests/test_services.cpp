@@ -8,6 +8,7 @@
 #include "ReadingsExporter.hpp"
 #include "ApplicationLauncher.hpp"
 #include "ChartConfiguration.hpp"
+#include "ProfileFileCodec.hpp"
 #include "core/Locations.hpp"
 #include "core/Localization.hpp"
 #include "core/WebLink.hpp"
@@ -748,6 +749,43 @@ private slots:
         QCOMPARE(preferences.chartLayoutForProfile("classic"), classic);
         preferences.setProfile(copy);
         QCOMPARE(preferences.chartLayout().last().toMap()["height"].toInt(), 210);
+    }
+    void retiredPresetsKeepEditedSnapshotsAsUserProfiles()
+    {
+        const auto current = builtinChartProfiles();
+        auto previous = current;
+        auto retired = current.first().toMap();
+        retired["id"] = "retired-test";
+        retired["name"] = "Retired preset";
+        retired["revision"] = 4;
+        previous.append(retired);
+        UserPreferences old(nullptr, previous);
+        old.setProfile("retired-test");
+        old.renameProfile("My weather");
+        old.setProfileChartHeight(250);
+        old.setChartOptions("temperature", {{"title", "My temperature"}});
+        const auto edited = old.chartLayout();
+
+        UserPreferences upgraded(nullptr, current);
+        QCOMPARE(upgraded.profile(), "retired-test");
+        QCOMPARE(upgraded.chartLayout(), edited);
+        QCOMPARE(upgraded.profileChartHeight(), 250);
+        const auto profile = upgraded.profiles().last().toMap();
+        QCOMPARE(profile["name"].toString(), "My weather");
+        QCOMPARE(profile["revision"].toInt(), 4);
+        QVERIFY(!profile["builtin"].toBool());
+        QVERIFY(!profile["updateAvailable"].toBool());
+
+        QTemporaryDir directory;
+        const auto url = QUrl::fromLocalFile(directory.filePath("retired.json"));
+        QVERIFY(upgraded.exportProfiles(url, true)["ok"].toBool());
+        const auto exported = ProfileFileCodec::read(url);
+        QVERIFY(exported);
+        QCOMPARE(exported->first().toMap()["charts"].toList(), edited);
+        QCOMPARE(exported->first().toMap()["revision"].toInt(), 4);
+        upgraded.deleteProfile();
+        QCOMPARE(upgraded.profiles().size(), current.size());
+        QCOMPARE(upgraded.profile(), current.first().toMap()["id"].toString());
     }
     void newerPresetRevisionsReplaceUntouchedProfilesAndBackUpEditedOnes()
     {

@@ -7,6 +7,16 @@ Its positive `revision` is the factory content version; increment it whenever
 the bundled profile's charts or appearance change. The document's `version`
 describes the file format separately.
 
+The bundled choices are **Classic ICM**, with the complete seven-chart view,
+and **Quick forecast**, with three shorter charts for temperature and feels
+like, precipitation amount and chance, and wind with gusts and direction.
+Both use the same forecast data. Other combinations can be created with
+**Duplicate profile** and **Add chart**. The former All charts, Aviation and
+Outdoors presets have been retired because they duplicated the classic view.
+Edited snapshots of retired presets stay available as user profiles, including
+in widgets that selected them by ID; untouched retired presets fall back to
+Classic ICM.
+
 Every factory chart specifies its series, drawing types, light and dark colors,
 opacity, line styles and widths, point sizes, painter layers, axes and plot
 appearance. Wind and pressure fills include their color palettes; precipitation

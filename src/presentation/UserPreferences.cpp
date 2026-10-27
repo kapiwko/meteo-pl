@@ -198,8 +198,12 @@ QVariantList UserPreferences::profiles() const
             {"name", m_store.value("display/customProfileName", Meteo::i18n("Custom layout"))}, {"builtin", false}});
     for (const auto &value : saved) {
         const auto entry = value.toMap();
-        if (entry["id"].toString().startsWith("user:"))
-            result.append(QVariantMap{{"id", entry["id"]}, {"name", entry["name"]}, {"builtin", false}, {"revision", entry.value("revision", 1)}});
+        const auto id = entry["id"].toString();
+        // A retired preset's edited snapshot remains usable with the same ID,
+        // including in widgets that selected it independently of the main app.
+        if (!id.isEmpty() && id != "custom" && factoryProfile(id).isEmpty() && !deleted.contains(id))
+            result.append(QVariantMap{{"id", id}, {"name", entry["name"]}, {"builtin", false},
+                {"revision", entry.value("revision", entry.value("baseRevision", 1))}});
     }
     return result;
 }
@@ -234,7 +238,7 @@ QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) cons
             const auto entry = value.toMap();
             const auto id = entry["id"].toString();
             const auto source = factoryProfile(id);
-            const int revision = source.isEmpty() ? entry.value("revision", 1).toInt()
+            const int revision = source.isEmpty() ? entry.value("revision", entry.value("baseRevision", 1)).toInt()
                 : entry.value("baseRevision", source["revision"]).toInt();
             exported.append(QVariantMap{{"name", entry.value("name", factoryProfile(id)["name"])},
                                         {"charts", chartLayoutForProfile(id)},
