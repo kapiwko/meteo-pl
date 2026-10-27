@@ -13,8 +13,7 @@ ColumnLayout {
     signal hoursSelected(int hours)
     spacing: Kirigami.Units.largeSpacing
     PreferenceWriteNotice {}
-    GroupBox {
-        padding: Kirigami.Units.largeSpacing
+    SettingsSection {
         title: I18n.i18n("Current forecast")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
@@ -22,7 +21,7 @@ ColumnLayout {
                 Kirigami.FormData.label: I18n.i18n("Chart profile:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 20
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
                 Accessible.name: I18n.i18n("Chart profile")
                 model: UserPreferences.profiles
                 textRole: "name"
@@ -35,7 +34,7 @@ ColumnLayout {
                 visible: root.showTimeRange
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 20
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
                 Accessible.name: I18n.i18n("Chart time interval")
                 model: [I18n.i18n("Entire forecast"), I18n.i18n("24 hours"), I18n.i18n("48 hours"), I18n.i18n("72 hours"), I18n.i18n("Custom interval")]
                 currentIndex: {
@@ -50,7 +49,7 @@ ColumnLayout {
                 Kirigami.FormData.label: I18n.i18n("Model run:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 20
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
                 Accessible.name: I18n.i18n("Model run, including archived forecasts")
                 model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: I18n.i18n("Latest available")}]
                 textRole: "label"
@@ -69,7 +68,7 @@ ColumnLayout {
     Label {
         Layout.fillWidth: true
         text: I18n.i18n("The time interval and model run apply to this view. The selected profile is remembered.")
-        color: Kirigami.Theme.disabledTextColor
+        opacity: 0.7
         wrapMode: Text.WordWrap
     }
 }

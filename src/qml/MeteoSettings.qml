@@ -16,8 +16,8 @@ Dialog {
     title: I18n.i18n("Settings")
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: Math.min(700, parent ? parent.width - 24 : 700)
-    height: Math.min(720, parent ? parent.height - 24 : 720)
+    width: Math.min(860, parent ? parent.width - 24 : 860)
+    height: Math.min(800, parent ? parent.height - 24 : 800)
     padding: 0
     modal: true
     standardButtons: Dialog.Close
@@ -35,25 +35,50 @@ Dialog {
     component SettingsPage: ScrollView {
         id: page
         property alias pageContent: pagePane.contentItem
+        implicitWidth: 0
         contentWidth: availableWidth
         clip: true
+        Kirigami.Theme.inherit: false
+        Kirigami.Theme.colorSet: Kirigami.Theme.Window
+        background: Pane { padding: 0 }
         Pane {
             id: pagePane
-            width: page.availableWidth
-            padding: Kirigami.Units.largeSpacing
+            width: Math.min(page.availableWidth, Kirigami.Units.gridUnit * 34)
+            x: Math.max(0, (page.availableWidth - width) / 2)
+            padding: Kirigami.Units.largeSpacing * 2
             background: null
         }
     }
     contentItem: ColumnLayout {
         spacing: 0
-        TabBar {
+        Kirigami.NavigationTabBar {
             id: sections
             objectName: "settingsSections"
             Layout.fillWidth: true
-            TabButton { baselineOffset: height / 2; text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.width: 16; icon.height: 16 }
-            TabButton { baselineOffset: height / 2; text: I18n.i18n("Profiles"); icon.name: "view-statistics"; icon.width: 16; icon.height: 16 }
-            TabButton { baselineOffset: height / 2; text: I18n.i18n("Readings"); icon.name: "color-picker"; icon.width: 16; icon.height: 16 }
-            TabButton { baselineOffset: height / 2; text: I18n.i18n("Application"); icon.name: "configure"; icon.width: 16; icon.height: 16 }
+            implicitWidth: 0
+            maximumContentWidth: width
+            currentIndex: 0
+            spacing: Kirigami.Units.smallSpacing
+            buttonWidth: Math.max(0, Math.floor((width - 3 * spacing) / 4))
+            component SettingsTab: Kirigami.NavigationTabButton {
+                required property int page
+                display: root.width < 540 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
+                ButtonGroup.group: sections.tabGroup
+                checked: page === sections.currentIndex
+                onClicked: sections.currentIndex = page
+                Layout.minimumWidth: sections.buttonWidth
+                Layout.maximumWidth: sections.buttonWidth
+                Layout.fillHeight: true
+                icon.width: 20
+                icon.height: 20
+                Accessible.name: text
+                ToolTip.text: text
+                ToolTip.visible: hovered
+            }
+            SettingsTab { page: 0; text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds" }
+            SettingsTab { page: 1; text: I18n.i18n("Profiles"); icon.name: "view-statistics" }
+            SettingsTab { page: 2; text: I18n.i18n("Readings"); icon.name: "color-picker" }
+            SettingsTab { page: 3; text: I18n.i18n("Application"); icon.name: "configure" }
         }
         StackLayout {
             Layout.fillWidth: true

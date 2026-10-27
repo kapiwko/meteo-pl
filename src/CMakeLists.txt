@@ -38,6 +38,7 @@ foreach(component WidgetForecast Meteogram ForecastPanel ForecastInspector Forec
     set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)
 endforeach()
 set_source_files_properties(qml/MeteogramStyle.js PROPERTIES QT_RESOURCE_ALIAS MeteogramStyle.js)
+set_source_files_properties(qml/SettingsSection.qml PROPERTIES QT_RESOURCE_ALIAS SettingsSection.qml)
 set_source_files_properties(qml/icons/sunrise.svg PROPERTIES QT_RESOURCE_ALIAS icons/sunrise.svg)
 set_source_files_properties(qml/icons/sunset.svg PROPERTIES QT_RESOURCE_ALIAS icons/sunset.svg)
 configure_file(qml/AppInfo.js.in "${CMAKE_CURRENT_BINARY_DIR}/AppInfo.js" @ONLY)
@@ -78,7 +79,7 @@ qt_add_qml_module(meteo_ui
         network/ImageCache.cpp network/ImageCache.hpp
     RESOURCES qml/icons/sunrise.svg qml/icons/sunset.svg
     QML_FILES qml/WidgetForecast.qml "${CMAKE_CURRENT_BINARY_DIR}/AppInfo.js" qml/Meteogram.qml qml/ForecastPanel.qml qml/ForecastInspector.qml qml/ForecastHeader.qml qml/WeatherSymbol.qml qml/PlacePicker.qml qml/SavedPlaceSelection.qml qml/CompactForecast.qml qml/LocationEditor.qml qml/TileMap.qml
-        qml/MeteoSettings.qml qml/ForecastSettings.qml qml/MeteoAbout.qml qml/DisplaySettings.qml qml/ReadingSettings.qml qml/ApplicationSettings.qml qml/WeatherMap.qml qml/EditorialView.qml qml/ThematicMaps.qml
+        qml/MeteoSettings.qml qml/SettingsSection.qml qml/ForecastSettings.qml qml/MeteoAbout.qml qml/DisplaySettings.qml qml/ReadingSettings.qml qml/ApplicationSettings.qml qml/WeatherMap.qml qml/EditorialView.qml qml/ThematicMaps.qml
         qml/MapTileFrame.qml qml/MapWheelHandler.qml qml/BufferedImage.qml
         qml/OriginalMeteogram.qml qml/MeteogramStyle.js qml/SeriesLegend.qml qml/SeriesSettings.qml
 )

@@ -13,15 +13,17 @@ ColumnLayout {
     Connections { target: CacheStorage; function onCleared() { root.cacheCleared = true; } }
     spacing: Kirigami.Units.largeSpacing
     PreferenceWriteNotice {}
-    GroupBox {
-        padding: Kirigami.Units.largeSpacing
+    SettingsSection {
         title: I18n.i18n("Charts")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
+            id: chartsForm
             ComboBox {
                 objectName: "rendererSetting"
                 Kirigami.FormData.label: I18n.i18n("Renderer:")
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
                 model: [{id: "gpu", name: I18n.i18n("GPU · Qt Quick scene graph (default)")}, {id: "cpu", name: "CPU · Canvas"}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === UserPreferences.renderer)
@@ -38,16 +40,16 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: I18n.i18n("Profiles and individual charts can override this height.")
                 wrapMode: Text.WordWrap
-                color: Kirigami.Theme.disabledTextColor
+                opacity: 0.7
             }
             CheckBox { text: I18n.i18n("Shade nighttime"); checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
         }
     }
-    GroupBox {
-        padding: Kirigami.Units.largeSpacing
+    SettingsSection {
         title: I18n.i18n("Units and time")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
+            twinFormLayouts: [chartsForm]
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Wind speed:")
                 model: ["m/s", "km/h", "kt"]
@@ -55,16 +57,16 @@ ColumnLayout {
                 onActivated: UserPreferences.windUnit = currentText
             }
             CheckBox { text: I18n.i18n("Show UTC time"); checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
-            Label { text: I18n.i18n("The system time zone is used by default."); Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Kirigami.Theme.disabledTextColor }
+            Label { text: I18n.i18n("The system time zone is used by default."); Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: 0.7 }
         }
     }
-    GroupBox {
+    SettingsSection {
         title: I18n.i18n("Cache")
-        padding: Kirigami.Units.largeSpacing
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
             Kirigami.FormLayout {
+                twinFormLayouts: [chartsForm]
                 Layout.fillWidth: true
                 Label { Kirigami.FormData.label: I18n.i18n("Forecasts:"); text: CacheStorage.forecastSize }
                 Label { Kirigami.FormData.label: I18n.i18n("Articles and commentary:"); text: CacheStorage.editorialSize }
@@ -75,19 +77,19 @@ ColumnLayout {
                     Label { text: CacheStorage.sizeText; font.bold: true }
                     BusyIndicator { running: CacheStorage.busy; visible: running; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
                 }
-            }
-            Button {
-                objectName: "clearCacheButton"
-                text: I18n.i18n("Clear cache")
-                icon.name: "edit-clear"
-                enabled: !CacheStorage.busy && CacheStorage.size > 0
-                onClicked: { root.cacheCleared = false; CacheStorage.clear(); }
+                Button {
+                    objectName: "clearCacheButton"
+                    text: I18n.i18n("Clear cache")
+                    icon.name: "edit-clear"
+                    enabled: !CacheStorage.busy && CacheStorage.size > 0
+                    onClicked: { root.cacheCleared = false; CacheStorage.clear(); }
+                }
             }
             Label {
                 Layout.fillWidth: true
                 text: I18n.i18n("Data will be downloaded again when needed. Saved places and profiles will be kept.")
                 wrapMode: Text.WordWrap
-                color: Kirigami.Theme.disabledTextColor
+                opacity: 0.7
             }
             Kirigami.InlineMessage {
                 Layout.fillWidth: true
@@ -97,17 +99,17 @@ ColumnLayout {
             }
         }
     }
-    GroupBox {
-        padding: Kirigami.Units.largeSpacing
+    SettingsSection {
         title: I18n.i18n("Configuration")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
+            twinFormLayouts: [chartsForm]
             TextArea {
                 objectName: "settingsFilePath"
                 Kirigami.FormData.label: I18n.i18n("Settings file:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 22
+                Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
                 text: UserPreferences.settingsFile
                 readOnly: true
                 selectByMouse: true
