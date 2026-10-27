@@ -13,6 +13,23 @@ ColumnLayout {
     property string expandedChart: ""
     property string expandedSeries: ""
     property WeatherModel weather: null
+    readonly property var editingChart: UserPreferences.chartLayout.find(chart => chart.series.some(series => chart.key + "/" + series.key === expandedSeries)) || null
+    readonly property var editingSeries: editingChart ? editingChart.series.find(series => editingChart.key + "/" + series.key === expandedSeries) || null : null
+    onVisibleChanged: if (!visible) expandedSeries = ""
+    onEditingSeriesChanged: if (!editingSeries && expandedSeries.length) expandedSeries = ""
+    Loader {
+        active: root.visible && root.editingSeries !== null
+        visible: false
+        onLoaded: {
+            const dialog = item as SeriesAppearanceDialog;
+            if (dialog) dialog.open();
+        }
+        sourceComponent: SeriesAppearanceDialog {
+            chartKey: root.editingChart ? root.editingChart.key : ""
+            seriesStyle: root.editingSeries || ({})
+            onClosed: root.expandedSeries = ""
+        }
+    }
     property string transferMessage: ""
     property bool transferFailed: false
     PreferenceWriteNotice { visible: UserPreferences.error.length > 0 && !(transferNotice.visible && root.transferFailed) }

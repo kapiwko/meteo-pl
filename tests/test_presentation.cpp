@@ -428,6 +428,14 @@ private slots:
         const auto depthAfterMenuBack = stack->property("depth").toInt();
         QCOMPARE(depthAfterMenuBack, depthBeforeMenuBack);
         QTRY_VERIFY(profileMenu && !profileMenu->property("visible").toBool());
+        profileEditor->setProperty("expandedChart", "temperature");
+        profileEditor->setProperty("expandedSeries", "temperature/airtmp_point");
+        QObject *seriesDialog = nullptr;
+        QTRY_VERIFY(seriesDialog = object->findChild<QObject *>("seriesAppearanceDialog"));
+        QTRY_VERIFY(seriesDialog->property("opened").toBool());
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(profileEditor->property("expandedSeries").toString(), QString());
+        QCOMPARE(stack->property("depth").toInt(), 3);
         QTest::keyClick(window, Qt::Key_Back);
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         QTRY_VERIFY(!stack->property("busy").toBool());
@@ -1312,13 +1320,51 @@ private slots:
             QTRY_VERIFY(chart->height() > closedHeight + 100);
             const auto openHeight = chart->height();
             object->setProperty("expandedSeries", "temperature/airtmp_point");
-            QTRY_VERIFY(chart->height() > openHeight + 100);
-            object->setProperty("expandedSeries", "");
+            QObject *appearance = nullptr;
+            QTRY_VERIFY(appearance = object->findChild<QObject *>("seriesAppearanceDialog"));
+            QTRY_VERIFY(appearance->property("opened").toBool());
+            QTRY_VERIFY(qAbs(chart->height() - openHeight) < 2);
+            QVERIFY(QMetaObject::invokeMethod(appearance, "close"));
+            QTRY_COMPARE(object->property("expandedSeries").toString(), QString());
             QTRY_VERIFY(qAbs(chart->height() - openHeight) < 2);
             object->setProperty("expandedChart", "");
             QTRY_VERIFY(qAbs(chart->height() - closedHeight) < 2);
             QTRY_VERIFY(qAbs(item->implicitHeight() - closedTotal) < 2);
         }
+    }
+    void seriesAppearanceStaysOpenWhenItsProfileChanges()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "DisplaySettings");
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window;
+        window.resize(720, 900);
+        item->setParentItem(window.contentItem());
+        item->setWidth(680);
+        window.show();
+        object->setProperty("expandedChart", "temperature");
+        object->setProperty("expandedSeries", "temperature/airtmp_point");
+        QPointer<QObject> appearance;
+        QTRY_VERIFY(appearance = object->findChild<QObject *>("seriesAppearanceDialog"));
+        QTRY_VERIFY(appearance->property("opened").toBool());
+        auto *original = appearance.data();
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        preferences->setSeriesStyle("temperature", "airtmp_point", {{"lineWidth", 3.5}, {"color", "#123456"}});
+        QTest::qWait(150);
+        QVERIFY(appearance);
+        QCOMPARE(object->findChild<QObject *>("seriesAppearanceDialog"), original);
+        QVERIFY(appearance->property("opened").toBool());
+        const auto value = appearance->property("seriesStyle");
+        const auto style = value.metaType() == QMetaType::fromType<QJSValue>()
+            ? value.value<QJSValue>().toVariant().toMap() : value.toMap();
+        QCOMPARE(style.value("lineWidth").toDouble(), 3.5);
+        QCOMPARE(style.value("color").toString(), "#123456");
+        QTest::keyClick(&window, Qt::Key_Back);
+        QTRY_COMPARE(object->property("expandedSeries").toString(), QString());
     }
     void savedPlaceSelectionSharesTheListAndKeepsIndependentViews()
     {
