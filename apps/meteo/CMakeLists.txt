@@ -1,4 +1,4 @@
-find_package(Qt6 6.5 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 6.6 REQUIRED COMPONENTS Widgets)
 qt_add_executable(meteo-pl WIN32 MACOSX_BUNDLE main.cpp)
 target_compile_definitions(meteo-pl PRIVATE METEO_VERSION="${PROJECT_VERSION}")
 qt_add_resources(meteo-pl "application_icon" PREFIX "/icons"

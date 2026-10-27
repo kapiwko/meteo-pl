@@ -144,7 +144,7 @@ unit axes; a third incompatible unit prompts you to assign axes or split the cha
 
 ## Build From Source
 
-Requirements: CMake 3.25+, Ninja, a C++23 compiler, Qt 6.5+ and KDE Frameworks 6.
+Requirements: CMake 3.25+, Ninja, a C++23 compiler, Qt 6.6+ and KDE Frameworks 6.
 Qt modules: Core, Network, Qml, Quick, QuickControls2, Positioning, Widgets and
 Test. KDE dependencies: Kirigami, Notifications, KI18n and QQC2 Desktop Style.
 GNU gettext tools are required to compile translations. The
