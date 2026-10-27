@@ -559,6 +559,8 @@ ColumnLayout {
         function onRightBoundsChanged() { plot.requestPaint(); }
         function onHiddenKeysChanged() { plot.requestPaint(); }
         function onBoundsChanged() { plot.requestPaint(); }
+        function onLeftMarginChanged() { plot.requestPaint(); }
+        function onRightMarginChanged() { plot.requestPaint(); }
         function onSelectedTimeChanged() { plot.requestCursorPaint(); }
         function onExportModeChanged() { plot.requestCursorPaint(); }
         function onStartTimeChanged() { plot.requestPaint(); }

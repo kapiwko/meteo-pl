@@ -46,6 +46,7 @@ ColumnLayout {
         visible: root.commentary && root.mobileLayout
         Layout.fillWidth: true
         text: I18n.i18n("Swipe left or right to change the day")
+        wrapMode: Text.WordWrap
         font: Kirigami.Theme.smallFont
         color: Kirigami.Theme.disabledTextColor
         horizontalAlignment: Text.AlignHCenter

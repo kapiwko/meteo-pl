@@ -203,6 +203,16 @@ w poziomie, aby zmienić okres. Ruch pionowy przewija listę wykresów.
 Podwójne dotknięcie przywraca całą prognozę. Minimalny zakres pozostaje równy
 24 godzinom (lub całej prognozie, jeśli jest krótsza).
 
+W Synoptyku gest w prawo otwiera poprzedni dzień, a w lewo następny, do dnia
+dzisiejszego. Ruch pionowy przewija treść. Systemowe Wstecz zamyka menu,
+cofa strony ustawień i wraca z Map lub Aktualności do prognozy; z treści
+artykułu wraca najpierw do listy.
+
+Przycisk „Użyj mojej pozycji” prosi o systemową zgodę na przybliżoną lokalizację
+podczas używania aplikacji. Po odmowie zgodę można zmienić w ustawieniach
+systemowych aplikacji. Wyszukiwanie miejsca i wybór punktu na mapie działają
+bez tego uprawnienia.
+
 ## GitHub Actions
 
 Workflow `portable-packages.yml` uruchamia natywne zadania Windows i macOS oraz

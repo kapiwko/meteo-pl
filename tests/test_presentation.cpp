@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QQmlProperty>
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QQuickStyle>
@@ -254,6 +255,15 @@ private slots:
         QVERIFY(stack);
         auto *panel = page->property("panel").value<QObject *>();
         QVERIFY(panel);
+        QQuickItem *temperature = nullptr, *temperaturePlot = nullptr;
+        QTRY_VERIFY(temperature = find(find, page, "chart-temperature"));
+        QTRY_VERIFY(temperaturePlot = find(find, page, "plot-temperature"));
+        QTRY_VERIFY(temperaturePlot->width() > 200);
+        const double plotWidth = temperaturePlot->width() - temperature->property("leftMargin").toDouble() - temperature->property("rightMargin").toDouble();
+        QVERIFY2(plotWidth >= window->width() * 0.75, "Mobile charts waste too much screen width outside the data area");
+        auto *meteogram = findButton(findButton, page, "Meteogram");
+        QVERIFY(meteogram);
+        QCOMPARE(QQmlProperty(meteogram, "icon.name").read().toString(), "office-chart-line");
         QQuickItem *placeButton = nullptr;
         QTRY_VERIFY(placeButton = find(find, page, "mobilePlaceButton"));
         click(placeButton);
@@ -279,7 +289,7 @@ private slots:
         QVERIFY(!newPlaceButton->property("enabled").toBool());
         QCOMPARE(addPage->findChild<QObject *>("customLocationName")->property("text").toString(), QString());
         QTRY_VERIFY(!stack->property("busy").toBool());
-        QTest::keySequence(window, QKeySequence(QKeySequence::Back));
+        QTest::keyClick(window, Qt::Key_Back);
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
         QTRY_VERIFY(!stack->property("busy").toBool());
         QTRY_VERIFY(!places->property("visible").toBool());
@@ -295,7 +305,7 @@ private slots:
         window->resize(360, 700);
         QTRY_VERIFY(more->property("height").toDouble() <= window->height() * 0.8);
         window->resize(360, 800);
-        QVERIFY(QMetaObject::invokeMethod(more, "close"));
+        QTest::keyClick(window, Qt::Key_Back);
         QTRY_VERIFY(!more->property("visible").toBool());
         QTRY_VERIFY(navigation->mapToScene({0, 0}).y() > window->height()/2);
         auto *desktopNavigation = find(find, page, "forecastNavigation");
@@ -305,6 +315,7 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(panel, "setHours", Q_ARG(QVariant, 24)));
         auto *hourly = findButton(findButton, page, "Hourly");
         QVERIFY(hourly); click(hourly);
+        QCOMPARE(QQmlProperty(hourly, "icon.name").read().toString(), "chronometer");
         QTRY_COMPARE(panel->property("viewMode").toInt(), 1);
         QQuickItem *hours = nullptr, *firstHour = nullptr;
         QTRY_VERIFY(hours = find(find, page, "mobileHourlyForecast"));
@@ -315,13 +326,28 @@ private slots:
         QVERIFY(hours->property("contentHeight").toDouble() > hours->height());
         auto *days = findButton(findButton, page, "Days");
         QVERIFY(days); click(days);
+        QCOMPARE(QQmlProperty(days, "icon.name").read().toString(), "view-calendar");
         QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
         auto *news = findButton(findButton, navigation, "News");
         QVERIFY(news); click(news);
         QTRY_COMPARE(page->property("destination").toInt(), 2);
+        QVERIFY(!placeButton->isVisible());
+        auto *synoptic = findButton(findButton, page, "Synoptic");
+        QVERIFY(synoptic);
+        QCOMPARE(QQmlProperty(synoptic, "icon.name").read().toString(), "dialog-messages");
         auto *articles = findButton(findButton, page, "Articles");
         QVERIFY(articles); click(articles);
+        QCOMPARE(QQmlProperty(articles, "icon.name").read().toString(), "view-list-text");
         QTRY_COMPARE(panel->property("viewMode").toInt(), 5);
+        auto *articleReader = find(find, page, "editorialView");
+        QVERIFY(articleReader);
+        articleReader->setProperty("selectedArticle", QVariantMap{{"title", "Article"}, {"html", "<p>Fixture article</p>"}, {"url", "https://www.meteo.pl/"}});
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 5);
+        QTRY_VERIFY(articleReader->property("selectedArticle").isNull());
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(page->property("destination").toInt(), 0);
+        QVERIFY(placeButton->isVisible());
         auto *forecast = findButton(findButton, navigation, "Forecast");
         QVERIFY(forecast); click(forecast);
         QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
@@ -329,6 +355,7 @@ private slots:
         auto *maps = findButton(findButton, navigation, "Maps");
         QVERIFY(maps); click(maps);
         QTRY_COMPARE(panel->property("viewMode").toInt(), 3);
+        QVERIFY(!placeButton->isVisible());
         QQuickItem *mapType = nullptr, *mapViewport = nullptr;
         QTRY_VERIFY(mapType = find(find, page, "mobileMapType"));
         QTRY_VERIFY(mapViewport = find(find, page, "weatherMapViewport"));
@@ -344,8 +371,13 @@ private slots:
         QTRY_COMPARE(mapViewport->property("zoom").toInt(), originalZoom + 1);
         click(mapZoomOut);
         QTRY_COMPARE(mapViewport->property("zoom").toInt(), originalZoom);
-        click(forecast);
+        QTest::keyClick(window, Qt::Key_Back);
         QTRY_COMPARE(panel->property("viewMode").toInt(), 2);
+        QVERIFY(placeButton->isVisible());
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 0);
+        click(forecast);
+        QTRY_COMPARE(panel->property("viewMode").toInt(), 0);
         QVERIFY(QMetaObject::invokeMethod(page, "openSettings"));
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         auto currentPage = [stack] { return stack->property("currentItem").value<QQuickItem *>(); };
@@ -394,6 +426,61 @@ private slots:
         QTRY_VERIFY(!stack->property("busy").toBool());
         QVERIFY(!window->grabWindow().isNull());
         if (const auto path = qEnvironmentVariable("METEO_MOBILE_SCREENSHOT"); !path.isEmpty()) QVERIFY(window->grabWindow().save(path));
+    }
+    void mobileSynopticSwipesChangeDatesAndKeepVerticalScrolling()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));
+        const auto today = QDate::currentDate();
+        const auto folder = m_cache.path() + "/meteo-pl/editorial";
+        QVERIFY(QDir().mkpath(folder));
+        for (const auto &suffix : QStringList{"", today.toString(Qt::ISODate) + '/', today.addDays(-1).toString(Qt::ISODate) + '/'}) {
+            const auto url = "https://meteo-backend.dev.meteo.pl/api/v1/synoptic-comment/" + suffix + "pl";
+            const auto hash = QCryptographicHash::hash(url.toUtf8(), QCryptographicHash::Sha256).toHex();
+            const auto date = suffix.isEmpty() ? today.toString(Qt::ISODate) : suffix.first(10);
+            const auto html = QString("<p>A long synoptic commentary for testing horizontal and vertical touch navigation.</p>").repeated(100);
+            QFile file(folder + '/' + hash + ".json");
+            QVERIFY(file.open(QIODevice::WriteOnly));
+            const QJsonObject envelope{{"url", url}, {"savedAt", QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+                {"document", QJsonObject{{"content", html}, {"published_date", date}}}};
+            file.write(QJsonDocument(envelope).toJson());
+        }
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "EditorialView");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> view(component.createWithInitialProperties({{"mobileLayout", true}}));
+        QVERIFY2(view, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(360, 640);
+        auto *item = qobject_cast<QQuickItem *>(view.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        auto *reader = view->findChild<QQuickItem *>("editorialReader");
+        QVERIFY(reader);
+        QTRY_VERIFY(reader->height() > 200);
+        QTRY_COMPARE(view->property("shownDate").toString(), today.toString(Qt::ISODate));
+        QVERIFY(!view->findChild<QQuickItem *>("synopticPreviousDay")->isVisible());
+        QVERIFY(!view->findChild<QQuickItem *>("synopticNextDay")->isVisible());
+        static auto *device = QTest::createTouchDevice();
+        const auto swipe = [&](QPoint delta) {
+            const auto origin = reader->mapToScene({reader->width()/2, reader->height()/2}).toPoint();
+            auto touch = QTest::touchEvent(&window, device, false);
+            touch.press(0, origin).commit();
+            for (int step = 1; step <= 6; ++step) {
+                touch.move(0, origin + delta * step / 6).commit();
+                QTest::qWait(10);
+            }
+            touch.release(0, origin + delta).commit();
+        };
+        swipe({-130, 0}); // Future dates stay unavailable.
+        QCOMPARE(view->property("shownDate").toString(), today.toString(Qt::ISODate));
+        swipe({130, 0});
+        QTRY_COMPARE(view->property("shownDate").toString(), today.addDays(-1).toString(Qt::ISODate));
+        swipe({-130, 0});
+        QTRY_COMPARE(view->property("shownDate").toString(), today.toString(Qt::ISODate));
+        auto *flickable = reader->property("contentItem").value<QQuickItem *>();
+        QVERIFY(flickable);
+        swipe({0, -130});
+        QTRY_VERIFY(flickable->property("contentY").toDouble() > 20);
+        QCOMPARE(view->property("shownDate").toString(), today.toString(Qt::ISODate));
     }
     void windDirectionChartRendersArrows_data()
     {
