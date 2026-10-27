@@ -1,4 +1,5 @@
 #include "UserPreferences.hpp"
+#include "ChartConfiguration.hpp"
 #include <QCoreApplication>
 #include <QDeadlineTimer>
 #include <QDir>
@@ -17,6 +18,43 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void legacyCleanupPreservesEditedDisabledChartsAndOnlyRunsOnce()
+    {
+        QTemporaryDir config;
+        QVERIFY(config.isValid());
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        auto layout = defaultChartCatalog();
+        QStringList enabled;
+        for (const auto &entry : defaultChartLayout("classic")) enabled.append(entry.toMap()["key"].toString());
+        for (auto &value : layout) {
+            auto chart = value.toMap();
+            chart["enabled"] = enabled.contains(chart["key"].toString());
+            if (chart["key"] == "ground") chart["title"] = "My hidden ground chart";
+            if (chart["key"] == "humidity") chart["height"] = 220;
+            value = chart;
+        }
+        const auto before = normalizeChartLayout(layout);
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
+        settings.setValue("display/layoutVersion", 3);
+        settings.setValue("display/profile", "user:old");
+        settings.setValue("display/customLayout", QJsonDocument::fromVariant(layout).toJson());
+        settings.setValue("display/savedProfiles", QJsonDocument::fromVariant(QVariantList{
+            QVariantMap{{"id", "user:old"}, {"name", "Old profile"}, {"charts", layout}}}).toJson());
+        settings.sync();
+        UserPreferences preferences;
+        const auto cleaned = preferences.chartLayout();
+        QCOMPARE(cleaned.size(), enabled.size() + 2);
+        for (const auto &entry : cleaned) {
+            const auto chart = entry.toMap();
+            QVERIFY(chart["enabled"].toBool() || chart["key"] == "ground" || chart["key"] == "humidity");
+            QVERIFY(before.contains(entry));
+        }
+        QCOMPARE(preferences.chartLayoutForProfile("custom"), cleaned);
+        preferences.setChartEnabled("temperature", false);
+        UserPreferences reopened;
+        QCOMPARE(reopened.chartLayout().size(), cleaned.size());
+        QVERIFY(!reopened.chartLayout().first().toMap()["enabled"].toBool());
+    }
     void failedCommitPreservesTheLastSnapshotAndAllowsRetry()
     {
         QTemporaryDir config;
@@ -108,7 +146,7 @@ private slots:
             QCOMPARE(persisted.favorites().size(), 3);
             QCOMPARE(persisted.recentPlaces().size(), 2);
         } else if (operation == "profiles") {
-            QCOMPARE(persisted.profiles().size(), 10); // Six presets, two original and two concurrent profiles.
+            QCOMPARE(persisted.profiles().size(), 9); // Five presets, two original and two concurrent profiles.
         } else if (operation == "edits") {
             for (int i = 0; i < 2; ++i)
                 QCOMPARE(persisted.chartLayoutForProfile(profiles[i]).first().toMap()["title"].toString(),

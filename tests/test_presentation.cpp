@@ -29,6 +29,12 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void init()
+    {
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
+        settings.clear();
+        settings.sync();
+    }
     void initTestCase()
     {
         QVERIFY(m_cache.isValid());
@@ -1283,7 +1289,7 @@ private slots:
         auto *name = object->findChild<QQuickItem *>("profileNameField");
         QVERIFY(duplicate); QVERIFY(remove); QVERIFY(name);
         QTRY_VERIFY(duplicate->width() > 0);
-        QVERIFY(duplicate->isEnabled()); QVERIFY(!remove->isEnabled());
+        QVERIFY(duplicate->isEnabled()); QVERIFY(remove->isEnabled());
         const auto click = [&](QQuickItem *control) {
             QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier,
                 control->mapToScene({control->width()/2, control->height()/2}).toPoint());
@@ -1299,6 +1305,30 @@ private slots:
         click(remove);
         QTRY_COMPARE(preferences->profile(), "classic");
         QCOMPARE(preferences->profiles().size(), count);
+        auto *reset = object->findChild<QQuickItem *>("profileRestoreButton");
+        auto *recover = object->findChild<QQuickItem *>("restoreDeletedProfilesButton");
+        auto *addChart = object->findChild<QQuickItem *>("addChartButton");
+        QVERIFY(reset && recover && addChart);
+        const auto factory = preferences->chartLayout();
+        click(addChart);
+        auto *ground = object->findChild<QObject *>("addChart-ground");
+        QVERIFY(ground);
+        QVERIFY(QMetaObject::invokeMethod(ground, "triggered"));
+        auto *menu = object->findChild<QObject *>("addChartMenu");
+        QVERIFY(menu);
+        QTRY_VERIFY(!menu->property("visible").toBool());
+        QTRY_COMPARE(preferences->chartLayout().size(), factory.size() + 1);
+        QCOMPARE(preferences->profile(), "classic");
+        QTRY_VERIFY(reset->isEnabled());
+        click(reset);
+        QTRY_COMPARE(preferences->chartLayout(), factory);
+        QTRY_VERIFY(!reset->isEnabled());
+        click(remove);
+        QTRY_COMPARE(preferences->profiles().size(), count - 1);
+        QTRY_VERIFY(recover->isVisible());
+        click(recover);
+        QTRY_COMPARE(preferences->profiles().size(), count);
+        QVERIFY(!preferences->hasDeletedProfiles());
     }
     void timeLabelsFitNarrowChartsWithoutOverlapping()
     {

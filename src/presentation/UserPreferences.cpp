@@ -10,7 +10,15 @@
 #include <algorithm>
 #include <cmath>
 
-UserPreferences::UserPreferences(QObject *parent) : QObject(parent)
+QVariantMap UserPreferences::factoryProfile(const QString &id) const
+{
+    for (const auto &entry : m_factoryProfiles)
+        if (entry.toMap()["id"] == id) return entry.toMap();
+    return {};
+}
+
+UserPreferences::UserPreferences(QObject *parent, QVariantList defaults)
+    : QObject(parent), m_factoryProfiles(defaults.isEmpty() ? builtinChartProfiles() : std::move(defaults))
 {
     connect(&m_store, &PreferencesStore::placesChanged, this, &UserPreferences::placesChanged);
     connect(&m_store, &PreferencesStore::displayChanged, this, &UserPreferences::displayChanged);
@@ -26,7 +34,14 @@ void UserPreferences::writePlaces(const QString &key, const QVariantList &places
 }
 QVariantList UserPreferences::favorites() const { return readPlaces(QStringLiteral("places/favorites")); }
 QVariantList UserPreferences::recentPlaces() const { return readPlaces(QStringLiteral("places/recent")); }
-QString UserPreferences::profile() const { return m_store.value("display/profile", "classic").toString(); }
+QString UserPreferences::profile() const
+{
+    const auto selected = m_store.value("display/profile", "classic").toString();
+    const auto available = profiles();
+    for (const auto &entry : available)
+        if (entry.toMap()["id"] == selected) return selected;
+    return available.isEmpty() ? QStringLiteral("classic") : available.first().toMap()["id"].toString();
+}
 QStringList UserPreferences::visibleGroups() const
 {
     QStringList result;
@@ -54,12 +69,16 @@ int UserPreferences::chartHeight() const
 int UserPreferences::profileChartHeight() const { return chartHeightForProfile(profile()); }
 int UserPreferences::chartHeightForProfile(const QString &id) const
 {
+    const auto available = profiles();
+    const bool listed = std::any_of(available.cbegin(), available.cend(), [&](const QVariant &entry) { return entry.toMap()["id"] == id; });
+    if (!listed && !available.isEmpty()) return chartHeightForProfile(available.first().toMap()["id"].toString());
     if (id == "custom")
         return m_store.value("display/customChartHeight", 0).toInt();
+    const auto height = factoryProfile(id).value("chartHeight", 0);
     for (const auto &value : savedProfiles())
         if (value.toMap()["id"] == id)
-            return value.toMap().value("chartHeight", 0).toInt();
-    return 0;
+            return value.toMap().value("chartHeight", height).toInt();
+    return height.toInt();
 }
 void UserPreferences::setChartHeight(int value)
 {
@@ -77,25 +96,9 @@ void UserPreferences::setProfileChartHeight(int value)
         value = value ? std::clamp(value, 64, 800) : 0;
         if (value == chartHeightForProfile(selectedProfile))
             return;
-        if (selectedProfile.startsWith("user:")) {
-            auto saved = savedProfiles();
-            for (auto &item : saved) {
-                auto entry = item.toMap();
-                if (entry["id"] == selectedProfile) {
-                    entry["chartHeight"] = value;
-                    item = entry;
-                    break;
-                }
-            }
-            m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-        } else {
-            if (selectedProfile != "custom")
-                m_store.setValue(
-                    "display/customLayout",
-                    QJsonDocument::fromVariant(chartLayoutForProfile(selectedProfile)).toJson(QJsonDocument::Compact));
-            m_store.setValue("display/profile", "custom");
+        if (selectedProfile == "custom") {
             m_store.setValue("display/customChartHeight", value);
-        }
+        } else saveProfileOptions(selectedProfile, {{"chartHeight", value}});
     });
 }
 QString UserPreferences::probeMode() const
@@ -174,29 +177,45 @@ QVariantList UserPreferences::savedProfiles() const
 QVariantList UserPreferences::profiles() const
 {
     QVariantList result;
-    const QList<QPair<QString, QString>> presets{
-        {"classic", Meteo::i18n("Classic ICM")}, {"full", Meteo::i18n("All charts")},
-        {"basic", Meteo::i18n("Basic")},         {"aviation", Meteo::i18n("Aviation")},
-        {"outdoor", Meteo::i18n("Outdoors")},    {"custom", Meteo::i18n("Custom layout")}};
-    for (const auto &preset : presets)
-        result.append(QVariantMap{{"id", preset.first}, {"name", preset.second}, {"builtin", true}});
-    for (const auto &entry : savedProfiles())
-        result.append(QVariantMap{{"id", entry.toMap()["id"]}, {"name", entry.toMap()["name"]}, {"builtin", false}});
+    const auto saved = savedProfiles();
+    const auto deleted = m_store.value("display/deletedProfiles").toStringList();
+    for (const auto &value : m_factoryProfiles) {
+        const auto preset = value.toMap();
+        const auto id = preset["id"].toString();
+        if (deleted.contains(id)) continue;
+        QVariantMap override;
+        for (const auto &entry : saved)
+            if (entry.toMap()["id"] == id) { override = entry.toMap(); break; }
+        result.append(QVariantMap{{"id", id}, {"name", override.value("name", preset["name"])},
+                                 {"builtin", true}, {"modified", !override.isEmpty()}});
+    }
+    if (m_store.contains("display/customLayout"))
+        result.append(QVariantMap{{"id", "custom"},
+            {"name", m_store.value("display/customProfileName", Meteo::i18n("Custom layout"))}, {"builtin", false}});
+    for (const auto &value : saved) {
+        const auto entry = value.toMap();
+        if (entry["id"].toString().startsWith("user:"))
+            result.append(QVariantMap{{"id", entry["id"]}, {"name", entry["name"]}, {"builtin", false}, {"revision", entry.value("revision", 1)}});
+    }
     return result;
 }
+bool UserPreferences::hasDeletedProfiles() const { return !m_store.value("display/deletedProfiles").toStringList().isEmpty(); }
 QVariantList UserPreferences::chartLayout() const { return chartLayoutForProfile(profile()); }
 QVariantList UserPreferences::chartLayoutForProfile(const QString &id) const
 {
+    const auto available = profiles();
+    const bool listed = std::any_of(available.cbegin(), available.cend(), [&](const QVariant &entry) { return entry.toMap()["id"] == id; });
+    if (!listed && !available.isEmpty()) return chartLayoutForProfile(available.first().toMap()["id"].toString());
     if (id == "custom") {
         const auto saved = m_store.value("display/customLayout").toByteArray();
-        return saved.isEmpty() ? defaultChartLayout("classic")
+        return saved.isEmpty() ? m_factoryProfiles.first().toMap()["charts"].toList()
                                : normalizeChartLayout(QJsonDocument::fromJson(saved).toVariant().toList());
     }
-    if (id.startsWith("user:"))
-        for (const auto &entry : savedProfiles())
-            if (entry.toMap()["id"] == id)
-                return normalizeChartLayout(entry.toMap()["charts"].toList());
-    return defaultChartLayout(id);
+    for (const auto &value : savedProfiles()) {
+        const auto entry = value.toMap();
+        if (entry["id"] == id && entry.contains("charts")) return normalizeChartLayout(entry["charts"].toList());
+    }
+    return factoryProfile(id).value("charts", m_factoryProfiles.first().toMap()["charts"]).toList();
 }
 QVariantList UserPreferences::chartCatalog() const { return defaultChartCatalog(); }
 QVariantMap UserPreferences::chartAppearance() const { return defaultChartAppearance(); }
@@ -209,8 +228,13 @@ QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) cons
     if (allSaved) {
         for (const auto &value : savedProfiles()) {
             const auto entry = value.toMap();
-            exported.append(QVariantMap{{"name", entry["name"]},
-                                        {"charts", normalizeChartLayout(entry["charts"].toList())},
+            const auto id = entry["id"].toString();
+            const auto source = factoryProfile(id);
+            const int revision = source.isEmpty() ? entry.value("revision", 1).toInt()
+                : entry.value("baseRevision", source["revision"]).toInt();
+            exported.append(QVariantMap{{"name", entry.value("name", factoryProfile(id)["name"])},
+                                        {"charts", chartLayoutForProfile(id)},
+                                        {"revision", std::max(1, revision)},
                                         {"chartHeight", entry.value("chartHeight", 0)}});
         }
         if (m_store.contains("display/customLayout"))
@@ -224,10 +248,13 @@ QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) cons
     }
     if (exported.isEmpty()) {
         QString name;
+        int revision = 1;
         for (const auto &value : profiles())
-            if (value.toMap()["id"] == profile())
+            if (value.toMap()["id"] == profile()) {
                 name = value.toMap()["name"].toString();
-        exported.append(QVariantMap{{"name", name}, {"charts", chartLayout()}, {"chartHeight", profileChartHeight()}});
+                revision = std::max(1, value.toMap().value("revision", 1).toInt());
+            }
+        exported.append(QVariantMap{{"name", name}, {"charts", chartLayout()}, {"chartHeight", profileChartHeight()}, {"revision", revision}});
     }
     QString error;
     if (!ProfileFileCodec::write(url, exported, &error))
@@ -256,7 +283,7 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url)
             names.insert(name);
             const auto id = "user:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
             saved.append(QVariantMap{
-                {"id", id}, {"name", name}, {"charts", entry["charts"]}, {"chartHeight", entry["chartHeight"]}});
+                {"id", id}, {"name", name}, {"charts", entry["charts"]}, {"chartHeight", entry["chartHeight"]}, {"revision", entry.value("revision", 1)}});
             if (selected.isEmpty())
                 selected = id;
         }
@@ -272,23 +299,27 @@ void UserPreferences::saveLayout(const QString &id, const QVariantList &layout)
     const auto normalized = normalizeChartLayout(layout);
     if (normalized == chartLayoutForProfile(id))
         return;
-    if (id.startsWith("user:")) {
-        auto saved = savedProfiles();
-        for (auto &item : saved) {
-            auto entry = item.toMap();
-            if (entry["id"] == id) {
-                entry["charts"] = normalized;
-                item = entry;
-                break;
-            }
-        }
-        m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-    } else {
-        if (id != "custom")
-            m_store.setValue("display/customChartHeight", chartHeightForProfile(id));
+    if (id == "custom") {
         m_store.setValue("display/customLayout", QJsonDocument::fromVariant(normalized).toJson(QJsonDocument::Compact));
-        m_store.setValue("display/profile", "custom");
+    } else saveProfileOptions(id, {{"charts", normalized}});
+}
+void UserPreferences::saveProfileOptions(const QString &id, const QVariantMap &options)
+{
+    auto saved = savedProfiles();
+    for (auto &value : saved) {
+        auto entry = value.toMap();
+        if (entry["id"] != id) continue;
+        for (auto it = options.cbegin(); it != options.cend(); ++it) entry[it.key()] = it.value();
+        value = entry;
+        m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        return;
     }
+    auto entry = factoryProfile(id);
+    if (entry.isEmpty() || m_store.value("display/deletedProfiles").toStringList().contains(id)) return;
+    entry.remove("revision");
+    for (auto it = options.cbegin(); it != options.cend(); ++it) entry[it.key()] = it.value();
+    saved.append(entry);
+    m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
 }
 void UserPreferences::setChartEnabled(const QString &key, bool enabled)
 {
@@ -348,13 +379,10 @@ QString UserPreferences::createChart(const QString &title)
             if (layout.size() >= 50)
                 return {};
             const auto key = "chart:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
-            layout.append(
-                QVariantMap{{"key", key},
-                            {"title", title.trimmed().isEmpty() ? Meteo::i18n("New chart") : title.trimmed().left(80)},
-                            {"enabled", true},
-                            {"leftScale", "auto"},
-                            {"rightScale", "auto"},
-                            {"series", QVariantList{}}});
+            auto chart = defaultChartPrototype();
+            chart["key"] = key;
+            if (!title.trimmed().isEmpty()) chart["title"] = title.trimmed().left(80);
+            layout.append(chart);
             saveLayout(selectedProfile, normalizeChartLayout(layout));
             return key;
         }();
@@ -368,6 +396,28 @@ void UserPreferences::deleteChart(const QString &key)
         auto layout = chartLayoutForProfile(selectedProfile);
         layout.removeIf([&key](const QVariant &value) { return value.toMap()["key"] == key; });
         saveLayout(selectedProfile, layout);
+    });
+}
+void UserPreferences::addChart(const QString &key)
+{
+    const auto selectedProfile = profile();
+    change([&] {
+        auto layout = chartLayoutForProfile(selectedProfile);
+        for (auto &entry : layout) {
+            auto chart = entry.toMap();
+            if (chart["key"] != key) continue;
+            chart["enabled"] = true;
+            entry = chart;
+            saveLayout(selectedProfile, layout);
+            return;
+        }
+        if (layout.size() >= 50) return;
+        for (const auto &entry : defaultChartCatalog())
+            if (entry.toMap()["key"] == key) {
+                layout.append(entry);
+                saveLayout(selectedProfile, layout);
+                return;
+            }
     });
 }
 void UserPreferences::setChartOptions(const QString &key, const QVariantMap &options)
@@ -494,37 +544,45 @@ void UserPreferences::renameProfile(const QString &name)
 {
     const auto selectedProfile = profile();
     change([&] {
-        if (!selectedProfile.startsWith("user:") || name.trimmed().isEmpty())
-            return;
-        auto saved = savedProfiles();
-        for (auto &item : saved) {
-            auto entry = item.toMap();
-            if (entry["id"] == selectedProfile) {
-                entry["name"] = name.trimmed().left(80);
-                item = entry;
-                break;
-            }
-        }
-        m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        if (name.trimmed().isEmpty()) return;
+        if (selectedProfile == "custom") m_store.setValue("display/customProfileName", name.trimmed().left(80));
+        else saveProfileOptions(selectedProfile, {{"name", name.trimmed().left(80)}});
     });
 }
 void UserPreferences::deleteProfile()
 {
     const auto selectedProfile = profile();
     change([&] {
+        if (profiles().size() <= 1) return;
+        const bool wasSelected = profile() == selectedProfile;
         if (selectedProfile == "custom") {
             m_store.remove("display/customLayout");
             m_store.remove("display/customChartHeight");
-            m_store.setValue("display/profile", "classic");
-            return;
+            m_store.remove("display/customProfileName");
+        } else if (!factoryProfile(selectedProfile).isEmpty()) {
+            auto deleted = m_store.value("display/deletedProfiles").toStringList();
+            if (!deleted.contains(selectedProfile)) deleted.append(selectedProfile);
+            m_store.setValue("display/deletedProfiles", deleted);
         }
-        if (!selectedProfile.startsWith("user:"))
-            return;
         auto saved = savedProfiles();
         saved.removeIf([&](const QVariant &item) { return item.toMap()["id"] == selectedProfile; });
         m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-        m_store.setValue("display/profile", "classic");
+        if (wasSelected) m_store.setValue("display/profile", profiles().first().toMap()["id"]);
     });
+}
+void UserPreferences::resetProfile()
+{
+    const auto selectedProfile = profile();
+    change([&] {
+        if (factoryProfile(selectedProfile).isEmpty()) return;
+        auto saved = savedProfiles();
+        saved.removeIf([&](const QVariant &item) { return item.toMap()["id"] == selectedProfile; });
+        m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+    });
+}
+void UserPreferences::restoreDeletedProfiles()
+{
+    change([&] { m_store.remove("display/deletedProfiles"); });
 }
 bool UserPreferences::isFavorite(double latitude, double longitude) const
 {

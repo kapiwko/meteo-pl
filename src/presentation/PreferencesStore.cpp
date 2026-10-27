@@ -245,6 +245,22 @@ void PreferencesStore::migrate()
             setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
         setValue("display/layoutVersion", 3);
     }
+    if (value("display/layoutVersion", 0).toInt() < 4) {
+        if (contains("display/customLayout")) {
+            const auto old = QJsonDocument::fromJson(value("display/customLayout").toByteArray()).toVariant().toList();
+            setValue("display/customLayout",
+                     QJsonDocument::fromVariant(removeUnusedChartTemplates(old)).toJson(QJsonDocument::Compact));
+        }
+        auto saved = QJsonDocument::fromJson(value("display/savedProfiles").toByteArray()).toVariant().toList();
+        for (auto &value : saved) {
+            auto entry = value.toMap();
+            entry["charts"] = removeUnusedChartTemplates(entry["charts"].toList());
+            value = entry;
+        }
+        if (!saved.isEmpty())
+            setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        setValue("display/layoutVersion", 4);
+    }
     if (value("places/listVersion", 0).toInt() < 1) {
         auto places = QJsonDocument::fromJson(value("places/favorites").toByteArray()).toVariant().toList();
         const auto recent = QJsonDocument::fromJson(value("places/recent").toByteArray()).toVariant().toList();

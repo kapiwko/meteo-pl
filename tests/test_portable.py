@@ -58,7 +58,7 @@ class PortablePackagingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             apk = Path(directory)/"meteo.apk"
             prefix = "assets/qml/org/kde/kirigami/breeze-internal/"
-            icons = {"configure", "mark-location", "view-refresh", "office-chart-line",
+            icons = {"configure", "mark-location", "view-refresh", "office-chart-line", "edit-undo",
                      "chronometer", "view-calendar", "globe", "dialog-messages",
                      "view-list-text", "view-list-details", "window-close", "dialog-close", "go-next", "open-menu-symbolic",
                      "weather-clear", "weather-clear-night", "weather-clouds",

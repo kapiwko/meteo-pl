@@ -128,6 +128,18 @@ sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe
 identyfikatory i rozróżnia powtarzające się nazwy. Jeden plik może zawierać
 do 100 profili i mieć do 16 MiB. Plik ustawień jest wskazany w edytorze;
 domyślnie to `~/.config/meteo-pl/desktop.ini`.
+Fabryczne profile z `resources/profiles`, katalog i metadane serii z
+`resources/charts` są jedynym źródłem domyślnej konfiguracji wykresów.
+Kolory, typy rysowania, warstwy, tła, palety wypełnień i osie są zapisane w JSON.
+`resources/schemas/chart-data.schema.json` opisuje ich strukturę. Valijson,
+pobierany przez CMake z przypiętego archiwum i sumy SHA-256, sprawdza ten sam
+schemat podczas ładowania zasobów i importu. Walidacja nie pobiera zewnętrznych
+schematów. Pliki JSON i schemat są również instalowane w `share/meteo-pl`.
+Zmiany gotowych profili zapisują się jako nadpisania ich identyfikatorów w
+atomowym magazynie preferencji. Usunięte gotowe profile mają zapisaną listę
+identyfikatorów; przywrócenie odczytuje zasób fabryczny. Pozostawiono obsługę
+wcześniejszych zapisów „Własnego układu”. Jednorazowa migracja usuwa wyłącznie
+niezmodyfikowane, wyłączone szablony ze starszych profili.
 Tła i zakresy min–max poprzedzają linie
 i znaczniki, mgła jest ponad pokryciem chmur, siatka ponad wypełnieniami,
 a odczyt kursora na wierzchu. Ukrycie serii przez legendę nie przelicza osi.

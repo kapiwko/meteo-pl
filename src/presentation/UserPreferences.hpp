@@ -21,6 +21,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_PROPERTY(bool showNight READ showNight WRITE setShowNight NOTIFY displayChanged)
     Q_PROPERTY(bool showLegend READ showLegend WRITE setShowLegend NOTIFY displayChanged)
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY displayChanged)
+    Q_PROPERTY(bool hasDeletedProfiles READ hasDeletedProfiles NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartLayout READ chartLayout NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartCatalog READ chartCatalog CONSTANT)
     Q_PROPERTY(QVariantMap chartAppearance READ chartAppearance CONSTANT)
@@ -32,7 +33,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_PROPERTY(int profileChartHeight READ profileChartHeight WRITE setProfileChartHeight NOTIFY displayChanged)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
   public:
-    explicit UserPreferences(QObject *parent = nullptr);
+    explicit UserPreferences(QObject *parent = nullptr, QVariantList defaults = {});
     QString error() const { return m_error; }
     QVariantList favorites() const;
     QVariantList recentPlaces() const;
@@ -43,6 +44,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     bool showNight() const;
     bool showLegend() const;
     QVariantList profiles() const;
+    bool hasDeletedProfiles() const;
     QVariantList chartLayout() const;
     Q_INVOKABLE QStringList seriesRenderers(const QString &key) const;
     Q_INVOKABLE QVariantList chartLayoutForProfile(const QString &id) const;
@@ -75,10 +77,13 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE QString duplicateProfile();
     Q_INVOKABLE void renameProfile(const QString &name);
     Q_INVOKABLE void deleteProfile();
+    Q_INVOKABLE void resetProfile();
+    Q_INVOKABLE void restoreDeletedProfiles();
     Q_INVOKABLE void setChartEnabled(const QString &key, bool enabled);
     Q_INVOKABLE void setChartField(const QString &chart, const QString &field, bool enabled);
     Q_INVOKABLE void moveChart(int index, int direction);
     Q_INVOKABLE QString createChart(const QString &title);
+    Q_INVOKABLE void addChart(const QString &key);
     Q_INVOKABLE void deleteChart(const QString &key);
     Q_INVOKABLE void setChartOptions(const QString &key, const QVariantMap &options);
     Q_INVOKABLE void setSeriesStyle(const QString &chart, const QString &field, const QVariantMap &options);
@@ -89,11 +94,14 @@ class METEO_UI_EXPORT UserPreferences : public QObject
   private:
     bool change(const std::function<void()> &operation);
     void saveLayout(const QString &profile, const QVariantList &layout);
+    void saveProfileOptions(const QString &profile, const QVariantMap &options);
+    QVariantMap factoryProfile(const QString &id) const;
     QString createProfileFrom(const QString &name, const QString &sourceProfile);
     QVariantList savedProfiles() const;
     QVariantList readPlaces(const QString &key) const;
     void writePlaces(const QString &key, const QVariantList &places);
     PreferencesStore m_store;
+    QVariantList m_factoryProfiles;
     QString m_error;
   signals:
     void placesChanged();

@@ -120,7 +120,7 @@ def check_android_icons(apk):
     # A successful compile/signature check cannot detect a missing Android
     # fallback theme. Verify real assets in the final APK before publishing it.
     prefix = "assets/qml/org/kde/kirigami/breeze-internal/"
-    required = {"configure", "mark-location", "view-refresh", "office-chart-line",
+    required = {"configure", "mark-location", "view-refresh", "office-chart-line", "edit-undo",
                 "chronometer", "view-calendar", "globe", "dialog-messages",
                 "view-list-text", "view-list-details", "window-close", "dialog-close", "go-next", "open-menu-symbolic",
                 "weather-clear", "weather-clear-night", "weather-clouds",

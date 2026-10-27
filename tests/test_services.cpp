@@ -9,6 +9,7 @@
 #include "ApplicationLauncher.hpp"
 #include "ChartConfiguration.hpp"
 #include "core/Locations.hpp"
+#include "core/Localization.hpp"
 #include "core/WebLink.hpp"
 #include "network/MeteoMapSource.hpp"
 #include <QJsonObject>
@@ -688,42 +689,83 @@ private slots:
         QCOMPARE(reopened.favorites().size(), 2);
         QVERIFY(!reopened.isFavorite(52.2297, 21.0122));
     }
-    void duplicatesKeepLayoutsAndDeletingScratchRestoresDefaults()
+    void presetsCanBeEditedDeletedAndRestoredIndependently()
     {
         UserPreferences preferences;
         const auto defaults = preferences.chartLayout();
+        const auto basic = preferences.chartLayoutForProfile("basic");
+        const auto count = preferences.profiles().size();
         preferences.setChartEnabled("probability", false);
         preferences.setProfileChartHeight(240);
-        QCOMPARE(preferences.profile(), "custom");
+        preferences.renameProfile("My ICM");
+        QCOMPARE(preferences.profile(), "classic");
         const auto modified = preferences.chartLayout();
         const auto copy = preferences.duplicateProfile();
         QVERIFY(copy.startsWith("user:"));
         QCOMPARE(preferences.chartLayout(), modified);
         QCOMPARE(preferences.profileChartHeight(), 240);
-        const auto firstName = preferences.profiles().last().toMap()["name"].toString();
-        preferences.setProfile("custom");
-        const auto next = preferences.duplicateProfile();
-        QVERIFY(next != copy);
-        QVERIFY(preferences.profiles().last().toMap()["name"].toString() != firstName);
-        preferences.deleteProfile();
+        preferences.setProfile("classic");
+        preferences.resetProfile();
         QCOMPARE(preferences.profile(), "classic");
-        preferences.setProfile(copy);
-        preferences.setChartEnabled("temperature", false);
-        preferences.setProfile("custom");
-        QCOMPARE(preferences.chartLayout(), modified); // Copies are independent.
-        preferences.deleteProfile();
-        QCOMPARE(preferences.profile(), "classic");
-        preferences.setProfile("custom");
         QCOMPARE(preferences.chartLayout(), defaults);
         QCOMPARE(preferences.profileChartHeight(), 0);
-        preferences.setProfile(copy);
-        QVERIFY(!preferences.chartLayout().first().toMap()["enabled"].toBool());
+        QCOMPARE(preferences.profiles().first().toMap()["name"], builtinChartProfiles().first().toMap()["name"]);
+        QCOMPARE(preferences.chartLayoutForProfile(copy), modified);
+        QCOMPARE(preferences.chartLayoutForProfile("basic"), basic);
+        preferences.deleteProfile();
+        QVERIFY(preferences.profile() != "classic");
+        QVERIFY(preferences.hasDeletedProfiles());
+        for (const auto &entry : preferences.profiles()) QVERIFY(entry.toMap()["id"] != "classic");
         UserPreferences reopened;
-        QCOMPARE(reopened.profile(), copy);
+        QVERIFY(reopened.hasDeletedProfiles());
+        reopened.restoreDeletedProfiles();
+        reopened.setProfile("classic");
+        QCOMPARE(reopened.chartLayout(), defaults);
+        QCOMPARE(reopened.chartLayoutForProfile(copy), modified);
+        QCOMPARE(reopened.chartHeightForProfile(copy), 240);
+        reopened.setProfile(copy);
         reopened.deleteProfile();
-        QCOMPARE(reopened.profiles().size(), 6);
-        reopened.deleteProfile(); // Built-in profiles remain available.
-        QCOMPARE(reopened.profiles().size(), 6);
+        QCOMPARE(reopened.profiles().size(), count);
+    }
+    void addingTemplatesKeepsChartsLocalToTheChosenProfile()
+    {
+        UserPreferences preferences;
+        preferences.setProfile("basic");
+        const auto basic = preferences.chartLayout();
+        const auto classic = preferences.chartLayoutForProfile("classic");
+        const auto copy = preferences.duplicateProfile();
+        preferences.addChart("ground");
+        QCOMPARE(preferences.chartLayout().size(), basic.size() + 1);
+        QCOMPARE(preferences.chartLayout().last().toMap()["key"].toString(), "ground");
+        preferences.setChartOptions("ground", {{"height", 210}});
+        preferences.addChart("ground");
+        QCOMPARE(preferences.chartLayout().size(), basic.size() + 1);
+        QCOMPARE(preferences.chartLayout().last().toMap()["height"].toInt(), 210);
+        preferences.addChart("unknown");
+        QCOMPARE(preferences.chartLayout().size(), basic.size() + 1);
+        preferences.setProfile("basic");
+        QCOMPARE(preferences.chartLayout(), basic);
+        QCOMPARE(preferences.chartLayoutForProfile("classic"), classic);
+        preferences.setProfile(copy);
+        QCOMPARE(preferences.chartLayout().last().toMap()["height"].toInt(), 210);
+    }
+    void restoringDeletedPresetsPreservesNamedProfilesAndPreventsAnEmptyList()
+    {
+        UserPreferences preferences;
+        const auto copy = preferences.duplicateProfile();
+        const auto charts = preferences.chartLayout();
+        for (const auto &entry : builtinChartProfiles()) {
+            preferences.setProfile(entry.toMap()["id"].toString());
+            preferences.deleteProfile();
+        }
+        QCOMPARE(preferences.profiles().size(), 1);
+        QCOMPARE(preferences.profile(), copy);
+        preferences.deleteProfile();
+        QCOMPARE(preferences.profiles().size(), 1);
+        preferences.restoreDeletedProfiles();
+        QCOMPARE(preferences.profiles().size(), builtinChartProfiles().size() + 1);
+        QCOMPARE(preferences.profile(), copy);
+        QCOMPARE(preferences.chartLayout(), charts);
     }
     void arbitraryChartSeriesAndAppearancePersistPerProfile()
     {
@@ -808,7 +850,7 @@ private slots:
         QCOMPARE(preferences.importProfiles(all)["count"].toInt(), 2);
         QCOMPARE(preferences.profiles().last().toMap()["name"].toString(), QStringLiteral("Góry zimą (2) (2)"));
         UserPreferences reopened;
-        QCOMPARE(reopened.profiles().size(), 10); // Six built-ins, four independent saved profiles.
+        QCOMPARE(reopened.profiles().size(), builtinChartProfiles().size() + 4);
         QCOMPARE(reopened.profile(), preferences.profile());
         QCOMPARE(reopened.chartLayout(), preferences.chartLayout());
     }

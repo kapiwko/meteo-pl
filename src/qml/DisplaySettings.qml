@@ -17,7 +17,7 @@ ColumnLayout {
     property bool transferFailed: false
     PreferenceWriteNotice { visible: UserPreferences.error.length > 0 && !(transferNotice.visible && root.transferFailed) }
     readonly property var currentProfile: UserPreferences.profiles.find(profile => profile.id === UserPreferences.profile) || {name: ""}
-    readonly property bool savedProfile: UserPreferences.profile.startsWith("user:")
+    readonly property var availableCharts: UserPreferences.chartCatalog.filter(chart => !UserPreferences.chartLayout.some(existing => existing.key === chart.key))
     function transferResult(result, importing) {
         transferFailed = !result.ok;
         transferMessage = result.ok ? (importing ? I18n.i18n("Profiles imported: ") : I18n.i18n("Profiles exported: ")) + result.count : result.error;
@@ -72,10 +72,9 @@ ColumnLayout {
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 20
                     text: root.currentProfile.name
-                    readOnly: !root.savedProfile
                     maximumLength: 80
                     onEditingFinished: {
-                        if (!readOnly && text.trim().length && text.trim() !== root.currentProfile.name) UserPreferences.renameProfile(text);
+                        if (text.trim().length && text.trim() !== root.currentProfile.name) UserPreferences.renameProfile(text);
                         text = Qt.binding(() => root.currentProfile.name);
                     }
                 }
@@ -112,12 +111,27 @@ ColumnLayout {
                 }
                 Button {
                     objectName: "profileDeleteButton"
-                    text: UserPreferences.profile === "custom" ? I18n.i18n("Reset layout") : I18n.i18n("Delete profile")
+                    text: I18n.i18n("Delete profile")
                     icon.name: "edit-delete"
-                    enabled: root.savedProfile || UserPreferences.profile === "custom"
+                    enabled: UserPreferences.profiles.length > 1
                     onClicked: UserPreferences.deleteProfile()
-                    ToolTip.text: enabled ? text : I18n.i18n("Duplicate a preset to edit your own copy.")
+                    ToolTip.text: enabled ? text : I18n.i18n("At least one profile must remain.")
                     ToolTip.visible: hovered
+                }
+                Button {
+                    objectName: "profileRestoreButton"
+                    visible: root.currentProfile.builtin === true
+                    enabled: root.currentProfile.modified === true
+                    text: I18n.i18n("Restore defaults")
+                    icon.name: "edit-undo"
+                    onClicked: UserPreferences.resetProfile()
+                }
+                Button {
+                    objectName: "restoreDeletedProfilesButton"
+                    visible: UserPreferences.hasDeletedProfiles
+                    text: I18n.i18n("Restore deleted presets")
+                    icon.name: "edit-undo"
+                    onClicked: UserPreferences.restoreDeletedProfiles()
                 }
             }
             Kirigami.ActionToolBar {
@@ -145,17 +159,48 @@ ColumnLayout {
     }
     Label {
         Layout.fillWidth: true
-        text: UserPreferences.profile === "custom"
-            ? I18n.i18n("This is a draft layout. Duplicate the profile to save it with your own name.")
-            : root.savedProfile ? I18n.i18n("The name and chart changes are saved automatically.")
-            : I18n.i18n("You can duplicate a preset. Editing its charts creates a draft “Custom layout”.")
+        text: root.currentProfile.builtin
+            ? I18n.i18n("Changes are saved in this profile. Restore defaults to reset this preset.")
+            : I18n.i18n("The name and chart changes are saved automatically.")
         wrapMode: Text.WordWrap
         color: Kirigami.Theme.disabledTextColor
     }
     RowLayout {
         Layout.fillWidth: true
         Kirigami.Heading { text: I18n.i18n("Charts in profile"); level: 3; Layout.fillWidth: true }
-        ToolButton { text: I18n.i18n("Add chart"); icon.name: "list-add"; onClicked: root.expandedChart = UserPreferences.createChart(I18n.i18n("New chart")) }
+        ToolButton {
+            id: addChartButton
+            objectName: "addChartButton"
+            text: I18n.i18n("Add chart")
+            icon.name: "list-add"
+            onClicked: addChartMenu.popup(addChartButton, 0, addChartButton.height)
+            Menu {
+                id: addChartMenu
+                objectName: "addChartMenu"
+                MenuItem {
+                    text: I18n.i18n("New chart")
+                    icon.name: "list-add"
+                    onTriggered: root.expandedChart = UserPreferences.createChart(I18n.i18n("New chart"))
+                }
+                MenuSeparator { visible: root.availableCharts.length > 0 }
+                Instantiator {
+                    model: root.availableCharts
+                    delegate: MenuItem {
+                        required property var modelData
+                        objectName: "addChart-" + modelData.key
+                        text: modelData.title
+                        onTriggered: {
+                            const key = modelData.key;
+                            addChartMenu.close();
+                            UserPreferences.addChart(key);
+                            root.expandedChart = key;
+                        }
+                    }
+                    onObjectAdded: (index, object) => addChartMenu.insertItem(index + 2, object)
+                    onObjectRemoved: (index, object) => addChartMenu.removeItem(object)
+                }
+            }
+        }
     }
     Repeater {
         model: UserPreferences.chartLayout

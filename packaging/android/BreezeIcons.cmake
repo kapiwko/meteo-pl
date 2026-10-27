@@ -15,7 +15,7 @@ kirigami_package_breeze_icons(ICONS
     arrow-down arrow-right arrow-up chronometer color-picker configure
     dialog-close dialog-information-symbolic dialog-messages
     document-export document-import document-open document-save-as
-    edit-clear edit-delete edit-duplicate find-location folder-open globe
+    edit-clear edit-delete edit-duplicate edit-undo find-location folder-open globe
     go-down go-next go-previous go-up help-about image-png internet-web-browser
     list-add list-remove map-globe mark-location media-playback-pause
     media-playback-start office-chart-line overflow-menu pin text-csv view-calendar

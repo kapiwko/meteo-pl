@@ -89,7 +89,10 @@ Przy każdej serii jest próbka legendy i edytor wyglądu: sposób rysowania,
 kolory dla jasnego i ciemnego motywu, grubość i wzór linii, rozmiar punktów,
 krycie oraz przypisanie do osi. Kolor można wybrać z palety lub wpisać kod.
 Wygląd i opcjonalne granice obu osi zapisują się oddzielnie w każdym profilu.
-Domyślne wykresy są gotową konfiguracją używającą tego samego renderera.
+Gotowe profile są dostarczane jako pliki JSON. Każdy zawiera wyłącznie własne
+wykresy wraz z pełnym wyglądem serii, paletami kolorów, tłami i osiami.
+**Dodaj wykres** pozwala wybrać szablon z katalogu albo utworzyć nowy wykres.
+Zmiany dotyczą wybranego profilu.
 Tryb automatyczny dobiera dwie osie według jednostek. Trzecia niezgodna jednostka
 wyświetla komunikat: przypisz osie jawnie albo rozdziel serie na kilka wykresów.
 Specjalne symbole (np. wyładowania i kierunek wiatru) są dostępne tylko dla
@@ -127,8 +130,10 @@ Przycisk **Ustawienia** w górnym pasku otwiera wspólne okno. Zakładka
 **Prognoza** zawiera **Profil wykresów**, **Zakres czasu** i **Start modelu**,
 **Profile** zawiera edytor wykresów i serii oraz import i eksport profili.
 **Duplikuj profil** tworzy niezależną kopię z gotową nazwą, którą można od razu zmienić.
-Zapisane własne profile można usuwać, a roboczy „Własny układ” wyczyścić.
-Gotowe profile pozostają dostępne jako szablony.
+Każdy profil można edytować, zmienić jego nazwę i usunąć; musi pozostać co
+najmniej jeden profil. **Przywróć domyślne** odtwarza wybrany gotowy profil
+z fabrycznego JSON, a **Przywróć usunięte profile** odzyskuje usunięte gotowe
+profile. Zapisane własne kopie mają niezależną konfigurację.
 **Odczyt** — zakres parametrów próbnika i domyślną widoczność legendy,
 a **Aplikacja** — renderer, jednostki, strefę czasu i ogólną wysokość wykresów.
 Formularze korzystają z `Kirigami.FormLayout`, standardowych grup opcji i kontrolek Qt Quick.

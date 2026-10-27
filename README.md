@@ -26,6 +26,8 @@ without leaving your desktop.
   enter coordinates or use the system location service.
 - Custom chart profiles with mixed series, axis ranges, colors, drawing styles,
   chart order and individual heights. Import and export profiles as JSON.
+  Built-in profiles are complete [JSON configurations](docs/chart-profiles.md),
+  validated with JSON Schema. Edit, delete or restore them from Settings.
 - PNG export of selected charts as one image, plus PNG and CSV export of readings.
   Right-click a chart to save it individually or toggle series with checkboxes;
   these controls share the legend's visibility state and preserve axis ranges.
