@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtPositioning
+import QtCore
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
@@ -26,29 +27,60 @@ ColumnLayout {
     function resetDraft(name, lat, lon, forecastModel) {
         locationName = name; latitude = lat; longitude = lon; model = forecastModel;
         searchField.text = ""; placeSearch.query = ""; positionError = "";
+        positionRequested = false;
         showMap = false; manual.checked = false;
     }
     function selectPlace(place) {
+        positionRequested = false;
         locationName = place.name;
         latitude = place.latitude; longitude = place.longitude;
         searchField.text = place.name; placeSearch.query = "";
         positionError = "";
     }
-    PlaceSearchModel { id: placeSearch }
-    PositionSource {
-        id: positionSource
-        active: false
-        onPositionChanged: {
-            if (!position.coordinate.isValid) return;
-            root.selectPlace({name: I18n.i18n("My location"), latitude: position.coordinate.latitude, longitude: position.coordinate.longitude});
-            root.positionRequested = false;
+    function requestPosition() {
+        positionError = "";
+        if (locationPermission.status === Qt.PermissionStatus.Denied) {
+            positionError = I18n.i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again.");
+            return;
         }
-        onSourceErrorChanged: {
-            if (!root.positionRequested || sourceError === PositionSource.NoError) return;
+        positionRequested = true;
+        if (locationPermission.status === Qt.PermissionStatus.Undetermined) locationPermission.request();
+    }
+    PlaceSearchModel { id: placeSearch }
+    LocationPermission {
+        id: locationPermission
+        accuracy: LocationPermission.Approximate
+        availability: LocationPermission.WhenInUse
+        onStatusChanged: if (root.positionRequested && status === Qt.PermissionStatus.Denied) {
             root.positionRequested = false;
-            root.positionError = sourceError === PositionSource.UpdateTimeoutError
-                ? I18n.i18n("Location lookup timed out. You can choose a point on the map.")
-                : I18n.i18n("Could not determine your location. Check the location service or choose a point on the map.");
+            root.positionError = I18n.i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again.");
+        }
+    }
+    Loader {
+        active: root.positionRequested && locationPermission.status === Qt.PermissionStatus.Granted
+        visible: false
+        onLoaded: {
+            if (!root.positionRequested) return;
+            const source = item as PositionSource;
+            if (source && source.valid) source.update(15000);
+            else {
+                root.positionRequested = false;
+                root.positionError = I18n.i18n("The location service is unavailable. Choose a place or a point on the map.");
+            }
+        }
+        sourceComponent: PositionSource {
+            active: false
+            onPositionChanged: {
+                if (!root.positionRequested || !position.coordinate.isValid) return;
+                root.selectPlace({name: I18n.i18n("My location"), latitude: position.coordinate.latitude, longitude: position.coordinate.longitude});
+            }
+            onSourceErrorChanged: {
+                if (!root.positionRequested || sourceError === PositionSource.NoError) return;
+                root.positionRequested = false;
+                root.positionError = sourceError === PositionSource.UpdateTimeoutError
+                    ? I18n.i18n("Location lookup timed out. You can choose a point on the map.")
+                    : I18n.i18n("Could not determine your location. Check the location service or choose a point on the map.");
+            }
         }
     }
 
@@ -118,14 +150,11 @@ ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 Button { text: I18n.i18n("Choose on map"); icon.name: "map-globe"; checkable: true; checked: root.showMap; onToggled: root.showMap = checked }
                 Button {
+                    objectName: "useMyLocationButton"
                     text: root.positionRequested ? I18n.i18n("Locating…") : I18n.i18n("Use my location")
                     icon.name: "find-location"
                     enabled: !root.positionRequested
-                    onClicked: {
-                        root.positionError = "";
-                        if (positionSource.valid) { root.positionRequested = true; positionSource.update(15000); }
-                        else root.positionError = I18n.i18n("The location service is unavailable. Choose a place or a point on the map.");
-                    }
+                    onClicked: root.requestPosition()
                 }
             }
             Kirigami.InlineMessage { visible: root.positionError.length > 0; text: root.positionError; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
