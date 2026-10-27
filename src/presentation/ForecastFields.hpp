@@ -8,6 +8,8 @@ struct ForecastField {
     QString key, label, unit, group, color, kind;
     double scale = 1;
     int decimals = 1;
+    QString darkColor, axisScale;
+    QStringList renderers;
 };
 METEO_UI_EXPORT const QVector<ForecastField> &forecastFields();
 METEO_UI_EXPORT QString forecastDarkColor(const QString &lightColor, const QString &fieldKey = {});

@@ -2,81 +2,45 @@
 #include "ChartConfiguration.hpp"
 #include "ChartAnalysis.hpp"
 #include "ForecastFields.hpp"
+#include "ProfileFileCodec.hpp"
+#include "JsonSchemaValidator.hpp"
 #include <QColor>
+#include <QFile>
+#include <QHash>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QSet>
 #include <cmath>
 #include <algorithm>
 
+namespace {
+const QVariantMap &chartDefaults()
+{
+    static const auto defaults = bundledChartJson(":/meteo/charts/catalog.json").object().toVariantMap();
+    return defaults;
+}
+}
+
 QString seriesScale(const QString &key)
 {
-    for (const auto &field : forecastFields()) if (field.key == key) {
-        if (key == "fog_max") return "fraction";
-        if (key == "pcpttlprob_point") return "probability";
-        if (field.group == "ground") return "temperature";
-        return field.group;
-    }
+    for (const auto &field : forecastFields()) if (field.key == key) return field.axisScale;
     return "linear";
 }
 
 QVariantMap defaultSeriesStyle(const QString &key)
 {
-    for (const auto &field : forecastFields()) if (field.key == key) {
-        QString render = "line", lower, fill = "solid";
-        int layer = 15;
-        if (key == "airtmp_max" || key == "wchill_max" || key == "grdtmp_max") {
-            lower = key; lower.replace("_max", "_min");
-            render = key == "grdtmp_max" ? "rangeStems" : "range";
-            layer = key == "wchill_max" ? 0 : key == "airtmp_max" ? 1 : 15;
-        }
-        if (key == "wchill_point") layer = 12;
-        if (key == "airtmp_point") layer = 13;
-        if (key == "dwptmp_point") { render = "points"; layer = 14; }
-        if (key == "pcpttl_aver") { render = "bars"; layer = 10; }
-        if (key == "pcpttl_max") { render = "stems"; layer = 11; }
-        if (field.kind == "type") render = "type";
-        if (field.kind == "direction") render = "direction";
-        if (key == "wind_gust_max") { render = "gusts"; layer = 16; }
-        if (key == "slpres_point") { render = "area"; fill = "pressure"; }
-        if (key == "wind10_sd_true_prev_point") { render = "area"; fill = "wind"; }
-        if (key.startsWith("cldbse") || key == "cldtop") {
-            render = "cloudPoint";
-            layer = key == "cldbse79" ? 1 : key == "cldbse65" ? 2 : key == "cldbse45" ? 3 : key == "cldbse25" ? 4 : key == "cldbse01" ? 5 : 6;
-        }
-        const QStringList clouds{"cldhigh_aver", "cldmed_aver", "cldlow_aver", "cldvlow_aver"};
-        if (clouds.contains(key)) { render = "cloudArea"; layer = clouds.indexOf(key); }
-        if (key == "fog_max") { render = "rightBars"; layer = 20; }
-        if (key == "storm_max") render = "storm";
-        if (key == "flash_max") render = "flash";
-        QString label = field.label;
-        if (!lower.isEmpty()) label = key == "grdtmp_max" ? Meteo::i18n("Ground temperature min–max") : key == "wchill_max" ? Meteo::i18n("Feels like min–max") : Meteo::i18n("Air temperature min–max");
-        return {{"key", key}, {"label", label}, {"unit", field.unit}, {"enabled", true},
-            {"render", render}, {"lowerKey", lower}, {"axis", "auto"}, {"color", field.color},
-            {"darkColor", forecastDarkColor(field.color, key)}, {"lineWidth", render == "stems" ? 2.5 : render == "rangeStems" || render == "cloudArea" ? 1.25 : 2.0},
-            {"lineStyle", "solid"}, {"opacity", render == "range" ? 191.0 / 255 : 1.0}, {"fill", fill}, {"layer", layer},
-            {"precipitationColors", key == "pcpttl_aver" || key == "pcpttl_max"},
-            {"eventColors", true}, {"pointSize", key == "dwptmp_point" ? 2.0 : key == "storm_max" || key == "flash_max" ? 4.0 : 3.0}};
-    }
+    for (const auto &value : chartDefaults()["series"].toList())
+        if (value.toMap()["key"] == key) return value.toMap();
     return {};
 }
 
-QVariantList chartSeriesCatalog()
-{
-    QVariantList result;
-    for (const auto &field : forecastFields()) result.append(defaultSeriesStyle(field.key));
-    return result;
-}
+QVariantList chartSeriesCatalog() { return chartDefaults()["series"].toList(); }
 
 QStringList seriesRenderers(const QString &key)
 {
-    const auto style = defaultSeriesStyle(key);
-    if (style.isEmpty()) return {};
-    // Semantic glyphs require data prepared for that specific quantity.
-    if (key == "pcpttl_type_max") return {"type"};
-    QStringList renderers{"line", "points", "area", "bars", "stems", "gusts", "rightBars"};
-    const auto semantic = style.value("render").toString();
-    if (QStringList{"direction", "storm", "flash", "cloudArea", "cloudPoint"}.contains(semantic)) renderers.append(semantic);
-    if (!style.value("lowerKey").toString().isEmpty()) renderers.append({"range", "rangeStems"});
-    return renderers;
+    for (const auto &field : forecastFields()) if (field.key == key) return field.renderers;
+    return {};
 }
 
 QVariantMap normalizeSeriesStyle(const QVariantMap &value)
@@ -84,9 +48,20 @@ QVariantMap normalizeSeriesStyle(const QVariantMap &value)
     auto result = defaultSeriesStyle(value["key"].toString());
     if (result.isEmpty()) return {};
     const auto renderers = seriesRenderers(value.value("key").toString());
+    if (value.contains("label")) result["label"] = value["label"].toString().trimmed().left(80);
+    if (value.contains("lowerKey") && (value["lowerKey"].toString().isEmpty() || !defaultSeriesStyle(value["lowerKey"].toString()).isEmpty()))
+        result["lowerKey"] = value["lowerKey"];
     if (value.contains("enabled")) result["enabled"] = value["enabled"].toBool();
     if (value.contains("precipitationColors")) result["precipitationColors"] = value["precipitationColors"].toBool();
     if (value.contains("eventColors")) result["eventColors"] = value["eventColors"].toBool();
+    for (const auto &key : {"palette", "paletteFallback"})
+        if (value.contains(key)) result[key] = value[key];
+    if (value.contains("colors")) {
+        auto colors = result["colors"].toMap();
+        const auto overrides = value["colors"].toMap();
+        for (auto it = overrides.cbegin(); it != overrides.cend(); ++it) colors[it.key()] = it.value();
+        result["colors"] = colors;
+    }
     if (renderers.contains(value["render"].toString())) result["render"] = value["render"];
     if (result["lowerKey"].toString().isEmpty() && QStringList{"range", "rangeStems"}.contains(result["render"].toString())) result["render"] = "line";
     if (QStringList{"auto", "left", "right"}.contains(value["axis"].toString())) result["axis"] = value["axis"];
@@ -118,30 +93,59 @@ QStringList chartFieldKeys(const QVariantList &series)
     keys.removeDuplicates(); return keys;
 }
 
-QVariantList defaultChartLayout(const QString &profile)
+QVariantList defaultChartCatalog()
 {
-    QStringList enabled{"temperature", "precipitation", "probability", "pressure", "wind", "cloudHeights", "clouds"};
-    if (profile == "basic") enabled = {"temperature", "precipitation", "wind", "pressure", "clouds"};
-    if (profile == "outdoor") enabled = {"temperature", "precipitation", "probability", "wind", "clouds"};
-    QVariantList layout;
-    for (const auto &chart : forecastCharts()) {
-        QVariantList series;
-        for (const auto &key : chart.fields) {
-            if (key.endsWith("_min") && chart.fields.contains(QString(key).replace("_min", "_max"))) continue;
-            auto style = defaultSeriesStyle(key);
-            style["axis"] = (chart.key == "precipitation" && key == "realhum_aver") || (chart.key == "cloudHeights" && key == "visibl_min") || (chart.key == "clouds" && key == "fog_max") || (chart.key == "humidity" && key == "fog_max") ? "right" : "left";
-            series.append(style);
-        }
-        layout.append(QVariantMap{{"key", chart.key}, {"title", chart.title}, {"enabled", chart.key != "windDirection" && (profile == "full" || enabled.contains(chart.key))},
-            {"leftScale", chart.key == "ground" ? "temperature" : chart.key == "windDirection" ? "direction" : chart.key},
-            {"rightScale", "auto"}, {"series", series}, {"fields", chartFieldKeys(series)}});
+    auto charts = chartDefaults()["charts"].toList();
+    for (auto &value : charts) {
+        auto chart = value.toMap();
+        chart["fields"] = chartFieldKeys(chart["series"].toList());
+        value = chart;
     }
-    return layout;
+    return charts;
+}
+QVariantMap defaultChartAppearance() { return chartDefaults()["appearance"].toMap(); }
+QVariantMap defaultChartPrototype() { return chartDefaults()["newChart"].toMap(); }
+
+QVariantList builtinChartProfiles()
+{
+    static const QVariantList profiles = [] {
+        const auto files = bundledChartJson(":/meteo/profiles/index.json").array();
+        if (files.isEmpty()) qFatal("Empty bundled profile index");
+        QVariantList result;
+        QSet<QString> ids;
+        for (const auto &name : files) {
+            const auto fileName = name.toString();
+            const auto bytes = bundledChartJson(":/meteo/profiles/" + fileName).toJson();
+            QString error;
+            const auto decoded = ProfileFileCodec::decode(bytes, &error);
+            const auto id = QJsonDocument::fromJson(bytes).object()["profiles"].toArray().first().toObject()["id"].toString();
+            if (!decoded || decoded->size() != 1 || id.isEmpty() || id == "custom" || id.startsWith("user:")
+                || ids.contains(id) || fileName != id + ".json")
+                qFatal("Invalid bundled profile %s: %s", qPrintable(fileName), qPrintable(error));
+            auto profile = decoded->first().toMap();
+            profile["id"] = id;
+            const auto revision = QJsonDocument::fromJson(bytes).object()["profiles"].toArray().first().toObject()["revision"].toInt();
+            if (revision < 1) qFatal("Missing bundled profile revision: %s", qPrintable(fileName));
+            profile["revision"] = revision;
+            result.append(profile);
+            ids.insert(id);
+        }
+        return result;
+    }();
+    return profiles;
+}
+
+QVariantList defaultChartLayout(const QString &id)
+{
+    const auto profiles = builtinChartProfiles();
+    for (const auto &entry : profiles)
+        if (entry.toMap()["id"] == id) return entry.toMap()["charts"].toList();
+    return profiles.first().toMap()["charts"].toList();
 }
 
 QVariantList normalizeChartLayout(const QVariantList &saved)
 {
-    const auto defaults = defaultChartLayout("classic");
+    const auto defaults = defaultChartCatalog();
     QVariantList result;
     QSet<QString> seen;
     for (const auto &item : saved) {
@@ -168,9 +172,11 @@ QVariantList normalizeChartLayout(const QVariantList &saved)
                 if (!style.isEmpty() && !seriesSeen.contains(field)) { series.append(style); seriesSeen.insert(field); }
             }
         }
-        QVariantMap normalized{{"key", key}, {"title", chart.value("title", standard.value("title", Meteo::i18n("New chart"))).toString().trimmed().left(80)},
+        const auto prototype = defaultChartPrototype();
+        QVariantMap normalized{{"key", key}, {"title", chart.value("title", standard.value("title", prototype["title"])).toString().trimmed().left(80)},
+            {"appearance", chart.value("appearance", standard.value("appearance", defaultChartAppearance()))},
             {"enabled", chart["enabled"].toBool()}, {"series", series}, {"fields", chartFieldKeys(series)},
-            {"leftScale", chart.value("leftScale", standard.value("leftScale", "auto"))}, {"rightScale", chart.value("rightScale", "auto")}};
+            {"leftScale", chart.value("leftScale", standard.value("leftScale", prototype["leftScale"]))}, {"rightScale", chart.value("rightScale", prototype["rightScale"])}};
         for (const auto &bound : {"leftMin", "leftMax", "rightMin", "rightMax"}) {
             bool valid = false; const double value = chart[bound].toDouble(&valid);
             if (valid && !chart[bound].isNull() && std::isfinite(value)) normalized[bound] = value;
@@ -180,6 +186,22 @@ QVariantList normalizeChartLayout(const QVariantList &saved)
             if (normalized.contains(axis + "Min") && normalized.contains(axis + "Max") && !ChartMath::validRange(normalized[axis + "Min"].toDouble(), normalized[axis + "Max"].toDouble())) { normalized.remove(axis + "Min"); normalized.remove(axis + "Max"); }
         result.append(normalized); seen.insert(key);
     }
+    return result;
+}
+
+QVariantList removeUnusedChartTemplates(const QVariantList &saved)
+{
+    QHash<QString, QVariantMap> templates;
+    for (const auto &entry : normalizeChartLayout(defaultChartCatalog())) {
+        auto chart = entry.toMap();
+        chart["enabled"] = false;
+        templates.insert(chart["key"].toString(), chart);
+    }
+    auto result = normalizeChartLayout(saved);
+    result.removeIf([&](const QVariant &entry) {
+        const auto chart = entry.toMap();
+        return !chart["enabled"].toBool() && templates.value(chart["key"].toString()) == chart;
+    });
     return result;
 }
 

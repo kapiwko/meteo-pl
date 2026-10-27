@@ -66,6 +66,7 @@ qt_add_qml_module(meteo_ui
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/ProfileFileCodec.cpp presentation/ProfileFileCodec.hpp
+        presentation/JsonSchemaValidator.cpp presentation/JsonSchemaValidator.hpp
         presentation/PreferencesStore.cpp presentation/PreferencesStore.hpp
         presentation/SavedPlaceController.cpp presentation/SavedPlaceController.hpp
         presentation/WeatherLayersModel.cpp presentation/WeatherLayersModel.hpp
@@ -100,6 +101,26 @@ target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presenta
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)
 qt_add_resources(meteo_ui "license" PREFIX "/meteo" BASE "${PROJECT_SOURCE_DIR}"
     FILES "${PROJECT_SOURCE_DIR}/LICENSE")
+file(GLOB METEO_PROFILE_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/resources/profiles/*.json")
+qt_add_resources(meteo_ui "chart_profiles" PREFIX "/meteo/profiles"
+    BASE "${PROJECT_SOURCE_DIR}/resources/profiles" FILES ${METEO_PROFILE_FILES})
+install(FILES ${METEO_PROFILE_FILES} DESTINATION "${CMAKE_INSTALL_DATADIR}/meteo-pl/profiles")
+file(GLOB METEO_CHART_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/resources/charts/*.json" "${PROJECT_SOURCE_DIR}/resources/schemas/*.json")
+qt_add_resources(meteo_ui "chart_defaults" PREFIX "/meteo"
+    BASE "${PROJECT_SOURCE_DIR}/resources" FILES ${METEO_CHART_FILES})
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/resources/charts" "${PROJECT_SOURCE_DIR}/resources/schemas"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/meteo-pl")
+include(FetchContent)
+FetchContent_Declare(meteo_valijson
+    URL https://codeload.github.com/tristanpenman/valijson/tar.gz/5eac4b66f20b2c189ae40281c29e71cf39a958ec
+    URL_HASH SHA256=8b68741da04708c806d07a5a5fd181d3fb801aa161d7f65f45d7a3cc1b0c98ee
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    SOURCE_SUBDIR meteo-headers-only)
+FetchContent_MakeAvailable(meteo_valijson)
+target_include_directories(meteo_ui SYSTEM PRIVATE "${meteo_valijson_SOURCE_DIR}/include")
+target_compile_definitions(meteo_ui PRIVATE VALIJSON_USE_EXCEPTIONS=1)
+install(FILES "${meteo_valijson_SOURCE_DIR}/LICENSE"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/meteo-pl/valijson")
 foreach(target meteo_core meteo_ui)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /permissive-)

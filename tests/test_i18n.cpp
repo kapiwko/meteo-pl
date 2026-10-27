@@ -2,6 +2,7 @@
 #include "core/Forecast.hpp"
 #include "ForecastFields.hpp"
 #include "UserPreferences.hpp"
+#include "ChartConfiguration.hpp"
 #include <KLocalizedString>
 #include <QQmlComponent>
 #include <QQmlEngine>
@@ -38,6 +39,12 @@ private slots:
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 2), polish ? QStringLiteral("Wybrano 2 wykresy") : QStringLiteral("2 charts selected"));
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 5), polish ? QStringLiteral("Wybrano 5 wykresów") : QStringLiteral("5 charts selected"));
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 12), polish ? QStringLiteral("Wybrano 12 wykresów") : QStringLiteral("12 charts selected"));
+    }
+    void translatesBundledJsonProfileNames()
+    {
+        const auto profiles = builtinChartProfiles();
+        QCOMPARE(profiles.first().toMap()["name"].toString(), polish ? QStringLiteral("Klasyczny ICM") : QStringLiteral("Classic ICM"));
+        QCOMPARE(profiles[2].toMap()["name"].toString(), polish ? QStringLiteral("Podstawowy") : QStringLiteral("Basic"));
     }
     void translatesEachQmlEngine()
     {

@@ -1,121 +1,19 @@
 .pragma library
 
-// Numerical scales and palette values verified against the public Meteo ICM
-// web client, https://app.meteo.pl/main.dart.js, 25.10.2026.
-// Rendering is implemented independently for Qt Canvas.
-var windStops = [
-    [5, "#80ffff", "#406080"],
-    [10, "#00ffff", "#008080"],
-    [15, "#00c3ff", "#006280"],
-    [20, "#0082ff", "#004180"],
-    [25, "#004b82", "#002541"],
-    [30, "#008200", "#004100"],
-    [35, "#1ec800", "#0f6400"],
-    [40, "#4bff1e", "#25800f"],
-    [45, "#82ff4b", "#418025"],
-    [50, "#c8ff82", "#648041"],
-    [55, "#ffff4b", "#808025"],
-    [60, "#ffc800", "#806400"],
-    [65, "#ff8200", "#804100"],
-    [70, "#c84b00", "#642500"],
-    [75, "#821e00", "#410f00"],
-    [80, "#820a0a", "#410505"],
-    [85, "#c81414", "#640a0a"],
-    [90, "#ff2828", "#801414"],
-    [95, "#ff4b4b", "#802525"],
-    [100, "#ff8282", "#804141"],
-    [105, "#ff82ff", "#804180"],
-    [110, "#dc5adc", "#6e2d6e"],
-    [115, "#c83cc8", "#641e64"],
-    [120, "#b41eb4", "#5a0f5a"],
-    [125, "#a000a0", "#500050"],
-    [130, "#5a1e5a", "#2d0f2d"],
-    [135, "#783c78", "#3c1e3c"],
-    [140, "#965a96", "#4b2d4b"],
-    [145, "#b478b4", "#5a3c5a"],
-    [150, "#d296d2", "#694b69"],
-    [255, "#e6b4e6", "#735a73"]
-];
-
-var pressureStops = [
-    [48, "#f5f5f5", "#7a7a7a"],
-    [51, "#ebf0f0", "#757878"],
-    [54, "#d2e6e6", "#697373"],
-    [57, "#c3dcdc", "#616e6e"],
-    [60, "#b4d2d2", "#5a6969"],
-    [63, "#a5c8c8", "#526464"],
-    [66, "#96bebe", "#4b5f5f"],
-    [69, "#87b4b9", "#435a5c"],
-    [72, "#78aab4", "#3c555a"],
-    [75, "#69a5aa", "#345255"],
-    [78, "#5aa0a0", "#2d5050"],
-    [81, "#4b8ca0", "#254650"],
-    [84, "#3c788c", "#1e3c46"],
-    [87, "#2d5a6e", "#162d37"],
-    [90, "#1e465a", "#0f232d"],
-    [93, "#0f3246", "#071923"],
-    [96, "#0f235a", "#07112d"],
-    [99, "#0f1482", "#070a41"],
-    [102, "#0f2396", "#07114b"],
-    [105, "#0f3cb4", "#071e5a"],
-    [108, "#0f5ad2", "#072d69"],
-    [111, "#0f78f0", "#073c78"],
-    [114, "#0f96ff", "#074b80"],
-    [117, "#0fb4ff", "#075a80"],
-    [120, "#0fdcff", "#076e80"],
-    [123, "#0fffff", "#078080"],
-    [126, "#00ffd2", "#008069"],
-    [129, "#00eb8c", "#007546"],
-    [132, "#00cd46", "#006623"],
-    [135, "#00aa00", "#005500"],
-    [138, "#00cd00", "#006600"],
-    [141, "#32eb00", "#197500"],
-    [144, "#64ff00", "#328000"],
-    [147, "#96ff00", "#4b8000"],
-    [150, "#c8ff14", "#64800a"],
-    [153, "#ffff00", "#808000"],
-    [156, "#ffd700", "#806b00"],
-    [159, "#ffaf00", "#805700"],
-    [162, "#ff8700", "#804300"],
-    [165, "#fa5f00", "#7d2f00"],
-    [168, "#f53700", "#7a1b00"],
-    [171, "#f01900", "#780c00"],
-    [174, "#eb001e", "#75000f"],
-    [177, "#e60f3c", "#73071e"],
-    [180, "#e11e5a", "#700f2d"],
-    [183, "#dc2d78", "#6e163c"],
-    [186, "#d73c96", "#6b1e4b"],
-    [189, "#d24bb4", "#69255a"],
-    [192, "#cd5ad2", "#662d69"],
-    [195, "#d769f0", "#6b3478"],
-    [198, "#e178ff", "#703c80"],
-    [201, "#eb87ff", "#754380"],
-    [204, "#f596ff", "#7a4b80"],
-    [207, "#ffa5ff", "#805280"],
-    [210, "#f5b4f5", "#7a5a7a"],
-    [213, "#ebc3eb", "#756175"],
-    [216, "#e1cde1", "#706670"],
-    [219, "#d7d7d7", "#6b6b6b"],
-    [222, "#dcdcdc", "#6e6e6e"],
-    [225, "#e1e1e1", "#707070"],
-    [228, "#e6e6e6", "#737373"],
-    [231, "#ebebeb", "#757575"],
-    [234, "#f0f0f0", "#787878"],
-    [237, "#f5f5f5", "#7a7a7a"],
-    [240, "#f5f5f5", "#7a7a7a"],
-    [255, "#f5f5f5", "#7a7a7a"]
-];
-
-function paletteColor(stops, index, dark) {
+// All appearance values come from the chart's JSON configuration.
+function paletteColor(stops, value, dark, fallback) {
     for (var i = 0; i < stops.length; ++i)
-        if (index < stops[i][0]) return stops[i][dark ? 2 : 1];
-    return "#000000";
+        if (value < stops[i][0]) return stops[i][dark ? 2 : 1];
+    return fallback[dark ? "darkColor" : "color"];
 }
-function pressureColor(hPa, dark) {
-    return paletteColor(pressureStops, Math.floor(Math.max(0, Math.min(255, (hPa - 915) / 170 * 255))), dark);
+function pressureColor(hPa, dark, field) {
+    return paletteColor(field.palette, hPa, dark, field.paletteFallback);
 }
-function windColor(mps, dark) {
-    return paletteColor(windStops, Math.floor(mps / 51 * 255), dark);
+function windColor(mps, dark, field) {
+    return paletteColor(field.palette, mps, dark, field.paletteFallback);
+}
+function namedColor(field, name, dark) {
+    return field.colors[name][dark ? "darkColor" : "color"];
 }
 function timeAxisLabels(left, right, startTime, endTime, origin, formatTime, measureText, calendarDays) {
     const width = right - left;
@@ -180,15 +78,15 @@ function paintChart(root, plot, ctx, withCursor) {
     const left = root.leftMargin, right = width - root.rightMargin;
     const top = root.topMargin, bottom = height - root.bottomMargin;
     if (right <= left || bottom <= top) return;
-    ctx.fillStyle = root.darkPalette ? "#121212" : "#ffffff";
+    ctx.fillStyle = root.plotStyle("background");
     ctx.fillRect(left, top, right - left, bottom - top);
     if (root.scaleKind === "clouds" || root.scaleKind === "cloudHeights") {
-        ctx.fillStyle = root.darkPalette ? "#1e3a5f" : "#87cefa";
+        ctx.fillStyle = root.plotStyle("cloudBackground");
         ctx.fillRect(left, top, right - left, bottom - top);
     }
     if (root.scaleKind === "temperature" && root.bounds.low < 0) {
         const zero = Math.max(top, Math.min(bottom, root.py(0)));
-        ctx.fillStyle = root.darkPalette ? "#2c5f7c" : "#87ceeb";
+        ctx.fillStyle = root.plotStyle("freezingBackground");
         ctx.fillRect(left, zero, right - left, bottom - zero);
     }
     ctx.font = "10px sans-serif";
@@ -206,7 +104,7 @@ function paintChart(root, plot, ctx, withCursor) {
         ctx.textAlign = "left";
         const linked = root.rightScale === "linked";
         const rightField = root.fields.find(f => root.isRightField(f));
-        if (rightField) ctx.fillStyle = root.rightScale === "fraction" || root.rightScale === "visibility" ? (root.darkPalette ? "#ff8c42" : "#ff7800") : root.seriesColor(rightField);
+        if (rightField) ctx.fillStyle = root.rightScale === "fraction" || root.rightScale === "visibility" ? root.plotStyle("rightAxisAccent") : root.seriesColor(rightField);
         ctx.fillText(root.axisUnit(true), right + 6, top - 14);
         for (const value of root.ticks(!linked))
             ctx.fillText(root.tickLabel(linked ? value * root.secondaryScale() : value, !linked), right + 6, root.py(value, !linked));
@@ -274,15 +172,15 @@ function paintChart(root, plot, ctx, withCursor) {
                     const types = root.fields.find(f => f.kind === "type");
                     const type = types ? point.precipitationType : null;
                     const rainColor = root.seriesColor(field);
-                    const snowColor = root.darkPalette ? "#60a5fa" : "#1539c0";
-                    const mixedColor = root.darkPalette ? "#e879f9" : "#b72dc1";
+                    const snowColor = root.categoryColor(field, "snow");
+                    const mixedColor = root.categoryColor(field, "sleet");
                     ctx.fillStyle = type === 2 ? snowColor : type === 3 ? mixedColor : rainColor;
                 }
                 if (field.kind === "stems") {
                     ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = field.lineWidth === undefined ? 2.5 : field.lineWidth;
                     ctx.beginPath(); ctx.moveTo(x, root.py(0, isRight)); ctx.lineTo(x, y); ctx.stroke();
                     if (point.value > (isRight ? root.rightBounds.high : root.bounds.high)) {
-                        ctx.fillStyle = root.darkPalette ? "#ff6b6b" : "#f44336";
+                        ctx.fillStyle = root.plotStyle("aboveScale");
                         ctx.beginPath(); ctx.arc(x, top + 2, 2, 0, Math.PI * 2); ctx.fill();
                     }
                 } else {
@@ -307,11 +205,11 @@ function paintChart(root, plot, ctx, withCursor) {
             const flash = flashes && root.valid(point.flash) ? point.flash : 0;
             if (flash <= 0 && intensity <= 0) continue;
             const eventStyle = flashes || storm, autoColors = eventStyle.eventColors !== false, radius = eventStyle.pointSize || 4;
-            ctx.fillStyle = autoColors ? (flash >= 30 ? (root.darkPalette ? "#ff6b6b" : "#f44336") : flash >= 10 ? (root.darkPalette ? "#ffb74d" : "#ff9800") : "#ffeb3b") : root.seriesColor(eventStyle);
+            ctx.fillStyle = autoColors ? root.categoryColor(eventStyle, flash >= 30 ? "high" : flash >= 10 ? "medium" : "low") : root.seriesColor(eventStyle);
             const eventX = root.px(intervalBounds(point).center), eventY = (top + bottom) / 2;
             ctx.globalAlpha = eventStyle.opacity === undefined ? 1 : eventStyle.opacity;
             if (flash > 0) { ctx.beginPath(); ctx.arc(eventX, eventY, radius, 0, Math.PI * 2); ctx.fill(); }
-            ctx.strokeStyle = root.darkPalette ? "#ffffff" : "#000000"; ctx.lineWidth = eventStyle.lineWidth || 2;
+            ctx.strokeStyle = root.categoryColor(eventStyle, "outline"); ctx.lineWidth = eventStyle.lineWidth || 2;
             ctx.beginPath(); ctx.arc(eventX, eventY, Math.max(1, radius - 1), 0, Math.PI * 2); ctx.stroke();
         }
     }
@@ -321,18 +219,18 @@ function paintChart(root, plot, ctx, withCursor) {
     const gridFirst = origin + Math.ceil((root.startTime - origin) / 10800) * 10800;
     root.drawGrid(ctx, left, right, top, bottom, gridFirst, 10800);
     for (const night of root.nights) {
-        ctx.fillStyle = root.darkPalette ? "#ffffff" : "#000000"; ctx.globalAlpha = 0.1;
+        ctx.fillStyle = root.plotStyle("grid"); ctx.globalAlpha = root.plotStyle("nightOpacity");
         ctx.fillRect(root.px(night.start), top, root.px(night.end) - root.px(night.start), bottom - top);
     }
     ctx.restore();
     if (root.directionBandHeight) {
         const bandBottom = bottom + root.directionBandHeight;
         ctx.save(); ctx.beginPath(); ctx.rect(left, bottom, right - left, root.directionBandHeight); ctx.clip();
-        ctx.fillStyle = root.darkPalette ? "#121212" : "#ffffff";
+        ctx.fillStyle = root.plotStyle("background");
         ctx.fillRect(left, bottom, right - left, root.directionBandHeight);
         root.drawGrid(ctx, left, right, bottom, bandBottom, gridFirst, 10800);
         for (const night of root.nights) {
-            ctx.fillStyle = root.darkPalette ? "#ffffff" : "#000000"; ctx.globalAlpha = 0.1;
+            ctx.fillStyle = root.plotStyle("grid"); ctx.globalAlpha = root.plotStyle("nightOpacity");
             ctx.fillRect(root.px(night.start), bottom, root.px(night.end) - root.px(night.start), root.directionBandHeight);
         }
         paintDirections(root, ctx, left, right, bottom + root.directionBandHeight / 2);

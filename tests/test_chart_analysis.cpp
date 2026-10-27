@@ -17,7 +17,15 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
     script.remove(0, script.indexOf('\n') + 1);
     const auto loaded = engine.evaluate(script);
     if (loaded.isError()) return loaded;
-    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartFields(fields)));
+    QVariantList styled;
+    for (const auto &entry : fields) {
+        auto field = defaultSeriesStyle(entry.toMap()["key"].toString());
+        const auto overrides = entry.toMap();
+        for (auto it = overrides.cbegin(); it != overrides.cend(); ++it) field[it.key()] = it.value();
+        styled.append(field);
+    }
+    engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartFields(styled)));
+    engine.globalObject().setProperty("appearanceUnderTest", engine.toScriptValue(defaultChartAppearance()["light"]));
     return engine.evaluate(QStringLiteral(R"JS(
         (function() {
             const rectangles=[], polygons=[], circles=[], lines=[], ctx={}; let path=[];
@@ -33,6 +41,8 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
             const root={
                 leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
                 darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,
+                plotStyle:function(name){return appearanceUnderTest[name];},
+                categoryColor:function(field,name){return namedColor(field,name,false);},
                 startTime:1800000000,endTime:1800021600,weather:{firstTimestamp:1800000000},nights:[],
                 fields:fieldsUnderTest,bounds:{low:0,high:10},rightBounds:{low:0,high:10},
                 ticks:function(){return [];},axisUnit:function(){return "";},
@@ -250,6 +260,7 @@ private slots:
         QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");
         QVERIFY(source.open(QIODevice::ReadOnly));
         QJSEngine engine;
+        engine.globalObject().setProperty("appearanceUnderTest", engine.toScriptValue(defaultChartAppearance()["light"]));
         auto script = QString::fromUtf8(source.readAll());
         script.remove(0, script.indexOf('\n') + 1); // QML's .pragma is not JavaScript.
         const auto loaded = engine.evaluate(script);
@@ -269,6 +280,7 @@ private slots:
                     const root = {
                         leftMargin:0, rightMargin:0, topMargin:0, bottomMargin:0, directionBandHeight:0,
                         darkPalette:false, scaleKind:"linear", directionOnly:false, hasRightAxis:false,
+                        plotStyle:function(name){return appearanceUnderTest[name];},
                         startTime:0, endTime:3600, weather:{firstTimestamp:0}, nights:[],
                         fields:[{key:"airtmp_point",kind:"bars",color:"#123456",axis:testRight?"right":"left",
                                  points:[{time:0,value:testValue},{time:3600,value:null}]}],

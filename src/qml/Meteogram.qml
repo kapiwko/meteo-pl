@@ -44,6 +44,7 @@ ColumnLayout {
     readonly property color gridColor: Kirigami.Theme.disabledTextColor
     readonly property color backgroundColor: Kirigami.Theme.backgroundColor
     readonly property bool darkPalette: backgroundColor.hslLightness < 0.5
+    readonly property var appearance: chartConfiguration.appearance || UserPreferences.chartAppearance
     readonly property real leftMargin: 50
     readonly property real rightMargin: 44
     readonly property bool hasRightAxis: fields.some(f => isRightField(f)) || ["temperature", "pressure", "wind", "probability", "clouds"].indexOf(scaleKind) >= 0
@@ -88,6 +89,13 @@ ColumnLayout {
         saveDialog.choose();
     }
     function seriesColor(field) { return darkPalette && field.darkColor ? field.darkColor : field.color; }
+    function categoryColor(field, name) {
+        if (field.colors && field.colors[name]) return field.colors[name][darkPalette ? "darkColor" : "color"];
+        const standard = UserPreferences.seriesCatalog.find(entry => entry.key === field.key);
+        const colors = Object.assign({}, standard ? standard.colors : {}, field.colors || {});
+        return colors[name][darkPalette ? "darkColor" : "color"];
+    }
+    function plotStyle(name) { return appearance[darkPalette ? "dark" : "light"][name]; }
     function isRightField(field) { return field.axis !== undefined ? field.axis === "right" : field.kind === "right" || field.kind === "rightBars"; }
     function configuredAxis(axis, right) {
         const prefix = right ? "right" : "left", minimum = chartConfiguration[prefix + "Min"], maximum = chartConfiguration[prefix + "Max"];
@@ -101,8 +109,8 @@ ColumnLayout {
             const a = field.points[i-1], b = field.points[i];
             if (!valid(a.value) || !valid(b.value)) continue;
             const right = isRightField(field);
-            ctx.fillStyle = field.fill === "pressure" ? Style.pressureColor(b.value, darkPalette)
-                : field.fill === "wind" ? Style.windColor((a.value + b.value) / 2 / windScale, darkPalette) : seriesColor(field);
+            ctx.fillStyle = field.fill === "pressure" ? Style.pressureColor(b.value, darkPalette, field)
+                : field.fill === "wind" ? Style.windColor((a.value + b.value) / 2 / windScale, darkPalette, field) : seriesColor(field);
             ctx.beginPath(); ctx.moveTo(px(a.time), bottom); ctx.lineTo(px(a.time), py(a.value, right));
             ctx.lineTo(px(b.time), py(b.value, right)); ctx.lineTo(px(b.time), bottom); ctx.closePath(); ctx.fill();
         }
@@ -129,10 +137,10 @@ ColumnLayout {
     }
     function drawGrid(ctx, left, right, top, bottom, first, interval) {
         ctx.save();
-        ctx.strokeStyle = darkPalette ? "#ffffff" : "#000000";
-        ctx.globalAlpha = darkPalette ? 0.24 : 0.22;
-        ctx.lineWidth = 0.75;
-        ctx.setLineDash([2, 2]);
+        ctx.strokeStyle = plotStyle("grid");
+        ctx.globalAlpha = plotStyle("gridOpacity");
+        ctx.lineWidth = plotStyle("gridWidth");
+        ctx.setLineDash(plotStyle("gridDash"));
         if (!directionOnly) for (const value of ticks(false)) {
             const y = py(value);
             ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
@@ -142,8 +150,8 @@ ColumnLayout {
             ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
         }
         ctx.setLineDash([]);
-        ctx.globalAlpha = 0.45;
-        ctx.lineWidth = 1;
+        ctx.globalAlpha = plotStyle("borderOpacity");
+        ctx.lineWidth = plotStyle("borderWidth");
         ctx.strokeRect(left, top, right - left, bottom - top);
         ctx.restore();
     }
@@ -360,9 +368,9 @@ ColumnLayout {
         }
         Repeater {
             model: root.fields.some(f => f.kind === "type") ? [
-                {label: I18n.i18n("Rain"), color: root.darkPalette ? "#4ade80" : "#00aa00"},
-                {label: I18n.i18n("Snow"), color: root.darkPalette ? "#60a5fa" : "#1539c0"},
-                {label: I18n.i18n("Sleet"), color: root.darkPalette ? "#e879f9" : "#b72dc1"}
+                {label: I18n.i18n("Rain"), color: root.seriesColor(root.fields.find(f => f.kind === "type"))},
+                {label: I18n.i18n("Snow"), color: root.categoryColor(root.fields.find(f => f.kind === "type"), "snow")},
+                {label: I18n.i18n("Sleet"), color: root.categoryColor(root.fields.find(f => f.kind === "type"), "sleet")}
             ] : []
             delegate: RowLayout {
                 required property var modelData
@@ -376,7 +384,7 @@ ColumnLayout {
             visible: root.fields.some(f => (f.kind === "stems" || f.kind === "gusts") && f.points.some(p => p.time >= root.startTime && p.time <= root.endTime && root.valid(p.value) && p.value > (root.isRightField(f) ? root.rightBounds.high : root.bounds.high)))
             spacing: 5
             height: 26
-            Rectangle { Layout.preferredWidth: 4; Layout.preferredHeight: 4; Layout.alignment: Qt.AlignVCenter; radius: 2; color: root.darkPalette ? "#ff6b6b" : "#f44336" }
+            Rectangle { Layout.preferredWidth: 4; Layout.preferredHeight: 4; Layout.alignment: Qt.AlignVCenter; radius: 2; color: root.plotStyle("aboveScale") }
             Label { Layout.alignment: Qt.AlignVCenter; text: root.wind ? I18n.i18n("Gust above scale") : I18n.i18n("Maximum precipitation above scale"); font.pixelSize: 11; opacity: 0.8 }
         }
     }

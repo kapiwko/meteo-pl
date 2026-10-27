@@ -1,0 +1,761 @@
+{
+  "format": "pl.meteo.chart-profiles",
+  "version": 1,
+  "profiles": [
+    {
+      "id": "outdoor",
+      "name": "Outdoors",
+      "chartHeight": 0,
+      "charts": [
+        {
+          "enabled": true,
+          "key": "temperature",
+          "leftScale": "temperature",
+          "rightScale": "auto",
+          "series": [
+            {
+              "axis": "left",
+              "color": "#f44336",
+              "darkColor": "#ff6b6b",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "airtmp_point",
+              "label": "Air temperature",
+              "layer": 13,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "line",
+              "unit": "°C"
+            },
+            {
+              "axis": "left",
+              "color": "#fadcdc",
+              "darkColor": "#4d2626",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "airtmp_max",
+              "label": "Air temperature min–max",
+              "layer": 1,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "airtmp_min",
+              "opacity": 0.7490196078431373,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "range",
+              "unit": "°C"
+            },
+            {
+              "axis": "left",
+              "color": "#6a5acd",
+              "darkColor": "#9f7aea",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "dwptmp_point",
+              "label": "Dew point",
+              "layer": 14,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 2,
+              "precipitationColors": false,
+              "render": "points",
+              "unit": "°C"
+            },
+            {
+              "axis": "left",
+              "color": "#00008b",
+              "darkColor": "#4a90e2",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "wchill_point",
+              "label": "Feels like temperature",
+              "layer": 12,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "line",
+              "unit": "°C"
+            },
+            {
+              "axis": "left",
+              "color": "#b9dcff",
+              "darkColor": "#1a3a5c",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "wchill_max",
+              "label": "Feels like min–max",
+              "layer": 0,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "wchill_min",
+              "opacity": 0.7490196078431373,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "range",
+              "unit": "°C"
+            },
+            {
+              "axis": "left",
+              "color": "#795548",
+              "darkColor": "#8b6914",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "grdtmp_max",
+              "label": "Ground temperature min–max",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 1.25,
+              "lowerKey": "grdtmp_min",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "rangeStems",
+              "unit": "°C"
+            }
+          ],
+          "title": "Temperature",
+          "appearance": {
+            "light": {
+              "background": "#ffffff",
+              "cloudBackground": "#87cefa",
+              "freezingBackground": "#87ceeb",
+              "grid": "#000000",
+              "gridOpacity": 0.22,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff7800",
+              "aboveScale": "#f44336",
+              "nightOpacity": 0.1
+            },
+            "dark": {
+              "background": "#121212",
+              "cloudBackground": "#1e3a5f",
+              "freezingBackground": "#2c5f7c",
+              "grid": "#ffffff",
+              "gridOpacity": 0.24,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff8c42",
+              "aboveScale": "#ff6b6b",
+              "nightOpacity": 0.1
+            }
+          }
+        },
+        {
+          "enabled": true,
+          "key": "precipitation",
+          "leftScale": "precipitation",
+          "rightScale": "auto",
+          "series": [
+            {
+              "axis": "left",
+              "color": "#00aa00",
+              "darkColor": "#4ade80",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "pcpttl_aver",
+              "label": "Mean precipitation in interval",
+              "layer": 10,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": true,
+              "render": "bars",
+              "unit": "mm",
+              "colors": {
+                "snow": {
+                  "color": "#1539c0",
+                  "darkColor": "#60a5fa"
+                },
+                "sleet": {
+                  "color": "#b72dc1",
+                  "darkColor": "#e879f9"
+                }
+              }
+            },
+            {
+              "axis": "left",
+              "color": "#00aa00",
+              "darkColor": "#4ade80",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "pcpttl_max",
+              "label": "Maximum precipitation in interval",
+              "layer": 11,
+              "lineStyle": "solid",
+              "lineWidth": 2.5,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": true,
+              "render": "stems",
+              "unit": "mm",
+              "colors": {
+                "snow": {
+                  "color": "#1539c0",
+                  "darkColor": "#60a5fa"
+                },
+                "sleet": {
+                  "color": "#b72dc1",
+                  "darkColor": "#e879f9"
+                }
+              }
+            },
+            {
+              "axis": "left",
+              "color": "#00aa00",
+              "darkColor": "#4ade80",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "pcpttl_type_max",
+              "label": "Precipitation type",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "type",
+              "unit": "",
+              "colors": {
+                "snow": {
+                  "color": "#1539c0",
+                  "darkColor": "#60a5fa"
+                },
+                "sleet": {
+                  "color": "#b72dc1",
+                  "darkColor": "#e879f9"
+                }
+              }
+            },
+            {
+              "axis": "right",
+              "color": "#dc4614",
+              "darkColor": "#ff8c42",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "realhum_aver",
+              "label": "Relative humidity",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "line",
+              "unit": "%"
+            }
+          ],
+          "title": "Precipitation and humidity",
+          "appearance": {
+            "light": {
+              "background": "#ffffff",
+              "cloudBackground": "#87cefa",
+              "freezingBackground": "#87ceeb",
+              "grid": "#000000",
+              "gridOpacity": 0.22,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff7800",
+              "aboveScale": "#f44336",
+              "nightOpacity": 0.1
+            },
+            "dark": {
+              "background": "#121212",
+              "cloudBackground": "#1e3a5f",
+              "freezingBackground": "#2c5f7c",
+              "grid": "#ffffff",
+              "gridOpacity": 0.24,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff8c42",
+              "aboveScale": "#ff6b6b",
+              "nightOpacity": 0.1
+            }
+          }
+        },
+        {
+          "enabled": true,
+          "key": "probability",
+          "leftScale": "probability",
+          "rightScale": "auto",
+          "series": [
+            {
+              "axis": "left",
+              "color": "#00aa00",
+              "darkColor": "#4ade80",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "pcpttlprob_point",
+              "label": "Probability of precipitation",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "line",
+              "unit": "%"
+            },
+            {
+              "axis": "left",
+              "color": "#ff9800",
+              "darkColor": "#ff9800",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "storm_max",
+              "label": "Storm intensity",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 4,
+              "precipitationColors": false,
+              "render": "storm",
+              "unit": "",
+              "colors": {
+                "low": {
+                  "color": "#ffeb3b",
+                  "darkColor": "#ffeb3b"
+                },
+                "medium": {
+                  "color": "#ff9800",
+                  "darkColor": "#ffb74d"
+                },
+                "high": {
+                  "color": "#f44336",
+                  "darkColor": "#ff6b6b"
+                },
+                "outline": {
+                  "color": "#000000",
+                  "darkColor": "#ffffff"
+                }
+              }
+            },
+            {
+              "axis": "left",
+              "color": "#f44336",
+              "darkColor": "#ff6b6b",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "flash_max",
+              "label": "Lightning indicator",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 4,
+              "precipitationColors": false,
+              "render": "flash",
+              "unit": "",
+              "colors": {
+                "low": {
+                  "color": "#ffeb3b",
+                  "darkColor": "#ffeb3b"
+                },
+                "medium": {
+                  "color": "#ff9800",
+                  "darkColor": "#ffb74d"
+                },
+                "high": {
+                  "color": "#f44336",
+                  "darkColor": "#ff6b6b"
+                },
+                "outline": {
+                  "color": "#000000",
+                  "darkColor": "#ffffff"
+                }
+              }
+            }
+          ],
+          "title": "Precipitation chance and storms",
+          "appearance": {
+            "light": {
+              "background": "#ffffff",
+              "cloudBackground": "#87cefa",
+              "freezingBackground": "#87ceeb",
+              "grid": "#000000",
+              "gridOpacity": 0.22,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff7800",
+              "aboveScale": "#f44336",
+              "nightOpacity": 0.1
+            },
+            "dark": {
+              "background": "#121212",
+              "cloudBackground": "#1e3a5f",
+              "freezingBackground": "#2c5f7c",
+              "grid": "#ffffff",
+              "gridOpacity": 0.24,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff8c42",
+              "aboveScale": "#ff6b6b",
+              "nightOpacity": 0.1
+            }
+          }
+        },
+        {
+          "enabled": true,
+          "key": "wind",
+          "leftScale": "wind",
+          "rightScale": "auto",
+          "series": [
+            {
+              "axis": "left",
+              "color": "#111199",
+              "darkColor": "#5b9cf6",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "wind",
+              "key": "wind10_sd_true_prev_point",
+              "label": "Wind at 10 m",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "area",
+              "unit": "m/s",
+              "palette": [
+                [1.0, "#80ffff", "#406080"],
+                [2.0, "#00ffff", "#008080"],
+                [3.0, "#00c3ff", "#006280"],
+                [4.0, "#0082ff", "#004180"],
+                [5.0, "#004b82", "#002541"],
+                [6.0, "#008200", "#004100"],
+                [7.0, "#1ec800", "#0f6400"],
+                [8.0, "#4bff1e", "#25800f"],
+                [9.0, "#82ff4b", "#418025"],
+                [10.0, "#c8ff82", "#648041"],
+                [11.0, "#ffff4b", "#808025"],
+                [12.0, "#ffc800", "#806400"],
+                [13.0, "#ff8200", "#804100"],
+                [14.0, "#c84b00", "#642500"],
+                [15.0, "#821e00", "#410f00"],
+                [16.0, "#820a0a", "#410505"],
+                [17.0, "#c81414", "#640a0a"],
+                [18.0, "#ff2828", "#801414"],
+                [19.0, "#ff4b4b", "#802525"],
+                [20.0, "#ff8282", "#804141"],
+                [21.0, "#ff82ff", "#804180"],
+                [22.0, "#dc5adc", "#6e2d6e"],
+                [23.0, "#c83cc8", "#641e64"],
+                [24.0, "#b41eb4", "#5a0f5a"],
+                [25.0, "#a000a0", "#500050"],
+                [26.0, "#5a1e5a", "#2d0f2d"],
+                [27.0, "#783c78", "#3c1e3c"],
+                [28.0, "#965a96", "#4b2d4b"],
+                [29.0, "#b478b4", "#5a3c5a"],
+                [30.0, "#d296d2", "#694b69"],
+                [51.0, "#e6b4e6", "#735a73"]
+              ],
+              "paletteFallback": {
+                "color": "#000000",
+                "darkColor": "#000000"
+              }
+            },
+            {
+              "axis": "left",
+              "color": "#f44336",
+              "darkColor": "#ff6b6b",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "wind_gust_max",
+              "label": "Wind gusts",
+              "layer": 16,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "gusts",
+              "unit": "m/s"
+            },
+            {
+              "axis": "left",
+              "color": "#111199",
+              "darkColor": "#5b9cf6",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "wind10_dr_deg_true_prev_point",
+              "label": "Wind direction · from",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "direction",
+              "unit": "°"
+            }
+          ],
+          "title": "Wind",
+          "appearance": {
+            "light": {
+              "background": "#ffffff",
+              "cloudBackground": "#87cefa",
+              "freezingBackground": "#87ceeb",
+              "grid": "#000000",
+              "gridOpacity": 0.22,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff7800",
+              "aboveScale": "#f44336",
+              "nightOpacity": 0.1
+            },
+            "dark": {
+              "background": "#121212",
+              "cloudBackground": "#1e3a5f",
+              "freezingBackground": "#2c5f7c",
+              "grid": "#ffffff",
+              "gridOpacity": 0.24,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff8c42",
+              "aboveScale": "#ff6b6b",
+              "nightOpacity": 0.1
+            }
+          }
+        },
+        {
+          "enabled": true,
+          "key": "clouds",
+          "leftScale": "clouds",
+          "rightScale": "auto",
+          "series": [
+            {
+              "axis": "left",
+              "color": "#ffffff",
+              "darkColor": "#ffffff",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "cldhigh_aver",
+              "label": "High clouds",
+              "layer": 0,
+              "lineStyle": "solid",
+              "lineWidth": 1.25,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "cloudArea",
+              "unit": "%"
+            },
+            {
+              "axis": "left",
+              "color": "#969696",
+              "darkColor": "#969696",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "cldmed_aver",
+              "label": "Medium clouds",
+              "layer": 1,
+              "lineStyle": "solid",
+              "lineWidth": 1.25,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "cloudArea",
+              "unit": "%"
+            },
+            {
+              "axis": "left",
+              "color": "#5a5a5a",
+              "darkColor": "#5a5a5a",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "cldlow_aver",
+              "label": "Low clouds",
+              "layer": 2,
+              "lineStyle": "solid",
+              "lineWidth": 1.25,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "cloudArea",
+              "unit": "%"
+            },
+            {
+              "axis": "left",
+              "color": "#424242",
+              "darkColor": "#373737",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "cldvlow_aver",
+              "label": "Very low clouds",
+              "layer": 3,
+              "lineStyle": "solid",
+              "lineWidth": 1.25,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "cloudArea",
+              "unit": "%"
+            },
+            {
+              "axis": "left",
+              "color": "#dc4614",
+              "darkColor": "#dc4614",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "cldtot_aver",
+              "label": "Total cloud cover",
+              "layer": 15,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "line",
+              "unit": "%"
+            },
+            {
+              "axis": "right",
+              "color": "#ffb400",
+              "darkColor": "#ffb400",
+              "enabled": true,
+              "eventColors": true,
+              "fill": "solid",
+              "key": "fog_max",
+              "label": "Fog cover",
+              "layer": 20,
+              "lineStyle": "solid",
+              "lineWidth": 2,
+              "lowerKey": "",
+              "opacity": 1,
+              "pointSize": 3,
+              "precipitationColors": false,
+              "render": "rightBars",
+              "unit": "%"
+            }
+          ],
+          "title": "Cloud cover and fog",
+          "appearance": {
+            "light": {
+              "background": "#ffffff",
+              "cloudBackground": "#87cefa",
+              "freezingBackground": "#87ceeb",
+              "grid": "#000000",
+              "gridOpacity": 0.22,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff7800",
+              "aboveScale": "#f44336",
+              "nightOpacity": 0.1
+            },
+            "dark": {
+              "background": "#121212",
+              "cloudBackground": "#1e3a5f",
+              "freezingBackground": "#2c5f7c",
+              "grid": "#ffffff",
+              "gridOpacity": 0.24,
+              "gridWidth": 0.75,
+              "gridDash": [
+                2,
+                2
+              ],
+              "borderOpacity": 0.45,
+              "borderWidth": 1,
+              "rightAxisAccent": "#ff8c42",
+              "aboveScale": "#ff6b6b",
+              "nightOpacity": 0.1
+            }
+          }
+        }
+      ],
+      "revision": 1
+    }
+  ],
+  "$schema": "../schemas/chart-data.schema.json"
+}

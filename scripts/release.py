@@ -17,7 +17,7 @@ import time
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORIES = ("apps", "cmake", "docs", "integrations", "packaging", "po", "scripts", "src", "tests", ".github")
+DIRECTORIES = ("apps", "cmake", "docs", "integrations", "packaging", "po", "resources", "scripts", "src", "tests", ".github")
 FILES = ("CMakeLists.txt", "CMakePresets.json", "VERSION", "README.md", ".gitignore", ".dockerignore", "LICENSE", "COPYING")
 ARCH_DEPENDS = ("qt6-base", "qt6-declarative", "qt6-positioning", "qt6-svg", "qt6-wayland", "breeze-icons", "kirigami", "ki18n", "knotifications", "qqc2-desktop-style", "krunner")
 

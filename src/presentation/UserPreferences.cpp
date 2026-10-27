@@ -198,7 +198,8 @@ QVariantList UserPreferences::chartLayoutForProfile(const QString &id) const
                 return normalizeChartLayout(entry.toMap()["charts"].toList());
     return defaultChartLayout(id);
 }
-QVariantList UserPreferences::chartCatalog() const { return defaultChartLayout("full"); }
+QVariantList UserPreferences::chartCatalog() const { return defaultChartCatalog(); }
+QVariantMap UserPreferences::chartAppearance() const { return defaultChartAppearance(); }
 QVariantList UserPreferences::seriesCatalog() const { return chartSeriesCatalog(); }
 QString UserPreferences::settingsFile() const { return m_store.fileName(); }
 

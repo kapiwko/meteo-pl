@@ -1,5 +1,6 @@
 #include "ProfileFileCodec.hpp"
 #include "ChartConfiguration.hpp"
+#include "JsonSchemaValidator.hpp"
 #include "core/Localization.hpp"
 #include <QFile>
 #include <QFileInfo>
@@ -27,6 +28,8 @@ std::optional<QVariantList> ProfileFileCodec::decode(const QByteArray &bytes, QS
     const auto root = document.object();
     if (root["format"] != "pl.meteo.chart-profiles" || root["version"].toDouble(-1) != 1)
         return fail(Meteo::i18n("Unsupported profile file format or version."));
+    QString validationError;
+    if (!validateChartJson(root, &validationError)) return fail(validationError);
     const auto input = root["profiles"].toArray();
     if (input.isEmpty() || input.size() > 100)
         return fail(Meteo::i18n("The file must contain between 1 and 100 profiles."));
@@ -45,8 +48,9 @@ std::optional<QVariantList> ProfileFileCodec::decode(const QByteArray &bytes, QS
         if (!valid)
             return fail(Meteo::i18n("Invalid profile definition or unknown series. No profiles were imported."));
         const auto height = entry["chartHeight"].toInt();
-        profiles.append(
-            QVariantMap{{"name", name}, {"charts", charts}, {"chartHeight", height ? std::clamp(height, 64, 800) : 0}});
+        QVariantMap profile{{"name", name}, {"charts", charts}, {"chartHeight", height ? std::clamp(height, 64, 800) : 0}};
+        if (entry.contains("revision")) profile["revision"] = entry["revision"].toInt();
+        profiles.append(profile);
     }
     return profiles;
 }
@@ -54,7 +58,8 @@ std::optional<QByteArray> ProfileFileCodec::encode(const QVariantList &profiles,
 {
     if (error)
         error->clear();
-    const auto bytes = QJsonDocument(QJsonObject{{"format", "pl.meteo.chart-profiles"},
+    const auto bytes = QJsonDocument(QJsonObject{{"$schema", "https://raw.githubusercontent.com/kapiwko/meteo-pl/main/resources/schemas/chart-data.schema.json"},
+                                                 {"format", "pl.meteo.chart-profiles"},
                                                  {"version", 1},
                                                  {"profiles", QJsonArray::fromVariantList(profiles)}})
                            .toJson(QJsonDocument::Indented);

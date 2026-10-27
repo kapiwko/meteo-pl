@@ -23,6 +23,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_PROPERTY(QVariantList profiles READ profiles NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartLayout READ chartLayout NOTIFY displayChanged)
     Q_PROPERTY(QVariantList chartCatalog READ chartCatalog CONSTANT)
+    Q_PROPERTY(QVariantMap chartAppearance READ chartAppearance CONSTANT)
     Q_PROPERTY(QVariantList seriesCatalog READ seriesCatalog CONSTANT)
     Q_PROPERTY(QString settingsFile READ settingsFile CONSTANT)
     Q_PROPERTY(QString probeMode READ probeMode WRITE setProbeMode NOTIFY displayChanged)
@@ -46,6 +47,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE QStringList seriesRenderers(const QString &key) const;
     Q_INVOKABLE QVariantList chartLayoutForProfile(const QString &id) const;
     QVariantList chartCatalog() const;
+    QVariantMap chartAppearance() const;
     QVariantList seriesCatalog() const;
     QString settingsFile() const;
     QString probeMode() const;
