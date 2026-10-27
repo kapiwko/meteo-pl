@@ -17,6 +17,7 @@ if(WIN32 OR APPLE OR ANDROID)
 endif()
 if(APPLE)
     set_target_properties(meteo-pl PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/packaging/macos/Info.plist.in"
         MACOSX_BUNDLE_GUI_IDENTIFIER "pl.meteo.desktop"
         MACOSX_BUNDLE_BUNDLE_NAME "Meteo"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
