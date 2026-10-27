@@ -14,6 +14,9 @@ ScrollView {
     GridLayout {
         id: dayGrid
         width: root.availableWidth
+        uniformCellWidths: true
+        columnSpacing: Kirigami.Units.smallSpacing
+        rowSpacing: Kirigami.Units.smallSpacing
         columns: Math.max(1, Math.min(days.count, Math.floor(width / 160)))
         readonly property real cardWidth: (width - columnSpacing * (columns - 1)) / columns
         Repeater {
@@ -23,13 +26,12 @@ ScrollView {
                 id: dayCard
                 objectName: "forecastDayCard"
                 required property var modelData
-                Layout.minimumWidth: dayGrid.cardWidth
+                Layout.minimumWidth: 0
                 Layout.preferredWidth: dayGrid.cardWidth
-                Layout.maximumWidth: dayGrid.cardWidth
+                Layout.fillWidth: true
                 Layout.fillHeight: true
                 padding: 12
-                ColumnLayout {
-                    anchors.fill: parent
+                contentItem: ColumnLayout {
                     spacing: 4
                     Label { Layout.fillWidth: true; Layout.preferredHeight: 28; text: dayCard.modelData.day; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter; wrapMode: Text.WordWrap }
                     Kirigami.Icon { source: dayCard.modelData.icon; Layout.preferredWidth: 48; Layout.preferredHeight: 48; Layout.alignment: Qt.AlignHCenter; Accessible.name: dayCard.modelData.description }

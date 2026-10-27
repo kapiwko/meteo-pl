@@ -87,6 +87,7 @@ Popup {
             objectName: "inspectorCategories"
             Layout.fillWidth: true
             implicitWidth: 0
+            clip: true
             visible: root.allParameters
             currentIndex: Math.max(0, root.categories.findIndex(entry => entry.key === root.category))
             TabButton { baselineOffset: height / 2; text: I18n.i18n("All"); width: implicitWidth; onClicked: root.category = "" }

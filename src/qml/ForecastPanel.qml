@@ -288,7 +288,7 @@ Item {
             Layout.fillWidth: true
             maximumContentWidth: root.width
             spacing: Kirigami.Units.smallSpacing
-            buttonWidth: Math.max(0, (root.width - 5 * spacing) / 6)
+            buttonWidth: Math.max(0, Math.floor((root.width - 5 * spacing) / 6))
             currentIndex: root.viewMode
             onCurrentIndexChanged: if (currentIndex >= 0) root.viewMode = currentIndex
             function selectPage() {
@@ -506,10 +506,11 @@ Item {
                                 ToolTip.visible: hovered
                             }
                             ToolButton {
+                                objectName: "chartExportButton"
                                 text: chartExporter.busy ? I18n.i18n("Exporting…") : I18n.i18n("Export…")
                                 icon.name: "document-export"
                                 display: root.touchMode ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
-                                implicitHeight: root.touchMode ? 44 : implicitContentHeight + topPadding + bottomPadding
+                                Layout.minimumHeight: root.touchMode ? 44 : 0
                                 enabled: !chartExporter.busy && root.visibleCharts.length > 0
                                 Accessible.name: I18n.i18n("Export selected charts to PNG")
                                 ToolTip.text: Accessible.name; ToolTip.visible: hovered
