@@ -7,6 +7,7 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     property bool commentary: true
+    property bool mobileLayout: false
     property bool initialized: false
     property var selectedArticle: null
     readonly property string today: feed.today
@@ -15,6 +16,7 @@ ColumnLayout {
     Component.onCompleted: { initialized = true; feed.reload(false); }
     onCommentaryChanged: if (initialized) { selectedArticle = null; Qt.callLater(() => feed.reload(false)); }
     function shiftDate(delta) {
+        if (feed.busy || delta > 0 && shownDate >= today) return;
         const date = new Date(shownDate + "T12:00:00");
         date.setDate(date.getDate() + delta);
         feed.date = Qt.formatDate(date, "yyyy-MM-dd");
@@ -27,7 +29,7 @@ ColumnLayout {
     RowLayout {
         visible: root.commentary
         Layout.fillWidth: true
-        Button { text: "‹"; enabled: !feed.busy; onClicked: root.shiftDate(-1) }
+        Button { objectName: "synopticPreviousDay"; visible: !root.mobileLayout; text: "‹"; enabled: !feed.busy; onClicked: root.shiftDate(-1) }
         TextField {
             id: dateField
             Layout.fillWidth: true
@@ -36,8 +38,16 @@ ColumnLayout {
             inputMask: "9999-99-99"
             onAccepted: feed.date = text
         }
-        Button { text: "›"; enabled: !feed.busy && root.shownDate < root.today; onClicked: root.shiftDate(1) }
+        Button { objectName: "synopticNextDay"; visible: !root.mobileLayout; text: "›"; enabled: !feed.busy && root.shownDate < root.today; onClicked: root.shiftDate(1) }
         Button { text: I18n.i18n("Latest"); enabled: !feed.busy; onClicked: { if (feed.date.length) feed.date = ""; else feed.reload(); } }
+    }
+    Label {
+        visible: root.commentary && root.mobileLayout
+        Layout.fillWidth: true
+        text: I18n.i18n("Swipe left or right to change the day")
+        font: Kirigami.Theme.smallFont
+        color: Kirigami.Theme.disabledTextColor
+        horizontalAlignment: Text.AlignHCenter
     }
     Button { visible: !root.commentary && root.selectedArticle !== null; text: I18n.i18n("Back to articles"); icon.name: "go-previous"; onClicked: root.selectedArticle = null }
     BusyIndicator { running: feed.busy; visible: running; Layout.alignment: Qt.AlignHCenter }
@@ -45,11 +55,26 @@ ColumnLayout {
     Kirigami.InlineMessage { Layout.fillWidth: true; visible: feed.notice.length > 0; text: feed.notice; type: Kirigami.MessageType.Information }
     ScrollView {
         id: readerScroll
+        objectName: "editorialReader"
         Layout.fillWidth: true
         Layout.fillHeight: true
         contentWidth: availableWidth
         clip: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        DragHandler {
+            target: null
+            enabled: root.commentary && root.mobileLayout && !feed.busy
+            acceptedDevices: PointerDevice.TouchScreen
+            maximumPointCount: 1
+            yAxis.enabled: false
+            property real distance: 0
+            onActiveTranslationChanged: if (active) distance = activeTranslation.x
+            onActiveChanged: {
+                if (active) distance = 0;
+                else if (enabled && root.visible && Math.abs(distance) >= Math.min(80, readerScroll.width * 0.2))
+                    root.shiftDate(distance < 0 ? 1 : -1);
+            }
+        }
         ColumnLayout {
             width: readerScroll.availableWidth
             spacing: 16
