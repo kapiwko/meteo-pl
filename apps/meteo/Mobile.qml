@@ -19,6 +19,12 @@ ApplicationWindow {
     Kirigami.Theme.colorSet: colorScheme === Qt.Dark ? Kirigami.Theme.Complementary : Kirigami.Theme.Window
     MaterialStyle.Material.theme: colorScheme === Qt.Dark ? MaterialStyle.Material.Dark : MaterialStyle.Material.Light
     color: Kirigami.Theme.backgroundColor
+    readonly property bool canNavigateBack: navigation.depth > 1 || forecastPage.canNavigateBack
+    function navigateBack() {
+        if (navigation.busy) return;
+        if (navigation.depth > 1) navigation.pop();
+        else forecastPage.navigateBack();
+    }
     ForecastSession { id: session }
     StackView {
         id: navigation
@@ -26,21 +32,21 @@ ApplicationWindow {
         anchors.fill: parent
         focus: true
         onCurrentItemChanged: if (currentItem) currentItem.forceActiveFocus()
-        Keys.onReleased: event => { if (event.key === Qt.Key_Back) { navigation.pop(); event.accepted = true; } }
         initialItem: MobileForecastPage {
+            id: forecastPage
             weather: window.weather
             navigationStack: navigation
             onForecastSelected: (name, latitude, longitude, model) => session.selectForecast(name, latitude, longitude, model)
         }
     }
     onClosing: event => {
-        if (navigation.depth > 1) { event.accepted = false; if (!navigation.busy) navigation.pop(); }
+        if (window.canNavigateBack) { event.accepted = false; window.navigateBack(); }
     }
     Shortcut {
         objectName: "mobileBackShortcut"
         context: Qt.ApplicationShortcut
-        sequences: [StandardKey.Back, StandardKey.Cancel]
-        enabled: navigation.depth > 1 && !navigation.busy
-        onActivated: navigation.pop()
+        sequences: ["Back", "Alt+Left", "Escape"]
+        enabled: window.canNavigateBack
+        onActivated: window.navigateBack()
     }
 }

@@ -12,6 +12,14 @@ Item {
     property int viewMode: 0
     property bool touchMode: Kirigami.Settings.isMobile
     property bool mobileLayout: false
+    function navigateBack() {
+        if (viewMode < 4) return false;
+        const page = mainViewLoader.item as Pane;
+        const reader = page ? page.contentItem as EditorialView : null;
+        if (!reader || !reader.selectedArticle) return false;
+        reader.selectedArticle = null;
+        return true;
+    }
     property real viewportStart: weather.firstTimestamp
     property real viewportEnd: weather.lastTimestamp
     property real documentFirst: 0
@@ -336,6 +344,7 @@ Item {
             ForecastTab { page: 5; text: I18n.i18n("Articles"); icon.name: "view-list-text" }
         }
         Loader {
+            id: mainViewLoader
             Layout.fillWidth: true
             Layout.fillHeight: true
             sourceComponent: root.viewMode === 3 ? mapsComponent : root.viewMode >= 4 ? contentComponent : forecastComponent

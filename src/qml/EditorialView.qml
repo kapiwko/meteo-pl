@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 
 ColumnLayout {
     id: root
+    objectName: "editorialView"
     property bool commentary: true
     property bool mobileLayout: false
     property bool initialized: false

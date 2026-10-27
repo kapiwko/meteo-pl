@@ -14,6 +14,15 @@ Kirigami.Page {
     property int newsView: 4
     readonly property int destination: forecastPanel.viewMode < 3 ? 0 : forecastPanel.viewMode === 3 ? 1 : 2
     readonly property alias panel: forecastPanel
+    readonly property bool canNavigateBack: placesSheet.opened || moreSheet.opened || about.opened || destination !== 0 || forecastView !== 0
+    function navigateBack() {
+        if (placesSheet.opened) placesSheet.close();
+        else if (moreSheet.opened) moreSheet.close();
+        else if (about.opened) about.close();
+        else if (forecastPanel.navigateBack()) return;
+        else if (destination !== 0) showDestination(0);
+        else if (forecastView !== 0) forecastPanel.viewMode = 0;
+    }
     signal forecastSelected(string name, real latitude, real longitude, string model)
     padding: 0
     title: I18n.i18n("Meteo")
@@ -69,7 +78,7 @@ Kirigami.Page {
         baselineOffset: contentItem ? contentItem.y + contentItem.baselineOffset : height / 2
     }
     component SectionTab: MobileTab {
-        display: AbstractButton.TextBesideIcon
+        display: TabButton.TextBesideIcon
         icon.width: 20
         icon.height: 20
         leftPadding: Kirigami.Units.smallSpacing
