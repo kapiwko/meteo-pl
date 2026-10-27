@@ -19,6 +19,7 @@ ColumnLayout {
     property bool showHeading: true
     property bool identificationEnabled: false
     property bool touchNavigationEnabled: false
+    property bool compactAxes: false
     // The desktop panel shares its exporter and status message across charts.
     // Standalone charts (including Plasma) use the same native save workflow.
     property var exportHandler: null
@@ -45,8 +46,8 @@ ColumnLayout {
     readonly property color backgroundColor: Kirigami.Theme.backgroundColor
     readonly property bool darkPalette: backgroundColor.hslLightness < 0.5
     readonly property var appearance: chartConfiguration.appearance || UserPreferences.chartAppearance
-    readonly property real leftMargin: 50
-    readonly property real rightMargin: 44
+    readonly property real leftMargin: compactAxes ? axisMargin(false) : 50
+    readonly property real rightMargin: compactAxes ? hasRightAxis ? axisMargin(true) : 6 : 44
     readonly property bool hasRightAxis: fields.some(f => isRightField(f)) || ["temperature", "pressure", "wind", "probability", "clouds"].indexOf(scaleKind) >= 0
     readonly property bool wind: scaleKind === "wind"
     readonly property bool directionOnly: fields.length > 0 && fields.every(f => f.kind === "direction" || f.kind === "hidden")
@@ -257,6 +258,14 @@ ColumnLayout {
         if (configured !== undefined) return configured;
         const field = fields.find(f => isRightField(f) === Boolean(right));
         return field ? field.unit : "";
+    }
+    function axisMargin(right) {
+        if (directionOnly) return 6;
+        let width = axisFont.advanceWidth(axisUnit(right));
+        const linked = right && rightScale === "linked";
+        for (const value of ticks(linked ? false : right))
+            width = Math.max(width, axisFont.advanceWidth(tickLabel(linked ? value * secondaryScale() : value, right && !linked)));
+        return Math.ceil(width) + (right ? 10 : 12);
     }
     function pointAt(list, time) {
         // Exact native timestamp lookup for range partners. Sampling is done

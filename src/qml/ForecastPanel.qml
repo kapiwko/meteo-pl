@@ -345,6 +345,8 @@ Item {
         id: forecastComponent
         Pane {
             padding: Kirigami.Units.largeSpacing
+            leftPadding: root.mobileLayout ? Kirigami.Units.smallSpacing : padding
+            rightPadding: root.mobileLayout ? Kirigami.Units.smallSpacing : padding
             background: null
             contentItem: ColumnLayout {
             spacing: 10
@@ -566,6 +568,7 @@ Item {
                         selectedTime: root.selectedTime
                         identificationEnabled: root.identificationEnabled
                         touchNavigationEnabled: true
+                        compactAxes: root.mobileLayout
                         exportHandler: chart => root.saveCharts([chart])
                         nights: UserPreferences.showNight ? root.weather.nightIntervals : []
                         onProbeMoved: (timestamp, position) => root.showProbe(timestamp, position, groupKey)
