@@ -16,6 +16,8 @@ PlasmaComponents.ScrollView {
     property bool showCharts: true
     property string profile: "classic"
     property int hours: 24
+    property int legendOverride: -1
+    readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     property var collapsedCharts: []
     property real clockTime: Date.now() / 1000
     signal locationSelected(string name, real latitude, real longitude)
@@ -60,15 +62,29 @@ PlasmaComponents.ScrollView {
                 onAddLocationRequested: root.configureRequested()
                 onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
             }
-            PlasmaComponents.Label {
-                objectName: "widgetForecastPeriod"
+            RowLayout {
                 Layout.fillWidth: true
                 visible: root.weather.hasData && root.showCharts
-                text: root.weather.formatTime(selection.startTime, "ddd d MMM HH:mm") + " – "
-                    + root.weather.formatTime(selection.endTime, "ddd d MMM HH:mm") + (root.weather.utc ? " UTC" : "")
-                color: Kirigami.Theme.disabledTextColor
-                font: Kirigami.Theme.smallFont
-                wrapMode: Text.WordWrap
+                PlasmaComponents.Label {
+                    objectName: "widgetForecastPeriod"
+                    Layout.fillWidth: true
+                    text: root.weather.formatTime(selection.startTime, "ddd d MMM HH:mm") + " – "
+                        + root.weather.formatTime(selection.endTime, "ddd d MMM HH:mm") + (root.weather.utc ? " UTC" : "")
+                    color: Kirigami.Theme.disabledTextColor
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
+                PlasmaComponents.ToolButton {
+                    id: legendButton
+                    objectName: "widgetLegendToggle"
+                    icon.name: "view-list-details"
+                    text: root.legendVisible ? I18n.i18n("Hide legend") : I18n.i18n("Show legend")
+                    display: QQC2.AbstractButton.IconOnly
+                    checkable: true
+                    checked: root.legendVisible
+                    onClicked: root.legendOverride = checked ? 1 : 0
+                    PlasmaComponents.ToolTip { text: legendButton.text }
+                }
             }
         }
         footer: PlasmaExtras.PlaceholderMessage {
@@ -87,7 +103,6 @@ PlasmaComponents.ScrollView {
             id: section
             readonly property var modelData: model.modelData
             objectName: "widgetSection-" + modelData.key
-            property int legendOverride: -1
             title: modelData.title
             icon: "view-statistics"
             onItemExpanded: root.sectionToggled(modelData.key, true)
@@ -95,15 +110,6 @@ PlasmaComponents.ScrollView {
             Component.onCompleted: {
                 if ("index" in section) section.index = Qt.binding(() => model.index);
                 if (root.collapsedCharts.indexOf(modelData.key) < 0) expand();
-            }
-            defaultActionButtonAction: legendAction
-            QQC2.Action {
-                id: legendAction
-                icon.name: "dialog-information-symbolic"
-                text: I18n.i18n("Show legend")
-                checkable: true
-                checked: section.legendOverride < 0 ? UserPreferences.showLegend : Boolean(section.legendOverride)
-                onTriggered: section.legendOverride = checked ? 1 : 0
             }
             customExpandedViewContent: chartContent
             Component {
@@ -115,7 +121,7 @@ PlasmaComponents.ScrollView {
                     fields: section.modelData.fields
                     chartConfiguration: section.modelData
                     showHeading: false
-                    legendOverride: section.legendOverride
+                    legendOverride: root.legendOverride
                     chartHeight: section.modelData.height || UserPreferences.chartHeightForProfile(root.profile) || UserPreferences.chartHeight
                     startTime: selection.startTime
                     endTime: selection.endTime
