@@ -59,9 +59,11 @@ ColumnLayout {
                 wrapMode: Text.WordWrap
             }
         }
-        ColumnLayout {
+        GridLayout {
             visible: root.weather.hasData
-            spacing: Kirigami.Units.smallSpacing
+            columns: root.width >= Kirigami.Units.gridUnit * 26 ? 2 : 1
+            columnSpacing: Kirigami.Units.largeSpacing
+            rowSpacing: Kirigami.Units.smallSpacing
             SolarEvent {
                 objectName: "compactSunrise"
                 title: I18n.i18n("Sunrise")
@@ -76,7 +78,7 @@ ColumnLayout {
                 icon: "icons/sunset.svg"
                 visible: !root.solar.status
             }
-            Label { text: root.solar.status || ""; visible: text.length > 0; wrapMode: Text.WordWrap; Layout.maximumWidth: 100 }
+            Label { text: root.solar.status || ""; visible: text.length > 0; wrapMode: Text.WordWrap; Layout.maximumWidth: 160; Layout.columnSpan: parent.columns }
         }
     }
     Kirigami.InlineMessage { objectName: "forecastErrorMessage"; Layout.fillWidth: true; text: root.weather.error; visible: text.length > 0; type: Kirigami.MessageType.Warning }
@@ -132,8 +134,8 @@ ColumnLayout {
             source: Qt.resolvedUrl(event.icon)
             isMask: true
             color: Kirigami.Theme.neutralTextColor
-            Layout.preferredWidth: Kirigami.Units.iconSizes.small
-            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+            Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
             Accessible.ignored: true
         }
         Label { text: event.time; font.bold: true; Accessible.ignored: true }
