@@ -138,10 +138,13 @@ PlasmoidItem {
         collapseMarginsHint: true
 
         header: PlasmaExtras.BasicPlasmoidHeading {
+            id: popupHeading
             leftPadding: Kirigami.Units.smallSpacing
             rightPadding: Kirigami.Units.smallSpacing
-            PlasmaComponents.ToolButton {
+            // extraControls precede the built-in menu and settings. Keep the pin last.
+            readonly property PlasmaComponents.ToolButton pinControl: PlasmaComponents.ToolButton {
                 id: pinButton
+                parent: popupHeading.contentItem
                 objectName: "pinPopupButton"
                 icon.name: checked ? "window-unpin" : "window-pin"
                 text: checked ? I18n.i18n("Unpin popup") : I18n.i18n("Keep open")
