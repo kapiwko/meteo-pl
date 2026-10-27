@@ -10,6 +10,7 @@
 #include <QLockFile>
 #include <QSaveFile>
 #include <QScopeGuard>
+#include <QStandardPaths>
 #include <QTemporaryFile>
 
 namespace
@@ -18,6 +19,15 @@ QString settingsPath()
 {
     return QSettings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("meteo-pl"), QStringLiteral("desktop"))
         .fileName();
+}
+QString settingsTemporaryFileTemplate()
+{
+    // Android applications cannot write to the shared system temporary directory.
+    // Keep scratch files outside the watched settings and clearable data cache.
+    const auto directory = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
+        + QStringLiteral("/meteo-pl-preferences");
+    QDir().mkpath(directory);
+    return QDir(directory).filePath(QStringLiteral("settings-XXXXXX.ini"));
 }
 // QSettings still owns the INI encoding. A private temporary file avoids its
 // shared, process-local cache and pending writes leaking out of a failed edit.
@@ -33,7 +43,7 @@ bool readSettings(const QString &path, QVariantMap &values, QString *error)
             *error = input.errorString();
         return false;
     }
-    QTemporaryFile temporary;
+    QTemporaryFile temporary(settingsTemporaryFileTemplate());
     if (!temporary.open()) {
         if (error)
             *error = temporary.errorString();
@@ -59,7 +69,7 @@ bool readSettings(const QString &path, QVariantMap &values, QString *error)
 }
 bool writeSettings(const QString &path, const QVariantMap &values, QString *error)
 {
-    QTemporaryFile temporary;
+    QTemporaryFile temporary(settingsTemporaryFileTemplate());
     if (!temporary.open()) {
         if (error)
             *error = temporary.errorString();

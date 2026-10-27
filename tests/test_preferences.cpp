@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QLockFile>
 #include <QProcess>
+#include <QProcessEnvironment>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QSignalSpy>
@@ -18,6 +19,28 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void persistenceDoesNotRequireAWritableSystemTempDirectory()
+    {
+#ifndef Q_OS_UNIX
+        QSKIP("This exercises the Unix TMPDIR used by Android.");
+#endif
+        QTemporaryDir config;
+        QVERIFY(config.isValid());
+        QFile blocked(config.filePath("not-a-directory"));
+        QVERIFY(blocked.open(QIODevice::WriteOnly));
+        blocked.close();
+        auto environment = QProcessEnvironment::systemEnvironment();
+        environment.insert("TMPDIR", blocked.fileName());
+        environment.insert("XDG_CACHE_HOME", config.filePath("cache"));
+        environment.insert("QT_FORCE_STDERR_LOGGING", "1");
+        QProcess worker;
+        worker.setProcessEnvironment(environment);
+        worker.start(QCoreApplication::applicationFilePath(), {"--check-private-temporaries", config.path()});
+        QVERIFY(worker.waitForFinished(10000));
+        QCOMPARE(worker.exitStatus(), QProcess::NormalExit);
+        const auto errors = worker.readAllStandardError();
+        QVERIFY2(worker.exitCode() == 0, errors.constData());
+    }
     void legacyCleanupPreservesEditedDisabledChartsAndOnlyRunsOnce()
     {
         QTemporaryDir config;
@@ -211,6 +234,17 @@ private slots:
 int main(int argc, char **argv)
 {
     QCoreApplication application(argc, argv);
+    if (application.arguments().value(1) == "--check-private-temporaries") {
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, application.arguments().value(2));
+        PreferencesStore store;
+        QString error;
+        if (!store.update([&] { store.setValue("display/profile", "basic"); }, &error)) {
+            qWarning().noquote() << error;
+            return 2;
+        }
+        PreferencesStore reopened;
+        return reopened.value("display/profile").toString() == "basic" ? 0 : 3;
+    }
     if (application.arguments().value(1) == "--mutate") {
         const auto arguments = application.arguments();
         const auto directory = arguments.value(2), operation = arguments.value(3);
