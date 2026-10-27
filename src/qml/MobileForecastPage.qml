@@ -57,6 +57,13 @@ Kirigami.Page {
         // deriving its baseline from that item. Keep both native styles valid.
         baselineOffset: contentItem ? contentItem.y + contentItem.baselineOffset : height / 2
     }
+    component SectionTab: MobileTab {
+        display: AbstractButton.TextBesideIcon
+        icon.width: 20
+        icon.height: 20
+        leftPadding: Kirigami.Units.smallSpacing
+        rightPadding: Kirigami.Units.smallSpacing
+    }
     footer: TabBar {
         objectName: "mobileNavigation"
         position: TabBar.Footer
@@ -76,9 +83,9 @@ Kirigami.Page {
             visible: root.destination === 0
             currentIndex: root.forecastView
             onCurrentIndexChanged: if (visible && currentIndex >= 0) forecastPanel.viewMode = currentIndex
-            MobileTab { text: I18n.i18n("Meteogram") }
-            MobileTab { text: I18n.i18n("Hourly") }
-            MobileTab { text: I18n.i18n("Days") }
+            SectionTab { text: I18n.i18n("Meteogram"); icon.name: "office-chart-line" }
+            SectionTab { text: I18n.i18n("Hourly"); icon.name: "chronometer" }
+            SectionTab { text: I18n.i18n("Days"); icon.name: "view-calendar" }
         }
         TabBar {
             objectName: "mobileNewsTabs"
@@ -86,8 +93,8 @@ Kirigami.Page {
             visible: root.destination === 2
             currentIndex: root.newsView - 4
             onCurrentIndexChanged: if (visible && currentIndex >= 0) forecastPanel.viewMode = currentIndex + 4
-            MobileTab { text: I18n.i18n("Synoptic") }
-            MobileTab { text: I18n.i18n("Articles") }
+            SectionTab { text: I18n.i18n("Synoptic"); icon.name: "dialog-messages" }
+            SectionTab { text: I18n.i18n("Articles"); icon.name: "view-list-text" }
         }
         ForecastPanel {
             id: forecastPanel
