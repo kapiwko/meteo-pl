@@ -28,6 +28,7 @@ Kirigami.Page {
             spacing: Kirigami.Units.smallSpacing
             ToolButton {
                 objectName: "mobilePlaceButton"
+                visible: root.destination === 0
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 implicitHeight: 56
@@ -36,7 +37,17 @@ Kirigami.Page {
                 Accessible.name: I18n.i18n("My places · choose a forecast")
                 onClicked: placesSheet.open()
             }
+            Kirigami.Heading {
+                objectName: "mobileDestinationTitle"
+                visible: root.destination !== 0
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.largeSpacing
+                level: 2
+                text: root.destination === 1 ? I18n.i18n("Maps") : I18n.i18n("News")
+                elide: Text.ElideRight
+            }
             ToolButton {
+                visible: root.destination === 0
                 icon.name: "view-refresh"
                 implicitWidth: 48; implicitHeight: 48
                 enabled: !root.weather.busy
@@ -143,7 +154,7 @@ Kirigami.Page {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 0
-            ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("Location and model"); icon.name: "mark-location"; onClicked: { moreSheet.close(); root.chooseLocation(); } }
+            ItemDelegate { visible: root.destination === 0; Layout.fillWidth: true; text: I18n.i18n("Location and model"); icon.name: "mark-location"; onClicked: { moreSheet.close(); root.chooseLocation(); } }
             ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("Settings"); icon.name: "configure"; onClicked: { moreSheet.close(); root.openSettings(); } }
             ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onClicked: { moreSheet.close(); about.open(); } }
         }
