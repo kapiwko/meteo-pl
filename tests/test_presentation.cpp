@@ -1694,8 +1694,17 @@ private slots:
         QCOMPARE(solar["sunsetText"].toString(), model.formatTime(solar["sunset"].toDouble(), "HH:mm"));
         QVERIFY(solar["status"].toString().isEmpty());
     }
+    void nativeSamplingIsSharedByReadingsCursorAndCsv_data()
+    {
+        QTest::addColumn<QTime>("startTime");
+        QTest::addColumn<QString>("labelFormat");
+        QTest::newRow("same-day") << QTime(12, 0) << QStringLiteral("HH:mm");
+        QTest::newRow("across-midnight") << QTime(23, 0) << QStringLiteral("d MMM HH:mm");
+    }
     void nativeSamplingIsSharedByReadingsCursorAndCsv()
     {
+        QFETCH(QTime, startTime);
+        QFETCH(QString, labelFormat);
         const auto hash = QCryptographicHash::hash("um4_60:52.229700:21.012200", QCryptographicHash::Sha256).toHex();
         const auto path = m_cache.path() + "/meteo-pl/" + hash + ".json";
         QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
@@ -1704,7 +1713,12 @@ private slots:
         auto envelope = QJsonDocument::fromJson(original).object();
         auto payload = QJsonDocument::fromJson(envelope["payload"].toString().toUtf8()).object();
         auto fields = payload["data"].toObject();
-        const auto first = fields["airtmp_point"].toObject()["first_timestamp"].toString().toLongLong();
+        const auto first = QDateTime(QDate(2026, 10, 27), startTime, QTimeZone::systemTimeZone()).toSecsSinceEpoch();
+        for (auto it = fields.begin(); it != fields.end(); ++it) {
+            auto field = it.value().toObject();
+            field["first_timestamp"] = QString::number(first);
+            it.value() = field;
+        }
         for (const auto &key : {"dwptmp_point", "pcpttl_aver", "pcpttl_type_max"}) {
             auto field = fields["airtmp_point"].toObject();
             field["interval"] = 10800;
@@ -1735,7 +1749,7 @@ private slots:
         for (int i = 0; i < 3; ++i) {
             const auto cell = hours[i].toMap()["cells"].toMap()["pcpttl_aver"].toMap();
             QCOMPARE(cell, rain);
-            QCOMPARE(cell["intervalLabel"].toString(), model.formatTime(first, "HH:mm") + "–" + model.formatTime(first + 10800, "HH:mm"));
+            QCOMPARE(cell["intervalLabel"].toString(), model.formatTime(first, labelFormat) + "–" + model.formatTime(first + 10800, labelFormat));
             QCOMPARE(hours[i].toMap()["pcpttl_aver"].toDouble(), 1.0);
         }
         const auto missing = hours[6].toMap()["cells"].toMap()["pcpttl_aver"].toMap();
