@@ -157,7 +157,7 @@ private slots:
         QTRY_COMPARE(bindings->property("renderer").toString(), "cpu");
         QCOMPARE(bindings->property("unit").toString(), "km/h");
         QCOMPARE(bindings->property("utc").toBool(), true);
-        QCOMPARE(bindings->property("legend").toBool(), false);
+        QCOMPARE(bindings->property("legend").toBool(), true);
         QCOMPARE(bindings->property("chartHeight").toInt(), 262);
         QCOMPARE(bindings->property("profile").toString(), "full");
         QCOMPARE(bindings->property("places").toInt(), 1);
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
         settings.setValue("display/renderer", "cpu");
         settings.setValue("display/windUnit", "km/h");
         settings.setValue("display/utc", true);
-        settings.setValue("display/showLegend", false);
+        settings.setValue("display/showLegend", true);
         settings.setValue("display/chartHeight", 262);
         settings.setValue("display/profile", "full");
         settings.setValue("places/favorites", QByteArray(R"([{"name":"Kielce","latitude":50.8661,"longitude":20.6286}])"));

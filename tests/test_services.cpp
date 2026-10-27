@@ -602,7 +602,10 @@ private slots:
         qputenv("XDG_CONFIG_HOME", config.path().toUtf8());
         UserPreferences preferences;
         QCOMPARE(preferences.profile(), "classic");
-        QVERIFY(preferences.showLegend());
+        QVERIFY(!preferences.showLegend());
+        preferences.setShowLegend(true);
+        UserPreferences legendReload;
+        QVERIFY(legendReload.showLegend());
         preferences.setShowLegend(false);
         QCOMPARE(preferences.probeMode(), "chart");
         preferences.setProbeMode("all");

@@ -110,7 +110,9 @@ Wysokość można ustawić ogólnie, nadpisać w profilu i osobno dla wykresu.
 Obowiązuje pierwsza ustawiona wartość: wykres → profil → ustawienie ogólne.
 Wysokości profilu i wykresów są zawarte w eksporcie. Przycisk **ⓘ** bezpośrednio
 przy tytule pokazuje lub ukrywa legendę tego wykresu; globalna opcja
-**Domyślnie pokazuj legendę** określa stan początkowy.
+**Domyślnie pokazuj legendę** określa stan początkowy. Domyślnie legendy są ukryte.
+W plasmoidzie jeden przycisk przy wspólnym zakresie czasu przełącza legendy
+wszystkich jego wykresów.
 Można też wybrać jednostkę wiatru i cieniowanie nocy. Legenda przełącza serie
 bez zmiany skali osi. Kliknięcie prawym przyciskiem na wykresie otwiera menu
 **Zapisz wykres jako…** oraz listę serii z checkboxami zsynchronizowanymi z legendą.

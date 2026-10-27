@@ -879,6 +879,7 @@ private slots:
         QFETCH(QString,renderer);
         UserPreferences preferences;
         const auto previous=preferences.renderer();
+        preferences.setShowLegend(true); // This case compares exports with and without a visible legend.
         preferences.setRenderer(renderer);
         const auto restore=qScopeGuard([&]{ preferences.setRenderer(previous); });
         WeatherModel model; model.setAutoRefresh(false); model.refresh(false);
@@ -1383,7 +1384,10 @@ private slots:
         QTRY_VERIFY(plot->height() > 40 && plot->width() > 0);
         QVariant boundary;
         QVERIFY(QMetaObject::invokeMethod(chart.data(), "px", Q_RETURN_ARG(QVariant, boundary), Q_ARG(QVariant, first + 3600)));
-        const auto nearBaseline = [&] { return plot->mapToScene({boundary.toDouble(), plot->height() - 40}).toPoint(); };
+        const auto nearBaseline = [&] {
+            QMetaObject::invokeMethod(chart.data(), "px", Q_RETURN_ARG(QVariant, boundary), Q_ARG(QVariant, first + 3600));
+            return plot->mapToScene({boundary.toDouble(), plot->height() - 40}).toPoint();
+        };
         QTRY_COMPARE(window.grabWindow().pixelColor(nearBaseline()), QColor("#00aa00"));
         const auto pixel = nearBaseline();
         const auto image = window.grabWindow();

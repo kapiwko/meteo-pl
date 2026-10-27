@@ -38,7 +38,7 @@ QStringList UserPreferences::visibleGroups() const
 QString UserPreferences::windUnit() const { return m_store.value("display/windUnit", "m/s").toString(); }
 bool UserPreferences::utc() const { return m_store.value("display/utc", false).toBool(); }
 bool UserPreferences::showNight() const { return m_store.value("display/showNight", true).toBool(); }
-bool UserPreferences::showLegend() const { return m_store.value("display/showLegend", true).toBool(); }
+bool UserPreferences::showLegend() const { return m_store.value("display/showLegend", false).toBool(); }
 void UserPreferences::setShowLegend(bool value)
 {
     change([&] {
