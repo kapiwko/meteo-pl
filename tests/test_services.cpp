@@ -749,6 +749,69 @@ private slots:
         preferences.setProfile(copy);
         QCOMPARE(preferences.chartLayout().last().toMap()["height"].toInt(), 210);
     }
+    void newerPresetRevisionsReplaceUntouchedProfilesAndBackUpEditedOnes()
+    {
+        auto firstRelease = builtinChartProfiles();
+        for (auto &entry : firstRelease) {
+            auto preset = entry.toMap();
+            preset["revision"] = 7;
+            entry = preset;
+        }
+        UserPreferences old(nullptr, firstRelease);
+        old.renameProfile("Edited ICM");
+        old.setChartOptions("temperature", {{"title", "My temperature"}});
+        old.setProfileChartHeight(240);
+        const auto edited = old.chartLayout();
+        const auto oldName = Meteo::i18n("%1 (old)").arg("Edited ICM");
+        const auto collision = old.createProfile(oldName);
+        old.setProfile("classic");
+        auto secondRelease = firstRelease;
+        QVariantList nextClassic, nextBasic;
+        for (auto &value : secondRelease) {
+            auto preset = value.toMap();
+            preset["revision"] = preset["revision"].toInt() + 1;
+            preset["chartHeight"] = 300;
+            auto charts = preset["charts"].toList();
+            auto chart = charts.first().toMap();
+            chart["title"] = "New factory chart";
+            auto styles = chart["series"].toList();
+            auto style = styles.first().toMap();
+            style["color"] = "#214263";
+            styles[0] = style;
+            chart["series"] = styles;
+            charts[0] = chart;
+            preset["charts"] = charts;
+            if (preset["id"] == "classic") nextClassic = charts;
+            if (preset["id"] == "basic") nextBasic = charts;
+            value = preset;
+        }
+        UserPreferences upgraded(nullptr, secondRelease);
+        QCOMPARE(upgraded.chartLayout(), edited);
+        QCOMPARE(upgraded.profileChartHeight(), 240);
+        QCOMPARE(upgraded.chartLayoutForProfile("basic"), nextBasic);
+        QCOMPARE(upgraded.chartHeightForProfile("basic"), 300);
+        const auto metadata = [&upgraded](const QString &id) {
+            for (const auto &entry : upgraded.profiles()) if (entry.toMap()["id"] == id) return entry.toMap();
+            return QVariantMap{};
+        };
+        QVERIFY(metadata("classic")["updateAvailable"].toBool());
+        QVERIFY(!metadata("basic")["updateAvailable"].toBool());
+        upgraded.setProfile("basic");
+        upgraded.updateProfile("classic"); // A widget can update its profile without selecting it globally.
+        QCOMPARE(upgraded.profile(), "basic");
+        QCOMPARE(upgraded.chartLayoutForProfile("classic"), nextClassic);
+        QCOMPARE(upgraded.chartHeightForProfile("classic"), 300);
+        QVERIFY(!metadata("classic")["updateAvailable"].toBool());
+        const auto backup = upgraded.profiles().last().toMap();
+        QCOMPARE(backup["revision"].toInt(), 7);
+        QCOMPARE(backup["name"].toString(), oldName + " (2)");
+        QCOMPARE(upgraded.chartLayoutForProfile(backup["id"].toString()), edited);
+        QCOMPARE(upgraded.chartHeightForProfile(backup["id"].toString()), 240);
+        QCOMPARE(upgraded.chartLayoutForProfile(collision), edited);
+        const auto count = upgraded.profiles().size();
+        upgraded.updateProfile("classic");
+        QCOMPARE(upgraded.profiles().size(), count);
+    }
     void restoringDeletedPresetsPreservesNamedProfilesAndPreventsAnEmptyList()
     {
         UserPreferences preferences;

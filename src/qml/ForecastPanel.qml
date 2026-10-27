@@ -363,6 +363,7 @@ Item {
                 visible: active
                 sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false }
             }
+            ProfileUpdateNotice { Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: !root.mobileLayout && root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.archive; text: I18n.i18n("Archived model run. Chart dates and times refer to the selected forecast."); type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.stale; text: I18n.i18n("The forecast may be outdated. Last downloaded: ") + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }

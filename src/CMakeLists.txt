@@ -96,6 +96,8 @@ set_source_files_properties(qml/PreferenceWriteNotice.qml PROPERTIES QT_RESOURCE
 qt_target_qml_sources(meteo_ui QML_FILES qml/PreferenceWriteNotice.qml)
 set_source_files_properties(qml/HourlyForecastTable.qml PROPERTIES QT_RESOURCE_ALIAS HourlyForecastTable.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/HourlyForecastTable.qml)
+set_source_files_properties(qml/ProfileUpdateNotice.qml PROPERTIES QT_RESOURCE_ALIAS ProfileUpdateNotice.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/ProfileUpdateNotice.qml)
 target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)

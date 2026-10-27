@@ -46,3 +46,11 @@ Its sources stay in the build directory. For an offline build, reuse the CMake
 dependency cache or set `FETCHCONTENT_SOURCE_DIR_METEO_VALIJSON` to an existing
 checkout of that revision. The runtime package includes the library's BSD
 license.
+
+On an application upgrade, untouched presets immediately use the new bundled
+revision. The first edit snapshots the complete preset and its base revision,
+so a later release preserves that edited content. A standard inline notice in
+the forecast, widget and profile settings offers **Update and keep old copy**.
+Updating installs the new factory content and saves the edited snapshot as a
+named profile with an `(old)` suffix, translated to `(stary)` in Polish. Name
+collisions receive a number. The backup keeps its series, appearance and height.

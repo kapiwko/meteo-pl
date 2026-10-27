@@ -79,6 +79,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE void deleteProfile();
     Q_INVOKABLE void resetProfile();
     Q_INVOKABLE void restoreDeletedProfiles();
+    Q_INVOKABLE void updateProfile(const QString &id = {});
     Q_INVOKABLE void setChartEnabled(const QString &key, bool enabled);
     Q_INVOKABLE void setChartField(const QString &chart, const QString &field, bool enabled);
     Q_INVOKABLE void moveChart(int index, int direction);

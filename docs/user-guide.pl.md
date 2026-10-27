@@ -134,6 +134,10 @@ Każdy profil można edytować, zmienić jego nazwę i usunąć; musi pozostać 
 najmniej jeden profil. **Przywróć domyślne** odtwarza wybrany gotowy profil
 z fabrycznego JSON, a **Przywróć usunięte profile** odzyskuje usunięte gotowe
 profile. Zapisane własne kopie mają niezależną konfigurację.
+Gotowe profile mają własne numery rewizji. Po aktualizacji aplikacji niezmienione
+profile korzystają z nowej wersji automatycznie. Przy zmodyfikowanym profilu
+pojawia się informacja o nowej rewizji. **Aktualizuj i zachowaj starą kopię**
+zapisuje dotychczasowy układ jako „nazwa (stary)” i wczytuje nowy profil fabryczny.
 **Odczyt** — zakres parametrów próbnika i domyślną widoczność legendy,
 a **Aplikacja** — renderer, jednostki, strefę czasu i ogólną wysokość wykresów.
 Formularze korzystają z `Kirigami.FormLayout`, standardowych grup opcji i kontrolek Qt Quick.

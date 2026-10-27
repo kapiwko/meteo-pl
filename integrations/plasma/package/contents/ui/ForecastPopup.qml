@@ -53,6 +53,7 @@ PlasmaComponents.ScrollView {
             width: sections.width
             spacing: Kirigami.Units.largeSpacing
             function chooseLocation() { summary.chooseLocation(); }
+            ProfileUpdateNotice { Layout.fillWidth: true; profileId: root.profile }
             CompactForecast {
                 id: summary
                 Layout.fillWidth: true

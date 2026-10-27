@@ -186,8 +186,12 @@ QVariantList UserPreferences::profiles() const
         QVariantMap override;
         for (const auto &entry : saved)
             if (entry.toMap()["id"] == id) { override = entry.toMap(); break; }
+        const auto availableRevision = preset["revision"].toInt();
+        const auto revision = override.isEmpty() ? availableRevision : override.value("baseRevision", 0).toInt();
         result.append(QVariantMap{{"id", id}, {"name", override.value("name", preset["name"])},
-                                 {"builtin", true}, {"modified", !override.isEmpty()}});
+                                 {"builtin", true}, {"modified", !override.isEmpty()},
+                                 {"revision", revision}, {"availableRevision", availableRevision},
+                                 {"updateAvailable", !override.isEmpty() && revision < availableRevision}});
     }
     if (m_store.contains("display/customLayout"))
         result.append(QVariantMap{{"id", "custom"},
@@ -316,7 +320,7 @@ void UserPreferences::saveProfileOptions(const QString &id, const QVariantMap &o
     }
     auto entry = factoryProfile(id);
     if (entry.isEmpty() || m_store.value("display/deletedProfiles").toStringList().contains(id)) return;
-    entry.remove("revision");
+    entry["baseRevision"] = entry.take("revision");
     for (auto it = options.cbegin(); it != options.cend(); ++it) entry[it.key()] = it.value();
     saved.append(entry);
     m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
@@ -576,6 +580,12 @@ void UserPreferences::resetProfile()
     change([&] {
         if (factoryProfile(selectedProfile).isEmpty()) return;
         auto saved = savedProfiles();
+        for (const auto &entry : saved)
+            if (entry.toMap()["id"] == selectedProfile
+                && entry.toMap().value("baseRevision", 0).toInt() < factoryProfile(selectedProfile)["revision"].toInt()) {
+                updateProfile(selectedProfile);
+                return;
+            }
         saved.removeIf([&](const QVariant &item) { return item.toMap()["id"] == selectedProfile; });
         m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
     });
@@ -583,6 +593,31 @@ void UserPreferences::resetProfile()
 void UserPreferences::restoreDeletedProfiles()
 {
     change([&] { m_store.remove("display/deletedProfiles"); });
+}
+void UserPreferences::updateProfile(const QString &id)
+{
+    const auto selectedProfile = id.isEmpty() ? profile() : id;
+    change([&] {
+        const auto factory = factoryProfile(selectedProfile);
+        if (factory.isEmpty()) return;
+        auto saved = savedProfiles();
+        for (qsizetype i = 0; i < saved.size(); ++i) {
+            const auto old = saved[i].toMap();
+            if (old["id"] != selectedProfile || old.value("baseRevision", 0).toInt() >= factory["revision"].toInt()) continue;
+            QStringList names;
+            for (const auto &entry : profiles()) names.append(entry.toMap()["name"].toString());
+            const auto base = Meteo::i18n("%1 (old)").arg(old.value("name", factory["name"]).toString().left(65));
+            auto name = base;
+            for (int number = 2; names.contains(name, Qt::CaseInsensitive); ++number) name = base + QStringLiteral(" (%1)").arg(number);
+            saved.removeAt(i);
+            saved.append(QVariantMap{{"id", "user:" + QUuid::createUuid().toString(QUuid::WithoutBraces)},
+                {"name", name}, {"charts", old.value("charts", factory["charts"])},
+                {"revision", std::max(1, old.value("baseRevision", 1).toInt())},
+                {"chartHeight", old.value("chartHeight", factory["chartHeight"])}});
+            m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+            return;
+        }
+    });
 }
 bool UserPreferences::isFavorite(double latitude, double longitude) const
 {

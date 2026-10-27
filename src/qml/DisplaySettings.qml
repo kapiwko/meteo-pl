@@ -149,6 +149,7 @@ ColumnLayout {
             }
         }
     }
+    ProfileUpdateNotice { Layout.fillWidth: true }
     Kirigami.InlineMessage {
         id: transferNotice
         Layout.fillWidth: true
