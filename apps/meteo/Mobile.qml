@@ -19,8 +19,9 @@ ApplicationWindow {
     Kirigami.Theme.colorSet: colorScheme === Qt.Dark ? Kirigami.Theme.Complementary : Kirigami.Theme.Window
     MaterialStyle.Material.theme: colorScheme === Qt.Dark ? MaterialStyle.Material.Dark : MaterialStyle.Material.Light
     color: Kirigami.Theme.backgroundColor
-    readonly property bool canNavigateBack: navigation.depth > 1 || forecastPage.canNavigateBack
+    readonly property bool canNavigateBack: Qt.inputMethod.visible || Qt.inputMethod.animating || navigation.depth > 1 || forecastPage.canNavigateBack
     function navigateBack() {
+        if (Qt.inputMethod.visible || Qt.inputMethod.animating) { Qt.inputMethod.hide(); return; }
         if (navigation.busy) return;
         if (navigation.depth > 1) navigation.pop();
         else forecastPage.navigateBack();
