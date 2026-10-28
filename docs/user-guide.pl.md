@@ -26,9 +26,14 @@ ctest --preset dev
 ./build/dev/apps/meteo/meteo-pl
 ```
 
-Przycisk **Lokalizacja** otwiera wyszukiwarkę miast i wsi z opisem regionu
-oraz wspólną listę **Moje miejsca**. Można także wskazać punkt na mapie,
-pobrać pozycję przez systemową usługę lokalizacji lub wpisać współrzędne.
+Przy pierwszym uruchomieniu aplikacja prosi o dodanie miejsca. Żadne miasto
+nie jest wybierane automatycznie. Możesz wyszukać miejscowość, wskazać punkt
+na mapie, użyć systemowej lokalizacji albo rozwinąć współrzędne i wpisać je ręcznie.
+Sama nazwa bez wybranego punktu nie wystarczy do zapisania miejsca.
+**Moje miejsca** otwiera osobną listę zapisanych miejsc. **Dodaj lokalizację**
+otwiera pusty formularz, a przycisk edycji przy miejscu pozwala zmienić jego nazwę
+lub położenie. Kliknięcie wiersza wybiera prognozę. Usunięcie miejsca można cofnąć.
+Model prognozy wybierasz osobno w **Ustawienia → Prognoza**.
 GPS wymaga dostępnego dostawcy Qt Positioning; bez niego można użyć wyszukiwarki
 lub mapy. Wyszukiwanie domyślnie obejmuje Polskę, opcjonalnie cały świat.
 Każda otwarta lokalizacja jest zapisywana w **Moich miejscach**. Przy kilku miejscach
@@ -44,6 +49,7 @@ UM4 obejmuje obszar 44,5–66,482°N i 8,21–30,176°E; GFS jest globalny.
 Współrzędne przyjmują kropkę lub przecinek dziesiętny.
 **Ustawienia → O aplikacji** pokazuje autorstwo Kamila Piwowarskiego,
 źródła danych i informacje o aktualnie pobranej prognozie.
+W **Informacjach technicznych** można sprawdzić ścieżkę pliku konfiguracji.
 
 Nagłówek grupuje lokalizację i prognozę na oznaczoną godzinę, temperaturę,
 wiatr i ciśnienie oraz parę godzin wschodu i zachodu słońca z ikonami.
@@ -66,9 +72,9 @@ odczuwalną, rodzaj i prawdopodobieństwo opadów, kierunki i porywy wiatru,
 warstwy oraz podstawy chmur, wilgotność, mgłę, widzialność i wskaźniki burz.
 Brakujące wartości pozostają lukami. Dostępność parametrów zależy od modelu.
 
-Domyślny profil **Klasyczny ICM** zawiera osiem wykresów: temperaturę, opady
-z wilgotnością, szansę opadu i burze, ciśnienie, prędkość wiatru, kierunek
-wiatru, pionowy zasięg chmur z widzialnością oraz zachmurzenie z mgłą.
+Domyślny profil **Klasyczny ICM** zawiera siedem wykresów: temperaturę, opady
+z wilgotnością, szansę opadu i burze, ciśnienie, prędkość i kierunek wiatru,
+pionowy zasięg chmur z widzialnością oraz zachmurzenie z mgłą.
 Temperatura powietrza i odczuwalna mają półprzezroczyste zakresy min–max.
 Zakres temperatury przy gruncie przedstawiają pionowe kreski od minimum do
 maksimum dla każdej godziny prognozy. Błękitne tło wyróżnia obszar poniżej 0°C.
@@ -78,7 +84,7 @@ Linie siatki są delikatne. Etykiety czasu na wąskich wykresach pomijają minut
 i w razie potrzeby pojawiają się rzadziej, bez nakładania się godzin i dat.
 
 Domyślny renderer **GPU** przekazuje geometrię wykresów bezpośrednio do sceny
-Qt Quick (RHI), z wygładzaniem MSAA. W **Ustawienia → Aplikacja → Rysowanie wykresów** można od razu przełączyć na **CPU · Canvas**. Oba renderery używają
+Qt Quick (RHI), z wygładzaniem MSAA. W **Ustawienia → Aplikacja → Wykresy** można od razu wybrać **Renderowanie na CPU**. Oba renderery używają
 tych samych obliczeń, kolorów, warstw i obsługi kursora. Bez akceleracji sceny
 Qt Quick aplikacja automatycznie korzysta z CPU.
 
@@ -97,20 +103,23 @@ Tryb automatyczny dobiera dwie osie według jednostek. Trzecia niezgodna jednost
 wyświetla komunikat: przypisz osie jawnie albo rozdziel serie na kilka wykresów.
 Specjalne symbole (np. wyładowania i kierunek wiatru) są dostępne tylko dla
 odpowiednich parametrów, również po imporcie profilu.
-Przyciski **Importuj…**, **Eksportuj profil…** i **Eksportuj zapisane…**
-przenoszą profile w pliku JSON, razem z wyglądem serii i zakresami osi.
+Przyciski **Importuj…** i **Eksportuj…** przenoszą profile w pliku JSON,
+razem z wyglądem serii i zakresami osi. Przed eksportem wybierasz profile z listy;
+możesz zaznaczyć także niezmienione profile domyślne.
 Wybór pliku korzysta ze standardowego okna środowiska: w KDE z dialogu KDE,
 a w środowisku używającym portalu z XDG Desktop Portal. Aplikacja używa
 `QApplication`, wymaganego przez natywną integrację dialogów KDE.
 Import dodaje nowe profile; zbieżne nazwy otrzymują numer, a istniejące
 profile pozostają zachowane. Jeżeli zapis ustawień się nie powiedzie, aplikacja
 pokazuje błąd i zachowuje poprzednią konfigurację; import można ponowić.
-Eksport zapisanych obejmuje nazwane własne
-profile i zmodyfikowany „Własny układ”. Ulubione lokalizacje i ustawienia
+Import otwiera nowy profil do edycji, zachowując profil używany w prognozie.
+Zapisane lokalizacje i ustawienia
 globalne, takie jak jednostka wiatru i UTC, nie są częścią pliku profili.
 Dotyczy to również wyboru renderera, wspólnego dla aplikacji i plasmoidu.
 Wysokość można ustawić ogólnie, nadpisać w profilu i osobno dla wykresu.
 Obowiązuje pierwsza ustawiona wartość: wykres → profil → ustawienie ogólne.
+Przy polu wysokości widać wartość wynikową i jej źródło. Granice osi przyjmują
+kropkę lub przecinek; błędny zakres pozostaje w formularzu z wyjaśnieniem.
 Wysokości profilu i wykresów są zawarte w eksporcie. Przycisk **ⓘ** bezpośrednio
 przy tytule pokazuje lub ukrywa legendę tego wykresu; globalna opcja
 **Domyślnie pokazuj legendę** określa stan początkowy. Domyślnie legendy są ukryte.
@@ -123,13 +132,23 @@ Menu działa również w plasmoidzie i jest dostępne z klawiatury klawiszem Men
 lub Shift+F10. Zapis PNG zachowuje widoczne serie i wybrany zakres czasu.
 Dolny pasek statusu pokazuje widoczny przedział czasu,
 strzałki przesuwania, suwak powiększenia i przycisk dopasowania całej prognozy.
+Po wyborze zakresu 24/48/72 godzin widok zaczyna się od pierwszej godziny
+prognozy. Na telefonie domyślnie widać pierwsze 72 godziny, a jeśli prognoza
+jest krótsza — całą prognozę. Własny przedział zaczyna się od wskazanej daty.
 Powiększanie zatrzymuje się na 24 godzinach, a dla krótszej prognozy na jej
 pełnym zakresie. Ctrl + kółko myszy również zmienia powiększenie. Podczas
 oglądania fragmentu pojawia się drugi suwak do przesuwania czasu.
 Przycisk **Ustawienia** w górnym pasku otwiera wspólne okno. Zakładka
-**Prognoza** zawiera **Profil wykresów**, **Zakres czasu** i **Start modelu**,
+**Prognoza** zawiera model, **Profil wykresów**, **Zakres czasu** i **Start modelu**.
+**Własny zakres czasu** otwiera kalendarz oraz wybór godzin początku i końca,
+z walidacją dostępnego zakresu i minimalnego powiększenia.
+Zakładka
 **Profile** zawiera edytor wykresów i serii oraz import i eksport profili.
 **Duplikuj profil** tworzy niezależną kopię z gotową nazwą, którą można od razu zmienić.
+Wybór profilu do edycji i import nie przełączają prognozy. Służy do tego osobny
+przycisk **Użyj w prognozie**. Usunięcie profilu, wykresu lub serii oraz przywrócenie
+ustawień domyślnych można cofnąć. Jeśli profil został później zmieniony w innym
+oknie, cofnięcie nie nadpisze tych zmian.
 Każdy profil można edytować, zmienić jego nazwę i usunąć; musi pozostać co
 najmniej jeden profil. **Przywróć domyślne** odtwarza wybrany gotowy profil
 z fabrycznego JSON, a **Przywróć usunięte profile** odzyskuje usunięte gotowe
@@ -141,7 +160,7 @@ zapisuje dotychczasowy układ jako „nazwa (stary)” i wczytuje nowy profil fa
 **Odczyt** — zakres parametrów próbnika i domyślną widoczność legendy,
 a **Aplikacja** — renderer, jednostki, strefę czasu i ogólną wysokość wykresów.
 Formularze korzystają z `Kirigami.FormLayout`, standardowych grup opcji i kontrolek Qt Quick.
-Padding jest wewnątrz kart; pasek kart dochodzi do krawędzi okna. Działania profili
+Nagłówki kart, formularze i dolne przyciski zachowują odstęp od krawędzi okna. Działania profili
 korzystają z `Kirigami.ActionToolBar`, który przy małej szerokości pokazuje menu nadmiarowe.
 Zakres i start dotyczą bieżącego widoku; wybór profilu jest zapamiętywany.
 Lista startów modelu udostępnia krótkoterminowe archiwum publikowane przez serwer.
@@ -189,6 +208,8 @@ Niedawno zapisana prognoza ogranicza powtórne pobrania przy otwieraniu kolejneg
 widoku. Ręczne **Odśwież** zawsze pyta serwer. Gdy pobieranie się nie powiedzie,
 widoczna pozostaje zapisana prognoza z datą pobrania i komunikatem.
 
+Datę komentarza synoptyka wybierasz w kalendarzu; przyszłe dni są niedostępne.
+Na Androidzie można też przesuwać komentarz w lewo lub w prawo, aby zmienić dzień.
 Artykuły i komentarze synoptyka są zapisywane na dysku osobno dla każdej strony
 listy i daty. Przez 30 minut ponowne otwarcie korzysta z zapisu bez sieci.
 Ręczne odświeżenie sprawdza serwer; w razie błędu zachowuje zapisaną treść.

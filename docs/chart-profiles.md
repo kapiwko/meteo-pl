@@ -40,7 +40,18 @@ factory definitions.
 In **Settings → Profiles**, all profiles can be edited, renamed or deleted.
 **Restore defaults** resets the selected factory profile. **Restore deleted
 presets** recovers removed factory profiles without resetting named user copies.
-At least one profile remains available. Changes are saved in the shared
+At least one profile remains available. Editing, duplicating or importing a profile
+does not switch the forecast; choose **Use for forecast** to apply it. Deleting a
+profile, chart or series and restoring defaults offer **Undo**. Undo only restores
+the affected profile and refuses to overwrite any subsequent changes to it.
+
+**Export…** lets you select any combination of profiles, including untouched
+presets, before opening the platform file picker. Empty axis bounds use automatic
+scaling; invalid ranges remain in the editor with an explanation. Decimal input
+accepts both a dot and a comma. Height fields show the effective value and whether
+it comes from the application, profile or individual chart.
+
+Changes are saved in the shared
 `~/.config/meteo-pl/desktop.ini` preference store, preserving atomic updates
 between the application and Plasma widgets. Existing custom layouts remain
 available.

@@ -126,7 +126,7 @@ z dialogu platformy Qt, z natywną integracją KDE wymagającą `QApplication`.
 `pl.meteo.chart-profiles`, wersja 1. Zapis jest atomowy (`QSaveFile`). Import
 sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe
 identyfikatory i rozróżnia powtarzające się nazwy. Jeden plik może zawierać
-do 100 profili i mieć do 16 MiB. Plik ustawień jest wskazany w edytorze;
+do 100 profili i mieć do 16 MiB. Plik ustawień jest wskazany w informacjach technicznych okna „O aplikacji”;
 domyślnie to `~/.config/meteo-pl/desktop.ini`.
 Fabryczne profile z `resources/profiles`, katalog i metadane serii z
 `resources/charts` są jedynym źródłem domyślnej konfiguracji wykresów.

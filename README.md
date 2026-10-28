@@ -15,12 +15,17 @@ without leaving your desktop.
 
 [![Meteo displaying a forecast with temperature and precipitation charts](docs/images/meteogram.png)](docs/images/meteogram.png)
 
+*The Quick forecast profile: temperature ranges, precipitation probability,
+wind speed, gusts and direction in one view.*
+
 ## What You Get
 
 - Interactive charts for temperature, precipitation, wind, pressure, clouds,
   visibility, fog and storm indicators, with an optional parameter probe.
   On touchscreens, pinch to zoom, swipe horizontally to move through time,
   and double-tap to restore the full forecast. Vertical swipes scroll the charts.
+  Mobile meteograms initially show the first 72 hours, or the entire forecast
+  when it is shorter. Selecting a time interval starts at the beginning of the forecast.
 - UM4 forecasts for Poland and Central Europe, and global GFS forecasts.
 - A shared list of saved places: search for a town, choose a point on the map,
   enter coordinates or use the system location service.
@@ -38,6 +43,33 @@ without leaving your desktop.
   searches, with disk usage and clearing controls in Settings.
 - GPU rendering by default, an optional CPU renderer, and automated visual
   comparisons between both renderers.
+
+## Screenshots
+
+These screenshots were captured on 28 October 2026 from the running application
+and Plasma widget with real ICM weather data. The Android image comes from the
+APK running in an Android 15 emulator with its default 72-hour view.
+Click an image to view it at full size.
+
+| Interactive weather map | Thematic maps |
+| :---: | :---: |
+| [![Temperature map with a color legend and saved places](docs/images/map.png)](docs/images/map.png) | [![Thematic pressure map with forecast time and animation controls](docs/images/thematic-maps.png)](docs/images/thematic-maps.png) |
+| Weather layers, saved-place markers and a color legend. | Full forecast images with animation and a fit-to-view option. |
+
+| Parameter readings | Chart profiles |
+| :---: | :---: |
+| [![Pinned chart reading with parameter values and an export action](docs/images/readings.png)](docs/images/readings.png) | [![Profile editor with chart series, style previews and profile import and export](docs/images/profiles.png)](docs/images/profiles.png) |
+| Inspect a forecast time, pin a reading and export its values. | Choose series, adjust their appearance and share profiles as JSON. |
+
+| Application settings | Saved places |
+| :---: | :---: |
+| [![Application settings with chart rendering, units and cache sections](docs/images/settings.png)](docs/images/settings.png) | [![Saved-place manager with separate add, edit and delete actions](docs/images/places.png)](docs/images/places.png) |
+| Rendering, chart height, units and cache controls in dedicated sections. | Switch forecasts, add a place or edit an existing entry. |
+
+| KDE Plasma widget | Android |
+| :---: | :---: |
+| <a href="docs/images/plasma.png"><img src="docs/images/plasma.png" height="540" alt="Plasma popup with temperature and wind charts expanded, other charts collapsed, and a button to open the full application"></a> | <a href="docs/images/android.png"><img src="docs/images/android.png" height="540" alt="Android Material interface showing meteograms, forecast tabs and bottom navigation"></a> |
+| Independently expandable charts inside Plasma's native popup. | Touch navigation with forecast, map and news views. |
 
 ## Install
 
