@@ -1882,15 +1882,24 @@ private slots:
         QCOMPARE(preferences->profiles().size(), count);
         auto *reset = object->findChild<QQuickItem *>("profileRestoreButton");
         auto *recover = object->findChild<QQuickItem *>("restoreDeletedProfilesButton");
-        auto *addChart = object->findChild<QQuickItem *>("addChartButton");
-        QVERIFY(reset && recover && addChart);
+        // Kirigami owns custom action delegates outside the QML root's QObject
+        // tree on older versions. Follow their visual parents, as the user does.
+        const auto findButton = [](auto &&self, QQuickItem *parent) -> QQuickItem * {
+            if (parent->objectName() == "addChartButton") return parent;
+            for (auto *child : parent->childItems())
+                if (auto *found = self(self, child)) return found;
+            return nullptr;
+        };
+        QQuickItem *addChart = nullptr;
+        QVERIFY(reset && recover);
+        QTRY_VERIFY(addChart = findButton(findButton, item));
         const auto factory = preferences->chartLayout();
         click(addChart);
-        auto *ground = object->findChild<QObject *>("addChart-ground");
-        QVERIFY(ground);
-        QVERIFY(QMetaObject::invokeMethod(ground, "triggered"));
-        auto *chartMenu = object->findChild<QObject *>("addChartMenu");
+        auto *chartMenu = addChart->findChild<QObject *>("addChartMenu");
         QVERIFY(chartMenu);
+        QObject *ground = nullptr;
+        QTRY_VERIFY(ground = chartMenu->findChild<QObject *>("addChart-ground"));
+        QVERIFY(QMetaObject::invokeMethod(ground, "triggered"));
         QTRY_VERIFY(!chartMenu->property("visible").toBool());
         QTRY_COMPARE(preferences->chartLayout().size(), factory.size() + 1);
         QCOMPARE(preferences->profile(), "classic");
