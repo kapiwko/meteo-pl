@@ -9,31 +9,39 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     objectName: "locationEditor"
-    property string locationName: "Warszawa"
-    property real latitude: 52.2297
-    property real longitude: 21.0122
-    property string model: "um4_60"
+    property string locationName: ""
+    property real latitude: NaN
+    property real longitude: NaN
+    property string editingId: ""
+    property bool hasPoint: false
+    property real mapLatitude: 52.2297
+    property real mapLongitude: 21.0122
     property bool showMap: false
     property string positionError: ""
     property bool positionRequested: false
-    readonly property bool valid: locationName.trim().length > 0 && LocationRules.valid(latitude, longitude, model)
+    readonly property var duplicatePlace: hasPoint ? UserPreferences.places.find(place => place.id !== editingId && LocationRules.samePlace(place.latitude, place.longitude, latitude, longitude)) || null : null
+    readonly property bool valid: hasPoint && locationName.trim().length > 0 && !duplicatePlace
+        && !placeSearch.busy && !positionRequested && LocationRules.valid(latitude, longitude, "gfs")
         && (!manual.checked || (latField.acceptableInput && lonField.acceptableInput))
-    readonly property bool outsideModel: model !== "gfs" && !LocationRules.valid(latitude, longitude, model)
-    readonly property bool savedPlace: locationName.trim().length > 0 && UserPreferences.places.some(place => LocationRules.samePlace(place.latitude, place.longitude, root.latitude, root.longitude))
+    onVisibleChanged: if (!visible) { positionRequested = false; placeSearch.query = ""; }
     spacing: Kirigami.Units.largeSpacing
 
-    PreferenceWriteNotice {}
 
-    function resetDraft(name, lat, lon, forecastModel) {
-        locationName = name; latitude = lat; longitude = lon; model = forecastModel;
+    function resetDraft(name, lat, lon) {
+        hasPoint = name.trim().length > 0 && LocationRules.valid(lat, lon, "gfs");
+        locationName = name;
+        latitude = hasPoint ? lat : NaN; longitude = hasPoint ? lon : NaN;
+        mapLatitude = Number.isFinite(lat) ? lat : 52.2297;
+        mapLongitude = Number.isFinite(lon) ? lon : 21.0122;
         searchField.text = ""; placeSearch.query = ""; positionError = "";
-        positionRequested = false;
-        showMap = false; manual.checked = false;
+        positionRequested = false; showMap = false; manual.checked = false;
     }
     function selectPlace(place) {
         positionRequested = false;
         locationName = place.name;
         latitude = place.latitude; longitude = place.longitude;
+        hasPoint = true;
+        mapLatitude = latitude; mapLongitude = longitude;
         searchField.text = place.name; placeSearch.query = "";
         positionError = "";
     }
@@ -84,10 +92,9 @@ ColumnLayout {
         }
     }
 
-    GroupBox {
+    SettingsSection {
         title: I18n.i18n("Find a place")
         Layout.fillWidth: true
-        padding: Kirigami.Units.largeSpacing
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
             RowLayout {
@@ -101,7 +108,7 @@ ColumnLayout {
                     Accessible.name: I18n.i18n("Search for a place")
                     autoAccept: false
                     onTextChanged: if (!text.length) placeSearch.query = ""
-                    onTextEdited: placeSearch.query = text
+                    onTextEdited: { root.hasPoint = false; placeSearch.query = text; }
                     onAccepted: {
                         if (!text.length) { placeSearch.query = ""; return; }
                         if (placeSearch.results.length) root.selectPlace(placeSearch.results[0]); else placeSearch.search();
@@ -115,25 +122,26 @@ ColumnLayout {
                 }
             }
             CheckBox { text: I18n.i18n("Search outside Poland too"); checked: !placeSearch.polandOnly; onToggled: placeSearch.polandOnly = !checked }
-            Frame {
+            Pane {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.min(220, searchResults.contentHeight + padding * 2)
                 visible: placeSearch.results.length > 0
                 padding: 0
-                contentItem: ListView {
-                    id: searchResults
-                    clip: true
-                    model: placeSearch.results
-                    ScrollBar.vertical: ScrollBar {}
-                    delegate: ItemDelegate {
-                        id: resultDelegate
-                        required property var modelData
-                        width: ListView.view.width
-                        onClicked: root.selectPlace(modelData)
-                        contentItem: ColumnLayout {
-                            spacing: Kirigami.Units.smallSpacing / 2
-                            Label { text: resultDelegate.modelData.name; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
-                            Label { text: resultDelegate.modelData.description; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                Kirigami.Theme.inherit: false
+                Kirigami.Theme.colorSet: Kirigami.Theme.View
+                contentItem: ColumnLayout {
+                    spacing: 0
+                    Repeater {
+                        model: placeSearch.results
+                        delegate: ItemDelegate {
+                            id: resultDelegate
+                            required property var modelData
+                            Layout.fillWidth: true
+                            onClicked: root.selectPlace(modelData)
+                            contentItem: ColumnLayout {
+                                spacing: Kirigami.Units.smallSpacing / 2
+                                Label { text: resultDelegate.modelData.name; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+                                Label { text: resultDelegate.modelData.description; opacity: 0.7; font: Kirigami.Theme.smallFont; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                            }
                         }
                     }
                 }
@@ -165,8 +173,8 @@ ColumnLayout {
                 active: root.showMap
                 visible: active
                 sourceComponent: TileMap {
-                    latitude: root.latitude; longitude: root.longitude
-                    markerLatitude: root.latitude; markerLongitude: root.longitude
+                    latitude: root.mapLatitude; longitude: root.mapLongitude
+                    markerLatitude: root.hasPoint ? root.latitude : NaN; markerLongitude: root.hasPoint ? root.longitude : NaN
                     markerName: root.locationName
                     places: UserPreferences.places
                     onPlaceSelected: (name, latitude, longitude) => root.selectPlace({name: name, latitude: latitude, longitude: longitude})
@@ -177,120 +185,64 @@ ColumnLayout {
     }
     Connections {
         target: root
-        function onLatitudeChanged() { const map = locationMap.item as TileMap; if (map) map.latitude = root.latitude; }
-        function onLongitudeChanged() { const map = locationMap.item as TileMap; if (map) map.longitude = root.longitude; }
+        function onMapLatitudeChanged() { const map = locationMap.item as TileMap; if (map) map.latitude = root.mapLatitude; }
+        function onMapLongitudeChanged() { const map = locationMap.item as TileMap; if (map) map.longitude = root.mapLongitude; }
     }
-    GroupBox {
-        title: I18n.i18n("My places")
-        visible: UserPreferences.places.length > 0
+    Kirigami.InlineMessage {
         Layout.fillWidth: true
-        padding: Kirigami.Units.smallSpacing
-        contentItem: ListView {
-            implicitHeight: Math.min(160, contentHeight)
-            clip: true
-            model: UserPreferences.places
-            ScrollBar.vertical: ScrollBar {}
-            delegate: ItemDelegate {
-                id: savedPlace
-                required property var modelData
-                width: ListView.view.width
-                highlighted: LocationRules.samePlace(modelData.latitude, modelData.longitude, root.latitude, root.longitude)
-                onClicked: root.selectPlace(modelData)
-                contentItem: RowLayout {
-                    Label { text: savedPlace.modelData.name; Layout.fillWidth: true; elide: Text.ElideRight }
-                    ToolButton {
-                        icon.name: "edit-delete"
-                        onClicked: {
-                            const selected = LocationRules.samePlace(savedPlace.modelData.latitude, savedPlace.modelData.longitude, root.latitude, root.longitude);
-                            UserPreferences.removePlace(savedPlace.modelData.latitude, savedPlace.modelData.longitude);
-                            if (selected) {
-                                const first = UserPreferences.places[0];
-                                if (first) root.selectPlace(first);
-                                else root.resetDraft("", 0, 0, root.model);
-                            }
-                        }
-                        ToolTip.text: I18n.i18n("Remove place: ") + savedPlace.modelData.name
-                        ToolTip.visible: hovered
-                        Accessible.name: ToolTip.text
-                    }
-                }
-            }
-        }
-    }
-    GroupBox {
-        title: I18n.i18n("Forecast")
-        Layout.fillWidth: true
-        padding: Kirigami.Units.largeSpacing
-        contentItem: ColumnLayout {
-            spacing: Kirigami.Units.smallSpacing
-            Kirigami.FormLayout {
-                Layout.fillWidth: true
-                Label {
-                    Kirigami.FormData.label: I18n.i18n("Place:")
-                    Layout.fillWidth: true
-                    text: root.locationName.length ? root.locationName : I18n.i18n("Choose a place or a point on the map")
-                    font.bold: root.locationName.length > 0
-                    wrapMode: Text.WordWrap
-                }
-                ComboBox {
-                    objectName: "locationModelSelector"
-                    Kirigami.FormData.label: I18n.i18n("Model:")
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    Accessible.name: I18n.i18n("Forecast model")
-                    model: [I18n.i18n("UM4 · 60 hours"), I18n.i18n("UM4 · 120 hours"), I18n.i18n("GFS · 240 hours")]
-                    currentIndex: ["um4_60", "um4_120", "gfs"].indexOf(root.model)
-                    onActivated: index => root.model = ["um4_60", "um4_120", "gfs"][index]
-                }
-            }
-            Label {
-                Layout.fillWidth: true
-                text: root.model === "gfs" ? I18n.i18n("GFS: worldwide forecast.") : I18n.i18n("UM4: detailed forecasts for Poland and Central Europe.")
-                color: Kirigami.Theme.disabledTextColor
-                font: Kirigami.Theme.smallFont
-                wrapMode: Text.WordWrap
-            }
-            Kirigami.InlineMessage { Layout.fillWidth: true; visible: root.outsideModel; text: I18n.i18n("This point is outside the UM4 area. Choose the GFS model."); type: Kirigami.MessageType.Warning }
-        }
-    }
-    ToolButton {
-        id: manual
-        objectName: "manualLocationToggle"
-        text: I18n.i18n("Custom name and coordinates")
-        icon.name: checked ? "arrow-down" : "arrow-right"
-        checkable: true
+        visible: root.duplicatePlace !== null
+        text: I18n.i18n("This place is already in your list. Choose it from My places.")
+        type: Kirigami.MessageType.Information
     }
     Kirigami.FormLayout {
-        visible: manual.checked
+        id: nameForm
         Layout.fillWidth: true
+        visible: root.hasPoint || root.editingId.length > 0 || manual.checked
         TextField {
             objectName: "customLocationName"
             Kirigami.FormData.label: I18n.i18n("Name:")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
+            Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
             text: root.locationName
             maximumLength: 100
             onTextEdited: root.locationName = text
         }
+    }
+    ToolButton {
+        id: manual
+        objectName: "manualLocationToggle"
+        text: I18n.i18n("Coordinates")
+        icon.name: checked ? "arrow-down" : "arrow-right"
+        checkable: true
+    }
+    Kirigami.FormLayout {
+        twinFormLayouts: [nameForm]
+        visible: manual.checked
+        Layout.fillWidth: true
         TextField {
             id: latField
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
             objectName: "manualLatitude"
             Kirigami.FormData.label: I18n.i18n("Latitude (°N):")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            Binding on text { value: root.latitude.toFixed(6); when: !latField.activeFocus; restoreMode: Binding.RestoreNone }
+            Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
+            Binding on text { value: Number.isFinite(root.latitude) ? root.latitude.toFixed(6) : ""; when: !latField.activeFocus; restoreMode: Binding.RestoreNone }
             validator: RegularExpressionValidator { regularExpression: /-?\d{1,2}([.,]\d{1,6})?/ }
-            onTextEdited: if (acceptableInput) root.latitude = Number(text.replace(",", "."));
+            onTextEdited: { root.latitude = acceptableInput ? Number(text.replace(",", ".")) : NaN; root.hasPoint = Number.isFinite(root.latitude) && Number.isFinite(root.longitude); }
         }
         TextField {
             id: lonField
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
             objectName: "manualLongitude"
             Kirigami.FormData.label: I18n.i18n("Longitude (°E):")
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            Binding on text { value: root.longitude.toFixed(6); when: !lonField.activeFocus; restoreMode: Binding.RestoreNone }
+            Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
+            Binding on text { value: Number.isFinite(root.longitude) ? root.longitude.toFixed(6) : ""; when: !lonField.activeFocus; restoreMode: Binding.RestoreNone }
             validator: RegularExpressionValidator { regularExpression: /-?\d{1,3}([.,]\d{1,6})?/ }
-            onTextEdited: if (acceptableInput) root.longitude = Number(text.replace(",", "."));
+            onTextEdited: { root.longitude = acceptableInput ? Number(text.replace(",", ".")) : NaN; root.hasPoint = Number.isFinite(root.latitude) && Number.isFinite(root.longitude); }
         }
     }
 }

@@ -10,6 +10,7 @@ ColumnLayout {
     property bool showTimeRange: false
     property real startTime: weather.firstTimestamp
     property real endTime: weather.lastTimestamp
+    signal modelSelected(string model)
     signal hoursSelected(int hours)
     spacing: Kirigami.Units.largeSpacing
     PreferenceWriteNotice {}
@@ -17,6 +18,30 @@ ColumnLayout {
         title: I18n.i18n("Current forecast")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {
+            ComboBox {
+                objectName: "forecastModelSelector"
+                Kirigami.FormData.label: I18n.i18n("Forecast model:")
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                model: [{id: "um4_60", name: I18n.i18n("UM4 · 60 hours")}, {id: "um4_120", name: I18n.i18n("UM4 · 120 hours")}, {id: "gfs", name: I18n.i18n("GFS · 240 hours")}]
+                textRole: "name"
+                currentIndex: model.findIndex(entry => entry.id === root.weather.model)
+                delegate: ItemDelegate {
+                    required property int index
+                    required property var modelData
+                    width: parent ? parent.width : implicitWidth
+                    text: modelData.name
+                    enabled: LocationRules.valid(root.weather.latitude, root.weather.longitude, modelData.id)
+                }
+                onActivated: index => root.modelSelected(model[index].id)
+            }
+            Label {
+                Layout.fillWidth: true
+                text: I18n.i18n("UM4 covers Poland and Central Europe. GFS covers the whole world.")
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+            }
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Chart profile:")
                 Layout.fillWidth: true

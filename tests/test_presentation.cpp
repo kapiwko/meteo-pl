@@ -31,6 +31,88 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void widgetLocationSettingsFollowAnEditedPlace()
+    {
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        preferences->savePlace("Kielce", 50.8661, 20.6286);
+        const auto id = preferences->placeAt(50.8661, 20.6286)["id"].toString();
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configGeneral.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> settings(component.createWithInitialProperties({
+            {"cfg_locationName", "Kielce"}, {"cfg_latitude", 50.8661}, {"cfg_longitude", 20.6286}, {"cfg_model", "um4_60"}}));
+        QVERIFY2(settings, qPrintable(component.errorString()));
+        QVERIFY(settings->property("isSaveAllowed").toBool());
+        QVERIFY(preferences->editPlace(id, "Moved Kielce", 50.9, 20.7)["ok"].toBool());
+        QTRY_COMPARE(settings->property("cfg_locationName").toString(), "Moved Kielce");
+        QCOMPARE(settings->property("cfg_latitude").toDouble(), 50.9);
+        QCOMPARE(settings->property("cfg_longitude").toDouble(), 20.7);
+        QVERIFY(settings->property("isSaveAllowed").toBool());
+        QVERIFY(preferences->editPlace(id, "Kielce", 50.8661, 20.6286)["ok"].toBool());
+    }
+    void placesManagerCanUndoConsecutiveRemovals()
+    {
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto first = preferences->editPlace({}, "First undo place", 55.1, 19.2)["place"].toMap();
+        const auto second = preferences->editPlace({}, "Second undo place", 55.2, 19.3)["place"].toMap();
+        QVERIFY(!first.isEmpty() && !second.isEmpty());
+        const auto original = preferences->favorites();
+        QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "PlacesView");
+        QScopedPointer<QObject> view(component.create());
+        QVERIFY2(view, qPrintable(component.errorString()));
+        for (const auto &place : {first, second}) {
+            QVERIFY(QMetaObject::invokeMethod(view.data(), "remove", Q_ARG(QVariant, place)));
+            QCOMPARE(preferences->favorites().size(), original.size() - 1);
+            QVERIFY(QMetaObject::invokeMethod(view.data(), "undoRemoval"));
+            QCOMPARE(preferences->favorites(), original);
+        }
+        preferences->deletePlace(first["id"].toString());
+        preferences->deletePlace(second["id"].toString());
+    }
+    void placeSaveButtonKeepsTheFormOpenOnErrorAndAcceptsOnce()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick
+            import pl.meteo.desktop
+            Item { PlaceEditorDialog {} }
+        )", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(720, 900); item->setParentItem(window.contentItem()); item->setSize({720, 900}); window.show();
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto saved = preferences->editPlace({}, "Existing", 50, 20)["place"].toMap();
+        auto *dialog = object->findChild<QObject *>("locationDialog");
+        auto *save = object->findChild<QQuickItem *>("saveLocationButton");
+        auto *editor = object->findChild<QObject *>("locationEditor");
+        QVERIFY(dialog && save && editor);
+        dialog->setProperty("place", saved);
+        QVERIFY(QMetaObject::invokeMethod(dialog, "open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QVERIFY(preferences->deletePlace(saved["id"].toString())["ok"].toBool());
+        QVERIFY(save->isEnabled());
+        QSignalSpy accepted(dialog, SIGNAL(accepted()));
+        const auto clickSave = [&] { QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, save->mapToScene({save->width()/2, save->height()/2}).toPoint()); };
+        clickSave();
+        QVERIFY(dialog->property("visible").toBool());
+        QVERIFY(!dialog->property("saveError").toString().isEmpty());
+        QCOMPARE(accepted.size(), 0);
+        QCOMPARE(preferences->favorites().size(), 0);
+        QVERIFY(QMetaObject::invokeMethod(dialog, "reject"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        dialog->setProperty("place", QVariantMap{});
+        QVERIFY(QMetaObject::invokeMethod(dialog, "open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        const QVariantMap newPlace{{"name", "New place"}, {"latitude", 51}, {"longitude", 21}};
+        QVERIFY(QMetaObject::invokeMethod(editor, "selectPlace", Q_ARG(QVariant, newPlace)));
+        QVERIFY(save->isEnabled()); clickSave();
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(accepted.size(), 1);
+        QCOMPARE(preferences->favorites().size(), 1);
+    }
     void init()
     {
         QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
@@ -284,8 +366,8 @@ private slots:
         QTRY_VERIFY(qAbs(addPage->mapToScene({0, 0}).x()) < 1);
         QTRY_VERIFY(!stack->property("busy").toBool());
         QCOMPARE(addPage->objectName(), "mobileLocationPage");
-        QVERIFY(addPage->property("addingPlace").toBool());
-        auto *newPlaceButton = addPage->findChild<QObject *>("mobileShowForecastButton");
+        QVERIFY(!addPage->property("editing").toBool());
+        auto *newPlaceButton = addPage->findChild<QObject *>("mobileSavePlaceButton");
         QVERIFY(newPlaceButton);
         QVERIFY(!newPlaceButton->property("enabled").toBool());
         QCOMPARE(addPage->findChild<QObject *>("customLocationName")->property("text").toString(), QString());
@@ -446,15 +528,22 @@ private slots:
         QTRY_VERIFY(!stack->property("busy").toBool());
         QVERIFY(QMetaObject::invokeMethod(page, "chooseLocation"));
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
-        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileLocationPage");
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobilePlacesPage");
         QTRY_VERIFY(qAbs(currentPage()->mapToScene({0, 0}).x()) < 1);
-        QQuickItem *show = nullptr;
-        QTRY_VERIFY(show = find(find, currentPage(), "mobileShowForecastButton"));
-        QVERIFY(show->isEnabled());
-        click(show);
-        QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QQuickItem *manageAddPlace = nullptr;
+        QTRY_VERIFY(manageAddPlace = find(find, currentPage(), "addPlaceButton"));
+        click(manageAddPlace);
+        QTRY_COMPARE(stack->property("depth").toInt(), 3);
+        QTRY_VERIFY(currentPage() && currentPage()->objectName() == "mobileLocationPage");
         QTRY_VERIFY(!stack->property("busy").toBool());
-        QTRY_VERIFY(qAbs(page->mapToScene({0, 0}).x()) < 1);
+        QQuickItem *savePlace = nullptr;
+        QTRY_VERIFY(savePlace = find(find, currentPage(), "mobileSavePlaceButton"));
+        QVERIFY(!savePlace->isEnabled());
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        QTest::keyClick(window, Qt::Key_Back);
+        QTRY_COMPARE(stack->property("depth").toInt(), 1);
         QTRY_VERIFY(!stack->property("busy").toBool());
         QVERIFY(!window->grabWindow().isNull());
         if (const auto path = qEnvironmentVariable("METEO_MOBILE_SCREENSHOT"); !path.isEmpty()) QVERIFY(window->grabWindow().save(path));
@@ -1424,6 +1513,13 @@ private slots:
         QTRY_COMPARE(other.locationName(), "Gdańsk");
         preferences->rememberPlace("Gdańsk", 54.352, 18.6466);
         QCOMPARE(preferences->favorites().size(), 1);
+        const auto id = preferences->favorites().first().toMap()["id"].toString();
+        QVERIFY(preferences->editPlace(id, "Port", 54.4, 18.7)["ok"].toBool());
+        QTRY_VERIFY(!changed.isEmpty() && !otherChanged.isEmpty()); apply();
+        QTRY_COMPARE(model.locationName(), "Port");
+        QCOMPARE(model.latitude(), 54.4);
+        QCOMPARE(other.latitude(), 54.4);
+        QCOMPARE(preferences->favorites().size(), 1);
     }
     void profileButtonsDuplicateRenameAndDeleteWithoutPreparingAName()
     {
@@ -2004,7 +2100,7 @@ private slots:
         const double latitude = 50.866123456789012;
         const double longitude = 20.628612345678901;
         QScopedPointer<QObject> editor(component.createWithInitialProperties({
-            {"locationName", "GPS point"}, {"latitude", latitude}, {"longitude", longitude}}));
+            {"locationName", "GPS point"}, {"latitude", latitude}, {"longitude", longitude}, {"hasPoint", true}}));
         QVERIFY2(editor, qPrintable(component.errorString()));
         QVERIFY(editor->property("valid").toBool());
         auto *manual = editor->findChild<QObject *>("manualLocationToggle");
@@ -2026,13 +2122,8 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(lat, "textEdited"));
         QCOMPARE(editor->property("latitude").toDouble(), 50.123456);
         QVERIFY(editor->property("valid").toBool());
-        editor->setProperty("model", "unknown");
-        QVERIFY(!editor->property("valid").toBool());
         editor->setProperty("latitude", 1.2345678912345);
-        editor->setProperty("model", "um4_60");
-        QVERIFY(!editor->property("valid").toBool());
-        editor->setProperty("model", "gfs");
-        QVERIFY(editor->property("valid").toBool());
+        QVERIFY(editor->property("valid").toBool()); // Editing a place is independent of its forecast model.
         editor->setProperty("latitude", 91);
         QVERIFY(!editor->property("valid").toBool());
     }
@@ -2104,36 +2195,62 @@ private slots:
     {
         QQmlEngine engine;
         QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
-        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         const QVariantMap preview{{"locationName", "New York"}, {"latitude", 40.7128}, {"longitude", -74.006}, {"model", "gfs"}};
         QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", preview}}));
         QVERIFY2(object, qPrintable(component.errorString()));
         auto *weather = object->findChild<WeatherModel *>();
         auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
-        QVERIFY(weather); QVERIFY(preferences);
         const auto places = preferences->favorites();
         auto *add = object->findChild<QObject *>("addLocationButton");
         auto *dialog = object->findChild<QObject *>("locationDialog");
-        auto *editor = object->findChild<QObject *>("locationEditor");
-        auto *save = object->findChild<QObject *>("saveLocationButton");
-        QVERIFY(add); QVERIFY(dialog); QVERIFY(editor); QVERIFY(save);
+        QVERIFY(add && dialog);
+        auto *editor = dialog->findChild<QObject *>("locationEditor");
+        auto *save = dialog->findChild<QObject *>("saveLocationButton");
+        QVERIFY(editor && save);
         QVERIFY(QMetaObject::invokeMethod(add, "clicked"));
         QTRY_VERIFY(dialog->property("visible").toBool());
-        QCOMPARE(dialog->property("title").toString(), "Add location");
         QCOMPARE(editor->property("locationName").toString(), QString());
+        QVERIFY(!std::isfinite(editor->property("latitude").toDouble()));
+        editor->setProperty("locationName", "Name without a point");
         QVERIFY(!save->property("enabled").toBool());
         const QVariantMap place{{"name", "Test place"}, {"latitude", 1.2345}, {"longitude", 2.3456}};
         QVERIFY(QMetaObject::invokeMethod(editor, "selectPlace", Q_ARG(QVariant, place)));
         QVERIFY(save->property("enabled").toBool());
-        QCOMPARE(save->property("text").toString(), "Add and show forecast");
+        QCOMPARE(save->property("text").toString(), "Add");
         QCOMPARE(preferences->favorites(), places);
-        QCOMPARE(weather->locationName(), "New York");
-        QVERIFY(QMetaObject::invokeMethod(dialog, "accept"));
+        QVERIFY(QMetaObject::invokeMethod(dialog, "reject"));
+        QCOMPARE(preferences->favorites(), places);
+        QVERIFY(QMetaObject::invokeMethod(add, "clicked"));
+        QVERIFY(QMetaObject::invokeMethod(editor, "selectPlace", Q_ARG(QVariant, place)));
+        QVERIFY(QMetaObject::invokeMethod(dialog, "save"));
         QCOMPARE(weather->locationName(), "Test place");
-        QCOMPARE(weather->latitude(), 1.2345);
-        QCOMPARE(weather->longitude(), 2.3456);
-        QVERIFY(preferences->isFavorite(1.2345, 2.3456));
-        preferences->removePlace(1.2345, 2.3456);
+        const auto saved = preferences->placeAt(1.2345, 2.3456);
+        QVERIFY(!saved.isEmpty());
+        dialog->setProperty("place", saved);
+        QVERIFY(QMetaObject::invokeMethod(dialog, "open"));
+        editor->setProperty("locationName", "Changed name");
+        editor->setProperty("latitude", 1.5);
+        QVERIFY(QMetaObject::invokeMethod(dialog, "reject"));
+        QCOMPARE(preferences->placeAt(1.2345, 2.3456), saved);
+        QVERIFY(QMetaObject::invokeMethod(dialog, "open"));
+        editor->setProperty("locationName", "Changed name");
+        editor->setProperty("latitude", 1.5);
+        QVERIFY(QMetaObject::invokeMethod(dialog, "save"));
+        const auto moved = preferences->placeAt(1.5, 2.3456);
+        QCOMPARE(moved["id"], saved["id"]);
+        QCOMPARE(moved["name"].toString(), "Changed name");
+        QCOMPARE(preferences->favorites().size(), places.size() + 1);
+        QObject *panel = nullptr;
+        for (auto *candidate : object->findChildren<QObject *>())
+            if (QByteArray(candidate->metaObject()->className()).startsWith("ForecastPanel_")) { panel = candidate; break; }
+        QVERIFY(panel);
+        QTRY_COMPARE(weather->latitude(), 1.5);
+        QVERIFY(preferences->editPlace(saved["id"].toString(), "Changed name", 50.87, 20.63)["ok"].toBool());
+        QTRY_COMPARE(weather->latitude(), 50.87);
+        QVERIFY(QMetaObject::invokeMethod(panel, "modelSelected", Q_ARG(QString, QStringLiteral("um4_120"))));
+        QCOMPARE(weather->model(), "um4_120");
+        QCOMPARE(object->findChild<QObject *>("locationSettings")->property("model").toString(), "um4_120");
+        preferences->removePlace(50.87, 20.63);
     }
     void locationDialogUsesInsetContentAndFitsNarrowWindows()
     {
@@ -2141,7 +2258,7 @@ private slots:
         QQmlEngine engine;
         QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}}));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", QVariantMap{{"locationName", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}, {"model", "um4_60"}}}}));
         QVERIFY2(object, qPrintable(component.errorString()));
         auto *window = qobject_cast<QQuickWindow *>(object.data());
         QVERIFY(window);
@@ -2155,9 +2272,9 @@ private slots:
         QTest::qWait(150);
         QVERIFY(dialog->property("visible").toBool());
         QCOMPARE(dialog->property("padding").toDouble(), 0);
-        auto *content = object->findChild<QQuickItem *>("locationDialogContent");
-        auto *search = object->findChild<QQuickItem *>("placeSearchField");
-        auto *manual = object->findChild<QQuickItem *>("manualLocationToggle");
+        auto *content = dialog->findChild<QQuickItem *>("locationDialogContent");
+        auto *search = dialog->findChild<QQuickItem *>("placeSearchField");
+        auto *manual = dialog->findChild<QQuickItem *>("manualLocationToggle");
         QVERIFY(content); QVERIFY(search); QVERIFY(manual);
         QVERIFY(content->property("padding").toDouble() > 0);
         QVERIFY(dialog->property("height").toDouble() < window->height());
@@ -2172,7 +2289,19 @@ private slots:
         QTest::qWait(100); // Allow the responsive form to finish layout after resizing.
         const auto collapsed = content->implicitHeight();
         manual->setProperty("checked", true);
-        QTRY_VERIFY(content->implicitHeight() > collapsed + 90);
+        QTRY_VERIFY(content->implicitHeight() > collapsed);
+        QVERIFY(dialog->findChild<QQuickItem *>("manualLatitude")->isVisible());
+        QVERIFY(dialog->findChild<QQuickItem *>("manualLongitude")->isVisible());
+        for (const auto &name : {"customLocationName", "manualLatitude", "manualLongitude"}) {
+            auto *field = dialog->findChild<QQuickItem *>(name);
+            QVERIFY(field);
+            QTRY_VERIFY2(([&] {
+                const auto x = field->mapToItem(content, {0, 0}).x();
+                const auto padding = content->property("padding").toDouble();
+                return field->width() >= 220 && x >= padding
+                    && x + field->width() <= content->width() - padding + 1;
+            })(), name);
+        }
         manual->setProperty("checked", false);
         QTRY_VERIFY(qAbs(content->implicitHeight() - collapsed) < 2);
         QMetaObject::invokeMethod(dialog, "close");
@@ -2438,8 +2567,8 @@ private slots:
         QVERIFY(settings->property("isSaveAllowed").toBool());
         QVERIFY(QMetaObject::invokeMethod(settings.data(), "move", Q_ARG(QVariant, 0), Q_ARG(QVariant, 1)));
         const auto order = qvariant_cast<QJSValue>(settings->property("cfg_placeOrder")).toVariant().toStringList();
-        QCOMPARE(order[0], "50.866100,20.628600");
-        QCOMPARE(order[1], "54.352000,18.646600");
+        QCOMPARE(order[0], preferences->placeAt(50.8661, 20.6286)["id"].toString());
+        QCOMPARE(order[1], preferences->placeAt(54.352, 18.6466)["id"].toString());
         settings->setProperty("cfg_visiblePlaces", QStringList{});
         QVERIFY(!settings->property("isSaveAllowed").toBool());
         settings->setProperty("cfg_visiblePlaces", QStringList{"*"});
@@ -2566,6 +2695,15 @@ private slots:
     void plasmaConfigurationUpdatesInBothDirections()
     {
         QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        preferences->savePlace("Kielce", 50.8661, 20.6286);
+        preferences->savePlace("Gdańsk", 54.352, 18.6466);
+        const auto available = preferences->favorites();
+        const auto indexOf = [&](double latitude) {
+            for (int i = 0; i < available.size(); ++i)
+                if (qAbs(available[i].toMap()["latitude"].toDouble() - latitude) < 1e-6) return i;
+            return -1;
+        };
         const auto path = QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configGeneral.qml");
         QQmlComponent component(&engine, QUrl::fromLocalFile(path));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
@@ -2574,15 +2712,18 @@ private slots:
         editor->setProperty("cfg_locationName", "Kielce");
         editor->setProperty("cfg_latitude", 50.8661);
         editor->setProperty("cfg_longitude", 20.6286);
-        QCOMPARE(editor->property("locationName").toString(), "Kielce");
-        QCOMPARE(editor->property("latitude").toDouble(), 50.8661);
+        auto *selector = editor->findChild<QObject *>("widgetLocationSelector");
+        auto *model = editor->findChild<QObject *>("widgetForecastModelSelector");
+        QVERIFY(selector && model);
+        QCOMPARE(selector->property("currentIndex").toInt(), indexOf(50.8661));
         QVERIFY(editor->property("isSaveAllowed").toBool());
-        editor->setProperty("latitude", 40.7);
-        QCOMPARE(editor->property("cfg_latitude").toDouble(), 40.7);
-        QVERIFY(!editor->property("isSaveAllowed").toBool());
-        editor->setProperty("model", "gfs");
-        QVERIFY(editor->property("isSaveAllowed").toBool());
+        QVERIFY(QMetaObject::invokeMethod(selector, "activated", Q_ARG(int, indexOf(54.352))));
+        QCOMPARE(editor->property("cfg_locationName").toString(), "Gdańsk");
+        QCOMPARE(editor->property("cfg_latitude").toDouble(), 54.352);
+        QVERIFY(QMetaObject::invokeMethod(model, "activated", Q_ARG(int, 2)));
         QCOMPARE(editor->property("cfg_model").toString(), "gfs");
+        editor->setProperty("cfg_model", "um4_120");
+        QCOMPARE(model->property("currentIndex").toInt(), 1);
     }
 };
 QTEST_MAIN(PresentationTest)

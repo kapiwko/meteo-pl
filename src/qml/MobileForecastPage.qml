@@ -28,8 +28,8 @@ Kirigami.Page {
     title: I18n.i18n("Meteo")
     function showDestination(index) { forecastPanel.viewMode = index === 0 ? forecastView : index === 1 ? 3 : newsView; }
     function openSettings() { navigationStack.push(settingsPage); }
-    function chooseLocation() { navigationStack.push(locationPage); }
-    function addLocation() { navigationStack.push(locationPage, {addingPlace: true}); }
+    function chooseLocation() { navigationStack.push(placesPage); }
+    function addLocation() { navigationStack.push(locationPage); }
     header: ToolBar {
         MaterialStyle.Material.background: Kirigami.Theme.backgroundColor
         MaterialStyle.Material.foreground: Kirigami.Theme.textColor
@@ -124,6 +124,8 @@ Kirigami.Page {
             touchMode: true
             mobileLayout: true
             onConfigureRequested: root.chooseLocation()
+            onAddLocationRequested: root.addLocation()
+            onModelSelected: model => root.forecastSelected(root.weather.locationName, root.weather.latitude, root.weather.longitude, model)
             onSettingsRequested: root.openSettings()
             onLocationSelected: (name, latitude, longitude) => root.forecastSelected(name, latitude, longitude, root.weather.model)
             onViewModeChanged: {
@@ -163,7 +165,7 @@ Kirigami.Page {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 0
-            ItemDelegate { visible: root.destination === 0; Layout.fillWidth: true; text: I18n.i18n("Location and model"); icon.name: "mark-location"; onClicked: { moreSheet.close(); root.chooseLocation(); } }
+            ItemDelegate { visible: root.destination === 0; Layout.fillWidth: true; text: I18n.i18n("My places"); icon.name: "mark-location"; onClicked: { moreSheet.close(); root.chooseLocation(); } }
             ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("Settings"); icon.name: "configure"; onClicked: { moreSheet.close(); root.openSettings(); } }
             ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onClicked: { moreSheet.close(); about.open(); } }
         }
@@ -173,9 +175,19 @@ Kirigami.Page {
     Component {
         id: locationPage
         MobileLocationPage {
+            navigationStack: root.navigationStack
+            onPlaceSaved: (place, added) => {
+                if (added) root.forecastSelected(place.name, place.latitude, place.longitude, root.weather.model);
+                root.navigationStack.pop();
+            }
+        }
+    }
+    Component {
+        id: placesPage
+        MobilePlacesPage {
             weather: root.weather
             navigationStack: root.navigationStack
-            onForecastSelected: (name, latitude, longitude, model) => root.forecastSelected(name, latitude, longitude, model)
+            onLocationSelected: (name, latitude, longitude) => root.forecastSelected(name, latitude, longitude, root.weather.model)
         }
     }
 }

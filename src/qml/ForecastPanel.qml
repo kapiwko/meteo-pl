@@ -40,6 +40,7 @@ Item {
     property bool exportingReadings: false
     property url exportedFile
     readonly property real minimumViewportSpan: Math.min(24 * 3600, Math.max(0, weather.lastTimestamp - weather.firstTimestamp))
+    signal modelSelected(string model)
     signal configureRequested()
     signal addLocationRequested()
     signal settingsRequested()
@@ -637,6 +638,7 @@ Item {
         active: !root.mobileLayout
         sourceComponent: Component {
             MeteoSettings {
+                onModelSelected: model => root.modelSelected(model)
                 weather: root.weather
                 showTimeRange: root.viewMode === 0
                 startTime: root.viewportStart

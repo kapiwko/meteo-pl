@@ -84,6 +84,10 @@ qt_add_qml_module(meteo_ui
         qml/MapTileFrame.qml qml/MapWheelHandler.qml qml/BufferedImage.qml
         qml/OriginalMeteogram.qml qml/MeteogramStyle.js qml/SeriesLegend.qml qml/SeriesSettings.qml qml/SeriesAppearanceDialog.qml
 )
+foreach(component PlaceEditorDialog PlacesView PlacesDialog MobilePlacesPage)
+    set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)
+    qt_target_qml_sources(meteo_ui QML_FILES qml/${component}.qml)
+endforeach()
 set_source_files_properties(qml/WidgetChartSelection.qml PROPERTIES QT_RESOURCE_ALIAS WidgetChartSelection.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/WidgetChartSelection.qml)
 set_source_files_properties(qml/ChartGestures.qml PROPERTIES QT_RESOURCE_ALIAS ChartGestures.qml)

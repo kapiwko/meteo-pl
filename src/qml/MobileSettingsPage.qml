@@ -68,6 +68,7 @@ Kirigami.ScrollablePage {
         id: forecastSettings
         ForecastSettings {
             weather: root.weather
+            onModelSelected: model => root.forecastPanel.modelSelected(model)
             showTimeRange: true
             startTime: root.forecastPanel.viewportStart
             endTime: root.forecastPanel.viewportEnd

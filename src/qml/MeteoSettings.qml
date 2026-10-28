@@ -12,6 +12,7 @@ Dialog {
     property real startTime: weather.firstTimestamp
     property real endTime: weather.lastTimestamp
     property alias section: sections.currentIndex
+    signal modelSelected(string model)
     signal hoursSelected(int hours)
     title: I18n.i18n("Settings")
     parent: Overlay.overlay
@@ -86,6 +87,7 @@ Dialog {
             currentIndex: sections.currentIndex
             SettingsPage {
                 pageContent: ForecastSettings {
+                    onModelSelected: model => root.modelSelected(model)
                     weather: root.weather
                     showTimeRange: root.showTimeRange
                     startTime: root.startTime
