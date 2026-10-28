@@ -647,6 +647,7 @@ Item {
                 startTime: root.viewportStart
                 endTime: root.viewportEnd
                 onHoursSelected: hours => root.setHours(hours)
+                onRangeSelected: (first, last) => root.setRange(first, last)
             }
         }
     }

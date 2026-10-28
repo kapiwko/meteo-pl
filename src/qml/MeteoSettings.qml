@@ -14,6 +14,7 @@ Dialog {
     property alias section: sections.currentIndex
     signal modelSelected(string model)
     signal hoursSelected(int hours)
+    signal rangeSelected(real first, real last)
     title: I18n.i18n("Settings")
     parent: Overlay.overlay
     anchors.centerIn: parent
@@ -93,6 +94,7 @@ Dialog {
                     startTime: root.startTime
                     endTime: root.endTime
                     onHoursSelected: hours => root.hoursSelected(hours)
+                    onRangeSelected: (first, last) => root.rangeSelected(first, last)
                 }
             }
             SettingsPage { pageContent: DisplaySettings { weather: root.weather } }

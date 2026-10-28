@@ -31,6 +31,45 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void customIntervalUsesValidatedDatesAndCanBeCancelled()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        WeatherModel weather; weather.setAutoRefresh(false);
+        weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastSettings");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"showTimeRange", true}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(420, 800); item->setParentItem(window.contentItem()); item->setWidth(400); window.show();
+        auto *combo = object->findChild<QObject *>("settingsTimeRange");
+        auto *dialog = object->findChild<QObject *>("timeRangeDialog");
+        auto *apply = object->findChild<QQuickItem *>("applyTimeRange");
+        QVERIFY(combo && dialog && apply);
+        QSignalSpy selected(object.data(), SIGNAL(rangeSelected(double,double)));
+        QVERIFY(selected.isValid());
+        const auto first = weather.firstTimestamp();
+        const auto last = weather.lastTimestamp();
+        QVERIFY(QMetaObject::invokeMethod(combo, "activated", Q_ARG(int, 4)));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        dialog->setProperty("draftStart", first); dialog->setProperty("draftEnd", first + 12 * 3600);
+        QVERIFY(!apply->isEnabled());
+        dialog->setProperty("draftEnd", last + 3600);
+        QVERIFY(!apply->isEnabled());
+        QVERIFY(QMetaObject::invokeMethod(dialog, "reject"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(selected.size(), 0);
+        QCOMPARE(combo->property("currentIndex").toInt(), 0);
+        QVERIFY(QMetaObject::invokeMethod(combo, "activated", Q_ARG(int, 4)));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        dialog->setProperty("draftStart", first); dialog->setProperty("draftEnd", last);
+        QVERIFY(apply->isEnabled());
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, apply->mapToScene({apply->width()/2, apply->height()/2}).toPoint());
+        QTRY_COMPARE(selected.size(), 1);
+        QCOMPARE(selected.first()[0].toDouble(), double(first));
+        QCOMPARE(selected.first()[1].toDouble(), double(last));
+    }
     void calendarUsesNativeMonthGridAndBounds()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|Unable to assign).*")));

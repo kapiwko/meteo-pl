@@ -12,6 +12,22 @@ ColumnLayout {
     property real endTime: weather.lastTimestamp
     signal modelSelected(string model)
     signal hoursSelected(int hours)
+    signal rangeSelected(real first, real last)
+    function intervalIndex() {
+        const hours = (endTime - startTime) / 3600;
+        if (Math.abs(startTime - weather.firstTimestamp) < 1 && Math.abs(endTime - weather.lastTimestamp) < 1) return 0;
+        const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
+        return index < 0 ? 4 : index + 1;
+    }
+    TimeRangeDialog {
+        id: intervalDialog
+        minimum: root.weather.firstTimestamp
+        maximum: root.weather.lastTimestamp
+        startTime: root.startTime
+        endTime: root.endTime
+        onRangeSelected: (first, last) => root.rangeSelected(first, last)
+        onClosed: intervalSelector.currentIndex = Qt.binding(() => root.intervalIndex())
+    }
     spacing: Kirigami.Units.largeSpacing
     PreferenceWriteNotice {}
     SettingsSection {
@@ -62,13 +78,13 @@ ColumnLayout {
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 18
                 Accessible.name: I18n.i18n("Chart time interval")
                 model: [I18n.i18n("Entire forecast"), I18n.i18n("24 hours"), I18n.i18n("48 hours"), I18n.i18n("72 hours"), I18n.i18n("Custom interval")]
-                currentIndex: {
-                    const hours = (root.endTime - root.startTime) / 3600;
-                    if (Math.abs(root.startTime - root.weather.firstTimestamp) < 1 && Math.abs(root.endTime - root.weather.lastTimestamp) < 1) return 0;
-                    const index = [24,48,72].findIndex(value => Math.abs(value - hours) < 0.01);
-                    return index < 0 ? 4 : index + 1;
+                id: intervalSelector
+                enabled: root.weather.hasData
+                currentIndex: root.intervalIndex()
+                onActivated: index => {
+                    if (index < 4) root.hoursSelected([0,24,48,72][index]);
+                    else intervalDialog.open();
                 }
-                onActivated: index => { if (index < 4) root.hoursSelected([0,24,48,72][index]); }
             }
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Model run:")

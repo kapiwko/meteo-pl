@@ -73,6 +73,7 @@ Kirigami.ScrollablePage {
             startTime: root.forecastPanel.viewportStart
             endTime: root.forecastPanel.viewportEnd
             onHoursSelected: hours => root.forecastPanel.setHours(hours)
+            onRangeSelected: (first, last) => root.forecastPanel.setRange(first, last)
         }
     }
     Component { id: profileSettings; DisplaySettings { weather: root.weather } }
