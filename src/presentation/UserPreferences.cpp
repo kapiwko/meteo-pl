@@ -467,10 +467,11 @@ void UserPreferences::addChart(const QString &key, const QString &profileId)
             }
     });
 }
-void UserPreferences::setChartOptions(const QString &key, const QVariantMap &options, const QString &profileId)
+bool UserPreferences::setChartOptions(const QString &key, const QVariantMap &options, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
-    change([&] {
+    QString validationError;
+    const bool committed = change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &value : layout) {
             auto chart = value.toMap();
@@ -481,11 +482,24 @@ void UserPreferences::setChartOptions(const QString &key, const QVariantMap &opt
                                 "height"}
                         .contains(it.key()))
                     chart[it.key()] = it.value();
+            for (const auto &axis : {QStringLiteral("left"), QStringLiteral("right")}) {
+                const auto low = chart.value(axis + "Min"), high = chart.value(axis + "Max");
+                for (const auto &bound : {low, high}) {
+                    if (!bound.isValid() || bound.isNull()) continue;
+                    bool ok = false; const auto number = bound.toDouble(&ok);
+                    if (!ok || !std::isfinite(number)) { validationError = Meteo::i18n("Enter a valid axis limit."); return; }
+                }
+                if (low.isValid() && !low.isNull() && high.isValid() && !high.isNull() && low.toDouble() >= high.toDouble()) {
+                    validationError = Meteo::i18n("The minimum must be lower than the maximum."); return;
+                }
+            }
             value = chart;
             break;
         }
         saveLayout(selectedProfile, normalizeChartLayout(layout));
     });
+    if (!validationError.isEmpty() && m_error != validationError) { m_error = validationError; emit errorChanged(); }
+    return committed && validationError.isEmpty();
 }
 void UserPreferences::setSeriesStyle(const QString &key, const QString &field, const QVariantMap &options, const QString &profileId)
 {

@@ -15,6 +15,7 @@
 #include <QTest>
 #include <QThread>
 #include <array>
+#include <limits>
 
 class PreferencesTest : public QObject {
     Q_OBJECT
@@ -25,6 +26,14 @@ private slots:
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
         UserPreferences preferences;
         const auto original = preferences.chartLayout();
+        QVERIFY(!preferences.setChartOptions("temperature", {{"leftMin", 10}, {"leftMax", 5}, {"title", "Invalid"}}));
+        QCOMPARE(preferences.chartLayout(), original);
+        QVERIFY(!preferences.error().isEmpty());
+        QVERIFY(!preferences.setChartOptions("temperature", {{"leftMin", std::numeric_limits<double>::infinity()}}));
+        QCOMPARE(preferences.chartLayout(), original);
+        QVERIFY(preferences.setChartOptions("temperature", {{"leftMin", -3.5}, {"leftMax", 20}}));
+        QVERIFY(preferences.error().isEmpty());
+        QCOMPARE(preferences.chartLayout().first().toMap()["leftMin"].toDouble(), -3.5);
         const auto file = QUrl::fromLocalFile(config.filePath("profiles.json"));
         const auto count = preferences.profiles().size();
         QVERIFY(count > 1);

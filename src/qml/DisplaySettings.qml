@@ -456,48 +456,10 @@ ColumnLayout {
                                         }
                                         Button { text: I18n.i18n("Add series"); enabled: addSeries.currentIndex >= 0; onClicked: UserPreferences.setChartField(chartEntry.modelData.key, addSeries.model[addSeries.currentIndex].key, true, root.profileId) }
                                     }
-                                    Kirigami.FormLayout {
+                                    ChartAxesEditor {
                                         Layout.fillWidth: true
-                                        Layout.topMargin: Kirigami.Units.largeSpacing
-                                        twinFormLayouts: [chartForm]
-                                        Repeater {
-                                            model: ["left", "right"]
-                                            delegate: RowLayout {
-                                                id: axis
-                                                required property string modelData
-                                                Kirigami.FormData.label: modelData === "left" ? I18n.i18n("Left axis") : I18n.i18n("Right axis")
-                                                Layout.fillWidth: true
-                                                Layout.minimumWidth: 0
-                                                Repeater {
-                                                    model: ["Min", "Max"]
-                                                    delegate: ColumnLayout {
-                                                        id: bound
-                                                        required property string modelData
-                                                        readonly property string option: axis.modelData + modelData
-                                                        Layout.fillWidth: true
-                                                        Layout.minimumWidth: 0
-                                                        spacing: Kirigami.Units.smallSpacing
-                                                        Label { text: bound.modelData === "Min" ? I18n.i18n("Minimum") : I18n.i18n("Maximum") }
-                                                        TextField {
-                                                            objectName: "chartBound-" + chartEntry.modelData.key + "-" + bound.option
-                                                            Layout.fillWidth: true
-                                                            Layout.minimumWidth: 0
-                                                            Layout.preferredWidth: Kirigami.Units.gridUnit * 8
-                                                            text: chartEntry.modelData[bound.option] === undefined ? "" : String(chartEntry.modelData[bound.option])
-                                                            placeholderText: I18n.i18n("Automatic")
-                                                            validator: DoubleValidator { locale: "C" }
-                                                            Accessible.name: axis.Kirigami.FormData.label + " · " + (bound.modelData === "Min" ? I18n.i18n("Minimum") : I18n.i18n("Maximum"))
-                                                            onEditingFinished: {
-                                                                if (!text.length || acceptableInput) {
-                                                                    const patch = {}; patch[bound.option] = text.length ? Number(text) : null;
-                                                                    UserPreferences.setChartOptions(chartEntry.modelData.key, patch, root.profileId);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        profileId: root.profileId
+                                        chart: chartEntry.modelData
                                     }
                                     Label { Layout.fillWidth: true; text: I18n.i18n("When combining different units, assign series to the left or right axis. Empty bounds use automatic scaling."); wrapMode: Text.WordWrap; font.pixelSize: 11; opacity: 0.65 }
                                 }

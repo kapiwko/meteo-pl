@@ -31,6 +31,32 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void axisEditorKeepsInvalidDraftAndAcceptsPolishDecimals()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine; QQmlComponent component(&engine);
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto original = preferences->chartLayout();
+        component.loadFromModule("pl.meteo.desktop", "ChartAxesEditor");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"profileId", preferences->profile()}, {"chart", original.first()}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *low = object->findChild<QObject *>("chartBound-temperature-leftMin");
+        auto *high = object->findChild<QObject *>("chartBound-temperature-leftMax");
+        QVERIFY(low && high);
+        low->setProperty("text", "10"); high->setProperty("text", "5");
+        QVERIFY(QMetaObject::invokeMethod(high, "editingFinished"));
+        QCOMPARE(preferences->chartLayout(), original);
+        QVERIFY(!object->property("validationError").toString().isEmpty());
+        QCOMPARE(low->property("text").toString(), "10");
+        low->setProperty("text", "3,5"); high->setProperty("text", "8,5");
+        QVERIFY(low->property("acceptableInput").toBool());
+        QVERIFY(QMetaObject::invokeMethod(high, "editingFinished"));
+        QCOMPARE(preferences->chartLayout().first().toMap()["leftMin"].toDouble(), 3.5);
+        QCOMPARE(preferences->chartLayout().first().toMap()["leftMax"].toDouble(), 8.5);
+        low->setProperty("text", ""); high->setProperty("text", "");
+        QVERIFY(QMetaObject::invokeMethod(high, "editingFinished"));
+        QVERIFY(!preferences->chartLayout().first().toMap().contains("leftMin"));
+    }
     void profileEditorCanUndoDeletionWithoutChangingForecast()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
