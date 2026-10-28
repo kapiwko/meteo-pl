@@ -8,6 +8,7 @@ import org.kde.kirigami as Kirigami
 Dialog {
     id: root
     objectName: "seriesAppearanceDialog"
+    property string profileId: UserPreferences.profile
     required property string chartKey
     required property var seriesStyle
     title: I18n.i18n("Series appearance") + " · " + seriesStyle.label
@@ -33,7 +34,7 @@ Dialog {
     }
     function change(options) {
         if ((options.color !== undefined || options.darkColor !== undefined) && ["storm", "flash"].indexOf(seriesStyle.render) >= 0) options.eventColors = false;
-        UserPreferences.setSeriesStyle(chartKey, seriesStyle.key, options);
+        UserPreferences.setSeriesStyle(chartKey, seriesStyle.key, options, profileId);
     }
     function chooseColor(option) { colorDialog.option = option; colorDialog.selectedColor = seriesStyle[option]; colorDialog.open(); }
     ColorDialog {

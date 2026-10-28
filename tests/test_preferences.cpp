@@ -19,6 +19,23 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void profileEditingIsIndependentOfTheActiveForecast()
+    {
+        QTemporaryDir config;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        UserPreferences preferences;
+        preferences.setProfile("classic");
+        const auto activeLayout = preferences.chartLayout();
+        const auto copy = preferences.duplicateProfile("classic");
+        QVERIFY(copy.startsWith("user:"));
+        QCOMPARE(preferences.profile(), "classic");
+        preferences.renameProfile("Edited separately", copy);
+        preferences.setChartOptions("temperature", {{"title", "Edited temperature"}}, copy);
+        preferences.setProfileChartHeightForProfile(copy, 250);
+        QCOMPARE(preferences.chartLayout(), activeLayout);
+        QCOMPARE(preferences.chartHeightForProfile(copy), 250);
+        QCOMPARE(preferences.profile(), "classic");
+    }
     void legacyPlaceKeysRemainStableAfterMovingThePoint()
     {
         QTemporaryDir config;

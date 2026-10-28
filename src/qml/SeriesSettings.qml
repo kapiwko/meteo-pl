@@ -7,18 +7,20 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     objectName: "series-settings-" + chartKey + "/" + seriesStyle.key
+    property string profileId: UserPreferences.profile
     required property string chartKey
     required property var seriesStyle
     property bool expanded: false
     property bool available: true
     signal toggleAppearance()
+    signal removeRequested()
     spacing: Kirigami.Units.largeSpacing * 1.5
     RowLayout {
         Layout.fillWidth: true
         CheckBox {
             Accessible.name: root.seriesStyle.label
             checked: root.seriesStyle.enabled
-            onToggled: UserPreferences.setChartField(root.chartKey, root.seriesStyle.key, checked)
+            onToggled: UserPreferences.setChartField(root.chartKey, root.seriesStyle.key, checked, root.profileId)
         }
         SeriesLegend { seriesStyle: root.seriesStyle; Layout.preferredWidth: 32; opacity: root.seriesStyle.enabled ? 1 : 0.3 }
         Label {
@@ -45,7 +47,7 @@ ColumnLayout {
             display: AbstractButton.IconOnly
             ToolTip.text: text
             ToolTip.visible: hovered
-            onClicked: UserPreferences.removeSeries(root.chartKey, root.seriesStyle.key)
+            onClicked: root.removeRequested()
         }
     }
 }

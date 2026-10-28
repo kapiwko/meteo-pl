@@ -1643,14 +1643,16 @@ private slots:
         };
         const auto count = preferences->profiles().size();
         QVERIFY(trigger(duplicate));
-        QTRY_VERIFY(preferences->profile().startsWith("user:"));
+        QTRY_VERIFY(object->property("profileId").toString().startsWith("user:"));
+        QCOMPARE(preferences->profile(), "classic");
         QCOMPARE(preferences->profiles().size(), count + 1);
         QVERIFY(remove->isEnabled()); QVERIFY(!name->property("readOnly").toBool());
         name->setProperty("text", "Profil testowy");
         QVERIFY(QMetaObject::invokeMethod(name, "editingFinished"));
         QCOMPARE(preferences->profiles().last().toMap()["name"].toString(), "Profil testowy");
         QVERIFY(trigger(remove));
-        QTRY_COMPARE(preferences->profile(), "classic");
+        QTRY_COMPARE(object->property("profileId").toString(), QString("classic"));
+        QCOMPARE(preferences->profile(), "classic");
         QCOMPARE(preferences->profiles().size(), count);
         auto *reset = object->findChild<QQuickItem *>("profileRestoreButton");
         auto *recover = object->findChild<QQuickItem *>("restoreDeletedProfilesButton");

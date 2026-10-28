@@ -10,10 +10,25 @@ ColumnLayout {
     id: root
     objectName: "meteogramDisplaySettings"
     spacing: Kirigami.Units.largeSpacing
+    property string profileId: UserPreferences.profile
+    property var layout: UserPreferences.chartLayoutForProfile(profileId)
+    property int profileHeight: UserPreferences.chartHeightForProfile(profileId)
+    onProfileIdChanged: { refreshProfile(); expandedChart = ""; expandedSeries = ""; }
+    function refreshProfile() {
+        layout = UserPreferences.chartLayoutForProfile(profileId);
+        profileHeight = UserPreferences.chartHeightForProfile(profileId);
+    }
+    Connections {
+        target: UserPreferences
+        function onDisplayChanged() {
+            if (!UserPreferences.profiles.some(profile => profile.id === root.profileId)) root.profileId = UserPreferences.profile;
+            root.refreshProfile();
+        }
+    }
     property string expandedChart: ""
     property string expandedSeries: ""
     property WeatherModel weather: null
-    readonly property var editingChart: UserPreferences.chartLayout.find(chart => chart.series.some(series => chart.key + "/" + series.key === expandedSeries)) || null
+    readonly property var editingChart: root.layout.find(chart => chart.series.some(series => chart.key + "/" + series.key === expandedSeries)) || null
     readonly property var editingSeries: editingChart ? editingChart.series.find(series => editingChart.key + "/" + series.key === expandedSeries) || null : null
     onVisibleChanged: if (!visible) expandedSeries = ""
     onEditingSeriesChanged: if (!editingSeries && expandedSeries.length) expandedSeries = ""
@@ -25,6 +40,7 @@ ColumnLayout {
             if (dialog) dialog.open();
         }
         sourceComponent: SeriesAppearanceDialog {
+            profileId: root.profileId
             chartKey: root.editingChart ? root.editingChart.key : ""
             seriesStyle: root.editingSeries || ({})
             onClosed: root.expandedSeries = ""
@@ -33,8 +49,8 @@ ColumnLayout {
     property string transferMessage: ""
     property bool transferFailed: false
     PreferenceWriteNotice { visible: UserPreferences.error.length > 0 && !(transferNotice.visible && root.transferFailed) }
-    readonly property var currentProfile: UserPreferences.profiles.find(profile => profile.id === UserPreferences.profile) || {name: ""}
-    readonly property var availableCharts: UserPreferences.chartCatalog.filter(chart => !UserPreferences.chartLayout.some(existing => existing.key === chart.key))
+    readonly property var currentProfile: UserPreferences.profiles.find(profile => profile.id === root.profileId) || {name: ""}
+    readonly property var availableCharts: UserPreferences.chartCatalog.filter(chart => !root.layout.some(existing => existing.key === chart.key))
     function transferResult(result, importing) {
         transferFailed = !result.ok;
         transferMessage = result.ok ? (importing ? I18n.i18n("Profiles imported: ") : I18n.i18n("Profiles exported: ")) + result.count : result.error;
@@ -81,8 +97,8 @@ ColumnLayout {
                         Layout.minimumWidth: 0
                         model: UserPreferences.profiles
                         textRole: "name"
-                        currentIndex: model.findIndex(profile => profile.id === UserPreferences.profile)
-                        onActivated: index => UserPreferences.profile = model[index].id
+                        currentIndex: model.findIndex(profile => profile.id === root.profileId)
+                        onActivated: index => root.profileId = model[index].id
                     }
                     ToolButton {
                         id: profileActionsButton
@@ -113,7 +129,10 @@ ColumnLayout {
                                 objectName: "profileDuplicateButton"
                                 text: I18n.i18n("Duplicate profile")
                                 icon.name: "edit-duplicate"
-                                onTriggered: if (UserPreferences.duplicateProfile().length) Qt.callLater(() => { profileName.forceActiveFocus(); profileName.selectAll(); })
+                                onTriggered: {
+                                    const id = UserPreferences.duplicateProfile(root.profileId);
+                                    if (id.length) { root.profileId = id; Qt.callLater(() => { profileName.forceActiveFocus(); profileName.selectAll(); }); }
+                                }
                             }
                             MenuItem {
                                 objectName: "profileRestoreButton"
@@ -121,7 +140,7 @@ ColumnLayout {
                                 enabled: root.currentProfile.modified === true
                                 text: I18n.i18n("Restore defaults")
                                 icon.name: "edit-undo"
-                                onTriggered: UserPreferences.resetProfile()
+                                onTriggered: UserPreferences.resetProfile(root.profileId)
                             }
                             MenuItem {
                                 objectName: "restoreDeletedProfilesButton"
@@ -136,10 +155,17 @@ ColumnLayout {
                                 text: I18n.i18n("Delete profile")
                                 icon.name: "edit-delete"
                                 enabled: UserPreferences.profiles.length > 1
-                                onTriggered: UserPreferences.deleteProfile()
+                                onTriggered: UserPreferences.deleteProfile(root.profileId)
                             }
                         }
                     }
+                }
+                Button {
+                    objectName: "useProfileButton"
+                    text: root.profileId === UserPreferences.profile ? I18n.i18n("Used in the forecast") : I18n.i18n("Use for forecast")
+                    icon.name: "dialog-ok-apply"
+                    enabled: root.profileId !== UserPreferences.profile
+                    onClicked: UserPreferences.profile = root.profileId
                 }
                 TextField {
                     id: profileName
@@ -151,7 +177,7 @@ ColumnLayout {
                     text: root.currentProfile.name
                     maximumLength: 80
                     onEditingFinished: {
-                        if (text.trim().length && text.trim() !== root.currentProfile.name) UserPreferences.renameProfile(text);
+                        if (text.trim().length && text.trim() !== root.currentProfile.name) UserPreferences.renameProfile(text, root.profileId);
                         text = Qt.binding(() => root.currentProfile.name);
                     }
                 }
@@ -159,15 +185,15 @@ ColumnLayout {
                     Kirigami.FormData.label: I18n.i18n("Chart height:")
                     CheckBox {
                         text: I18n.i18n("Custom")
-                        checked: UserPreferences.profileChartHeight > 0
-                        onToggled: UserPreferences.profileChartHeight = checked ? UserPreferences.chartHeight : 0
+                        checked: root.profileHeight > 0
+                        onToggled: UserPreferences.setProfileChartHeightForProfile(root.profileId, checked ? UserPreferences.chartHeight : 0)
                     }
                     SpinBox {
                         from: 64; to: 800; stepSize: 10
-                        enabled: UserPreferences.profileChartHeight > 0
-                        value: UserPreferences.profileChartHeight || UserPreferences.chartHeight
+                        enabled: root.profileHeight > 0
+                        value: root.profileHeight || UserPreferences.chartHeight
                         textFromValue: value => value + " px"
-                        onValueModified: UserPreferences.profileChartHeight = value
+                        onValueModified: UserPreferences.setProfileChartHeightForProfile(root.profileId, value)
                         Accessible.name: I18n.i18n("Chart height in this profile")
                     }
                 }
@@ -198,7 +224,7 @@ ColumnLayout {
             }
         }
     }
-    ProfileUpdateNotice { Layout.fillWidth: true }
+    ProfileUpdateNotice { Layout.fillWidth: true; profileId: root.profileId }
     Kirigami.InlineMessage {
         id: transferNotice
         Layout.fillWidth: true
@@ -232,7 +258,7 @@ ColumnLayout {
                             MenuItem {
                                 text: I18n.i18n("New chart")
                                 icon.name: "list-add"
-                                onTriggered: root.expandedChart = UserPreferences.createChart(I18n.i18n("New chart"))
+                                onTriggered: root.expandedChart = UserPreferences.createChart(I18n.i18n("New chart"), root.profileId)
                             }
                             MenuSeparator { visible: root.availableCharts.length > 0 }
                             Instantiator {
@@ -244,7 +270,7 @@ ColumnLayout {
                                     onTriggered: {
                                         const key = modelData.key;
                                         addChartMenu.close();
-                                        UserPreferences.addChart(key);
+                                        UserPreferences.addChart(key, root.profileId);
                                         root.expandedChart = key;
                                     }
                                 }
@@ -256,9 +282,9 @@ ColumnLayout {
                 }]
             }
             Repeater {
-                model: UserPreferences.chartLayout
+                model: root.layout
                 delegate: Pane {
-                    id: chart
+                    id: chartEntry
                     objectName: "chart-settings-" + modelData.key
                     required property var modelData
                     required property int index
@@ -268,36 +294,36 @@ ColumnLayout {
                     contentItem: ColumnLayout {
                         spacing: 0
                         Kirigami.Separator {
-                            visible: chart.index > 0
+                            visible: chartEntry.index > 0
                             Layout.fillWidth: true
                         }
                         ItemDelegate {
                             Layout.fillWidth: true
-                            Accessible.name: chart.modelData.title
-                            onClicked: root.expandedChart = root.expandedChart === chart.modelData.key ? "" : chart.modelData.key
+                            Accessible.name: chartEntry.modelData.title
+                            onClicked: root.expandedChart = root.expandedChart === chartEntry.modelData.key ? "" : chartEntry.modelData.key
                             contentItem: RowLayout {
                                 CheckBox {
-                                    Accessible.name: chart.modelData.title
-                                    checked: chart.modelData.enabled
-                                    onToggled: UserPreferences.setChartEnabled(chart.modelData.key, checked)
+                                    Accessible.name: chartEntry.modelData.title
+                                    checked: chartEntry.modelData.enabled
+                                    onToggled: UserPreferences.setChartEnabled(chartEntry.modelData.key, checked, root.profileId)
                                 }
-                                Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chart.modelData.title; wrapMode: Text.WordWrap }
+                                Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chartEntry.modelData.title; wrapMode: Text.WordWrap }
                                 Kirigami.ActionToolBar {
                                     alignment: Qt.AlignRight
                                     Layout.preferredWidth: maximumContentWidth
-                                    Layout.maximumWidth: Math.max(0, chart.availableWidth * 0.65)
+                                    Layout.maximumWidth: Math.max(0, chartEntry.availableWidth * 0.65)
                                     actions: [
                                         Kirigami.Action {
                                             text: I18n.i18n("Series")
-                                            icon.name: root.expandedChart === chart.modelData.key ? "arrow-up" : "arrow-down"
+                                            icon.name: root.expandedChart === chartEntry.modelData.key ? "arrow-up" : "arrow-down"
                                             checkable: true
                                             displayHint: Kirigami.DisplayHint.KeepVisible
-                                            checked: root.expandedChart === chart.modelData.key
-                                            onTriggered: root.expandedChart = checked ? chart.modelData.key : ""
+                                            checked: root.expandedChart === chartEntry.modelData.key
+                                            onTriggered: root.expandedChart = checked ? chartEntry.modelData.key : ""
                                         },
-                                        Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chart.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chart.index, -1) },
-                                        Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chart.index < UserPreferences.chartLayout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chart.index, 1) },
-                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.deleteChart(chart.modelData.key) }
+                                        Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chartEntry.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.index, -1, root.profileId) },
+                                        Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chartEntry.index < root.layout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.index, 1, root.profileId) },
+                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.deleteChart(chartEntry.modelData.key, root.profileId) }
                                     ]
                                 }
                             }
@@ -305,7 +331,7 @@ ColumnLayout {
                         Loader {
                             Layout.fillWidth: true
                             Layout.margins: Kirigami.Units.largeSpacing
-                            active: root.expandedChart === chart.modelData.key
+                            active: root.expandedChart === chartEntry.modelData.key
                             visible: active
                             sourceComponent: Component {
                                 ColumnLayout {
@@ -319,25 +345,27 @@ ColumnLayout {
                                             Layout.fillWidth: true
                                             Layout.minimumWidth: 0
                                             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-                                            text: chart.modelData.title
+                                            text: chartEntry.modelData.title
                                             maximumLength: 80
-                                            onEditingFinished: if (text.trim().length) UserPreferences.setChartOptions(chart.modelData.key, {title: text})
+                                            onEditingFinished: if (text.trim().length) UserPreferences.setChartOptions(chartEntry.modelData.key, {title: text}, root.profileId)
                                         }
                                         RowLayout {
                                             Kirigami.FormData.label: I18n.i18n("Chart height:")
-                                            CheckBox { text: I18n.i18n("Custom"); Accessible.name: I18n.i18n("Custom height for this chart"); checked: (chart.modelData.height || 0) > 0; onToggled: UserPreferences.setChartOptions(chart.modelData.key, {height: checked ? UserPreferences.profileChartHeight || UserPreferences.chartHeight : 0}) }
-                                            SpinBox { from: 64; to: 800; stepSize: 10; enabled: (chart.modelData.height || 0) > 0; value: chart.modelData.height || UserPreferences.profileChartHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.setChartOptions(chart.modelData.key, {height: value}) }
+                                            CheckBox { text: I18n.i18n("Custom"); Accessible.name: I18n.i18n("Custom height for this chart"); checked: (chartEntry.modelData.height || 0) > 0; onToggled: UserPreferences.setChartOptions(chartEntry.modelData.key, {height: checked ? root.profileHeight || UserPreferences.chartHeight : 0}, root.profileId) }
+                                            SpinBox { from: 64; to: 800; stepSize: 10; enabled: (chartEntry.modelData.height || 0) > 0; value: chartEntry.modelData.height || root.profileHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.setChartOptions(chartEntry.modelData.key, {height: value}, root.profileId) }
                                         }
                                     }
                                     Repeater {
-                                        model: chart.modelData.series
+                                        model: chartEntry.modelData.series
                                         delegate: SeriesSettings {
                                             required property var modelData
                                             Layout.fillWidth: true
-                                            chartKey: chart.modelData.key
+                                            profileId: root.profileId
+                                            chartKey: chartEntry.modelData.key
                                             seriesStyle: modelData
                                             available: !root.weather || root.weather.series[modelData.key] !== undefined
                                             expanded: root.expandedSeries === chartKey + "/" + modelData.key
+                                            onRemoveRequested: UserPreferences.removeSeries(chartEntry.modelData.key, modelData.key, root.profileId)
                                             onToggleAppearance: root.expandedSeries = expanded ? "" : chartKey + "/" + modelData.key
                                         }
                                     }
@@ -347,11 +375,11 @@ ColumnLayout {
                                         ComboBox {
                                             id: addSeries
                                             Layout.fillWidth: true
-                                            model: UserPreferences.seriesCatalog.filter(series => !chart.modelData.series.some(existing => existing.key === series.key))
+                                            model: UserPreferences.seriesCatalog.filter(series => !chartEntry.modelData.series.some(existing => existing.key === series.key))
                                             textRole: "label"
                                             displayText: currentIndex >= 0 ? currentText : I18n.i18n("Choose a series…")
                                         }
-                                        Button { text: I18n.i18n("Add series"); enabled: addSeries.currentIndex >= 0; onClicked: UserPreferences.setChartField(chart.modelData.key, addSeries.model[addSeries.currentIndex].key, true) }
+                                        Button { text: I18n.i18n("Add series"); enabled: addSeries.currentIndex >= 0; onClicked: UserPreferences.setChartField(chartEntry.modelData.key, addSeries.model[addSeries.currentIndex].key, true, root.profileId) }
                                     }
                                     Kirigami.FormLayout {
                                         Layout.fillWidth: true
@@ -376,18 +404,18 @@ ColumnLayout {
                                                         spacing: Kirigami.Units.smallSpacing
                                                         Label { text: bound.modelData === "Min" ? I18n.i18n("Minimum") : I18n.i18n("Maximum") }
                                                         TextField {
-                                                            objectName: "chartBound-" + chart.modelData.key + "-" + bound.option
+                                                            objectName: "chartBound-" + chartEntry.modelData.key + "-" + bound.option
                                                             Layout.fillWidth: true
                                                             Layout.minimumWidth: 0
                                                             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
-                                                            text: chart.modelData[bound.option] === undefined ? "" : String(chart.modelData[bound.option])
+                                                            text: chartEntry.modelData[bound.option] === undefined ? "" : String(chartEntry.modelData[bound.option])
                                                             placeholderText: I18n.i18n("Automatic")
                                                             validator: DoubleValidator { locale: "C" }
                                                             Accessible.name: axis.Kirigami.FormData.label + " · " + (bound.modelData === "Min" ? I18n.i18n("Minimum") : I18n.i18n("Maximum"))
                                                             onEditingFinished: {
                                                                 if (!text.length || acceptableInput) {
                                                                     const patch = {}; patch[bound.option] = text.length ? Number(text) : null;
-                                                                    UserPreferences.setChartOptions(chart.modelData.key, patch);
+                                                                    UserPreferences.setChartOptions(chartEntry.modelData.key, patch, root.profileId);
                                                                 }
                                                             }
                                                         }

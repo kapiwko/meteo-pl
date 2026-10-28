@@ -101,9 +101,9 @@ void UserPreferences::setChartHeight(int value)
         m_store.setValue("display/chartHeight", value);
     });
 }
-void UserPreferences::setProfileChartHeight(int value)
+void UserPreferences::setProfileChartHeight(int value) { setProfileChartHeightForProfile(profile(), value); }
+void UserPreferences::setProfileChartHeightForProfile(const QString &selectedProfile, int value)
 {
-    const auto selectedProfile = profile();
     change([&] {
         value = value ? std::clamp(value, 64, 800) : 0;
         if (value == chartHeightForProfile(selectedProfile))
@@ -341,9 +341,9 @@ void UserPreferences::saveProfileOptions(const QString &id, const QVariantMap &o
     saved.append(entry);
     m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
 }
-void UserPreferences::setChartEnabled(const QString &key, bool enabled)
+void UserPreferences::setChartEnabled(const QString &key, bool enabled, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -357,9 +357,9 @@ void UserPreferences::setChartEnabled(const QString &key, bool enabled)
         saveLayout(selectedProfile, layout);
     });
 }
-void UserPreferences::setChartField(const QString &key, const QString &field, bool enabled)
+void UserPreferences::setChartField(const QString &key, const QString &field, bool enabled, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -389,9 +389,9 @@ void UserPreferences::setChartField(const QString &key, const QString &field, bo
         saveLayout(selectedProfile, normalizeChartLayout(layout));
     });
 }
-QString UserPreferences::createChart(const QString &title)
+QString UserPreferences::createChart(const QString &title, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     QString result;
     const bool saved = change([&] {
         result = [&]() -> QString {
@@ -409,18 +409,18 @@ QString UserPreferences::createChart(const QString &title)
     });
     return saved ? result : QString{};
 }
-void UserPreferences::deleteChart(const QString &key)
+void UserPreferences::deleteChart(const QString &key, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         layout.removeIf([&key](const QVariant &value) { return value.toMap()["key"] == key; });
         saveLayout(selectedProfile, layout);
     });
 }
-void UserPreferences::addChart(const QString &key)
+void UserPreferences::addChart(const QString &key, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -440,9 +440,9 @@ void UserPreferences::addChart(const QString &key)
             }
     });
 }
-void UserPreferences::setChartOptions(const QString &key, const QVariantMap &options)
+void UserPreferences::setChartOptions(const QString &key, const QVariantMap &options, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &value : layout) {
@@ -460,9 +460,9 @@ void UserPreferences::setChartOptions(const QString &key, const QVariantMap &opt
         saveLayout(selectedProfile, normalizeChartLayout(layout));
     });
 }
-void UserPreferences::setSeriesStyle(const QString &key, const QString &field, const QVariantMap &options)
+void UserPreferences::setSeriesStyle(const QString &key, const QString &field, const QVariantMap &options, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &value : layout) {
@@ -487,9 +487,9 @@ void UserPreferences::setSeriesStyle(const QString &key, const QString &field, c
         saveLayout(selectedProfile, normalizeChartLayout(layout));
     });
 }
-void UserPreferences::removeSeries(const QString &key, const QString &field)
+void UserPreferences::removeSeries(const QString &key, const QString &field, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &value : layout) {
@@ -505,9 +505,9 @@ void UserPreferences::removeSeries(const QString &key, const QString &field)
         saveLayout(selectedProfile, normalizeChartLayout(layout));
     });
 }
-void UserPreferences::moveChart(int index, int direction)
+void UserPreferences::moveChart(int index, int direction, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         const auto next = index + direction;
@@ -517,7 +517,7 @@ void UserPreferences::moveChart(int index, int direction)
         saveLayout(selectedProfile, layout);
     });
 }
-QString UserPreferences::createProfileFrom(const QString &name, const QString &sourceProfile)
+QString UserPreferences::createProfileFrom(const QString &name, const QString &sourceProfile, bool activate)
 {
     QString result;
     const bool saved = change([&] {
@@ -531,15 +531,15 @@ QString UserPreferences::createProfileFrom(const QString &name, const QString &s
                                      {"charts", chartLayoutForProfile(sourceProfile)},
                                      {"chartHeight", chartHeightForProfile(sourceProfile)}});
             m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-            m_store.setValue("display/profile", id);
+            if (activate) m_store.setValue("display/profile", id);
             return id;
         }();
     });
     return saved ? result : QString{};
 }
-QString UserPreferences::duplicateProfile()
+QString UserPreferences::duplicateProfile(const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     QString result;
     const bool saved = change([&] {
         result = [&]() -> QString {
@@ -555,23 +555,23 @@ QString UserPreferences::duplicateProfile()
             auto name = base;
             for (int number = 2; names.contains(name, Qt::CaseInsensitive); ++number)
                 name = base + QStringLiteral(" (%1)").arg(number);
-            return createProfileFrom(name, selectedProfile);
+            return createProfileFrom(name, selectedProfile, profileId.isEmpty());
         }();
     });
     return saved ? result : QString{};
 }
-void UserPreferences::renameProfile(const QString &name)
+void UserPreferences::renameProfile(const QString &name, const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         if (name.trimmed().isEmpty()) return;
         if (selectedProfile == "custom") m_store.setValue("display/customProfileName", name.trimmed().left(80));
         else saveProfileOptions(selectedProfile, {{"name", name.trimmed().left(80)}});
     });
 }
-void UserPreferences::deleteProfile()
+void UserPreferences::deleteProfile(const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         if (profiles().size() <= 1) return;
         const bool wasSelected = profile() == selectedProfile;
@@ -590,9 +590,9 @@ void UserPreferences::deleteProfile()
         if (wasSelected) m_store.setValue("display/profile", profiles().first().toMap()["id"]);
     });
 }
-void UserPreferences::resetProfile()
+void UserPreferences::resetProfile(const QString &profileId)
 {
-    const auto selectedProfile = profile();
+    const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
     change([&] {
         if (factoryProfile(selectedProfile).isEmpty()) return;
         auto saved = savedProfiles();
