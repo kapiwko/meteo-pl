@@ -100,13 +100,13 @@ previous build. For local emulator and device testing, see the
 
 ```bash
 # Arch Linux
-sudo pacman -U ./meteo-pl-0.1.0-1-x86_64.pkg.tar.zst
+sudo pacman -U ./meteo-pl-0.9.0-1-x86_64.pkg.tar.zst
 
 # Debian / Ubuntu
-sudo apt install ./meteo-pl_0.1.0-1_amd64.deb
+sudo apt install ./meteo-pl_0.9.0-1_amd64.deb
 
 # Fedora
-sudo dnf install ./meteo-pl-0.1.0-1.x86_64.rpm
+sudo dnf install ./meteo-pl-0.9.0-1.x86_64.rpm
 ```
 
 Start **Meteo** from your application launcher, or run `meteo-pl`.
