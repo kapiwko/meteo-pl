@@ -98,3 +98,6 @@ RHI/OpenGL; przejście na zapasowy renderer CPU oznacza błąd testu.
 Akcje są przypięte do konkretnych commitów, a Dependabot zgłasza aktualizacje.
 Workflow ma tylko prawo odczytu repozytorium i nie publikuje automatycznie
 wydań ani paczek do zewnętrznych repozytoriów.
+
+Procedurę zmiany wersji, osobistego podpisu GPG i publikowania zweryfikowanych
+paczek Linux/Android opisuje [instrukcja wydawania](releasing.md).
