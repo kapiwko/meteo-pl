@@ -20,10 +20,16 @@ Item {
         reader.selectedArticle = null;
         return true;
     }
+    readonly property int initialHours: mobileLayout ? 72 : 0
     property real viewportStart: weather.firstTimestamp
-    property real viewportEnd: weather.lastTimestamp
+    property real viewportEnd: initialHours > 0 ? Math.min(weather.lastTimestamp, weather.firstTimestamp + initialHours * 3600) : weather.lastTimestamp
     property real documentFirst: 0
     property real documentLast: 0
+    Component.onCompleted: {
+        documentFirst = weather.firstTimestamp;
+        documentLast = weather.lastTimestamp;
+        setHours(initialHours);
+    }
     property real selectedTime: 0
     property string selectedGroup: ""
     property bool pinned: false
@@ -242,7 +248,7 @@ Item {
     function setHours(hours) {
         if (hours === 0) { resetRange(); return; }
         const duration = Math.min(hours * 3600, weather.lastTimestamp - weather.firstTimestamp);
-        viewportStart = Math.max(weather.firstTimestamp, Math.min(Date.now()/1000, weather.lastTimestamp - duration));
+        viewportStart = weather.firstTimestamp;
         viewportEnd = viewportStart + duration;
     }
     function zoom(factor, center) {
@@ -275,7 +281,7 @@ Item {
         function onStateChanged() {
             if (root.documentFirst !== root.weather.firstTimestamp || root.documentLast !== root.weather.lastTimestamp) {
                 root.documentFirst = root.weather.firstTimestamp; root.documentLast = root.weather.lastTimestamp;
-                root.resetRange(); inspector.close();
+                root.setHours(root.initialHours); inspector.close();
             }
         }
     }

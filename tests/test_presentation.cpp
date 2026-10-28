@@ -31,6 +31,73 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void forecastTimeWindowsStartAtTheBeginning()
+    {
+        QFETCH(bool, mobile); QFETCH(bool, preloaded); QFETCH(int, samples);
+        const auto first = QDateTime::currentSecsSinceEpoch() - (samples > 72 ? 36 * 3600 : 1800);
+        auto fixture = QJsonDocument::fromJson(forecastFixture(first)).object();
+        auto fields = fixture["data"].toObject();
+        for (auto it = fields.begin(); it != fields.end(); ++it) {
+            auto field = it.value().toObject();
+            const auto original = field["data"].toArray();
+            QJsonArray values;
+            for (int i = 0; i < samples; ++i) values.append(original[i % original.size()]);
+            field["data"] = values; it.value() = field;
+        }
+        fixture["data"] = fields;
+        const auto hash = QCryptographicHash::hash("um4_120:52.229700:21.012200", QCryptographicHash::Sha256).toHex();
+        const auto path = m_cache.path() + "/meteo-pl/" + hash + ".json";
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(QJsonDocument(QJsonObject{{"model", "um4_120"}, {"latitude", 52.2297}, {"longitude", 21.0122},
+            {"savedAt", QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+            {"payload", QString::fromUtf8(QJsonDocument(fixture).toJson())}}).toJson());
+        file.close();
+        const auto cleanup = qScopeGuard([&] { QFile::remove(path); });
+        WeatherModel weather; weather.setAutoRefresh(false); weather.setModel("um4_120");
+        if (preloaded) { weather.refresh(false); QVERIFY(weather.hasData()); }
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastPanel");
+        QScopedPointer<QObject> panel(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"mobileLayout", mobile}}));
+        QVERIFY2(panel, qPrintable(component.errorString()));
+        if (!preloaded) { weather.refresh(false); QVERIFY(weather.hasData()); }
+        const auto start = [&] { return panel->property("viewportStart").toDouble(); };
+        const auto end = [&] { return panel->property("viewportEnd").toDouble(); };
+        const auto total = weather.lastTimestamp() - weather.firstTimestamp();
+        const auto initialSpan = mobile ? std::min(72 * 3600.0, total) : total;
+        QTRY_COMPARE(start(), double(first));
+        QTRY_COMPARE(end(), first + initialSpan);
+        for (int hours : {24, 48, 72}) {
+            QVERIFY(QMetaObject::invokeMethod(panel.data(), "setHours", Q_ARG(QVariant, hours)));
+            QCOMPARE(start(), double(first));
+            QCOMPARE(end(), first + std::min(hours * 3600.0, total));
+            if (hours == 24 && total > 24 * 3600) {
+                QVERIFY(QMetaObject::invokeMethod(panel.data(), "moveRange", Q_ARG(QVariant, 1)));
+                QVERIFY(start() > first);
+            }
+        }
+        QVERIFY(QMetaObject::invokeMethod(panel.data(), "setHours", Q_ARG(QVariant, 24)));
+        weather.setWindUnit("km/h"); weather.refresh(false);
+        QCOMPARE(start(), double(first));
+        QCOMPARE(end(), first + std::min(24 * 3600.0, total));
+        weather.setLatitude(50); weather.setLatitude(52.2297); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QTRY_COMPARE(start(), double(first));
+        QTRY_COMPARE(end(), first + initialSpan);
+        QVERIFY(QMetaObject::invokeMethod(panel.data(), "setHours", Q_ARG(QVariant, 0)));
+        QCOMPARE(start(), double(first)); QCOMPARE(end(), weather.lastTimestamp());
+    }
+    void forecastTimeWindowsStartAtTheBeginning_data()
+    {
+        QTest::addColumn<bool>("mobile");
+        QTest::addColumn<bool>("preloaded");
+        QTest::addColumn<int>("samples");
+        QTest::newRow("desktop-loaded") << false << true << 120;
+        QTest::newRow("desktop-delayed") << false << false << 120;
+        QTest::newRow("mobile-loaded") << true << true << 120;
+        QTest::newRow("mobile-delayed") << true << false << 120;
+        QTest::newRow("mobile-short-loaded") << true << true << 48;
+        QTest::newRow("mobile-short-delayed") << true << false << 48;
+    }
     void customIntervalUsesValidatedDatesAndCanBeCancelled()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
@@ -1020,6 +1087,7 @@ private slots:
         QVERIFY(timeRange);
         QVERIFY(QMetaObject::invokeMethod(timeRange,"activated",Q_ARG(int,1)));
         QCOMPARE(object->property("viewportEnd").toDouble()-object->property("viewportStart").toDouble(),24*3600.0);
+        QCOMPARE(object->property("viewportStart").toDouble(), model.firstTimestamp());
         QVERIFY(QMetaObject::invokeMethod(object.data(),"resetRange"));
         auto *about = settings->findChild<QObject *>("meteoAboutDialog");
         QVERIFY(about);
@@ -1033,6 +1101,16 @@ private slots:
         auto *sourceInfo = about->findChild<QObject *>("forecastSourceInfo");
         QVERIFY(sourceInfo);
         QVERIFY(sourceInfo->property("text").toString().contains(model.runText()));
+        auto *settingsPath = about->findChild<QQuickItem *>("settingsFilePath");
+        QVERIFY(settingsPath);
+        settingsPath->setVisible(true);
+        QTRY_VERIFY(settingsPath->width() > 200 && settingsPath->height() < 100);
+        item->setWidth(450);
+        window.resize(450, 1000);
+        QTRY_VERIFY(settingsPath->width() > 200 && settingsPath->height() < 100);
+        QTRY_VERIFY(settingsPath->mapToScene({settingsPath->width(), 0}).x() <= window.width());
+        item->setWidth(780);
+        window.resize(780, 1000);
         if (const auto path = qEnvironmentVariable("METEO_ABOUT_SCREENSHOT"); !path.isEmpty()) {
             QTest::qWait(400);
             QVERIFY(window.grabWindow().save(path));
@@ -1056,13 +1134,6 @@ private slots:
         settings->setProperty("section", 3);
         QTRY_VERIFY(applicationSettings->isVisible());
         QVERIFY(!profileSettings->isVisible()); QVERIFY(!readingSettings->isVisible());
-        auto *settingsPath = applicationSettings->findChild<QQuickItem *>("settingsFilePath");
-        QVERIFY(settingsPath);
-        QTRY_VERIFY(settingsPath->width() > 200 && settingsPath->height() < 100);
-        item->setWidth(450);
-        window.resize(450, 1000);
-        QTRY_VERIFY(settingsPath->width() > 200 && settingsPath->height() < 100);
-        QTRY_VERIFY(settingsPath->mapToScene({settingsPath->width(), 0}).x() <= window.width());
         item->setWidth(780);
         window.resize(780, 1000);
         QVERIFY(QMetaObject::invokeMethod(settings,"close"));
