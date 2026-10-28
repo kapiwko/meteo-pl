@@ -19,6 +19,25 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void axisValidationIsAtomicAndProfileExportIncludesUntouchedPresets()
+    {
+        QTemporaryDir config;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        UserPreferences preferences;
+        const auto original = preferences.chartLayout();
+        const auto file = QUrl::fromLocalFile(config.filePath("profiles.json"));
+        const auto count = preferences.profiles().size();
+        QVERIFY(count > 1);
+        QCOMPARE(preferences.exportProfiles(file, true)["count"].toInt(), count);
+        QVERIFY(!preferences.exportProfilesByIds(file, {})["ok"].toBool());
+        QCOMPARE(preferences.exportProfilesByIds(file, {"classic"})["count"].toInt(), 1);
+        const auto active = preferences.profile();
+        const auto result = preferences.importProfiles(file, false);
+        QVERIFY(result["ok"].toBool());
+        QCOMPARE(result["ids"].toStringList().size(), 1);
+        QCOMPARE(preferences.profile(), active);
+        QCOMPARE(preferences.profiles().size(), count + 1);
+    }
     void profileEditingIsIndependentOfTheActiveForecast()
     {
         QTemporaryDir config;

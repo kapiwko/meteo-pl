@@ -244,50 +244,34 @@ QString UserPreferences::settingsFile() const { return m_store.fileName(); }
 
 QVariantMap UserPreferences::exportProfiles(const QUrl &url, bool allSaved) const
 {
+    QStringList ids;
+    if (allSaved) for (const auto &entry : profiles()) ids.append(entry.toMap()["id"].toString());
+    else ids.append(profile());
+    return exportProfilesByIds(url, ids);
+}
+QVariantMap UserPreferences::exportProfilesByIds(const QUrl &url, const QStringList &ids) const
+{
     QVariantList exported;
-    if (allSaved) {
-        for (const auto &value : savedProfiles()) {
-            const auto entry = value.toMap();
-            const auto id = entry["id"].toString();
-            const auto source = factoryProfile(id);
-            const int revision = source.isEmpty() ? entry.value("revision", entry.value("baseRevision", 1)).toInt()
-                : entry.value("baseRevision", source["revision"]).toInt();
-            exported.append(QVariantMap{{"name", entry.value("name", factoryProfile(id)["name"])},
-                                        {"charts", chartLayoutForProfile(id)},
-                                        {"revision", std::max(1, revision)},
-                                        {"chartHeight", entry.value("chartHeight", 0)}});
-        }
-        if (m_store.contains("display/customLayout"))
-            exported.append(QVariantMap{
-                {"name", Meteo::i18n("Custom layout")},
-                {"charts",
-                 normalizeChartLayout(QJsonDocument::fromJson(m_store.value("display/customLayout").toByteArray())
-                                          .toVariant()
-                                          .toList())},
-                {"chartHeight", m_store.value("display/customChartHeight", 0)}});
+    for (const auto &entry : profiles()) {
+        const auto item = entry.toMap();
+        const auto id = item["id"].toString();
+        if (!ids.contains(id)) continue;
+        exported.append(QVariantMap{{"name", item["name"]}, {"charts", chartLayoutForProfile(id)},
+            {"chartHeight", chartHeightForProfile(id)}, {"revision", std::max(1, item.value("revision", 1).toInt())}});
     }
-    if (exported.isEmpty()) {
-        QString name;
-        int revision = 1;
-        for (const auto &value : profiles())
-            if (value.toMap()["id"] == profile()) {
-                name = value.toMap()["name"].toString();
-                revision = std::max(1, value.toMap().value("revision", 1).toInt());
-            }
-        exported.append(QVariantMap{{"name", name}, {"charts", chartLayout()}, {"chartHeight", profileChartHeight()}, {"revision", revision}});
-    }
+    if (exported.isEmpty()) return {{"ok", false}, {"error", Meteo::i18n("Select at least one profile.")}};
     QString error;
-    if (!ProfileFileCodec::write(url, exported, &error))
-        return {{"ok", false}, {"error", error}};
+    if (!ProfileFileCodec::write(url, exported, &error)) return {{"ok", false}, {"error", error}};
     return {{"ok", true}, {"count", exported.size()}, {"path", url.toLocalFile()}};
 }
 
-QVariantMap UserPreferences::importProfiles(const QUrl &url)
+QVariantMap UserPreferences::importProfiles(const QUrl &url, bool activate)
 {
     QString error;
     const auto imported = ProfileFileCodec::read(url, &error);
     if (!imported)
         return {{"ok", false}, {"error", error}};
+    QStringList importedIds;
     const bool persisted = change([&] {
         auto saved = savedProfiles();
         QSet<QString> names;
@@ -304,15 +288,16 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url)
             const auto id = "user:" + QUuid::createUuid().toString(QUuid::WithoutBraces);
             saved.append(QVariantMap{
                 {"id", id}, {"name", name}, {"charts", entry["charts"]}, {"chartHeight", entry["chartHeight"]}, {"revision", entry.value("revision", 1)}});
+            importedIds.append(id);
             if (selected.isEmpty())
                 selected = id;
         }
         m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-        m_store.setValue("display/profile", selected);
+        if (activate) m_store.setValue("display/profile", selected);
     });
     if (!persisted)
         return {{"ok", false}, {"error", m_error}};
-    return {{"ok", true}, {"count", imported->size()}};
+    return {{"ok", true}, {"count", imported->size()}, {"ids", importedIds}};
 }
 void UserPreferences::saveLayout(const QString &id, const QVariantList &layout)
 {

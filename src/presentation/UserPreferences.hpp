@@ -93,7 +93,8 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE void setSeriesStyle(const QString &chart, const QString &field, const QVariantMap &options, const QString &profileId = {});
     Q_INVOKABLE void removeSeries(const QString &chart, const QString &field, const QString &profileId = {});
     Q_INVOKABLE QVariantMap exportProfiles(const QUrl &file, bool allSaved = false) const;
-    Q_INVOKABLE QVariantMap importProfiles(const QUrl &file);
+    Q_INVOKABLE QVariantMap exportProfilesByIds(const QUrl &file, const QStringList &ids) const;
+    Q_INVOKABLE QVariantMap importProfiles(const QUrl &file, bool activate = true);
     Q_INVOKABLE void setProfileChartHeightForProfile(const QString &id, int height);
 
   private:

@@ -778,7 +778,7 @@ private slots:
 
         QTemporaryDir directory;
         const auto url = QUrl::fromLocalFile(directory.filePath("retired.json"));
-        QVERIFY(upgraded.exportProfiles(url, true)["ok"].toBool());
+        QVERIFY(upgraded.exportProfilesByIds(url, {"retired-test"})["ok"].toBool());
         const auto exported = ProfileFileCodec::read(url);
         QVERIFY(exported);
         QCOMPARE(exported->first().toMap()["charts"].toList(), edited);
@@ -947,11 +947,12 @@ private slots:
         QCOMPARE(preferences.chartLayout(), original);
         preferences.setChartField("temperature", "dwptmp_point", false); // This edit must stay in the original profile.
         const auto all = QUrl::fromLocalFile(config.filePath("wszystkie.json"));
-        QCOMPARE(preferences.exportProfiles(all, true)["count"].toInt(), 2);
-        QCOMPARE(preferences.importProfiles(all)["count"].toInt(), 2);
+        const auto exportedCount = preferences.profiles().size();
+        QCOMPARE(preferences.exportProfiles(all, true)["count"].toInt(), exportedCount);
+        QCOMPARE(preferences.importProfiles(all)["count"].toInt(), exportedCount);
         QCOMPARE(preferences.profiles().last().toMap()["name"].toString(), QStringLiteral("Góry zimą (2) (2)"));
         UserPreferences reopened;
-        QCOMPARE(reopened.profiles().size(), builtinChartProfiles().size() + 4);
+        QCOMPARE(reopened.profiles().size(), builtinChartProfiles().size() + 2 + exportedCount);
         QCOMPARE(reopened.profile(), preferences.profile());
         QCOMPARE(reopened.chartLayout(), preferences.chartLayout());
     }

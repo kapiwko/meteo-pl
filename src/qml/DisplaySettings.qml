@@ -62,22 +62,76 @@ ColumnLayout {
         title: I18n.i18n("Import meteogram profiles")
         nameFilters: [I18n.i18n("Meteogram profiles (*.json)")]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-        onAccepted: root.transferResult(UserPreferences.importProfiles(selectedFile), true)
+        onAccepted: {
+            const result = UserPreferences.importProfiles(selectedFile, false);
+            root.transferResult(result, true);
+            if (result.ok && result.ids.length) root.profileId = result.ids[0];
+        }
     }
     FileDialog {
         id: exportDialog
         objectName: "profileExportDialog"
-        property bool allSaved: false
-        title: allSaved ? I18n.i18n("Export saved profiles") : I18n.i18n("Export current profile")
+        property var profileIds: []
+        title: I18n.i18n("Export profiles")
         fileMode: FileDialog.SaveFile
         defaultSuffix: "json"
         nameFilters: [I18n.i18n("Meteogram profiles (*.json)")]
         currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         onAccepted: {
-            const result = UserPreferences.exportProfiles(selectedFile, allSaved);
+            const result = UserPreferences.exportProfilesByIds(selectedFile, profileIds);
             root.transferResult(result, false);
             if (result.ok) ExportNotifications.saved(selectedFile, I18n.i18n("Profiles exported"));
         }
+    }
+    readonly property Dialog exportSelectionDialog: Dialog {
+        id: exportSelection
+        objectName: "profileExportSelection"
+        property var selectedIds: []
+        title: I18n.i18n("Select profiles to export")
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        modal: true
+        focus: true
+        width: Math.min(480, parent ? parent.width - 24 : 480)
+        height: Math.min(implicitHeight, parent ? parent.height - 24 : 600)
+        onOpened: selectedIds = [root.profileId]
+        contentItem: ScrollView {
+            id: selectionScroll
+            focus: true
+            Keys.onShortcutOverride: event => { if (event.key === Qt.Key_Back) event.accepted = true; }
+            Keys.onPressed: event => { if (event.key === Qt.Key_Back) { event.accepted = true; exportSelection.reject(); } }
+            implicitHeight: selectionList.implicitHeight
+            implicitWidth: 0
+            contentWidth: availableWidth
+            clip: true
+            ColumnLayout {
+                id: selectionList
+                width: selectionScroll.availableWidth
+                RowLayout {
+                    Button { text: I18n.i18n("Select all"); onClicked: exportSelection.selectedIds = UserPreferences.profiles.map(profile => profile.id) }
+                    Button { text: I18n.i18n("Clear selection"); onClicked: exportSelection.selectedIds = [] }
+                }
+                Repeater {
+                    model: UserPreferences.profiles
+                    delegate: CheckBox {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        text: modelData.name
+                        checked: exportSelection.selectedIds.indexOf(modelData.id) >= 0
+                        onToggled: {
+                            const ids = exportSelection.selectedIds.filter(id => id !== modelData.id);
+                            if (checked) ids.push(modelData.id);
+                            exportSelection.selectedIds = ids;
+                        }
+                    }
+                }
+            }
+        }
+        footer: DialogButtonBox {
+            Button { text: I18n.i18n("Export…"); enabled: exportSelection.selectedIds.length > 0; DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole }
+            Button { text: I18n.i18n("Cancel"); DialogButtonBox.buttonRole: DialogButtonBox.RejectRole }
+        }
+        onAccepted: { exportDialog.profileIds = selectedIds; Qt.callLater(() => exportDialog.open()); }
     }
     SettingsSection {
         title: I18n.i18n("Chart profile")
@@ -203,13 +257,7 @@ ColumnLayout {
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 18
                     actions: [
                         Kirigami.Action { text: I18n.i18n("Import…"); icon.name: "document-import"; onTriggered: importDialog.open() },
-                        Kirigami.Action {
-                            text: I18n.i18n("Export"); icon.name: "document-export"
-                            children: [
-                                Kirigami.Action { text: I18n.i18n("Current profile…"); onTriggered: { exportDialog.allSaved = false; exportDialog.open(); } },
-                                Kirigami.Action { text: I18n.i18n("All saved profiles…"); onTriggered: { exportDialog.allSaved = true; exportDialog.open(); } }
-                            ]
-                        }
+                        Kirigami.Action { text: I18n.i18n("Export…"); icon.name: "document-export"; onTriggered: exportSelection.open() }
                     ]
                 }
             }
