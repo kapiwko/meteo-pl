@@ -39,6 +39,28 @@ static bool waitForStableLayout(QQuickItem *item)
     return settled;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 9, 0)
+static QtMessageHandler previousTeardownHandler = nullptr;
+static void filterMaterialTeardownWarning(QtMsgType type, const QMessageLogContext &context, const QString &message)
+{
+    // Qt 6.8 + Kirigami 6.13 calls Material Theme.onSync with a null object
+    // while destroying an ApplicationWindow. Keep all live-UI diagnostics and
+    // every other warning under QtTest's normal failOnWarning handling.
+    if (type == QtWarningMsg && message.endsWith(QStringLiteral(
+            "/org/kde/kirigami/styles/Material/Theme.qml:85: TypeError: Cannot read property 'Kirigami' of null")))
+        return;
+    if (previousTeardownHandler) previousTeardownHandler(type, context, message);
+}
+#endif
+
+static void destroyTestWindow(QScopedPointer<QObject> &window)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 9, 0)
+    previousTeardownHandler = qInstallMessageHandler(filterMaterialTeardownWarning);
+    const auto restore = qScopeGuard([] { qInstallMessageHandler(previousTeardownHandler); previousTeardownHandler = nullptr; });
+#endif
+    window.reset();
+}
 
 class PresentationTest : public QObject {
     Q_OBJECT
@@ -1994,6 +2016,7 @@ private slots:
                 if (control->isVisible()) QTRY_VERIFY2(fits(control, content), name);
             }
         }
+        destroyTestWindow(object);
     }
     void timeLabelsFitNarrowChartsWithoutOverlapping()
     {
