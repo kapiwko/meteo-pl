@@ -31,6 +31,51 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void calendarUsesNativeMonthGridAndBounds()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|Unable to assign).*")));
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import pl.meteo.desktop
+            Item {
+                CalendarDialog {
+                    selectedDate: new Date(2026, 9, 25, 12)
+                    minimumDate: new Date(2026, 9, 20, 12)
+                    maximumDate: new Date(2026, 9, 27, 12)
+                }
+            }
+        )", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(420, 700); item->setParentItem(window.contentItem()); item->setSize({420, 700}); window.show();
+        auto *dialog = object->findChild<QObject *>("calendarDialog");
+        QVERIFY(dialog);
+        QSignalSpy selected(dialog, SIGNAL(dateSelected(QDateTime)));
+        QVERIFY(selected.isValid());
+        QVERIFY(QMetaObject::invokeMethod(dialog, "open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QQuickItem *valid = nullptr, *invalid = nullptr;
+        auto *grid = object->findChild<QQuickItem *>("calendarMonthGrid");
+        QVERIFY(grid);
+        const auto findDates = [&](auto &&self, QQuickItem *parent) -> void {
+            if (parent->property("text").toString() == "26") valid = parent;
+            if (parent->property("text").toString() == "19") invalid = parent;
+            for (auto *child : parent->childItems()) self(self, child);
+        };
+        findDates(findDates, grid);
+        QVERIFY(valid && invalid);
+        const auto click = [&](QQuickItem *control) {
+            QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, control->mapToScene({control->width()/2, control->height()/2}).toPoint());
+        };
+        click(invalid); QCOMPARE(selected.size(), 0); QVERIFY(dialog->property("visible").toBool());
+        click(valid); QTRY_COMPARE(selected.size(), 1);
+        QCOMPARE(selected.first().first().toDateTime().date(), QDate(2026, 10, 26));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        const auto right = valid->mapToScene({valid->width(), 0}).x();
+        QVERIFY(right <= window.width());
+    }
     void axisEditorKeepsInvalidDraftAndAcceptsPolishDecimals()
     {
         QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));

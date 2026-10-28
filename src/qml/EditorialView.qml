@@ -12,6 +12,7 @@ ColumnLayout {
     property bool initialized: false
     property var selectedArticle: null
     readonly property string today: feed.today
+    readonly property string earliest: "1997-01-01"
     readonly property string shownDate: feed.date || feed.publishedDate.slice(0, 10) || today
     EditorialModel { id: feed; commentary: root.commentary }
     Component.onCompleted: { initialized = true; feed.reload(false); }
@@ -20,6 +21,7 @@ ColumnLayout {
         if (feed.busy || delta > 0 && shownDate >= today) return;
         const date = new Date(shownDate + "T12:00:00");
         date.setDate(date.getDate() + delta);
+        if (Qt.formatDate(date, "yyyy-MM-dd") < earliest) return;
         feed.date = Qt.formatDate(date, "yyyy-MM-dd");
     }
     RowLayout {
@@ -30,17 +32,23 @@ ColumnLayout {
     RowLayout {
         visible: root.commentary
         Layout.fillWidth: true
-        Button { objectName: "synopticPreviousDay"; visible: !root.mobileLayout; text: "‹"; enabled: !feed.busy; onClicked: root.shiftDate(-1) }
-        TextField {
-            id: dateField
+        Button { objectName: "synopticPreviousDay"; visible: !root.mobileLayout; text: I18n.i18n("Previous day"); icon.name: "go-previous"; display: AbstractButton.IconOnly; enabled: !feed.busy && root.shownDate > root.earliest; onClicked: root.shiftDate(-1) }
+        Button {
+            objectName: "synopticDateButton"
             Layout.fillWidth: true
-            Binding on text { value: root.shownDate; when: !dateField.activeFocus; restoreMode: Binding.RestoreNone }
-            placeholderText: I18n.i18n("yyyy-mm-dd")
-            inputMask: "9999-99-99"
-            onAccepted: feed.date = text
+            icon.name: "view-calendar-day"
+            text: Qt.formatDate(new Date(root.shownDate + "T12:00:00"), Qt.locale().dateFormat(Locale.LongFormat))
+            enabled: !feed.busy
+            onClicked: commentaryCalendar.open()
         }
-        Button { objectName: "synopticNextDay"; visible: !root.mobileLayout; text: "›"; enabled: !feed.busy && root.shownDate < root.today; onClicked: root.shiftDate(1) }
+        Button { objectName: "synopticNextDay"; visible: !root.mobileLayout; text: I18n.i18n("Next day"); icon.name: "go-next"; display: AbstractButton.IconOnly; enabled: !feed.busy && root.shownDate < root.today; onClicked: root.shiftDate(1) }
         Button { text: I18n.i18n("Latest"); enabled: !feed.busy; onClicked: { if (feed.date.length) feed.date = ""; else feed.reload(); } }
+    }
+    CalendarDialog {
+        id: commentaryCalendar
+        selectedDate: new Date(root.shownDate + "T12:00:00")
+        maximumDate: new Date(root.today + "T12:00:00")
+        onDateSelected: value => feed.date = Qt.formatDate(value, "yyyy-MM-dd")
     }
     Label {
         visible: root.commentary && root.mobileLayout
