@@ -53,9 +53,9 @@ def verify_files(directory):
 
 def verify_run(info, sha, workflow):
     if (info.get("headSha") != sha or info.get("headBranch") != "main"
-            or info.get("event") != "push" or info.get("name") != workflow
+            or info.get("event") not in ("push", "workflow_dispatch") or info.get("name") != workflow
             or info.get("status") != "completed" or info.get("conclusion") != "success"):
-        raise ValueError(f"Require successful {workflow} push CI for {sha}")
+        raise ValueError(f"Require successful {workflow} main-branch CI for {sha}")
 
 
 def ci_runs(linux_run, portable_run, sha):

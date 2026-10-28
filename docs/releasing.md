@@ -47,7 +47,10 @@ python3 scripts/publish-release.py \
 ```
 
 Use `--apksigner /path/to/Android/Sdk/build-tools/VERSION/apksigner` if needed.
-The script downloads artifacts from the two successful `push` runs on `main`,
+The script downloads artifacts from successful `push` or manually dispatched
+runs on `main`, always requiring the exact release commit in both workflows.
+Manual runs can rebuild a signed APK after signing secrets change while keeping
+earlier development artifacts intact. The script
 checks every checksum and report, and compares source-file contents and metadata
 across Linux jobs, allowing compression differences between zlib versions.
 Debian and Ubuntu binaries retain separate names. It verifies the APK

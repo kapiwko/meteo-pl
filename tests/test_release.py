@@ -26,8 +26,10 @@ class ReleaseTest(unittest.TestCase):
         good={"headSha":"abc", "headBranch":"main", "event":"push", "name":"Linux CI",
               "status":"completed", "conclusion":"success"}
         publisher.verify_run(good,"abc","Linux CI")
+        publisher.verify_run(good|{"event":"workflow_dispatch"},"abc","Linux CI")
         for patch_data in ({"headSha":"old"},{"event":"pull_request"},{"status":"in_progress"},
-                           {"conclusion":"failure"},{"conclusion":"cancelled"},{"name":"Other workflow"}):
+                           {"conclusion":"failure"},{"conclusion":"cancelled"},{"name":"Other workflow"},
+                           {"headBranch":"feature","event":"workflow_dispatch"},{"event":"pull_request_target"}):
             with self.subTest(patch=patch_data),self.assertRaises(ValueError):
                 publisher.verify_run(good|patch_data,"abc","Linux CI")
 
