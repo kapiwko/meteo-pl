@@ -56,14 +56,14 @@ private slots:
                 import pl.meteo.desktop
                 Item {
                     property string caption: I18n.i18n("Settings")
-                    property string place: I18n.i18n("Show forecast")
+                    property string place: I18n.i18n("My places")
                     property string count: I18n.i18np("%1 chart selected", "%1 charts selected", 22)
                 }
             )", QUrl());
             QScopedPointer<QObject> object(component.create());
             QVERIFY2(object, qPrintable(component.errorString()));
             QCOMPARE(object->property("caption").toString(), polish ? QStringLiteral("Ustawienia") : QStringLiteral("Settings"));
-            QCOMPARE(object->property("place").toString(), polish ? QStringLiteral("Pokaż prognozę") : QStringLiteral("Show forecast"));
+            QCOMPARE(object->property("place").toString(), polish ? QStringLiteral("Moje miejsca") : QStringLiteral("My places"));
             QCOMPARE(object->property("count").toString(), polish ? QStringLiteral("Wybrano 22 wykresy") : QStringLiteral("22 charts selected"));
         }
         QVERIFY(KLocalizedString::applicationDomain().isEmpty());
