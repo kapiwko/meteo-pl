@@ -30,6 +30,8 @@ Kirigami.ScrollablePage {
                 required property int index
                 objectName: "mobileSettingsSection-" + index
                 Layout.fillWidth: true
+                leftPadding: Kirigami.Units.largeSpacing * 2
+                rightPadding: Kirigami.Units.largeSpacing * 2
                 implicitHeight: 76
                 Accessible.name: modelData.title + ". " + modelData.description
                 contentItem: RowLayout {
@@ -46,7 +48,15 @@ Kirigami.ScrollablePage {
                 onClicked: root.navigationStack.push(sectionPage, {section: index})
             }
         }
-        ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onClicked: about.open() }
+        ItemDelegate {
+            Layout.fillWidth: true
+            leftPadding: Kirigami.Units.largeSpacing * 2
+            rightPadding: Kirigami.Units.largeSpacing * 2
+            text: I18n.i18n("About")
+            icon.name: "help-about"
+            icon.color: "transparent"
+            onClicked: about.open()
+        }
     }
     MeteoAbout { id: about; weather: root.weather }
     Component {
@@ -56,7 +66,7 @@ Kirigami.ScrollablePage {
             required property int section
             objectName: "mobileSettingsDetail-" + section
             title: root.sections[section].title
-            padding: Kirigami.Units.largeSpacing
+            padding: Kirigami.Units.largeSpacing * 2
             header: MobilePageHeader { title: sectionView.title; onBackRequested: root.navigationStack.pop() }
             Loader {
                 width: sectionView.availableWidth

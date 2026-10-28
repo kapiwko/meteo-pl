@@ -20,10 +20,11 @@ Dialog {
     anchors.centerIn: parent
     width: Math.min(860, parent ? parent.width - 24 : 860)
     height: Math.min(800, parent ? parent.height - 24 : 800)
-    padding: 0
+    padding: Kirigami.Units.largeSpacing * 2
     modal: true
     standardButtons: Dialog.Close
     footer: DialogButtonBox {
+        padding: root.padding
         standardButtons: DialogButtonBox.Close
         onRejected: root.reject()
         Button {
@@ -47,7 +48,9 @@ Dialog {
             id: pagePane
             width: Math.min(page.availableWidth, Kirigami.Units.gridUnit * 34)
             x: Math.max(0, (page.availableWidth - width) / 2)
-            padding: Kirigami.Units.largeSpacing * 2
+            padding: 0
+            topPadding: Kirigami.Units.largeSpacing * 2
+            bottomPadding: Kirigami.Units.largeSpacing * 2
             background: null
         }
     }

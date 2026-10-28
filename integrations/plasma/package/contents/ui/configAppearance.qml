@@ -3,9 +3,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kcmutils as KCM
 import pl.meteo.desktop
 
-Item {
+KCM.SimpleKCM {
     id: root
     property string cfg_popupView: "charts"
     property string cfg_chartProfile: "classic"
@@ -15,13 +16,7 @@ Item {
         return UserPreferences.chartLayoutForProfile(cfg_chartProfile).filter(chart => chart.enabled);
     }
     readonly property bool isSaveAllowed: cfg_popupView !== "charts" || chartCatalog.length > 0
-    implicitWidth: form.implicitWidth
-    implicitHeight: form.implicitHeight
     Kirigami.FormLayout {
-        id: form
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
         ComboBox {
             Kirigami.FormData.label: I18n.i18n("Expanded view:")
             textRole: "name"

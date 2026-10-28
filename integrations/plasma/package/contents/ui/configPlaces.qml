@@ -3,17 +3,16 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kcmutils as KCM
 import pl.meteo.desktop
 
-Item {
+KCM.SimpleKCM {
     id: root
     property var cfg_visiblePlaces: ["*"]
     property var cfg_placeOrder: []
     readonly property bool allPlaces: cfg_visiblePlaces.indexOf("*") >= 0
     readonly property bool isSaveAllowed: catalog.places.length === 0 || allPlaces
         || catalog.places.some(place => catalog.includesPlace(cfg_visiblePlaces, place.latitude, place.longitude))
-    implicitWidth: form.implicitWidth
-    implicitHeight: form.implicitHeight
     SavedPlaceSelection { id: catalog; weather: null; orderKeys: root.cfg_placeOrder }
     function move(index, direction) {
         const keys = catalog.places.map(place => catalog.placeKey(place.latitude, place.longitude));
@@ -23,10 +22,6 @@ Item {
         cfg_placeOrder = keys;
     }
     Kirigami.FormLayout {
-        id: form
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
         CheckBox {
             text: I18n.i18n("Show all saved places, including new ones")
             checked: root.allPlaces

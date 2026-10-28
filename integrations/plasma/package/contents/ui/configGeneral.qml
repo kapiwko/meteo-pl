@@ -3,9 +3,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kcmutils as KCM
 import pl.meteo.desktop
 
-Item {
+KCM.SimpleKCM {
     id: root
     property string cfg_locationName: ""
     property real cfg_latitude: 0
@@ -40,13 +41,7 @@ Item {
         rememberSelection();
         cfg_model = LocationRules.modelFor(place.latitude, place.longitude, cfg_model);
     }
-    implicitWidth: form.implicitWidth
-    implicitHeight: form.implicitHeight
     Kirigami.FormLayout {
-        id: form
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
         ComboBox {
             objectName: "widgetLocationSelector"
             Kirigami.FormData.label: I18n.i18n("Place:")
