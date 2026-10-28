@@ -53,7 +53,8 @@ ColumnLayout {
         });
     }
     function latest() { thematic.latest(); }
-    ComboBox { Layout.fillWidth: true; model: root.catalog; textRole: "name"; currentIndex: root.layerIndex; onActivated: index => { animate.checked = false; root.layerIndex = index; root.imageScale = 1; } }
+    Label { text: I18n.i18n("Thematic map"); font: Kirigami.Theme.smallFont; opacity: 0.7 }
+    ComboBox { Layout.fillWidth: true; Layout.minimumWidth: 0; Accessible.name: I18n.i18n("Thematic map"); model: root.catalog; textRole: "name"; currentIndex: root.layerIndex; onActivated: index => { animate.checked = false; root.layerIndex = index; root.imageScale = 1; } }
     RowLayout {
         Layout.fillWidth: true
         ToolButton { icon.name: "go-previous"; Accessible.name: I18n.i18n("Earlier"); onClicked: thematic.earlier() }

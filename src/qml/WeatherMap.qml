@@ -56,8 +56,18 @@ ColumnLayout {
     GridLayout {
         Layout.fillWidth: true
         columns: width < 550 ? 1 : 2
-        ComboBox { Layout.fillWidth: true; model: layers.layers; textRole: "label"; currentIndex: layers.layerIndex; onActivated: index => layers.layerIndex = index }
-        ComboBox { Layout.fillWidth: true; model: layers.runs; textRole: "label"; currentIndex: layers.runIndex; onActivated: index => layers.runIndex = index }
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Label { text: I18n.i18n("Weather layer"); font: Kirigami.Theme.smallFont; opacity: 0.7 }
+            ComboBox { Layout.fillWidth: true; Layout.minimumWidth: 0; Accessible.name: I18n.i18n("Weather layer"); model: layers.layers; textRole: "label"; currentIndex: layers.layerIndex; onActivated: index => layers.layerIndex = index }
+        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.minimumWidth: 0
+            Label { text: I18n.i18n("Model run"); font: Kirigami.Theme.smallFont; opacity: 0.7 }
+            ComboBox { Layout.fillWidth: true; Layout.minimumWidth: 0; Accessible.name: I18n.i18n("Model run"); model: layers.runs; textRole: "label"; currentIndex: layers.runIndex; onActivated: index => layers.runIndex = index }
+        }
     }
     RowLayout {
         Layout.fillWidth: true
