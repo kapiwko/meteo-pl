@@ -26,6 +26,19 @@
 #include <QSignalSpy>
 #include <QScopeGuard>
 #include <QSettings>
+#include <QElapsedTimer>
+
+static bool waitForStableLayout(QQuickItem *item)
+{
+    QElapsedTimer quiet;
+    quiet.start();
+    const auto connection = QObject::connect(item, &QQuickItem::implicitHeightChanged,
+                                            [&] { quiet.restart(); });
+    const bool settled = QTest::qWaitFor([&] { return quiet.elapsed() >= 250; });
+    QObject::disconnect(connection);
+    return settled;
+}
+
 
 class PresentationTest : public QObject {
     Q_OBJECT
@@ -1697,7 +1710,7 @@ private slots:
         auto *chart = findChart(findChart, item);
         QVERIFY(chart);
         QTRY_VERIFY(chart->height() > 0 && chart->height() < 100);
-        QTest::qWait(100); // Let wrapped labels and the Flow of file buttons finish layout.
+        QVERIFY(waitForStableLayout(item));
         const auto closedHeight = chart->height();
         const auto closedTotal = item->implicitHeight();
         for (int repeat = 0; repeat < 2; ++repeat) {
@@ -1833,6 +1846,8 @@ private slots:
         auto *item = qobject_cast<QQuickItem *>(object.data());
         QQuickWindow window; window.resize(700, 800);
         item->setParentItem(window.contentItem()); item->setWidth(680); window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QVERIFY(waitForStableLayout(item));
         auto *duplicate = object->findChild<QQuickItem *>("profileDuplicateButton");
         auto *remove = object->findChild<QQuickItem *>("profileDeleteButton");
         auto *name = object->findChild<QQuickItem *>("profileNameField");
