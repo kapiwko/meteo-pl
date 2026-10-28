@@ -1,58 +1,58 @@
-# Porównanie wyglądu CPU i GPU
+# CPU and GPU appearance comparisons
 
-Test `renderer_parity` rysuje ten sam meteogram przez Canvas CPU i natywny
-renderer GPU, a następnie porównuje obrazy całego komponentu: serie, wypełnienia,
-kolejność warstw, osie, podpisy, legendę i kursor odczytu.
+`renderer_parity` renders the same meteogram with the CPU Canvas and native GPU
+renderer, then compares the entire component: series, fills, layer order, axes,
+labels, legend and reading cursor.
 
-Sprawdzane są wszystkie 12 domyślnych typów wykresów, każdy w trzech wariantach:
+It checks all 12 default chart types in three configurations:
 
-- szeroki widok całej prognozy, również używany przy eksporcie;
-- wąski widok 24 godzin z kursorem odczytu;
-- szeroki widok z rzeczywiście włączoną ciemną paletą.
+- A wide view of the entire forecast, also used for export.
+- A narrow 24-hour view with a reading cursor.
+- A wide view with the dark palette enabled.
 
-To 36 par obrazów. Lokalne dane obejmują m.in. temperatury ujemne, zakresy
-min–max, opad powyżej skali i różne jego rodzaje, zmienne kierunki wiatru,
-gęste punkty podstaw chmur, mgłę, burze oraz brakujące próbki.
-Testy nie pobierają prognoz z internetu i nie zmieniają ustawień użytkownika.
+This produces 36 image pairs. Local fixtures include negative temperatures,
+min–max ranges, off-scale precipitation, different precipitation types, changing
+wind directions, dense cloud-base points, fog, storms and missing samples.
+Tests do not download forecasts or change user settings.
 
-## Uruchomienie
+## Run
 
-Po zbudowaniu projektu:
+After building the project:
 
 ```sh
 METEO_RENDER_ARTIFACTS="$PWD/build/renderer-diffs" \
     ctest --test-dir build/dev -R renderer_parity --output-on-failure
 ```
 
-Na maszynie bez ekranu potrzebne są Mesa i Xvfb:
+Headless machines need Mesa and Xvfb:
 
 ```sh
 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run --auto-servernum dbus-run-session -- \
     ctest --test-dir build/dev -R renderer_parity --output-on-failure
 ```
 
-Mesa może wykonywać OpenGL programowo, ale test nadal wymaga natywnej ścieżki
-RHI/GPU aplikacji. Zapasowy Canvas CPU nie jest akceptowany jako renderer GPU.
-CI uruchamia porównanie niezależnie na czterech dystrybucjach; zapisuje obrazy
-CPU, GPU i różnic jako artefakty.
+Mesa may execute OpenGL in software, but the test still requires the
+application's native RHI/GPU rendering path. A CPU Canvas fallback does not count
+as a GPU renderer. CI runs comparisons independently on four distributions and
+preserves CPU, GPU and difference images as artifacts.
 
-## Kryterium zgodności
+## Acceptance criteria
 
-Obrazy muszą mieć identyczne wymiary. Porównanie dopuszcza niewielkie różnice
-wygładzania krawędzi między Canvas, sterownikami i Qt:
+Images must have identical dimensions. The comparison allows small differences
+in antialiasing between Canvas, drivers and Qt:
 
-- średnia różnica kanałów koloru poniżej 1,5% pełnego zakresu;
-- mniej niż 1,2% niedopasowanych pikseli przy poszukiwaniu krawędzi w promieniu
-  jednego piksela i tolerancji kanału 40/255;
-- mniej niż 2,5% niedopasowanych kolorowych pikseli albo maksymalnie 64 takie
-  piksele w całym obrazie, dla drobnych krawędzi rzadkich symboli.
+- Mean color-channel difference below 1.5% of the full range.
+- Fewer than 1.2% unmatched pixels using a one-pixel edge search and a channel
+  tolerance of 40/255.
+- Fewer than 2.5% unmatched colored pixels, or at most 64 such pixels per image,
+  to accommodate small edges on sparse symbols.
 
-Przy wygładzanych kolorowych krawędziach porównywany jest również odcień,
-aby sama różnica pokrycia piksela nie oznaczała innego koloru serii.
-Test kontrolny sprawdza, że zniknięcie geometrii i zamiana czerwieni na niebieski
-są odrzucane. Osobny test prezentacji wymaga widocznych strzałek wiatru.
-Progi nie oznaczają zgodności obrazów bit po bicie.
+For antialiased colored edges, the comparison also checks hue so that coverage
+changes alone do not count as different series colors. A control test verifies
+that missing geometry and replacing red with blue are rejected. A separate
+presentation test requires visible wind arrows. These thresholds do not imply
+bit-for-bit image equality.
 
-Przy błędzie obrazy trafiają domyślnie do `/tmp/meteo-renderer-diffs`.
-`METEO_RENDER_ARTIFACTS` ustawia katalog i zapisuje obrazy także dla poprawnych
-porównań. Warto obejrzeć wszystkie trzy obrazy przed zmianą progów.
+On failure, images are written to `/tmp/meteo-renderer-diffs` by default.
+`METEO_RENDER_ARTIFACTS` selects another directory and also preserves successful
+comparisons. Inspect all three images before changing thresholds.

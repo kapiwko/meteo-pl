@@ -1,30 +1,29 @@
-# Paczki i GitHub Actions
+# Packages and GitHub Actions
 
-Aplikacja i plasmoid są pakowane razem jako `meteo-pl`. W środku znajduje się
-program, moduł C++/QML, plasmoid, ikona, wpis menu i obsługa powiadomień KDE.
-Paczki używają bibliotek Qt/KDE danej dystrybucji. Nie zawierają danych prognoz
-ani ustawień użytkownika. Do użycia widgetu potrzebna jest Plasma 6;
-aplikacja okienkowa może działać również w innych środowiskach.
+The application and Plasma widget are packaged together as `meteo-pl`. The
+package contains the executable, shared C++/QML module, widget, icons, desktop
+entry and KDE notification integration. It uses the distribution's Qt/KDE
+libraries. Forecast data and user settings are stored separately. The widget
+requires Plasma 6; the desktop application can also run in other environments.
 
-| System budowania i docelowy | Paczka |
+| Build and target system | Package |
 | --- | --- |
-| Arch Linux / zgodne aktualne dystrybucje | `.pkg.tar.zst` |
+| Arch Linux / compatible current distributions | `.pkg.tar.zst` |
 | Debian 13 (trixie) | `.deb` |
 | Ubuntu 26.04 LTS | `.deb` |
 | Fedora 44 | `.rpm` |
-| Źródła | `.tar.gz`, `-source.zip` |
+| Source | `.tar.gz`, `-source.zip` |
 
-Każda paczka binarna powstaje w odpowiedniej dystrybucji, z jej wersją Qt,
-KDE, glibc i kompilatora. Paczki Debiana i Ubuntu są oddzielnymi artefaktami.
-Paczki Linuksa korzystają z bibliotek systemowych. Budowanie Windows, macOS
-i Androida opisano w [osobnej instrukcji](portable-packages.md).
-Ubuntu 24.04 i Debian 12 nie mają w domyślnych repozytoriach wymaganej kombinacji
-Qt i KDE Frameworks 6.
+Each binary package is built in its target distribution with that system's Qt,
+KDE, glibc and compiler. Debian and Ubuntu packages are separate artifacts.
+Linux packages use system libraries. See [portable packages](portable-packages.md)
+for Windows, macOS and Android builds. Ubuntu 24.04 and Debian 12 do not provide
+the required combination of Qt and KDE Frameworks 6 in their default repositories.
 
-## Budowanie lokalnie
+## Build locally
 
-Wymagania hosta dla kontenerów: Python ≥ 3.11 i działający Docker.
-Kompilacja nie instaluje aplikacji w systemie hosta.
+Container builds require Python 3.11 or later and a working Docker installation.
+They do not install the application on the host.
 
 ```sh
 python3 scripts/build-package.py --distro arch --test
@@ -33,26 +32,26 @@ python3 scripts/build-package.py --distro ubuntu --test
 python3 scripts/build-package.py --distro fedora --test
 ```
 
-Instalację gotowej paczki można sprawdzić w osobnym, czystym obrazie systemu:
+Check installation in a separate, clean runtime image:
 
 ```sh
 python3 scripts/check-package-runtime.py --distro arch
 ```
 
-Ten sam parametr obsługuje `debian`, `ubuntu` i `fedora`. Obraz instalacyjny
-zawiera środowisko Plasma i narzędzia testowe, bez kompilatora i bibliotek
-deweloperskich obrazu budującego. Skrypt wybiera konkretną paczkę z raportu,
-sprawdza jej sumę, wersję aplikacji oraz uruchomienie aplikacji i plasmoidu.
-Wynik i identyfikator obrazu trafiają do `BUILD-REPORT.json`; suma raportu
-w `SHA256SUMS` jest aktualizowana. CI wykonuje ten krok dla każdej dystrybucji.
+The same option accepts `debian`, `ubuntu` and `fedora`. Runtime images contain
+Plasma and test tools without the builder's compiler or development libraries.
+The script selects the exact package from its report, verifies its checksum and
+application version, and checks application and widget startup. It records the
+result and image ID in `BUILD-REPORT.json` and updates the report's checksum in
+`SHA256SUMS`. CI performs this check for every distribution.
 
-Wyniki są w `dist/<system>/`, a wielokrotnie używane katalogi budowania
-w `build/packages/<system>/`. Domyślnie używane są dwa zadania kompilacji;
-`--jobs 4` zmienia ten limit. `--test` uruchamia qmllint, testy CTest oraz
-porównania CPU/GPU przy pomocy Mesa i Xvfb. Brak `--test` pomija testy.
+Outputs are in `dist/<system>/`; reusable build directories are in
+`build/packages/<system>/`. Builds use two jobs by default; `--jobs 4` changes
+that limit. `--test` runs qmllint, CTest and CPU/GPU comparisons through Mesa and
+Xvfb. Omitting it skips tests.
 
-Na samym docelowym systemie, po zainstalowaniu zależności z odpowiedniego
-Dockerfile, można budować bez kontenera:
+On the target system, install the dependencies listed in its Dockerfile and
+build without a container:
 
 ```sh
 python3 scripts/release.py --target native --test
@@ -60,44 +59,43 @@ python3 scripts/release.py --target source
 python3 scripts/release.py --target tar-install
 ```
 
-Można też podać `--target arch`, `deb` albo `rpm`. Narzędzie odrzuca
-budowanie natywnego formatu na obcej dystrybucji. `tar-install` to archiwum
-drzewa instalacyjnego z zależnościami systemowymi, a nie przenośny AppImage.
-`--build-dir` i `--dist-dir` wskazują inne katalogi wynikowe.
+Explicit targets also include `arch`, `deb` and `rpm`. The script rejects native
+package formats built on another distribution. `tar-install` archives the
+installation tree and requires system dependencies; it is not a portable
+AppImage. `--build-dir` and `--dist-dir` select output directories.
 
-W każdym zestawie są źródła, `SHA256SUMS` i `BUILD-REPORT.json`, który zapisuje
-wersję, system, architekturę, wynik testów i sumy artefaktów. Sprawdzenie:
+Every set contains source archives, `SHA256SUMS` and `BUILD-REPORT.json`. The
+report records the version, system, architecture, test results and artifact
+checksums. Verify them with:
 
 ```sh
 cd dist/debian
 sha256sum --check SHA256SUMS
 ```
 
-Źródła są archiwizowane ze stałą kolejnością i znacznikami czasu z
-`SOURCE_DATE_EPOCH` (domyślnie data ostatniego commitu). Wykluczone są katalogi
-budowania, `.git`, dane cache i pliki IDE. `VERSION` określa wersję aplikacji,
-widoku informacji, instalowanego plasmoidu i paczek. Binarne paczki zależą też
-od wersji kompilatora i bibliotek w danym obrazie kontenera.
-Kod projektu jest udostępniany na licencji `GPL-3.0-or-later`, opisanej w pliku
-`LICENSE`. Metadane paczek używają tego samego identyfikatora licencji.
+Source archives have a stable file order and timestamps from `SOURCE_DATE_EPOCH`
+(the latest commit time by default). Build directories, `.git`, caches and IDE
+files are excluded. `VERSION` controls the application, About page, installed
+widget and package versions. Binary packages also depend on the compiler and
+libraries in the container image. The source uses `GPL-3.0-or-later`, as stated in
+`LICENSE`; package metadata use the same license identifier.
 
 ## GitHub
 
-Workflow `.github/workflows/tests.yml` działa na push, pull request i ręczne
-uruchomienie. Cztery niezależne zadania budują aplikację, widget i testy,
-uruchamiają qmllint i wszystkie testy, budują paczkę, instalują ją wewnątrz
-kontenera i sprawdzają zainstalowany program oraz widget bez ścieżek do
-bibliotek z katalogu budowania. Starsze wersje Plasma 6 bez `--smoke-test`
-są testowane przez krótkie uruchomienie `plasmawindowed`.
+`.github/workflows/tests.yml` runs on pushes, pull requests and manual dispatch.
+Four independent jobs build the application, widget and tests, run qmllint and
+the test suite, create the package, install it in a runtime container and check
+startup without build-directory library paths. Older Plasma 6 versions without
+`--smoke-test` are checked by briefly running `plasmawindowed`.
 
-W zakładce **Actions → wybrane uruchomienie → Artifacts** dostępne są paczki
-z sumami SHA-256, wyniki JUnit, logi CTest oraz obrazy CPU, GPU i ich różnice.
-Błąd testów blokuje udostępnienie paczki z tego zadania. Testy renderera wymagają
-RHI/OpenGL; przejście na zapasowy renderer CPU oznacza błąd testu.
+**Actions → selected run → Artifacts** contains packages, SHA-256 checksums,
+JUnit results, CTest logs and CPU/GPU comparison images. A test failure prevents
+that job from uploading a package. Renderer tests require RHI/OpenGL; falling
+back to the CPU renderer fails the test.
 
-Akcje są przypięte do konkretnych commitów, a Dependabot zgłasza aktualizacje.
-Workflow ma tylko prawo odczytu repozytorium i nie publikuje automatycznie
-wydań ani paczek do zewnętrznych repozytoriów.
+Actions are pinned to commits and Dependabot proposes updates. The build
+workflow has read-only repository access and does not automatically publish
+releases or packages to external repositories.
 
-Procedurę zmiany wersji, osobistego podpisu GPG i publikowania zweryfikowanych
-paczek Linux/Android opisuje [instrukcja wydawania](releasing.md).
+See [releasing](releasing.md) for version updates, personal GPG signatures and
+publication of verified Linux/Android artifacts.

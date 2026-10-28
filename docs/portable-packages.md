@@ -1,97 +1,95 @@
-# Windows, macOS i Android
+# Windows, macOS and Android
 
-`scripts/build-portable.py` buduje aplikację z bibliotekami Qt, Kirigami,
-ikonami Breeze i zależnościami KDE przy użyciu KDE Craft. Plasmoid jest
-wyłączony na tych platformach.
+`scripts/build-portable.py` bundles the application with Qt, Kirigami, Breeze
+icons and KDE dependencies using KDE Craft. The Plasma widget is disabled on
+these platforms.
 
-| Platforma | Środowisko budowania | Wynik |
+| Platform | Build environment | Output |
 | --- | --- | --- |
-| Windows x64 | Windows, Visual Studio 2022, Python ≥ 3.11 | instalator NSIS `.exe` |
-| macOS | macOS, Xcode z macOS SDK ≥ 15, Python ≥ 3.11 | `.dmg` z aplikacją `.app`, architektura komputera budującego |
-| Android arm64 | Linux z Dockerem, oficjalny obraz SDK KDE/Qt 6.11 | instalowalny `-signed.apk` z własnym kluczem lub testowy `-development.apk` |
+| Windows x64 | Windows, Visual Studio 2022, Python 3.11+ | NSIS `.exe` installer |
+| macOS | macOS, Xcode with macOS SDK 15+, Python 3.11+ | `.dmg` containing an `.app`, using the builder's architecture |
+| Android arm64 | Linux with Docker and the official KDE/Qt 6.11 SDK image | Persistent-key `-signed.apk` or test-only `-development.apk` |
 
-## Budowanie
+## Build
 
-Na Windows lub macOS, w katalogu projektu:
+On Windows or macOS, from the project directory:
 
 ```sh
 python -m pip install certifi
 python -m pip install pefile==2024.8.26 macholib==1.16.3
 python scripts/build-portable.py --target windows
-# Na macOS:
+# On macOS:
 python scripts/build-portable.py --target macos
 ```
 
-Na Linuksie z Dockerem:
+On Linux with Docker:
 
 ```sh
 python3 scripts/build-portable.py --target android
 ```
 
-Wyniki znajdują się w `dist/windows`, `dist/macos` lub `dist/android`, wraz
-z `SHA256SUMS` i `BUILD-REPORT.json`. Katalog roboczy jest wielokrotnie używany.
-Opcja `--include-alternatives` dołącza także przenośny ZIP Windows albo
-niepodpisany APK Androida. ZIP jest zawsze budowany i sprawdzany przed
-publikacją instalatora; domyślnie nie dubluje go w pobieranym zestawie.
-Gdy automatycznie wybrany mirror nie odpowiada, można podać np.
-`--cache-url https://ftp.gwdg.de/pub/linux/kde/extrafiles/craft/Qt6/`
-lub zmienną `METEO_CRAFT_CACHE_URL`.
-Można podać `--work-dir`, `--craft-root` oraz `--dist-dir`. Na Windows warto
-wybrać krótką ścieżkę, np. `--craft-root C:/MeteoCraft`, ze względu na długość
-ścieżek kompilatora. Pierwszy build pobiera duży zestaw Qt/KDE i SDK;
-potrzebuje kilku–kilkunastu GB oraz dostępu do cache `files.kde.org`.
+Outputs are in `dist/windows`, `dist/macos` or `dist/android`, together with
+`SHA256SUMS` and `BUILD-REPORT.json`. The working directory is reusable.
+`--include-alternatives` also includes the Windows portable ZIP or unsigned
+Android APK. The ZIP is always built and checked before the installer is
+published, but is omitted from the default download set to avoid duplication.
+If the default mirror is unavailable, select one with
+`--cache-url https://ftp.gwdg.de/pub/linux/kde/extrafiles/craft/Qt6/` or
+`METEO_CRAFT_CACHE_URL`.
 
-Natywne aplikacje okienkowe są uruchamiane z `--smoke-test` przed pakowaniem
-i ponownie z rozpakowanego ZIP lub zamontowanego DMG, bez ścieżek bibliotek
-środowiska Craft.
-Test odrzuca błędy ładowania QML. Raport Androida zapisuje brak testu uruchomienia
-na urządzeniu; samo utworzenie APK nie oznacza sprawdzenia działania na telefonie.
-Porównania CPU/GPU z [testów wizualnych](renderer-tests.md) są obecnie wykonywane
-na Linuksie, a nie na backendach D3D/Metal ani na telefonie.
+`--work-dir`, `--craft-root` and `--dist-dir` override directories. On Windows,
+choose a short path such as `--craft-root C:/MeteoCraft` to avoid compiler path
+limits. The first build downloads a substantial Qt/KDE SDK and needs several GB
+of disk space and access to the `files.kde.org` cache.
 
-## Rozmiar paczek
+Desktop applications run `--smoke-test` before packaging and again from the
+extracted ZIP or mounted DMG without Craft's library search paths. The check
+rejects QML loading errors. Android reports that device startup is untested;
+a successful APK build alone does not establish phone compatibility.
+[CPU/GPU visual comparisons](renderer-tests.md) currently run on Linux rather
+than D3D, Metal or phone hardware.
 
-Przed archiwizacją `bundle_runtime.py` usuwa przykłady SDK, motywy kursorów,
-pluginy deweloperskie i nieużywane moduły QML. Dla Windows i macOS odczytuje
-zależności PE/Mach-O i zachowuje ich domknięcie, pluginy QML i platformy oraz
-biblioteki TLS ładowane dynamicznie. Backend multimediów, SQL lub syntezy mowy
-pozostaje, jeśli wymaga go zachowana biblioteka Qt. Usuwany jest wyłącznie
-roboczy zbiór plików paczki, a nie SDK Craft.
+## Package size
 
-Tłumaczenia zależności odpowiadają językom aplikacji: obecnie angielski i polski.
-Ikony Breeze, licencje i zasoby zachowanych bibliotek pozostają w paczce.
-`BUILD-REPORT.json` zawiera rozmiary przed i po tej operacji oraz listę usuniętych
-bibliotek. Gotowe archiwum nadal musi przejść test uruchomienia.
-Raport podaje również rzeczywisty rozmiar każdego publikowanego pliku.
+Before archiving, `bundle_runtime.py` removes SDK examples, cursor themes,
+development plugins and unused QML modules. Windows/macOS trimming reads PE and
+Mach-O dependencies and retains their transitive closure, QML/platform plugins
+and dynamically loaded TLS libraries. Multimedia, SQL or speech backends remain
+if a retained Qt library needs them. Only the staged package tree is trimmed;
+the Craft SDK stays intact.
 
-Artefakt GitHub Androida korzysta z kompresji ZIP. Nie zmienia to bajtów ani
-podpisu APK, którego biblioteki natywne pozostają w formie umożliwiającej
-bezpośrednie mapowanie do pamięci przez Androida. Rozmiar pobieranego artefaktu
-może więc być mniejszy niż rozmiar wyodrębnionego APK
-([opis pakowania bibliotek Androida](https://developer.android.com/topic/performance/reduce-apk-size#reduce-native-binaries)).
+Dependency translations follow the application's languages, currently English
+and Polish. Breeze icons, licenses and resources for retained libraries remain
+bundled. `BUILD-REPORT.json` records sizes before/after trimming, removed
+libraries and the actual size of each published file. Final bundles must still
+pass startup checks.
 
-## Podpisy i publikowanie
+The GitHub Android artifact uses ZIP transport compression without altering APK
+bytes or signatures. APK native libraries remain suitable for direct Android
+memory mapping, so the downloaded artifact can be smaller than the extracted APK.
+See [Android native-library packaging](https://developer.android.com/topic/performance/reduce-apk-size#reduce-native-binaries).
 
-Instalator Windows nie jest podpisany Authenticode. Aplikacja macOS nie jest
-notaryzowana i może wymagać lokalnego podpisu oraz zezwolenia Gatekeeper.
-Nie są potrzebne konta ani klucze sklepów do utworzenia tych artefaktów.
+## Signing and distribution
 
-Android obsługuje własny, stały klucz podpisujący, dzięki któremu kolejne APK
-można instalować jako aktualizacje. Bez konfiguracji klucza powstaje testowy
-APK z nowym, tymczasowym podpisem przy każdym budowaniu. Zmiana takiego
-podpisu na stały może wymagać jednorazowego odinstalowania poprzedniej wersji,
-co usuwa jej ustawienia. Narzędzie nie publikuje w sklepach z aplikacjami.
+The Windows installer currently has no Authenticode signature. The macOS app is
+not notarized and may need local signing and Gatekeeper approval. Producing
+these artifacts does not require store accounts or keys.
 
-### Stały podpis Androida
+Android supports a persistent release key so later APKs install as updates.
+Without configured signing, each build receives a new temporary development
+signature. Moving from a development signature to the persistent key may require
+uninstalling the old test app once, which removes its settings. The build script
+does not publish to app stores.
 
-Klucz przechowuj **poza repozytorium**, z kopią zapasową w bezpiecznym miejscu.
-Nie można go odtworzyć z APK. Dla dystrybucji własnych APK utrata klucza oznacza
-utratę możliwości podpisania zgodnej aktualizacji
-([podpisywanie aplikacji Android](https://developer.android.com/studio/publish/app-signing)).
-Warto używać osobnego klucza dla każdej aplikacji.
+### Persistent Android signing
 
-Jeśli nie masz jeszcze klucza, utwórz go interaktywnie poleceniem `keytool`
-z JDK. Hasło wpisujesz w terminalu, a nie w argumentach polecenia:
+Keep the keystore outside the repository and maintain a secure backup. It cannot
+be recovered from an APK. Losing a self-managed APK signing key prevents signing
+a compatible update. See [Android app signing](https://developer.android.com/studio/publish/app-signing).
+A separate key per application is recommended.
+
+Create a key interactively with the JDK's `keytool`. Enter its password in the
+terminal rather than a command-line argument:
 
 ```bash
 install -d -m 700 "$HOME/.local/share/meteo-signing"
@@ -103,126 +101,120 @@ keytool -genkeypair -keystore "$METEO_ANDROID_KEYSTORE" -storetype PKCS12 \
 chmod 600 "$METEO_ANDROID_KEYSTORE"
 ```
 
-Przed budowaniem ustaw trzy zmienne. Dla istniejącego klucza podaj jego
-rzeczywistą ścieżkę i alias. Opcjonalna `METEO_ANDROID_KEY_PASSWORD` określa
-inne hasło klucza; domyślnie używane jest hasło magazynu:
+Set the signing variables before building. For an existing key, use its actual
+path and alias. Optional `METEO_ANDROID_KEY_PASSWORD` supplies a different key
+password; otherwise the store password is used:
 
 ```bash
 export METEO_ANDROID_KEYSTORE="$HOME/.local/share/meteo-signing/meteo.p12"
 export METEO_ANDROID_KEY_ALIAS=meteo
-read -r -s -p 'Hasło magazynu: ' METEO_ANDROID_STORE_PASSWORD
+read -r -s -p 'Keystore password: ' METEO_ANDROID_STORE_PASSWORD
 printf '\n'
 export METEO_ANDROID_STORE_PASSWORD
 python3 scripts/build-portable.py --target android --require-release-signing
 unset METEO_ANDROID_STORE_PASSWORD METEO_ANDROID_KEY_PASSWORD
 ```
 
-Powstaje `-signed.apk`. Magazyn jest montowany do kontenera tylko do odczytu;
-nie trafia do źródeł, cache budowania ani artefaktów. Hasła są przekazywane
-przez środowisko, bez wypisywania ich w poleceniach. Niepełna konfiguracja
-przerywa budowanie zamiast użyć innego klucza. Opcja `--require-release-signing`
-wymaga stałego podpisu także wtedy, gdy zapomnisz ustawić wszystkie zmienne.
+The output ends in `-signed.apk`. The keystore is mounted read-only into the
+container and excluded from source, build caches and artifacts. Passwords travel
+through environment variables without appearing in logged commands. Incomplete
+configuration fails rather than silently selecting another key.
+`--require-release-signing` also rejects an entirely missing configuration.
 
-`apksigner verify --verbose --print-certs` sprawdza wynik i wypisuje publiczny
-odcisk certyfikatu. `BUILD-REPORT.json` podaje `releaseSigned: true` dla APK
-podpisanego skonfigurowanym kluczem. Publiczny certyfikat można udostępniać,
-ale plik magazynu i jego hasła muszą pozostać prywatne.
+`apksigner verify --verbose --print-certs` checks the result and prints the public
+certificate fingerprint. `BUILD-REPORT.json` records `releaseSigned: true` for
+an APK using the configured key. The certificate is public; the keystore and
+passwords must remain private.
 
-### Podpis Androida w GitHub Actions
+### Android signing in GitHub Actions
 
-W ustawieniach repozytorium **Secrets and variables → Actions** skonfiguruj:
+Under **Secrets and variables → Actions**, configure:
 
-| Secret | Zawartość |
+| Secret | Contents |
 | --- | --- |
-| `ANDROID_KEYSTORE_BASE64` | Magazyn klucza zakodowany Base64 |
-| `ANDROID_KEY_ALIAS` | Alias klucza, np. `meteo` |
-| `ANDROID_STORE_PASSWORD` | Hasło magazynu |
-| `ANDROID_KEY_PASSWORD` | Opcjonalne inne hasło klucza |
+| `ANDROID_KEYSTORE_BASE64` | Base64-encoded keystore |
+| `ANDROID_KEY_ALIAS` | Key alias, for example `meteo` |
+| `ANDROID_STORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_PASSWORD` | Optional different key password |
 
-Przykład przesłania magazynu przez standardowe wejście, bez wyświetlania go:
+Upload the keystore through standard input without printing it:
 
 ```bash
 base64 -w 0 "$METEO_ANDROID_KEYSTORE" | gh secret set ANDROID_KEYSTORE_BASE64 --repo kapiwko/meteo-pl
 ```
 
-Pozostałe wartości można wpisać interaktywnie przez `gh secret set NAZWA`.
-Base64 nie jest szyfrowaniem; ochronę zapewniają GitHub Actions secrets.
-Workflow udostępnia klucz wyłącznie przy budowaniu zaufanej gałęzi lub ręcznym
-uruchomieniu. Pull requesty zawsze budują z kluczem tymczasowym, także PR-y
-z tego samego repozytorium. Plik magazynu jest usuwany po budowaniu.
-Bez sekretów dotychczasowe paczki testowe nadal powstają.
-Więcej: [sekrety GitHub Actions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).
+Enter other values interactively with `gh secret set SECRET_NAME`. Base64 is an
+encoding, not encryption; GitHub Actions secrets provide storage protection.
+The workflow supplies the key only for trusted-branch builds or manual runs.
+All pull requests, including same-repository PRs, use temporary keys. The
+keystore is removed after building. Development packages continue to build when
+secrets are absent. See [GitHub Actions secrets](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).
 
-Windows wymaga osobnego podpisu Authenticode. Dla projektu open source warto
-sprawdzić program SignPath Foundation; dla zwykłej dystrybucji potrzebny jest
-zaufany certyfikat lub usługa podpisywania. Sam podpis nie gwarantuje braku
-ostrzeżeń SmartScreen
-([opcje podpisu Windows](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options)).
-macOS wymaga certyfikatu Developer ID z Apple Developer Program i notaryzacji
-do standardowej dystrybucji poza App Store
-([Developer ID](https://developer.apple.com/developer-id/)).
-Te tożsamości nie są jeszcze skonfigurowane w workflow projektu.
+Windows needs its own Authenticode identity. Open-source projects can consider
+SignPath Foundation; ordinary distribution needs a trusted certificate or
+signing service. A signature does not itself guarantee that SmartScreen warnings
+disappear. See [Windows signing options](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options).
+Standard macOS distribution outside the App Store uses an Apple Developer ID
+certificate and notarization; see [Developer ID](https://developer.apple.com/developer-id/).
+Those identities are not configured in this project's workflow.
 
-Port Androida korzysta ze stylu Material (Material 3 w Qt Quick Controls),
-z jasnym lub ciemnym motywem systemowym. Paczka sprawdza obecność pluginu
-Material przed publikacją APK. Ikony nadal pochodzą z Breeze.
-Manifest zawiera uprawnienia sieci,
-lokalizacji i powiadomień w manifeście. Eksport i import przez Android Storage
-Access Framework oraz uprawnienia czasu wykonania wymagają osobnej weryfikacji
-na urządzeniu; manifest nie zastępuje takiego testu.
+## Android interface and local testing
 
-Ikony używane przez aplikację i standardowe komponenty są dołączane przez
-`kirigami_package_breeze_icons()` z przypiętego wydania Breeze. Pakowanie sprawdza
-obecność motywu i podstawowych ikon w gotowym APK, przed jego publikacją.
+The Android port uses Material styling (Material 3 in Qt Quick Controls), with
+the system's light or dark theme. Packaging checks for the Material plugin and
+bundles Breeze icons. The manifest requests network, location and notification
+permissions. Storage Access Framework import/export and runtime permissions
+still need device testing; manifest declarations alone are insufficient.
+`kirigami_package_breeze_icons()` embeds icons from a pinned Breeze release;
+packaging verifies the theme and required icons in the final APK.
 
-## Lokalne uruchamianie Androida
-
-Uruchom istniejący emulator (nazwy sprawdzisz przez `emulator -list-avds`):
+Start an existing emulator; list names with `emulator -list-avds`:
 
 ```sh
 ~/Android/Sdk/emulator/emulator -avd Medium_Phone_API_35 -gpu host -qemu -cpu host
 ```
 
-Opcja procesora jest przydatna dla APK ARM64 uruchamianego przez translację
-w obrazie x86_64: domyślny procesor wirtualny może nie udostępniać AES.
-Obraz musi obsługiwać ARM64; sprawdź `adb shell getprop ro.product.cpu.abilist`.
-Telefon ARM64 z włączonym debugowaniem USB nie wymaga emulatora.
+The CPU option helps ARM64 translation on an x86_64 image whose default virtual
+CPU may lack AES. The image must support ARM64; check
+`adb shell getprop ro.product.cpu.abilist`. An ARM64 phone with USB debugging
+needs no emulator.
 
-Po zbudowaniu APK:
+After building a development APK:
 
 ```sh
 ~/Android/Sdk/platform-tools/adb install -r dist/android/meteo-pl-arm64-v8a-development.apk
 ~/Android/Sdk/platform-tools/adb shell am start -n pl.meteo.desktop/org.qtproject.qt.android.bindings.QtActivity
 ```
 
-Przy zmianie klucza podpisującego poprzedni testowy APK wymaga odinstalowania;
-usuwa to jego lokalne ustawienia. Przy kilku urządzeniach dodaj `adb -s SERIAL`.
+Changing signing keys requires removing the previous incompatible test APK,
+which deletes its local settings. Add `adb -s SERIAL` when several devices are
+connected.
 
-Na wykresie rozsuń lub zsuń dwa palce, aby zmienić skalę czasu; przesuwaj palcem
-w poziomie, aby zmienić okres. Ruch pionowy przewija listę wykresów.
-Podwójne dotknięcie przywraca całą prognozę. Minimalny zakres pozostaje równy
-24 godzinom (lub całej prognozie, jeśli jest krótsza).
+Pinch charts to change the time scale and drag horizontally to move the interval.
+Vertical gestures scroll the chart list. Double-tap restores the whole forecast.
+The minimum interval is 24 hours, clamped to the full forecast when shorter.
+Mobile initially shows the first 72 hours.
 
-W Synoptyku gest w prawo otwiera poprzedni dzień, a w lewo następny, do dnia
-dzisiejszego. Ruch pionowy przewija treść. Systemowe Wstecz zamyka menu,
-cofa strony ustawień i wraca z Map lub Aktualności do prognozy; z treści
-artykułu wraca najpierw do listy.
+In **Synoptic**, swipe right for the previous day or left for the next, bounded
+by today. Vertical gestures scroll the content. System Back closes menus,
+unwinds settings pages and returns from Maps or News to the forecast. An open
+article first returns to its list. The keyboard is dismissed before navigating
+away from a form.
 
-Przycisk „Użyj mojej pozycji” prosi o systemową zgodę na przybliżoną lokalizację
-podczas używania aplikacji. Po odmowie zgodę można zmienić w ustawieniach
-systemowych aplikacji. Wyszukiwanie miejsca i wybór punktu na mapie działają
-bez tego uprawnienia.
+**Use my location** requests approximate location permission while using the app.
+After denial, change permission in the system's application settings. Place
+search and map selection do not require this permission.
 
 ## GitHub Actions
 
-Workflow `portable-packages.yml` uruchamia natywne zadania Windows i macOS oraz
-budowę Androida w przypiętym obrazie SDK. Artefakty są udostępniane po poprawnym
-zakończeniu zadania. Bootstrap Craft i blueprinty są wskazane przez rewizje
-w skrypcie. Cache binarny zależności KDE jest zewnętrzny i może się zmieniać.
-Zadanie macOS używa mirrora GWDG, aby korzystać z pełnego indeksu zależności
-podczas przebudowy głównego cache KDE.
-Przy ręcznym uruchomieniu opcja **include_alternatives** dołącza dodatkowe formaty.
+`portable-packages.yml` runs native Windows/macOS jobs and builds Android in a
+pinned SDK image. Artifacts are uploaded after the job succeeds. Craft bootstrap
+and blueprints are pinned by revision in the script; the external KDE binary
+cache can change. The macOS job uses GWDG's mirror to obtain a complete dependency
+index while KDE's primary cache is rebuilding. Manual dispatch offers
+**include_alternatives** for additional formats.
 
-Podstawa konfiguracji: [KDE Craft](https://develop.kde.org/docs/getting-started/building/craft/),
-[portowanie Qt/Kirigami na Androida](https://develop.kde.org/docs/packaging/android/porting_applications/basic/)
-oraz [budowanie APK w oficjalnym kontenerze KDE](https://develop.kde.org/docs/packaging/android/building_applications/).
+The setup follows [KDE Craft](https://develop.kde.org/docs/getting-started/building/craft/),
+[Qt/Kirigami Android porting](https://develop.kde.org/docs/packaging/android/porting_applications/basic/)
+and [building APKs in KDE's official container](https://develop.kde.org/docs/packaging/android/building_applications/).
+See [releasing](releasing.md) for personally signed Linux/Android publication.

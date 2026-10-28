@@ -1,279 +1,292 @@
-# Architektura
+# Architecture
 
-Wspólny backend C++ obsługuje aplikację okienkową i plasmoid. Inspiracją jest
-podział odpowiedzialności z `btrfs-backup`, zwłaszcza wspólne modele prezentacji
-i osobny pakiet integracji KDE. Pogoda nie wymaga procesu systemowego,
-uprawnień roota ani pośrednictwa D-Bus.
+A shared C++ backend serves the desktop application and Plasma widget. The
+separation follows `btrfs-backup`, particularly its shared presentation models
+and separate KDE integration package. Forecast access needs no system daemon,
+root privileges or D-Bus intermediary.
 
 ```mermaid
 flowchart BT
-    API[Interfejs prognoz meteo.pl] --> Network[MeteoClient · Qt Network]
-    Network --> Repository[ForecastRepository · walidacja i cache]
-    Repository --> Core[Forecast · próbkowanie i agregacja]
-    Core --> Model[WeatherModel · stan widoku i jednostki]
-    Model --> QML[pl.meteo.desktop · wspólne wykresy QML]
-    QML --> App[Aplikacja Kirigami]
-    QML --> Plasma[Plasmoid Plasma 6]
+    API[meteo.pl forecast API] --> Network[MeteoClient · Qt Network]
+    Network --> Repository[ForecastRepository · validation and cache]
+    Repository --> Core[Forecast · sampling and aggregation]
+    Core --> Model[WeatherModel · view state and units]
+    Model --> QML[pl.meteo.desktop · shared QML charts]
+    QML --> App[Kirigami application]
+    QML --> Plasma[Plasma 6 widget]
 ```
 
-| Katalog | Odpowiedzialność |
+| Directory | Responsibility |
 | --- | --- |
-| `src/core` | Dokument prognozy, walidacja współrzędnych i obszaru modelu, wybór najnowszego uruchomienia |
-| `src/data` | Pobieranie prognoz, walidowane wyniki i trwały cache |
-| `src/network` | Asynchroniczne HTTP, timeout, limity, anulowanie i cache obrazów |
-| `src/presentation` | Modele prognoz, wyszukiwarki, map i treści redakcyjnych; jednostki i preferencje |
-| `src/qml` | Wykresy z inspektorem, edytor lokalizacji, mapy, prognoza godzinowa i dzienna |
-| `apps/meteo` | Okno Kirigami, preferencje użytkownika i wpis desktop |
-| `integrations/plasma` | Pakiet Plasma 6, konfiguracja instancji i kompaktowa reprezentacja |
-| `tests` | Parser, lokalny serwer HTTP, cache, renderowanie QML i start aplikacji |
+| `src/core` | Forecast document, coordinate/model coverage validation and latest-run selection |
+| `src/data` | Forecast retrieval, validated results and persistent cache |
+| `src/network` | Asynchronous HTTP, deadlines, limits, cancellation and image cache |
+| `src/presentation` | Forecast, search, map and editorial models; units and preferences |
+| `src/qml` | Charts and inspector, place forms, maps, hourly and daily forecasts |
+| `apps/meteo` | Kirigami window, session preferences and desktop entry |
+| `integrations/plasma` | Plasma 6 package, instance settings and compact representation |
+| `tests` | Parsing, local HTTP fixtures, caches, QML rendering and application startup |
 
-## Przepływ danych
+## Forecast data flow
 
-1. `WeatherModel` pyta `ForecastRepository` o cache przypisany do modelu,
-   współrzędnych zaokrąglonych do sześciu miejsc i żądanego startu. Ten sam
-   punkt kanoniczny służy do zapytania HTTP i identyfikacji cache.
-2. Dla cache młodszego niż godzina, obejmującego bieżącą chwilę, nie powtarza
-   automatycznego pobrania. Ręczne odświeżenie pomija ten warunek.
-3. `GET /meteorograms/available` zwraca daty uruchomień. Adapter wybiera maksimum
-   lub żądany start archiwalny, po sprawdzeniu jego dostępności.
-4. `POST /meteorograms/{model}` z `point.lat`, `point.lon` i `date` zwraca prognozę.
-5. Parser sprawdza dane i osobne osie czasu wszystkich szeregów. Braki danych
-   zachowuje jako `null`; nie zamienia ich w zero.
-6. `WeatherModel` przelicza ciśnienie z Pa na hPa i zachmurzenie z ułamka na %,
-   wiatr na wybraną jednostkę i widzialność na km. Podstawy chmur sprawdza według
-   jednostki źródłowej (serwis zwraca też km).
-   Opad jest podawany w mm dla przedziału prognozy. Nie zakłada godzinnego
-   przedziału dla modeli o innej rozdzielczości czasowej.
-7. Repozytorium zwraca `ForecastSnapshot` z dokumentem, czasem pobrania,
-   pochodzeniem i rewizją źródła. Dopiero poprawna odpowiedź zastępuje cache
-   przez `QSaveFile`; model widoku nie odczytuje ani nie zapisuje plików prognoz.
+1. `WeatherModel` asks `ForecastRepository` for cached data keyed by model,
+   coordinates rounded to six decimals and requested run. HTTP requests and
+   cache identity use the same canonical point.
+2. Automatic retrieval reuses a cache entry younger than one hour if it covers
+   the current time. Manual refresh bypasses this freshness check.
+3. `GET /meteorograms/available` returns model-run dates. The adapter selects
+   the latest or explicitly requested available historical run.
+4. `POST /meteorograms/{model}`, with `point.lat`, `point.lon` and `date`, returns
+   the forecast.
+5. The parser validates the document and each series' individual time axis.
+   Missing values remain `null` rather than becoming zero.
+6. `WeatherModel` converts pressure from Pa to hPa, cloud fractions to percent,
+   wind to the selected unit and visibility to km. Cloud-base conversion checks
+   the source unit, which can already be km. Precipitation is in mm per source
+   forecast interval; models with another time resolution are not treated as
+   hourly data.
+7. The repository returns a `ForecastSnapshot` containing the document,
+   retrieval time, origin and source revision. Only a valid response replaces
+   cached data through `QSaveFile`. Presentation models do not own forecast-file
+   reads or writes.
 
-Zmiana lokalizacji anuluje poprzednie żądanie i usuwa poprzednie podsumowanie,
-zanim rozpocznie się nowe pobranie. Licznik generacji odrzuca spóźnione odpowiedzi.
-Jedna instancja `WeatherModel` obsługuje wszystkie wykresy danego widoku.
+Changing location cancels the previous request and clears its summary before
+retrieval starts. A generation counter rejects late replies. One `WeatherModel`
+serves all charts in a view.
 
-`ForecastSampling` definiuje osobno próbkowanie wartości chwilowych i wielkości
-odnoszących się do przedziału prognozy. Wartości chwilowe korzystają z najbliższej
-próbki źródłowej, a sumy opadu z przedziału `[czas, czas + interwał)`. Braki
-pozostają brakami. Sufiksy `_min`, `_max` i `_aver` często opisują statystyki
-przestrzenne sąsiednich węzłów, więc same nie określają semantyki czasowej
-([opis systemu ICM](https://www.meteo.pl/faq-category/opis-systemu),
-[objaśnienia meteogramów](https://www.meteo.pl/jak-czytac-prognoze-pogody-czesc-i-meteogramy)).
-Reguły są przypisane jawnie do parametrów. `ForecastFormatting` opisuje próbkę
-wspólnie dla odczytu i tabel godzinowych; sumy opadu pokazują źródłowy przedział
-także wtedy, gdy ta sama suma pojawia się w kilku wierszach. `ChartDataBuilder`, odczyt i CSV
-korzystają z tego samego kontraktu; odczyt podaje czas źródłowy lub przedział,
-a marker jest umieszczany przy odpowiadającej mu próbce.
-`ForecastAggregation` oblicza dni na oryginalnych przedziałach źródłowych,
-także przy zmianie czasu. `ChartAnalysis` wyznacza ograniczoną liczbę podziałek,
-również dla skrajnych zakresów importowanych profili. Minutowy zegar aktualizuje
-podsumowanie, bez zmiany rewizji danych i przebudowy geometrii wykresów.
+`ForecastSampling` separates instantaneous values from quantities covering an
+interval. Instantaneous values use the nearest source sample; precipitation
+uses `[time, time + interval)`. Missing values remain missing. Suffixes such as
+`_min`, `_max` and `_aver` often describe spatial statistics of neighboring grid
+points and do not themselves determine time semantics. See the
+[ICM system description](https://www.meteo.pl/faq-category/opis-systemu) and
+[meteogram guide](https://www.meteo.pl/jak-czytac-prognoze-pogody-czesc-i-meteogramy).
+Rules are assigned explicitly to fields.
 
-`ForecastFields` definiuje dane i katalog serii. `ChartConfiguration` buduje
-gotowe konfiguracje oraz normalizuje zapisy użytkownika. Każdy wykres ma nazwę,
-listę dowolnych serii, przypisania do osi, opcjonalne granice osi oraz style
-kolorów, linii, punktów i wypełnień. `UserPreferences` przechowuje pełną
-konfigurację w nazwanych profilach. `PreferencesStore` jest właścicielem pliku INI,
-migracji i powiadomień o zmianach lokalnych oraz pochodzących z innych procesów.
-Mutacja obejmuje blokadę międzyprocesową, ponowny odczyt aktualnego pliku,
-zmianę wskazanej kolekcji i atomowy zapis. Powiadomienia i stan publiczny zmieniają
-się dopiero po powodzeniu; błąd trafia do standardowego komunikatu w ustawieniach.
-Niezależne operacje na miejscach i profilach zachowują obie zmiany. Przy jawnym
-zapisie i usunięciu tego samego miejsca wygrywa ostatnia zatwierdzona operacja.
-Stare listy kluczy są migrowane z zachowaniem profili i zapisanych miejsc.
-`WeatherModel::configuredCharts` deleguje do `ChartDataBuilder`, który wiąże
-konfigurację z dostępnymi seriami i przypisuje jednostki do dwóch osi. Trzecia
-niezgodna jednostka w trybie automatycznym daje jawny komunikat konfliktu;
-konfiguracja pozostaje zachowana, a użytkownik wybiera osie. Builder łączy zakresy
-po dokładnych timestampach, zachowując luki, oraz scala przedziały burz i wyładowań.
-Geometria opadu korzysta z natywnego początku i końca każdej próbki.
-`ForecastPanel` składa widok według profilu. `Meteogram` używa rodzajów rysowania
-i skal z konfiguracji, a `MeteogramStyle.js` zawiera skale i palety ICM.
-`SeriesLegend` pokazuje tę samą próbkę w legendzie i w edytorze wyglądu.
-Katalog dozwolonych rendererów w `ChartConfiguration` ogranicza specjalne symbole
-do właściwych wielkości; edytor i normalizacja importowanych profili używają
-tego samego katalogu. Karty dni składa `DailyForecastView`, a wspólne metadane
-PNG przygotowuje `WeatherModel::chartExportMetadata`.
-`MeteogramStyle.paintChart` emituje wspólne polecenia rysowania. Domyślny
-`GpuPlot` zamienia je na trójkąty `QSGGeometryNode` z kolorami wierzchołków
-i przekazuje do RHI Qt Quick; etykiety są elementami `Text`, a warstwa ma
-MSAA 4×. W tej ścieżce nie powstaje obraz wykresu na CPU. Alternatywny
-`Canvas.Image` jest wybierany w preferencjach lub automatycznie, gdy scena
-Qt Quick używa backendu programowego. Zmiana renderera działa bez restartu.
-Wskaźniki kursora mają osobną geometrię; ruch myszy nie przebudowuje serii,
-siatki ani etykiet. Test na rzeczywistym RHI sprawdza również ten warunek.
-Edytory wykresów i serii są tworzone dopiero po rozwinięciu.
-Wysokość wykresu dziedziczy ustawienie profilu, a następnie wartość ogólną.
-Globalna preferencja legendy określa stan początkowy; przycisk przy tytule
-przełącza ją lokalnie bez zapisywania w profilu. Dolny pasek `ForecastPanel`
-obsługuje zakres i powiększenie z minimalnym przedziałem 24 godzin.
-Desktopowe `MeteoSettings` zawiera wybór profilu, okresu, startu modelu i
-preferencje globalne. Android używa stron ustawień w standardowym `StackView`.
-`ForecastSession` przechowuje stan pojedynczego okna i wybór w `QtCore.Settings`;
-korzystają z niego desktopowy `ForecastWindow` oraz mobilne `Mobile`.
-Podgląd przekazany z Plasma lub KRunner pozostaje tymczasowy do jawnego wyboru.
-Obliczenia ikony dnia/nocy, tła oraz wschodu/zachodu korzystają z `SolarCalendar`.
-Etykiety startów modelu powstają z timestampów w aktualnie wybranej strefie.
-`ChartExporter` przechwytuje wybrane wykresy osobno przez `QQuickItem::grabToImage`,
-niezależnie od pozycji przewijania, i składa PNG z podpisami i źródłem.
-Przejściowy tryb eksportu ukrywa przyciski i odczyt kursora bez zmiany układu.
-Zapis jest atomowy przez `QSaveFile`. Eksport kontroluje rewizje danych, stylu,
-zakresu i legendy przed każdym przechwyceniem i po nim. Zmiana w trakcie pracy
-anuluje zapis, zachowuje istniejący plik i przywraca stan wykresów.
-Limit 64 megapikseli ogranicza zużycie pamięci. Wybór pliku korzysta
-z dialogu platformy Qt, z natywną integracją KDE wymagającą `QApplication`.
-`ProfileFileCodec` obsługuje import i eksport lokalnych plików JSON w formacie
-`pl.meteo.chart-profiles`, wersja 1. Zapis jest atomowy (`QSaveFile`). Import
-sprawdza cały dokument przed zmianą ustawień, normalizuje style, nadaje nowe
-identyfikatory i rozróżnia powtarzające się nazwy. Jeden plik może zawierać
-do 100 profili i mieć do 16 MiB. Plik ustawień jest wskazany w informacjach technicznych okna „O aplikacji”;
-domyślnie to `~/.config/meteo-pl/desktop.ini`.
-Fabryczne profile z `resources/profiles`, katalog i metadane serii z
-`resources/charts` są jedynym źródłem domyślnej konfiguracji wykresów.
-Kolory, typy rysowania, warstwy, tła, palety wypełnień i osie są zapisane w JSON.
-`resources/schemas/chart-data.schema.json` opisuje ich strukturę. Valijson,
-pobierany przez CMake z przypiętego archiwum i sumy SHA-256, sprawdza ten sam
-schemat podczas ładowania zasobów i importu. Walidacja nie pobiera zewnętrznych
-schematów. Pliki JSON i schemat są również instalowane w `share/meteo-pl`.
-Zmiany gotowych profili zapisują się jako nadpisania ich identyfikatorów w
-atomowym magazynie preferencji. Usunięte gotowe profile mają zapisaną listę
-identyfikatorów; przywrócenie odczytuje zasób fabryczny. Pozostawiono obsługę
-wcześniejszych zapisów „Własnego układu”. Jednorazowa migracja usuwa wyłącznie
-niezmodyfikowane, wyłączone szablony ze starszych profili.
-Tła i zakresy min–max poprzedzają linie
-i znaczniki, mgła jest ponad pokryciem chmur, siatka ponad wypełnieniami,
-a odczyt kursora na wierzchu. Ukrycie serii przez legendę nie przelicza osi.
-Temperatura przy gruncie jest przedstawiana pionowymi kreskami min–max
-dla wspólnych znaczników czasu obu serii, ponad liniami temperatury powietrza.
-Tło temperatur poniżej zera jest ograniczone położeniem 0°C, także przy
-całkowicie ujemnym lub dodatnim zakresie.
+`ForecastFormatting` describes samples consistently in readings and hourly
+tables. Precipitation totals identify their source interval even when repeated
+in several rows. `ChartDataBuilder`, readings and CSV share this contract;
+readings identify source times or intervals and markers align with their source
+samples. `ForecastAggregation` computes daily values from original intervals,
+including daylight-saving transitions. `ChartAnalysis` bounds tick counts even
+for extreme limits in imported profiles. A minute timer updates the summary
+without changing the data revision or rebuilding chart geometry.
 
-Pola opadu konwekcyjnego nie ma w obecnym dokumencie liczbowym. Przekroczenie
-skali przez maksimum opadu lub poryw ma osobny czerwony znacznik.
-Opcjonalne serie GFS przesłane jako `null` są pomijane; ich brak nie odrzuca
-pozostałej prognozy. Brak temperatury głównej nadal jest błędem dokumentu.
+## Profiles, preferences and rendering
 
-Cache prognoz jest wspólny dla procesów i zawiera model, współrzędne, żądany
-start, czas pobrania oraz oryginalny dokument. Klucz to SHA-256 modelu
-i współrzędnych, z osobnym sufiksem dla archiwum.
-Odczyt sprawdza również zawartość nagłówka i dokumentu. Awaria cache nie blokuje
-pobrania ani wyświetlenia prognozy. Instancje uruchomione równocześnie mogą
-wykonać osobne żądania; ta wersja nie współdzieli trwających pobrań między procesami.
-Magazyn prognoz ma limit 128 MiB i 256 wpisów; retencja uwzględnia ostatni odczyt.
+`ForecastFields` defines data fields and the series catalog. `ChartConfiguration`
+builds configurations and normalizes user settings. Each chart stores a title,
+series list, axis assignments, optional bounds and styles for colors, lines,
+points and fills. `UserPreferences` exposes complete named profiles.
 
-## Mapy i wyszukiwanie
+`PreferencesStore` owns the INI file, migration and notifications for local and
+cross-process changes. Each mutation takes an interprocess lock, reloads the
+latest file, changes the relevant collection and writes atomically. Public state
+and notifications change only after success; errors appear in the standard
+settings notice. Independent place and profile operations preserve both
+changes. Stable place IDs survive edits and coordinate changes. A deleted place
+cannot be recreated by saving a stale editor; explicit deletion can be undone.
+Legacy keys migrate while preserving profiles and places.
 
-`PlaceSearchModel` odpytuje NOM dla Polski i Photon dla świata, z opóźnieniem
-350 ms i odrzucaniem spóźnionych wyników. `Locations` waliduje obydwa formaty.
-`UserPreferences` udostępnia wspólną kolekcję miejsc. `SavedPlaceController`
-osobno dla każdego widoku reaguje na zmianę nazwy i usunięcie aktywnego miejsca.
-Zapis aktualnego wyboru pozostaje w konfiguracji aplikacji lub instancji Plasma.
-Jedna reguła porównywania współrzędnych zachowuje dotychczasową tolerancję.
+`WeatherModel::configuredCharts` delegates to `ChartDataBuilder`, which binds
+configuration to available series and assigns units to two axes. A third
+incompatible automatic unit produces an explicit conflict notice. Configuration
+is retained so the user can assign axes. Ranges join by exact timestamps while
+preserving gaps; storm and lightning intervals are combined. Precipitation
+geometry uses each sample's native start and end.
 
-`MeteoMapSource` waliduje opublikowane starty z `/json/UM4_min_max.json`
-lub `/json/GFS_min_max.json` i tworzy żądania WMS w EPSG:3857.
-`WeatherLayersModel` przechowuje wybór warstwy, startu i dopuszczalnego kroku.
-`MapLegendModel` pobiera `legend_style.json` i `layers_legend.json` z serwisu
-mapowego. `MapLegend` pokazuje te kolory, progi i jednostki bezpośrednio na mapie;
-zmiana warstwy korzysta z już pobranego katalogu. Nie wymaga obrazu WMS legendy.
-`ThematicMapSource` oddziela adresy i zegar publikacji UM/WAM od ich widoku.
-`TileMap` zamraża adresy i współrzędne kafelków dla każdej klatki.
-`MapTileFrame` przechowuje poprzednią kompletną klatkę do przygotowania nowej;
-położenie starej nadal wynika z bieżącego środka i skali mapy. Odrzucone lub
-niekompletne klatki nie zastępują widocznej. `BufferedImage` zapewnia taką samą
-podmianę pojedynczych map tematycznych, używając dwóch stałych elementów obrazu.
-Następny PNG jest przygotowany pod bieżącym, z nieprzezroczystym tłem oddzielającym
-przezroczyste obszary. Kafelkowy podkład i napisy współdzielą aktywne tekstury
-pomiędzy krokami prognozy. Zegar próbuje przełączyć klatkę co 500 ms i pomija
-próbę podczas ładowania, bez restartowania całego odstępu. Podpis czasu zawsze
-dotyczy obrazu widocznego na ekranie.
+`ForecastPanel` assembles the configured profile. `Meteogram` uses configured
+renderers and scales; `MeteogramStyle.js` implements ICM scale/palette handling.
+`SeriesLegend` shares its preview between legends and appearance editors.
+`ChartConfiguration` restricts special renderers to compatible quantities;
+the editor and import normalization use the same catalog. `DailyForecastView`
+assembles day cards, and `WeatherModel::chartExportMetadata` supplies shared PNG
+metadata.
 
-Singleton QML `MapImages` rejestruje asynchronicznego dostawcę obrazów w każdym
-silniku QML. `ImageCache` współdzieli trwające pobrania i cache LRU obrazów
-(96 MiB) w procesie. `QNetworkDiskCache` ma limit 256 MiB i osobny katalog
-dla aplikacji oraz Plasma. Blokada `QLockFile` zapewnia jednego właściciela
-każdego katalogu; drugi proces korzysta z RAM i sieci bez otwierania tego samego
-magazynu dyskowego. Odpowiedzi mają deadline 25 s, limit 8 MiB i limit
-16 megapikseli; dekodowanie odbywa się w puli dwóch wątków. Prefetch kolejnej
-klatki używa tego samego magazynu i nie zmienia kroku aktualnie wyświetlanego.
-Gdy serwer nie podaje czasu ważności, poprawnie zdekodowany obraz otrzymuje
-30 minut także na dysku. Dzięki temu opuszczenie RAM LRU nie wymusza pobrania
-całej animacji ponownie. Jawne ograniczenia cache z odpowiedzi są respektowane.
-`ImagePreloader` domyślnie przygotowuje całą pętlę map tematycznych. Dla mapy
-interaktywnej gotowość obejmuje bieżący krok i dwa następne, a reszta prognozy
-ładuje się w tle. Kolejność zaczyna się od wybranego kroku i zawija na końcu.
-Wspólny limit czterech
-zadań obejmuje pobieranie i oczekiwanie na dekoder, niezależnie od konsumenta.
-Anulowanie usuwa subskrypcję danego widoku, zachowując żądanie potrzebne innym.
-Licznik generacji odrzuca zakończenia anulowanego zadania;
-zmiana warstwy, startu lub obszaru wymaga przygotowania nowej pętli.
-Postęp i anulowanie są dostępne na mapie. Mapy tematyczne mają skalę bazową
-dopasowaną do obu wymiarów widoku, niezależnie od proporcji obrazu.
+`MeteogramStyle.paintChart` emits shared drawing commands. The default `GpuPlot`
+converts them into vertex-colored `QSGGeometryNode` triangles for Qt Quick RHI.
+Labels use `Text` items and the layer has 4× MSAA. This path does not rasterize
+the plot to an image on the CPU. The alternative `Canvas.Image` is selected in
+preferences or automatically when Qt Quick uses its software backend. Renderer
+changes take effect without restarting. Cursor indicators have separate
+geometry: pointer movement does not rebuild series, grid or labels. An actual
+RHI test verifies this behavior. Chart/series editors are created lazily.
 
-`EditorialModel` pobiera komentarz synoptyka (także według daty) i stronicowane
-artykuły. Daty przyszłe nie powodują żądania; HTTP 404 dla komentarza jest
-prezentowane jako brak publikacji. Adaptery są oddzielone od QML, a ich adresy
-można wstrzyknąć w testach.
-Treści są zapisywane atomowo w `editorial`, pod kluczem pełnego URL (data/strona).
-Przez 30 minut otwarcie widoku używa zapisu; ręczne odświeżenie wymusza sieć.
-Nieudane odświeżenie zachowuje treść, a strony artykułów są zastępowane bez
-duplikowania wpisów. Ponowienie dotyczy nieudanej strony, a walidacja poprzedza
-aktualizację stanu i cache. Magazyn ma limit 32 MiB i 256 wpisów.
-Ilustracje i miniatury używają wspólnego `ImageCache`.
-Grafiki artykułów są skalowane przez `ResponsiveImages` do szerokości dokumentu,
-z zachowaniem proporcji także po zmianie rozmiaru okna.
+Chart height inherits from the profile, then the global preference. The global
+legend preference controls initial visibility; title buttons toggle it locally
+without changing profiles. The bottom status bar controls range and zoom with a
+minimum 24-hour interval, clamped to shorter forecasts. Preset intervals start
+at the first forecast hour; mobile starts with the first 72 hours.
 
-`JsonRequest` opcjonalnie zapisuje odpowiedzi pod pełnym URL w `metadata`:
-wyszukiwanie miejsc na 24 godziny, katalogi uruchomień modeli na 5 minut.
-Magazyn ma limit 512 wpisów i 32 MiB. Generacja żądania chroni również
-asynchroniczne zakończenia odczytu z cache przed anulowaniem lub zmianą query.
-Transport JSON i prognoz stosuje wspólne limity rozmiaru, bezczynności oraz
-całkowitego czasu żądania; powolny transfer nie przedłuża deadline bez końca.
-`CacheStorage` w tle liczy rozmiar plików i czyści wyłącznie katalog cache.
-Nie podąża za dowiązaniami. Czyszczenie resetuje także RAM obrazów i generację
-ich zapisów, aby starsze pobranie nie odtworzyło usuniętej zawartości.
-Ustawienia i zapisane profile pozostają w osobnym katalogu konfiguracji.
+Desktop `MeteoSettings` groups current-forecast controls and global preferences.
+Android uses settings pages in a standard `StackView`. Profile editing has its
+own selected profile and changes the forecast only through **Use for forecast**.
+Scoped undo rejects a conflicting later edit to the same profile while preserving
+unrelated changes. Axis drafts remain visible until valid bounds can be saved
+atomically. `ForecastSession` owns each window's state and `QtCore.Settings`
+selection, shared by `ForecastWindow` and `Mobile`. Plasma/KRunner previews stay
+temporary until explicitly selected. `SolarCalendar` supplies day/night icons,
+backgrounds and sunrise/sunset. Model-run labels use the selected time zone.
 
-Plasmoid osadza `ForecastPopup` w standardowym kontenerze Plasma. Widok wykresów
-pokazuje wszystkie włączone wykresy wybranego profilu jako niezależnie zwijane
-sekcje; alternatywny widok pokazuje kompaktową prognozę dzienną. Własny profil,
-okres, zwinięcia, aktywne miejsce i filtr/kolejność miejsc należą do konfiguracji
-konkretnej instancji. Jednostki, UTC, katalog profili i zapisanych miejsc są wspólne.
-Przycisk PIN i akcja „Pozostaw otwarte” przełączają natywne
-`hideOnWindowDeactivate`; ustawienie jest zapisywane osobno dla każdej instancji.
-Natywne strony konfiguracji Plasma odpowiadają za widok i miejsca widgetu,
-a także dają dostęp do preferencji wspólnych. „Pokaż meteogram” uruchamia osobne
-pełne okno aplikacji. `WidgetForecast` pozostaje eksportowanym komponentem
-zgodności dla starszych konsumentów; bieżący host go nie ładuje.
-Ikona panelu odpowiada pogodzie; własna ikona SVG służy jako ikona aplikacji
-i zastępnik przy braku danych. Skrypt rejestracji wersji developerskiej zapisuje
-wpis desktop i ikonę użytkownika wskazujące na plik wykonywalny z katalogu budowy.
+## Export and configuration storage
 
-## Weryfikacja
+`ChartExporter` captures selected charts individually through
+`QQuickItem::grabToImage`, regardless of scroll position, and composes a labeled
+PNG with source attribution. Temporary export mode hides controls and cursor
+readings without changing layout. `QSaveFile` writes atomically. Export checks
+data, style, range and legend revisions before and after each capture. A change
+cancels the operation, preserves an existing file and restores chart state.
+A 64-megapixel limit bounds memory. Qt platform file dialogs provide native
+selection; KDE integration requires `QApplication`.
 
-`ctest --preset dev` nie potrzebuje dostępu do serwisu meteo.pl. Testy HTTP
-korzystają z lokalnego serwera TCP; testy interfejsu uruchamiają Qt w trybie
-`offscreen`, z syntetyczną prognozą. Test aplikacji używa `--smoke-test`, który
-wyłącza pobieranie. Test renderowania obejmuje wspólny panel używany przez obydwa
-frontendy. Jeśli dostępny jest `plasmawindowed`, zestaw zawiera także test
-uruchomienia pakietu plasmoidu z odświeżaniem wyłączonym w kopii testowej.
-Test interakcji używa lokalnego serwera, a test dwóch rzeczywistych `ForecastPopup`
-sprawdza niezależne profile, zakresy i zwinięcia oraz wspólne jednostki i UTC.
-Zachowanie widgetu w panelu i zasobniku wymaga
-osobnego sprawdzenia w sesji Plasma.
+`ProfileFileCodec` imports/exports local JSON in `pl.meteo.chart-profiles`
+format version 1. Writes are atomic. Import validates the entire document before
+mutating settings, normalizes styles, creates fresh IDs and disambiguates names.
+A file can contain up to 100 profiles and 16 MiB. **About → Technical details**
+shows the settings path, normally `~/.config/meteo-pl/desktop.ini`.
 
-Testy map używają lokalnego serwera PNG z kontrolowanym opóźnieniem. Sprawdzają
-zachowanie starej klatki do załadowania wszystkich kafelków, błędy i spóźnione
-odpowiedzi, cache po restarcie bez serwera, przeliczanie współrzędnych w obu
-półkulach oraz rzeczywiste przeciąganie i zoom pod kursorem. Obejmują też
-przygotowanie animacji, anulowanie oraz dopasowanie szerokich map tematycznych.
-Testy renderowania sprawdzają także stykanie się słupków opadu, widoczność mgły
-nad chmurami i tło poniżej 0°C. Testy profili obejmują wybór serii, kolejność,
-zapis i odczyt; selektor oryginalnego meteogramu jest testowany lokalnie.
-Na Linuksie testy RHI korzystają z wirtualnego X11 przez `xvfb-run`, jeśli jest
-dostępny. Omija to uszkodzone przechwytywanie nagłówka okna w platformie
-`offscreen` Qt 6.8; backend RHI i tolerancje porównania pozostają wymagane.
-Osobne testy uruchamiają rzeczywiste RHI i programowy backend oraz sprawdzają
-semantykę geometrii, a nie tylko zgodność obu obrazów. CI instaluje każdą nową
-paczkę linuksową także w osobnym obrazie runtime bez kompilatora i nagłówków;
-raport zawiera dokładny artefakt, jego SHA-256 i wynik tej kontroli.
+Factory profiles in `resources/profiles` and catalogs in `resources/charts` are
+the single source of default chart configuration: colors, renderers, layers,
+backgrounds, fill palettes and axes live in JSON. The Draft 7 schema is
+`resources/schemas/chart-data.schema.json`. CMake fetches Valijson from a pinned
+archive with a SHA-256 digest; resource loading and import use the same schema
+without fetching external schemas. JSON files and schema are also installed in
+`share/meteo-pl`.
+
+Factory edits are stored as ID-based overrides in the atomic preference store.
+Deleted presets have an ID list; restoration reloads factory resources. Legacy
+Custom layout storage remains supported. A one-time migration removes only
+unmodified, disabled templates from older profiles.
+
+Backgrounds and min–max fills precede lines and markers; fog sits above cloud
+cover, the grid above fills and cursor readings on top. Legend toggles do not
+recompute axes. Ground temperature uses vertical min–max stems at timestamps
+shared by both bounds, above air-temperature lines. Subzero shading is clipped
+to 0°C even when the whole range is positive or negative.
+
+The current numeric document has no separate convective-precipitation field.
+Off-scale precipitation maxima and gusts have distinct red markers. Optional
+GFS series returned as `null` are omitted without rejecting the rest of the
+forecast. Missing primary temperature remains a document error.
+
+The forecast cache is shared across processes. Entries contain the model,
+coordinates, requested run, retrieval time and original document. Keys hash the
+model and coordinates with an archive suffix. Reads validate both header and
+document. Cache failure does not block network retrieval or display. Concurrent
+processes can issue separate requests; this version does not share in-flight
+forecast requests across processes. Storage is limited to 128 MiB and 256
+entries, with retention accounting for recent reads.
+
+## Maps and place search
+
+`PlaceSearchModel` queries NOM for Poland and Photon worldwide with a 350 ms
+debounce and stale-result rejection. `Locations` validates both formats.
+`UserPreferences` exposes the shared saved-place collection.
+`SavedPlaceController` tracks each view's selection independently and follows
+renames, moved coordinates and deletion. The selected place remains in the app
+or Plasma instance configuration. A shared coordinate rule retains the existing
+tolerance. Fresh views wait for an explicit choice.
+
+`MeteoMapSource` validates published runs from `/json/UM4_min_max.json` or
+`/json/GFS_min_max.json` and builds EPSG:3857 WMS requests. `WeatherLayersModel`
+owns the layer, run and valid step. `MapLegendModel` retrieves
+`legend_style.json` and `layers_legend.json`; `MapLegend` displays their colors,
+thresholds and units directly on the map. Layer changes reuse the catalog without
+a WMS legend image. `ThematicMapSource` separates UM/WAM URLs and publication
+timing from presentation.
+
+`TileMap` freezes tile URLs and coordinates per frame. `MapTileFrame` keeps the
+previous complete frame until its replacement is ready; that old frame still
+follows the current center and zoom. Discarded or incomplete frames never replace
+the visible one. `BufferedImage` provides the same behavior for thematic maps
+with two persistent image items. The next PNG prepares underneath the current
+one, with an opaque background separating transparent regions. Basemap and label
+tiles share active textures between forecast steps. The clock attempts a frame
+change every 500 ms, skipping attempts while loading without restarting the
+whole interval. The timestamp always describes the visible image.
+
+The QML `MapImages` singleton registers an asynchronous image provider in every
+QML engine. `ImageCache` shares in-flight requests and a 96 MiB decoded-image LRU
+within the process. `QNetworkDiskCache` has a 256 MiB limit and separate app and
+Plasma directories. `QLockFile` permits one owner per directory; another process
+uses RAM and network without opening the same disk store. Requests have a
+25-second deadline, 8 MiB response limit and 16-megapixel image limit. Two worker
+threads decode images. Prefetch uses the same store without changing the visible
+step. Images without explicit server freshness receive 30 minutes on disk too,
+so leaving the RAM LRU does not force a full animation download. Explicit server
+cache restrictions are respected.
+
+`ImagePreloader` prepares the full thematic loop by default. Interactive maps
+start once the current frame and next two frames are ready, with the rest loading
+in the background. Ordering starts at the selected step and wraps at the end.
+A shared four-task budget covers downloading and waiting for decoding across
+consumers. Cancellation removes only the view's subscription, preserving work
+needed elsewhere. Generation counters reject canceled completions. Changing
+layer, run or area requires preparing a new loop. Progress and cancellation are
+on the map. Thematic maps fit both viewport dimensions regardless of aspect ratio.
+
+## Editorial content and cache management
+
+`EditorialModel` retrieves dated synoptic commentary and paginated articles.
+Future dates issue no request; commentary HTTP 404 means no publication.
+Adapters are separate from QML and accept injectable endpoints in tests.
+Atomic `editorial` entries are keyed by complete URL (date/page). Reopening uses
+cached content for 30 minutes; manual refresh forces network access. Failed
+refresh preserves content. Article pages replace earlier pages without duplicate
+entries; retry targets the failed page. Validation precedes state/cache updates.
+Storage is limited to 32 MiB and 256 entries. Illustrations and thumbnails use
+`ImageCache`. `ResponsiveImages` fits article illustrations to document width
+while preserving aspect ratios after window resizing.
+
+`JsonRequest` optionally caches full-URL responses in `metadata`: place queries
+for 24 hours and model-run catalogs for five minutes. Limits are 512 entries and
+32 MiB. Request generations also reject stale asynchronous cache completions.
+JSON and forecast transports share size, inactivity and total-time limits;
+a slow transfer cannot extend the deadline indefinitely.
+
+`CacheStorage` measures and clears only the cache directory in the background,
+without following symlinks. Clearing also resets image RAM and write generations
+so older in-flight work cannot restore deleted content. Settings and profiles
+remain in a separate configuration directory.
+
+## Plasma integration
+
+The widget embeds `ForecastPopup` in a standard Plasma container. Its chart view
+shows every enabled chart in the selected profile as an independently collapsible
+section; an alternative view shows compact daily forecasts. Profile, time window,
+collapsed sections, active place and place filtering/order belong to each widget
+instance. Units, UTC, profile catalog and saved places are shared.
+
+The pin action and **Keep open** toggle native `hideOnWindowDeactivate`, persisted
+per instance. Native Plasma configuration pages control widget places and layout
+and provide access to shared preferences. **Show meteogram** launches a separate
+full application window. `WidgetForecast` remains exported for older consumers;
+the current host does not load it. The panel icon follows forecast conditions;
+the custom SVG identifies the application and serves as a no-data fallback.
+The development-registration script installs a user desktop entry and icon
+pointing at the build-directory executable.
+
+## Verification
+
+`ctest --preset dev` does not need meteo.pl access. HTTP tests use a local TCP
+server; UI tests use Qt's `offscreen` platform and synthetic forecasts. The
+application's `--smoke-test` disables retrieval. Rendering tests cover the shared
+panel used by both frontends. If `plasmawindowed` is available, the suite also
+checks widget-package startup with refresh disabled in an isolated copy.
+Interaction tests use a local server. Two real `ForecastPopup` instances verify
+independent profiles, ranges and collapsed sections with shared units and UTC.
+Panel/system-tray behavior still needs checking in a Plasma session.
+
+Map tests use delayed local PNG responses to check old-frame retention, errors,
+stale replies, disk-cache reuse after restart, both hemispheres, actual dragging,
+zoom under the cursor, animation preparation/cancellation and wide-map fitting.
+Rendering checks include adjacent precipitation bars, fog above clouds and
+subzero shading. Profile tests cover series selection, ordering and persistence;
+the original-meteogram selector is tested locally.
+
+On Linux, RHI tests use virtual X11 through `xvfb-run` when available. This avoids
+broken window-header capture in Qt 6.8's `offscreen` platform while preserving
+the RHI requirement and image tolerances. Separate tests exercise actual RHI and
+software backends and verify geometry semantics as well as image similarity.
+CI installs every Linux package in a separate runtime image without compiler
+headers; reports identify the exact artifact, SHA-256 and installation result.

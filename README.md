@@ -212,7 +212,7 @@ traces in `build/dev/tests/plasma-artifacts`; CI publishes them with test report
 
 ## Documentation
 
-- [User guide — Polish](docs/user-guide.pl.md): profiles, maps, exports and cache
+- [User guide](docs/user-guide.md): profiles, maps, exports and cache
   behavior.
 - [Linux packaging and CI](docs/packaging.md): isolated distribution builds and
   installation checks.
