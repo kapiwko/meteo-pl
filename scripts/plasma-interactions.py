@@ -41,9 +41,12 @@ def scenario(name, args):
 '''
         position = text.rfind('}')
         main.write_text(text[:position] + probe + text[position:])
-        if name == 'empty':
+        if name != 'empty':
             config = package / 'contents/config/main.xml'
-            config.write_text(config.read_text().replace('<default>Warszawa</default>', '<default></default>'))
+            config.write_text(config.read_text()
+                .replace('<entry name="locationName" type="String"><default></default>', '<entry name="locationName" type="String"><default>Warszawa</default>')
+                .replace('<entry name="latitude" type="Double"><default>0</default>', '<entry name="latitude" type="Double"><default>52.2297</default>')
+                .replace('<entry name="longitude" type="Double"><default>0</default>', '<entry name="longitude" type="Double"><default>21.0122</default>'))
         launch = temporary / 'bin/meteo-pl'
         launch.parent.mkdir()
         launch.write_text('#!/bin/sh\nprintf \'%s\\n\' "$@" > "$METEO_TEST_LAUNCH_OUTPUT"\n')
@@ -88,7 +91,7 @@ def scenario(name, args):
             'LANGUAGE': 'en_US', 'PATH': str(launch.parent) + os.pathsep + os.environ['PATH'],
             'METEO_TEST_FORECAST_ENDPOINT': f'http://127.0.0.1:{server.server_port}',
             'METEO_TEST_SCENARIO': name, 'METEO_TEST_PAYLOAD': str(payload),
-            'METEO_TEST_SCREENSHOT': str(args.artifacts / f'{name}.png'),
+            'METEO_TEST_SCREENSHOT': '' if os.environ.get('METEO_TEST_NO_SCREENSHOTS') == '1' else str(args.artifacts / f'{name}.png'),
             'METEO_TEST_LAUNCH_OUTPUT': str(temporary / 'launch.txt'),
         }
         command = [args.program, 'pl.meteo.desktop']

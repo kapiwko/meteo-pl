@@ -66,6 +66,7 @@ public:
     Q_INVOKABLE bool capture(QQuickItem *item)
     {
         if (!item || !item->window()) return false;
+        if (screenshot().isEmpty()) return true;
         // Capture the host window too: the native representation inherits its
         // background from Plasma, so an item-only grab would be transparent.
         return item->window()->grabWindow().save(screenshot());
