@@ -299,6 +299,48 @@ QVariantMap UserPreferences::importProfiles(const QUrl &url, bool activate)
         return {{"ok", false}, {"error", m_error}};
     return {{"ok", true}, {"count", imported->size()}, {"ids", importedIds}};
 }
+QVariantMap UserPreferences::profileState(const QString &id) const
+{
+    QVariantMap state{{"id", id}, {"deleted", m_store.value("display/deletedProfiles").toStringList().contains(id)}, {"override", QVariantMap{}}};
+    for (const auto &entry : savedProfiles())
+        if (entry.toMap()["id"] == id) { state["override"] = entry; break; }
+    if (id == "custom") {
+        state["hasLayout"] = m_store.contains("display/customLayout");
+        state["layout"] = QJsonDocument::fromJson(m_store.value("display/customLayout").toByteArray()).toVariant();
+        state["height"] = m_store.value("display/customChartHeight", 0);
+        state["name"] = m_store.value("display/customProfileName", "");
+    }
+    return state;
+}
+QVariantMap UserPreferences::restoreProfileState(const QVariantMap &before, const QVariantMap &after)
+{
+    QVariantMap result{{"ok", false}};
+    const auto id = before.value("id").toString();
+    const bool committed = change([&] {
+        if (id.isEmpty() || after.value("id").toString() != id || profileState(id) != after) {
+            result["error"] = Meteo::i18n("This profile has changed since that action. It cannot be undone.");
+            return;
+        }
+        auto saved = savedProfiles();
+        saved.removeIf([&](const QVariant &entry) { return entry.toMap()["id"].toString() == id; });
+        const auto original = before.value("override").toMap();
+        if (!original.isEmpty()) saved.append(original);
+        m_store.setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
+        auto deleted = m_store.value("display/deletedProfiles").toStringList();
+        deleted.removeAll(id);
+        if (before.value("deleted").toBool()) deleted.append(id);
+        m_store.setValue("display/deletedProfiles", deleted);
+        if (id == "custom") {
+            if (before.value("hasLayout").toBool()) m_store.setValue("display/customLayout", QJsonDocument::fromVariant(before["layout"]).toJson(QJsonDocument::Compact));
+            else m_store.remove("display/customLayout");
+            m_store.setValue("display/customChartHeight", before.value("height", 0));
+            m_store.setValue("display/customProfileName", before.value("name", ""));
+        }
+        result = {{"ok", true}, {"id", id}};
+    });
+    return committed ? result : QVariantMap{{"ok", false}, {"error", m_error}};
+}
+
 void UserPreferences::saveLayout(const QString &id, const QVariantList &layout)
 {
     const auto normalized = normalizeChartLayout(layout);

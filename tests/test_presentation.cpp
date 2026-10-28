@@ -31,6 +31,36 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void profileEditorCanUndoDeletionWithoutChangingForecast()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "DisplaySettings");
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto active = preferences->profile();
+        const auto copy = preferences->duplicateProfile(active);
+        object->setProperty("profileId", copy);
+        auto *item = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(700, 850); item->setParentItem(window.contentItem()); item->setWidth(680); window.show();
+        auto *remove = object->findChild<QObject *>("profileDeleteButton");
+        QVERIFY(remove);
+        QVERIFY(QMetaObject::invokeMethod(remove, "triggered"));
+        QCOMPARE(preferences->profile(), active);
+        QCOMPARE(preferences->profiles().size(), builtinChartProfiles().size());
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "undo"));
+        QCOMPARE(preferences->profiles().size(), builtinChartProfiles().size() + 1);
+        QCOMPARE(object->property("profileId").toString(), copy);
+        QCOMPARE(preferences->profile(), active);
+        auto *selection = object->findChild<QObject *>("profileExportSelection");
+        QVERIFY(selection); QVERIFY(QMetaObject::invokeMethod(selection, "open"));
+        QTRY_VERIFY(selection->property("opened").toBool());
+        QVERIFY(QMetaObject::invokeMethod(selection, "reject"));
+        auto *use = object->findChild<QObject *>("useProfileButton");
+        QVERIFY(use); QVERIFY(QMetaObject::invokeMethod(use, "clicked"));
+        QCOMPARE(preferences->profile(), copy);
+    }
     void firstRunRequiresAnExplicitPlace()
     {
         QFETCH(bool, mobile);

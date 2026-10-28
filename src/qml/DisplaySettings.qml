@@ -13,6 +13,9 @@ ColumnLayout {
     property string profileId: UserPreferences.profile
     property var layout: UserPreferences.chartLayoutForProfile(profileId)
     property int profileHeight: UserPreferences.chartHeightForProfile(profileId)
+    property var pendingUndo: null
+    property string undoMessage: ""
+    property string undoError: ""
     onProfileIdChanged: { refreshProfile(); expandedChart = ""; expandedSeries = ""; }
     function refreshProfile() {
         layout = UserPreferences.chartLayoutForProfile(profileId);
@@ -24,6 +27,20 @@ ColumnLayout {
             if (!UserPreferences.profiles.some(profile => profile.id === root.profileId)) root.profileId = UserPreferences.profile;
             root.refreshProfile();
         }
+    }
+    function withUndo(operation, message) {
+        const id = profileId;
+        const before = UserPreferences.profileState(id);
+        operation();
+        const after = UserPreferences.profileState(id);
+        if (JSON.stringify(before) === JSON.stringify(after)) return;
+        pendingUndo = {before: before, after: after}; undoMessage = message; undoError = ""; undoNotice.visible = true;
+    }
+    function undo() {
+        if (!pendingUndo) return;
+        const result = UserPreferences.restoreProfileState(pendingUndo.before, pendingUndo.after);
+        if (result.ok) { profileId = result.id; pendingUndo = null; undoNotice.visible = false; }
+        else undoError = result.error;
     }
     property string expandedChart: ""
     property string expandedSeries: ""
@@ -194,7 +211,7 @@ ColumnLayout {
                                 enabled: root.currentProfile.modified === true
                                 text: I18n.i18n("Restore defaults")
                                 icon.name: "edit-undo"
-                                onTriggered: UserPreferences.resetProfile(root.profileId)
+                                onTriggered: root.withUndo(() => UserPreferences.resetProfile(root.profileId), I18n.i18n("Profile defaults restored."))
                             }
                             MenuItem {
                                 objectName: "restoreDeletedProfilesButton"
@@ -209,7 +226,7 @@ ColumnLayout {
                                 text: I18n.i18n("Delete profile")
                                 icon.name: "edit-delete"
                                 enabled: UserPreferences.profiles.length > 1
-                                onTriggered: UserPreferences.deleteProfile(root.profileId)
+                                onTriggered: root.withUndo(() => UserPreferences.deleteProfile(root.profileId), I18n.i18n("Profile removed."))
                             }
                         }
                     }
@@ -271,6 +288,16 @@ ColumnLayout {
                 opacity: 0.7
             }
         }
+    }
+    Kirigami.InlineMessage {
+        id: undoNotice
+        objectName: "profileUndoNotice"
+        Layout.fillWidth: true
+        visible: false
+        text: root.undoError || root.undoMessage
+        type: root.undoError.length ? Kirigami.MessageType.Warning : Kirigami.MessageType.Information
+        showCloseButton: true
+        actions: [Kirigami.Action { text: I18n.i18n("Undo"); icon.name: "edit-undo"; onTriggered: root.undo() }]
     }
     ProfileUpdateNotice { Layout.fillWidth: true; profileId: root.profileId }
     Kirigami.InlineMessage {
@@ -371,7 +398,7 @@ ColumnLayout {
                                         },
                                         Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chartEntry.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.index, -1, root.profileId) },
                                         Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chartEntry.index < root.layout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.index, 1, root.profileId) },
-                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.deleteChart(chartEntry.modelData.key, root.profileId) }
+                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: root.withUndo(() => UserPreferences.deleteChart(chartEntry.modelData.key, root.profileId), I18n.i18n("Chart removed.")) }
                                     ]
                                 }
                             }
@@ -413,7 +440,7 @@ ColumnLayout {
                                             seriesStyle: modelData
                                             available: !root.weather || root.weather.series[modelData.key] !== undefined
                                             expanded: root.expandedSeries === chartKey + "/" + modelData.key
-                                            onRemoveRequested: UserPreferences.removeSeries(chartEntry.modelData.key, modelData.key, root.profileId)
+                                            onRemoveRequested: root.withUndo(() => UserPreferences.removeSeries(chartEntry.modelData.key, modelData.key, root.profileId), I18n.i18n("Series removed."))
                                             onToggleAppearance: root.expandedSeries = expanded ? "" : chartKey + "/" + modelData.key
                                         }
                                     }

@@ -38,7 +38,7 @@ private slots:
         QCOMPARE(preferences.profile(), active);
         QCOMPARE(preferences.profiles().size(), count + 1);
     }
-    void profileEditingIsIndependentOfTheActiveForecast()
+    void profileEditingIsIndependentAndUndoPreservesOtherChanges()
     {
         QTemporaryDir config;
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
@@ -53,7 +53,28 @@ private slots:
         preferences.setProfileChartHeightForProfile(copy, 250);
         QCOMPARE(preferences.chartLayout(), activeLayout);
         QCOMPARE(preferences.chartHeightForProfile(copy), 250);
+        const auto before = preferences.profileState(copy);
+        preferences.removeSeries("temperature", "dwptmp_point", copy);
+        const auto after = preferences.profileState(copy);
+        preferences.setChartOptions("temperature", {{"title", "A concurrent change"}}, "classic");
+        QVERIFY(preferences.restoreProfileState(before, after)["ok"].toBool());
+        QCOMPARE(preferences.profileState(copy), before);
+        QCOMPARE(preferences.chartLayout().first().toMap()["title"].toString(), "A concurrent change");
+        preferences.removeSeries("temperature", "dwptmp_point", copy);
+        const auto removed = preferences.profileState(copy);
+        preferences.renameProfile("Changed after deletion", copy);
+        const auto changed = preferences.profileState(copy);
+        QVERIFY(!preferences.restoreProfileState(before, removed)["ok"].toBool());
+        QCOMPARE(preferences.profileState(copy), changed);
+        const auto beforeDelete = preferences.profileState(copy);
+        preferences.deleteProfile(copy);
+        QVERIFY(preferences.restoreProfileState(beforeDelete, preferences.profileState(copy))["ok"].toBool());
+        QCOMPARE(preferences.profileState(copy), beforeDelete);
         QCOMPARE(preferences.profile(), "classic");
+        const auto presetBefore = preferences.profileState("classic");
+        preferences.resetProfile("classic");
+        QVERIFY(preferences.restoreProfileState(presetBefore, preferences.profileState("classic"))["ok"].toBool());
+        QCOMPARE(preferences.chartLayout().first().toMap()["title"].toString(), "A concurrent change");
     }
     void legacyPlaceKeysRemainStableAfterMovingThePoint()
     {
