@@ -9,6 +9,7 @@ from unittest.mock import patch
 import zipfile
 import sys
 import json
+import io
 
 SPEC=importlib.util.spec_from_file_location("release",Path(__file__).resolve().parents[1]/"scripts/release.py")
 release=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(release)
@@ -66,6 +67,17 @@ class ReleaseTest(unittest.TestCase):
     def test_release_keeps_debian_and_ubuntu_packages_distinct_and_sources_identical(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);inputs=root/"inputs";inputs.mkdir()
+            def source_archive(path, contents, level):
+                if path.suffix==".zip":
+                    with zipfile.ZipFile(path,"w") as archive:
+                        item=zipfile.ZipInfo("meteo-pl-1.0.0/source.txt",(2026,10,28,9,0,0))
+                        item.external_attr=0o100644<<16;item.compress_type=zipfile.ZIP_DEFLATED
+                        archive.writestr(item,contents,compresslevel=level)
+                else:
+                    with tarfile.open(path,"w:gz",compresslevel=level) as archive:
+                        item=tarfile.TarInfo("meteo-pl-1.0.0/source.txt")
+                        item.size=len(contents);item.mode=0o644;item.mtime=1700000000
+                        archive.addfile(item,io.BytesIO(contents))
             for target in (*publisher.LINUX,"android"):
                 directory=inputs/target;directory.mkdir()
                 report={"version":"1.0.0","architecture":"x86_64","tests":"passed",
@@ -74,7 +86,8 @@ class ReleaseTest(unittest.TestCase):
                 (directory/("meteo"+suffix)).write_bytes(target.encode())
                 if target=="android":report.update(target="android",releaseSigned=True,architecture="arm64-v8a")
                 else:
-                    for suffix in (".tar.gz","-source.zip"):(directory/("meteo-pl-1.0.0"+suffix)).write_bytes(b"same sources")
+                    for suffix in (".tar.gz","-source.zip"):
+                        source_archive(directory/("meteo-pl-1.0.0"+suffix),b"same sources"*3000,1 if target=="fedora" else 9)
                 (directory/"BUILD-REPORT.json").write_text(json.dumps(report))
                 (directory/"SHA256SUMS").write_text("".join(f"{publisher.digest(p)}  {p.name}\n" for p in sorted(directory.iterdir())))
             output=root/"output";publisher.collect(inputs,output,"1.0.0")
@@ -82,7 +95,10 @@ class ReleaseTest(unittest.TestCase):
             self.assertEqual((output/"meteo-pl-1.0.0-linux-ubuntu-x86_64.deb").read_bytes(),b"ubuntu")
             self.assertEqual(len(list(output.glob("*.apk"))),1)
             self.assertEqual(len(list(output.glob("*source.zip"))),1)
-            source=inputs/"ubuntu/meteo-pl-1.0.0.tar.gz";old=publisher.digest(source);source.write_bytes(b"different source")
+            self.assertNotEqual(publisher.digest(inputs/"arch/meteo-pl-1.0.0.tar.gz"),
+                                publisher.digest(inputs/"fedora/meteo-pl-1.0.0.tar.gz"))
+            source=inputs/"ubuntu/meteo-pl-1.0.0.tar.gz";old=publisher.digest(source)
+            source_archive(source,b"different source",9)
             sums=inputs/"ubuntu/SHA256SUMS";sums.write_text(sums.read_text().replace(
                 f"{old}  {source.name}",f"{publisher.digest(source)}  {source.name}"))
             with self.assertRaisesRegex(ValueError,"different source snapshots"):

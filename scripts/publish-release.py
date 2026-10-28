@@ -12,7 +12,9 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import tarfile
 import tempfile
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = "kapiwko/meteo-pl"
@@ -77,6 +79,30 @@ def validate_report(report, version, target):
         raise ValueError(f"{target}: tests and clean installation must both pass")
 
 
+def source_snapshot(path):
+    # Different zlib/Python versions can compress identical trees differently.
+    # Compare file contents and normalized metadata, not the compressed stream.
+    result = {}
+    if path.suffix == ".zip":
+        with zipfile.ZipFile(path) as archive:
+            for item in archive.infolist():
+                if item.is_dir() or item.filename in result:
+                    raise ValueError("Unsupported or duplicate source archive entry")
+                result[item.filename] = (item.external_attr, item.date_time,
+                                         hashlib.sha256(archive.read(item)).hexdigest())
+    else:
+        with tarfile.open(path) as archive:
+            for item in archive:
+                if not item.isfile() or item.name in result:
+                    raise ValueError("Unsupported or duplicate source archive entry")
+                with archive.extractfile(item) as stream:
+                    result[item.name] = (item.mode, item.uid, item.gid, item.mtime,
+                                         hashlib.file_digest(stream, "sha256").hexdigest())
+    if not result:
+        raise ValueError("Empty source archive")
+    return result
+
+
 def collect(inputs, destination, version):
     destination.mkdir(parents=True, exist_ok=False)
     for target in (*LINUX, "android"):
@@ -98,9 +124,11 @@ def collect(inputs, destination, version):
                 if name not in checksums:
                     raise ValueError(f"Missing release source archive: {name}")
                 existing = destination / name
-                if existing.exists() and digest(existing) != checksums[name]:
-                    raise ValueError("Linux jobs built different source snapshots")
-                shutil.copyfile(directory / name, existing)
+                if existing.exists():
+                    if source_snapshot(existing) != source_snapshot(directory / name):
+                        raise ValueError("Linux jobs built different source snapshots")
+                else:
+                    shutil.copyfile(directory / name, existing)
 
 
 def verify_android(apk, apksigner, expected):

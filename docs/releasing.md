@@ -48,8 +48,9 @@ python3 scripts/publish-release.py \
 
 Use `--apksigner /path/to/Android/Sdk/build-tools/VERSION/apksigner` if needed.
 The script downloads artifacts from the two successful `push` runs on `main`,
-checks every checksum and report, and compares source archives across Linux
-jobs. Debian and Ubuntu binaries retain separate names. It verifies the APK
+checks every checksum and report, and compares source-file contents and metadata
+across Linux jobs, allowing compression differences between zlib versions.
+Debian and Ubuntu binaries retain separate names. It verifies the APK
 signature and expected certificate, signs the checksum manifest and creates
 the signed local tag. Existing tags must point to the same commit and carry
 the same GPG identity.
