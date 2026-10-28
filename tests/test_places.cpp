@@ -8,6 +8,23 @@ class PlacesTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void legacySelectionKeepsTheMovedPlaceWhenItsOldCoordinatesAreReused()
+    {
+        QTemporaryDir directory;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
+        settings.setValue("places/listVersion", 1);
+        settings.setValue("places/favorites", QByteArray(R"([{"name":"Home","latitude":50,"longitude":20}])"));
+        settings.sync();
+        UserPreferences preferences;
+        SavedPlaceController selection;
+        selection.setPreferences(&preferences);
+        selection.setVisibleKeys({"50.000000,20.000000"});
+        QVERIFY(preferences.editPlace("50.000000,20.000000", "Moved home", 51, 21)["ok"].toBool());
+        preferences.savePlace("Old point", 50, 20);
+        QCOMPARE(selection.places().size(), 1);
+        QCOMPARE(selection.places().first().toMap()["name"].toString(), "Moved home");
+    }
     void widgetsFilterAndOrderTheSharedPlacesIndependently()
     {
         QTemporaryDir directory;
@@ -16,8 +33,8 @@ private slots:
         preferences.savePlace("Kielce", 50.8661, 20.6286);
         preferences.savePlace("Gdańsk", 54.352, 18.6466);
         preferences.savePlace("Warszawa", 52.2297, 21.0122);
-        const auto kielce = SavedPlaceController::placeKey(50.8661, 20.6286);
-        const auto gdansk = SavedPlaceController::placeKey(54.352, 18.6466);
+        const auto kielce = preferences.placeAt(50.8661, 20.6286)["id"].toString();
+        const auto gdansk = preferences.placeAt(54.352, 18.6466)["id"].toString();
         SavedPlaceController first, second;
         first.setPreferences(&preferences); second.setPreferences(&preferences);
         first.setVisibleKeys({kielce, gdansk}); first.setOrderKeys({gdansk, kielce});
@@ -34,6 +51,10 @@ private slots:
         QCOMPARE(weather.locationName(), "Gdańsk");
         preferences.savePlace("Gdańsk centrum", 54.352, 18.6466);
         QTRY_COMPARE(weather.locationName(), "Gdańsk centrum");
+        QVERIFY(preferences.editPlace(gdansk, "Gdańsk port", 54.4, 18.7)["ok"].toBool());
+        QTRY_COMPARE(weather.latitude(), 54.4);
+        QCOMPARE(first.places().size(), 2);
+        QCOMPARE(first.places().first().toMap()["id"].toString(), gdansk);
         first.setVisibleKeys({kielce});
         QTRY_COMPARE(weather.locationName(), "Kielce");
         preferences.removePlace(50.8661, 20.6286);
@@ -41,7 +62,7 @@ private slots:
         QVERIFY(second.places().isEmpty());
         QCOMPARE(preferences.favorites().size(), 2);
         first.setVisibleKeys({"*"});
-        QTRY_COMPARE(weather.locationName(), "Gdańsk centrum");
+        QTRY_COMPARE(weather.locationName(), "Gdańsk port");
     }
     void threeViewsKeepIndependentSelectionsAndFollowCollectionChanges()
     {

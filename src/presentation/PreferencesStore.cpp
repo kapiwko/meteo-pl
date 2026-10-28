@@ -291,4 +291,18 @@ void PreferencesStore::migrate()
         setValue("places/favorites", QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
         setValue("places/listVersion", 1);
     }
+    if (value("places/listVersion", 0).toInt() < 2) {
+        auto places = QJsonDocument::fromJson(value("places/favorites").toByteArray()).toVariant().toList();
+        for (auto &entry : places) {
+            auto place = entry.toMap();
+            // Existing Plasma selections use these coordinate keys. Retain
+            // them as stable IDs when migrating so moving a place keeps it selected.
+            if (place.value("id").toString().isEmpty())
+                place["id"] = QString::number(place["latitude"].toDouble(), 'f', 6) + ','
+                    + QString::number(place["longitude"].toDouble(), 'f', 6);
+            entry = place;
+        }
+        setValue("places/favorites", QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
+        setValue("places/listVersion", 2);
+    }
 }

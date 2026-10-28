@@ -11,7 +11,7 @@ Item {
     property var cfg_placeOrder: []
     readonly property bool allPlaces: cfg_visiblePlaces.indexOf("*") >= 0
     readonly property bool isSaveAllowed: catalog.places.length === 0 || allPlaces
-        || catalog.places.some(place => cfg_visiblePlaces.indexOf(catalog.placeKey(place.latitude, place.longitude)) >= 0)
+        || catalog.places.some(place => catalog.includesPlace(cfg_visiblePlaces, place.latitude, place.longitude))
     implicitWidth: form.implicitWidth
     implicitHeight: form.implicitHeight
     SavedPlaceSelection { id: catalog; weather: null; orderKeys: root.cfg_placeOrder }
@@ -48,9 +48,10 @@ Item {
                         Layout.fillWidth: true
                         text: row.modelData.name
                         enabled: !root.allPlaces
-                        checked: root.allPlaces || root.cfg_visiblePlaces.indexOf(row.key) >= 0
+                        checked: root.allPlaces || catalog.includesPlace(root.cfg_visiblePlaces, row.modelData.latitude, row.modelData.longitude)
                         onToggled: {
-                            const keys = Array.from(root.cfg_visiblePlaces).filter(key => key !== row.key);
+                            const legacy = row.modelData.latitude.toFixed(6) + "," + row.modelData.longitude.toFixed(6);
+                            const keys = Array.from(root.cfg_visiblePlaces).filter(key => key !== row.key && key !== legacy);
                             if (checked) keys.push(row.key);
                             root.cfg_visiblePlaces = keys;
                         }

@@ -19,6 +19,48 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void legacyPlaceKeysRemainStableAfterMovingThePoint()
+    {
+        QTemporaryDir config;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "meteo-pl", "desktop");
+        settings.setValue("places/listVersion", 1);
+        settings.setValue("places/favorites", QByteArray(R"([{"name":"Home","latitude":50,"longitude":20}])"));
+        settings.sync();
+        UserPreferences preferences;
+        const auto id = preferences.favorites().first().toMap()["id"].toString();
+        QCOMPARE(id, "50.000000,20.000000");
+        QVERIFY(preferences.editPlace(id, "Home", 51, 21)["ok"].toBool());
+        UserPreferences reopened;
+        QCOMPARE(reopened.favorites().first().toMap()["id"].toString(), id);
+    }
+    void placeEditingKeepsIdentityAndDeletionCanBeUndone()
+    {
+        QTemporaryDir config;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        UserPreferences preferences;
+        const auto added = preferences.editPlace({}, "Home", 50, 20);
+        QVERIFY(added["ok"].toBool());
+        const auto id = added["place"].toMap()["id"].toString();
+        QVERIFY(!id.isEmpty());
+        preferences.savePlace("Other", 51, 21);
+        preferences.rememberPlace("Stale name", 50, 20);
+        QCOMPARE(preferences.placeAt(50, 20)["name"].toString(), "Home");
+        QVERIFY(preferences.editPlace(id, "Moved home", 52, 22)["ok"].toBool());
+        QCOMPARE(preferences.favorites().size(), 2);
+        QCOMPARE(preferences.favorites().first().toMap()["id"].toString(), id);
+        QVERIFY(preferences.placeAt(50, 20).isEmpty());
+        const auto before = preferences.favorites();
+        QVERIFY(!preferences.editPlace(id, "Collision", 51, 21)["ok"].toBool());
+        QCOMPARE(preferences.favorites(), before);
+        const auto removed = preferences.deletePlace(id);
+        QVERIFY(removed["ok"].toBool());
+        QVERIFY(!preferences.editPlace(id, "Stale editor", 52, 22)["ok"].toBool());
+        QVERIFY(preferences.restorePlace(removed["place"].toMap(), removed["index"].toInt())["ok"].toBool());
+        QCOMPARE(preferences.favorites(), before);
+        UserPreferences reopened;
+        QCOMPARE(reopened.favorites(), before);
+    }
     void persistenceDoesNotRequireAWritableSystemTempDirectory()
     {
 #ifndef Q_OS_UNIX

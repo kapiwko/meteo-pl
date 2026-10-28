@@ -29,7 +29,8 @@ public:
     void setVisibleKeys(const QStringList &keys);
     void setOrderKeys(const QStringList &keys);
     QVariantList places() const;
-    Q_INVOKABLE static QString placeKey(double latitude, double longitude);
+    Q_INVOKABLE QString placeKey(double latitude, double longitude) const;
+    Q_INVOKABLE bool includesPlace(const QStringList &keys, double latitude, double longitude) const;
     void classBegin() override {}
     void componentComplete() override;
 signals:
@@ -41,6 +42,7 @@ signals:
 
 private:
     void schedule(bool collectionChanged = false);
+    void trackSelection();
     void rememberCurrent();
     void reconcile();
     void select(const QVariantMap &place);
@@ -50,4 +52,5 @@ private:
     QTimer m_synchronize;
     bool m_ready = false, m_collectionChanged = false;
     QStringList m_visibleKeys{QStringLiteral("*")}, m_orderKeys;
+    QString m_selectedId;
 };

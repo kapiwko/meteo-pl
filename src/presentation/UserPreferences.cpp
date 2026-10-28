@@ -32,7 +32,19 @@ void UserPreferences::writePlaces(const QString &key, const QVariantList &places
 {
     m_store.setValue(key, QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
 }
-QVariantList UserPreferences::favorites() const { return readPlaces(QStringLiteral("places/favorites")); }
+QVariantList UserPreferences::favorites() const
+{
+    auto places = readPlaces(QStringLiteral("places/favorites"));
+    for (auto &entry : places) {
+        auto place = entry.toMap();
+        if (place.value("id").toString().isEmpty()) {
+            place["id"] = QString::number(place["latitude"].toDouble(), 'f', 6) + ','
+                + QString::number(place["longitude"].toDouble(), 'f', 6);
+            entry = place;
+        }
+    }
+    return places;
+}
 QVariantList UserPreferences::recentPlaces() const { return readPlaces(QStringLiteral("places/recent")); }
 QString UserPreferences::profile() const
 {
@@ -656,9 +668,85 @@ void UserPreferences::savePlace(const QString &name, double latitude, double lon
             writePlaces("places/favorites", places);
             return;
         }
-        places.append(QVariantMap{{"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
+        places.append(QVariantMap{{"id", QUuid::createUuid().toString(QUuid::WithoutBraces)},
+            {"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
         writePlaces("places/favorites", places);
     });
+}
+QVariantMap UserPreferences::editPlace(const QString &id, const QString &name, double latitude, double longitude)
+{
+    QVariantMap result{{"ok", false}};
+    const bool committed = change([&] {
+        if (name.trimmed().isEmpty() || name.trimmed().size() > 100 || !std::isfinite(latitude)
+            || !std::isfinite(longitude) || std::abs(latitude) > 90 || std::abs(longitude) > 180) {
+            result["error"] = Meteo::i18n("Enter a name and valid coordinates.");
+            return;
+        }
+        auto places = favorites();
+        qsizetype index = -1;
+        for (qsizetype i = 0; i < places.size(); ++i) {
+            const auto place = places[i].toMap();
+            if (!id.isEmpty() && place["id"].toString() == id) index = i;
+            else if (Meteo::samePlace(latitude, longitude, place["latitude"].toDouble(), place["longitude"].toDouble())) {
+                result["error"] = Meteo::i18n("This place is already in your list.");
+                return;
+            }
+        }
+        if (!id.isEmpty() && index < 0) {
+            result["error"] = Meteo::i18n("This place no longer exists. Close the editor and choose another place.");
+            return;
+        }
+        const QVariantMap place{{"id", id.isEmpty() ? QUuid::createUuid().toString(QUuid::WithoutBraces) : id},
+            {"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}};
+        if (index < 0) places.append(place);
+        else places[index] = place;
+        writePlaces("places/favorites", places);
+        result = {{"ok", true}, {"place", place}};
+    });
+    if (!committed) return {{"ok", false}, {"error", m_error}};
+    return result;
+}
+QVariantMap UserPreferences::deletePlace(const QString &id)
+{
+    QVariantMap result{{"ok", false}, {"error", Meteo::i18n("This place no longer exists.")}};
+    const bool committed = change([&] {
+        auto places = favorites();
+        for (qsizetype i = 0; i < places.size(); ++i) {
+            const auto place = places[i].toMap();
+            if (place["id"].toString() != id) continue;
+            places.removeAt(i);
+            writePlaces("places/favorites", places);
+            result = {{"ok", true}, {"place", place}, {"index", int(i)}};
+            return;
+        }
+    });
+    return committed ? result : QVariantMap{{"ok", false}, {"error", m_error}};
+}
+QVariantMap UserPreferences::restorePlace(const QVariantMap &place, int index)
+{
+    QVariantMap result{{"ok", false}};
+    const bool committed = change([&] {
+        const auto id = place.value("id").toString();
+        const auto name = place.value("name").toString();
+        const auto lat = place.value("latitude", qQNaN()).toDouble(), lon = place.value("longitude", qQNaN()).toDouble();
+        if (id.isEmpty() || name.trimmed().isEmpty() || !std::isfinite(lat) || !std::isfinite(lon)
+            || std::abs(lat) > 90 || std::abs(lon) > 180) {
+            result["error"] = Meteo::i18n("This place cannot be restored.");
+            return;
+        }
+        auto places = favorites();
+        for (const auto &entry : places) {
+            const auto existing = entry.toMap();
+            if (existing["id"].toString() == id || Meteo::samePlace(lat, lon, existing["latitude"].toDouble(), existing["longitude"].toDouble())) {
+                result["error"] = Meteo::i18n("This place is already in your list.");
+                return;
+            }
+        }
+        places.insert(std::clamp(index, 0, int(places.size())), place);
+        writePlaces("places/favorites", places);
+        result = {{"ok", true}, {"place", place}};
+    });
+    return committed ? result : QVariantMap{{"ok", false}, {"error", m_error}};
 }
 void UserPreferences::removePlace(double latitude, double longitude)
 {
@@ -679,13 +767,17 @@ void UserPreferences::rememberPlace(const QString &name, double latitude, double
         if (name.trimmed().isEmpty() || !std::isfinite(latitude) || !std::isfinite(longitude) ||
             std::abs(latitude) > 90 || std::abs(longitude) > 180)
             return;
-        savePlace(name, latitude, longitude);
+        auto saved = placeAt(latitude, longitude);
+        if (saved.isEmpty()) {
+            savePlace(name, latitude, longitude);
+            saved = placeAt(latitude, longitude);
+        }
         auto places = recentPlaces();
         places.removeIf([latitude, longitude](const QVariant &v) {
             const auto p = v.toMap();
             return Meteo::samePlace(p["latitude"].toDouble(), p["longitude"].toDouble(), latitude, longitude);
         });
-        places.prepend(QVariantMap{{"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
+        places.prepend(saved);
         while (places.size() > 12)
             places.removeLast();
         writePlaces("places/recent", places);
@@ -703,7 +795,8 @@ void UserPreferences::toggleFavorite(const QString &name, double latitude, doubl
             return Meteo::samePlace(p["latitude"].toDouble(), p["longitude"].toDouble(), latitude, longitude);
         }) > 0;
         if (!removed)
-            places.append(QVariantMap{{"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
+            places.append(QVariantMap{{"id", QUuid::createUuid().toString(QUuid::WithoutBraces)},
+                {"name", name.trimmed()}, {"latitude", latitude}, {"longitude", longitude}});
         writePlaces("places/favorites", places);
     });
 }

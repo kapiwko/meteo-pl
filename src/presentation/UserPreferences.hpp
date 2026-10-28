@@ -73,6 +73,9 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE void toggleFavorite(const QString &name, double latitude, double longitude);
     Q_INVOKABLE bool isFavorite(double latitude, double longitude) const;
     Q_INVOKABLE QVariantMap placeAt(double latitude, double longitude) const;
+    Q_INVOKABLE QVariantMap editPlace(const QString &id, const QString &name, double latitude, double longitude);
+    Q_INVOKABLE QVariantMap deletePlace(const QString &id);
+    Q_INVOKABLE QVariantMap restorePlace(const QVariantMap &place, int index);
     Q_INVOKABLE QString createProfile(const QString &name);
     Q_INVOKABLE QString duplicateProfile();
     Q_INVOKABLE void renameProfile(const QString &name);

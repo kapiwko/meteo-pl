@@ -1053,7 +1053,8 @@ private slots:
         preferences.rememberPlace("First", 50.8, 20.4);
         preferences.rememberPlace("Renamed", 50.8, 20.4);
         QCOMPARE(preferences.recentPlaces().size(), 1);
-        QCOMPARE(preferences.recentPlaces().first().toMap()["name"].toString(), "Renamed");
+        QCOMPARE(preferences.recentPlaces().first().toMap()["name"].toString(), "Chęciny");
+        QCOMPARE(preferences.placeAt(50.8, 20.4)["name"].toString(), "Chęciny");
         preferences.toggleFavorite("Chęciny", 50.8, 20.4);
         QVERIFY(!preferences.isFavorite(50.8, 20.4));
     }
