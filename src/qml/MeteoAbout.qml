@@ -60,6 +60,19 @@ Dialog {
                     onLinkActivated: link => Qt.openUrlExternally(link)
                 }
             }
+            CheckBox { id: technical; text: I18n.i18n("Technical details") }
+            TextArea {
+                objectName: "settingsFilePath"
+                visible: technical.checked
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                implicitWidth: 0
+                text: I18n.i18n("Settings file:") + "\n" + UserPreferences.settingsFile
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextEdit.WrapAnywhere
+                background: null
+            }
             Kirigami.Separator { Layout.fillWidth: true }
             Kirigami.Heading { text: I18n.i18n("Current forecast data"); level: 3 }
             Label {

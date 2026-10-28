@@ -24,7 +24,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
-                model: [{id: "gpu", name: I18n.i18n("GPU · Qt Quick scene graph (default)")}, {id: "cpu", name: "CPU · Canvas"}]
+                model: [{id: "gpu", name: I18n.i18n("GPU acceleration (default)")}, {id: "cpu", name: I18n.i18n("CPU rendering")}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === UserPreferences.renderer)
                 onActivated: index => UserPreferences.renderer = model[index].id
@@ -96,26 +96,6 @@ ColumnLayout {
                 visible: root.cacheCleared || CacheStorage.error.length > 0
                 type: CacheStorage.error.length > 0 ? Kirigami.MessageType.Warning : Kirigami.MessageType.Information
                 text: CacheStorage.error || I18n.i18n("The cache has been cleared.")
-            }
-        }
-    }
-    SettingsSection {
-        title: I18n.i18n("Configuration")
-        Layout.fillWidth: true
-        contentItem: Kirigami.FormLayout {
-            twinFormLayouts: [chartsForm]
-            TextArea {
-                objectName: "settingsFilePath"
-                Kirigami.FormData.label: I18n.i18n("Settings file:")
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
-                text: UserPreferences.settingsFile
-                readOnly: true
-                selectByMouse: true
-                wrapMode: TextEdit.WrapAnywhere
-                padding: 0
-                background: null
             }
         }
     }
