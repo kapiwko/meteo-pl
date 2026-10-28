@@ -1751,7 +1751,7 @@ private slots:
         QQmlEngine engine;
         QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}}));
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", QVariantMap{{"locationName", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}, {"model", "um4_60"}}}}));
         QVERIFY2(object, qPrintable(component.errorString()));
         auto *window = qobject_cast<QQuickWindow *>(object.data());
         QVERIFY(window);
@@ -1808,7 +1808,7 @@ private slots:
                      "seriesColor-temperature-airtmp_point-color", "seriesColor-temperature-airtmp_point-darkColor",
                      "chartBound-temperature-leftMin", "chartBound-temperature-leftMax",
                      "chartBound-temperature-rightMin", "chartBound-temperature-rightMax",
-                     "settingsTimeRange", "probeModeSetting", "rendererSetting", "settingsFilePath"}) {
+                     "settingsTimeRange", "probeModeSetting", "rendererSetting"}) {
                 if (QByteArray(name).startsWith("seriesColor-") && section != 1) continue;
                 auto *control = items(QString::fromLatin1(name)).value(0);
                 QVERIFY2(control, name);

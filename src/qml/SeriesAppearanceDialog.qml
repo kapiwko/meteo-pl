@@ -32,6 +32,10 @@ Dialog {
         const allowed = UserPreferences.seriesRenderers(seriesStyle.key);
         return result.filter(renderer => allowed.indexOf(renderer.id) >= 0);
     }
+    readonly property bool hasLine: ["line", "area", "cloudArea", "rangeStems", "stems", "gusts", "direction", "storm", "flash"].indexOf(seriesStyle.render) >= 0
+    readonly property bool hasLineStyle: ["line", "area", "cloudArea", "rangeStems", "stems", "gusts"].indexOf(seriesStyle.render) >= 0
+    readonly property bool automaticColor: ["storm", "flash"].indexOf(seriesStyle.render) >= 0 && seriesStyle.eventColors
+    readonly property bool paletteFill: seriesStyle.render === "area" && seriesStyle.fill !== "solid"
     function change(options) {
         if ((options.color !== undefined || options.darkColor !== undefined) && ["storm", "flash"].indexOf(seriesStyle.render) >= 0) options.eventColors = false;
         UserPreferences.setSeriesStyle(chartKey, seriesStyle.key, options, profileId);
@@ -52,7 +56,11 @@ Dialog {
         focus: true
         Keys.onShortcutOverride: event => { if (event.key === Qt.Key_Back) event.accepted = true; }
         Keys.onPressed: event => {
-            if (event.key === Qt.Key_Back) { event.accepted = true; root.close(); }
+            if (event.key === Qt.Key_Back) {
+                event.accepted = true;
+                if (Qt.inputMethod.visible || Qt.inputMethod.animating) Qt.inputMethod.hide();
+                else root.close();
+            }
         }
         Kirigami.FormLayout {
             id: styleForm
@@ -95,6 +103,7 @@ Dialog {
                     id: colorRow
                     required property var modelData
                     Kirigami.FormData.label: modelData.label
+                    enabled: !root.automaticColor
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     Layout.preferredWidth: Kirigami.Units.gridUnit * 18
@@ -118,6 +127,14 @@ Dialog {
                     }
                 }
             }
+            Label {
+                Layout.fillWidth: true
+                visible: root.automaticColor || root.paletteFill
+                text: root.automaticColor ? I18n.i18n("Colors are set automatically from the weather values.")
+                    : I18n.i18n("The palette sets the fill colors. The chosen series color is used for its outline.")
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+            }
             CheckBox {
                 visible: root.seriesStyle.key === "pcpttl_aver" || root.seriesStyle.key === "pcpttl_max"
                 text: I18n.i18n("Color by precipitation type")
@@ -134,6 +151,7 @@ Dialog {
             Item { Kirigami.FormData.isSection: true; implicitHeight: Kirigami.Units.largeSpacing }
             SpinBox {
                 Kirigami.FormData.label: I18n.i18n("Line width:")
+                visible: root.hasLine
                 from: 5; to: 80; stepSize: 5
                 value: Math.round(root.seriesStyle.lineWidth * 10)
                 textFromValue: (value, locale) => Number(value / 10).toLocaleString(locale, 'f', 1) + " px"
@@ -149,6 +167,7 @@ Dialog {
             }
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Line:")
+                visible: root.hasLineStyle
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 18
@@ -157,7 +176,15 @@ Dialog {
                 currentIndex: model.findIndex(item => item.id === root.seriesStyle.lineStyle)
                 onActivated: index => root.change({lineStyle: model[index].id})
             }
-            SpinBox { Kirigami.FormData.label: I18n.i18n("Layer order:"); from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: I18n.i18n("Higher values draw a series later within its layer; fills stay below lines"); ToolTip.visible: hovered }
+            CheckBox { id: advanced; text: I18n.i18n("Advanced options") }
+            SpinBox { visible: advanced.checked; Kirigami.FormData.label: I18n.i18n("Layer order:"); from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: I18n.i18n("Higher values draw a series later within its layer; fills stay below lines"); ToolTip.visible: hovered }
+            Label {
+                visible: advanced.checked
+                Layout.fillWidth: true
+                text: I18n.i18n("Higher values draw a series later within its layer; fills stay below lines")
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+            }
         }
     }
 }

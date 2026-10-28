@@ -268,6 +268,14 @@ ColumnLayout {
                         Accessible.name: I18n.i18n("Chart height in this profile")
                     }
                 }
+                Label {
+                    Layout.fillWidth: true
+                    text: root.profileHeight > 0
+                        ? I18n.i18n("Profile height: %1 px. Individual charts can override it.").arg(root.profileHeight)
+                        : I18n.i18n("Uses the application height: %1 px. Individual charts can override it.").arg(UserPreferences.chartHeight)
+                    wrapMode: Text.WordWrap
+                    opacity: 0.7
+                }
                 Kirigami.ActionToolBar {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
@@ -429,6 +437,16 @@ ColumnLayout {
                                             CheckBox { text: I18n.i18n("Custom"); Accessible.name: I18n.i18n("Custom height for this chart"); checked: (chartEntry.modelData.height || 0) > 0; onToggled: UserPreferences.setChartOptions(chartEntry.modelData.key, {height: checked ? root.profileHeight || UserPreferences.chartHeight : 0}, root.profileId) }
                                             SpinBox { from: 64; to: 800; stepSize: 10; enabled: (chartEntry.modelData.height || 0) > 0; value: chartEntry.modelData.height || root.profileHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.setChartOptions(chartEntry.modelData.key, {height: value}, root.profileId) }
                                         }
+                                    }
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: chartEntry.modelData.height > 0
+                                            ? I18n.i18n("Chart height: %1 px.").arg(chartEntry.modelData.height)
+                                            : root.profileHeight > 0
+                                                ? I18n.i18n("Uses the profile height: %1 px.").arg(root.profileHeight)
+                                                : I18n.i18n("Uses the application height: %1 px.").arg(UserPreferences.chartHeight)
+                                        wrapMode: Text.WordWrap
+                                        opacity: 0.7
                                     }
                                     Repeater {
                                         model: chartEntry.modelData.series
