@@ -14,7 +14,7 @@ ApplicationWindow {
     width: 420; height: 840
     minimumWidth: 320; minimumHeight: 440
     visible: true
-    title: weather.locationName + " · Meteo"
+    title: weather.locationName.length ? weather.locationName + " · Meteo" : "Meteo"
     Kirigami.Theme.inherit: false
     Kirigami.Theme.colorSet: colorScheme === Qt.Dark ? Kirigami.Theme.Complementary : Kirigami.Theme.Window
     MaterialStyle.Material.theme: colorScheme === Qt.Dark ? MaterialStyle.Material.Dark : MaterialStyle.Material.Light
@@ -35,6 +35,7 @@ ApplicationWindow {
         initialItem: MobileForecastPage {
             id: forecastPage
             weather: window.weather
+            offerSetup: !window.smokeTest
             navigationStack: navigation
             onForecastSelected: (name, latitude, longitude, model) => session.selectForecast(name, latitude, longitude, model)
         }

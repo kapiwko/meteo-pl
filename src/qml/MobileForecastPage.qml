@@ -10,6 +10,7 @@ Kirigami.Page {
     objectName: "mobileForecastPage"
     required property WeatherModel weather
     required property var navigationStack
+    property bool offerSetup: true
     property int forecastView: 0
     property int newsView: 4
     readonly property int destination: forecastPanel.viewMode < 3 ? 0 : forecastPanel.viewMode === 3 ? 1 : 2
@@ -28,8 +29,13 @@ Kirigami.Page {
     title: I18n.i18n("Meteo")
     function showDestination(index) { forecastPanel.viewMode = index === 0 ? forecastView : index === 1 ? 3 : newsView; }
     function openSettings() { navigationStack.push(settingsPage); }
+    Component.onCompleted: Qt.callLater(() => { if (root.offerSetup && !root.weather.locationName.length) root.beginSetup(); })
+    function beginSetup() {
+        if (UserPreferences.places.length) chooseLocation();
+        else navigationStack.push(locationPage, {firstRun: true});
+    }
     function chooseLocation() { navigationStack.push(placesPage); }
-    function addLocation() { navigationStack.push(locationPage); }
+    function addLocation() { navigationStack.push(locationPage, {firstRun: UserPreferences.places.length === 0}); }
     header: ToolBar {
         MaterialStyle.Material.background: Kirigami.Theme.backgroundColor
         MaterialStyle.Material.foreground: Kirigami.Theme.textColor

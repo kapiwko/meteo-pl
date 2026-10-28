@@ -385,7 +385,10 @@ Item {
                 icon.name: "mark-location"
                 text: I18n.i18n("No forecast")
                 explanation: I18n.i18n("Choose a place to download its meteogram.")
-                helpfulAction: Kirigami.Action { text: I18n.i18n("Choose location"); onTriggered: root.configureRequested() }
+                helpfulAction: Kirigami.Action {
+                    text: UserPreferences.places.length ? I18n.i18n("Choose location") : I18n.i18n("Add location")
+                    onTriggered: { if (UserPreferences.places.length) root.configureRequested(); else root.addLocationRequested(); }
+                }
             }
             Loader {
                 Layout.fillWidth: true

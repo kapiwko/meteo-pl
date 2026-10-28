@@ -53,4 +53,5 @@ private:
     bool m_ready = false, m_collectionChanged = false;
     QStringList m_visibleKeys{QStringLiteral("*")}, m_orderKeys;
     QString m_selectedId;
+    bool m_hadSelection = false;
 };

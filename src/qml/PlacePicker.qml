@@ -36,8 +36,8 @@ RowLayout {
         Layout.alignment: root.centered ? Qt.AlignHCenter : Qt.AlignLeft
         model: root.places
         textRole: "name"
-        displayText: root.weather.locationName
-        currentIndex: model.findIndex(place => LocationRules.samePlace(place.latitude, place.longitude, root.weather.latitude, root.weather.longitude))
+        displayText: root.weather.locationName || I18n.i18n("Choose location")
+        currentIndex: root.weather.locationName.length ? model.findIndex(place => LocationRules.samePlace(place.latitude, place.longitude, root.weather.latitude, root.weather.longitude)) : -1
         Accessible.name: I18n.i18n("My places · choose a forecast")
         onActivated: index => {
             const place = model[index];

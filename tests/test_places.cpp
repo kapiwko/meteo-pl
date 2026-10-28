@@ -8,6 +8,29 @@ class PlacesTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void anEmptyViewDoesNotSelectOrAddADefaultPlace()
+    {
+        QTemporaryDir directory;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        UserPreferences preferences;
+        WeatherModel weather;
+        weather.setAutoRefresh(false);
+        weather.setLocationName("");
+        SavedPlaceController selection;
+        selection.setPreferences(&preferences);
+        selection.setWeather(&weather);
+        connect(&selection, &SavedPlaceController::locationSelected, &weather, [&](const QString &name, double lat, double lon) {
+            weather.setLocationName(name); weather.setLatitude(lat); weather.setLongitude(lon);
+        });
+        selection.componentComplete();
+        QTest::qWait(10);
+        QVERIFY(weather.locationName().isEmpty());
+        QVERIFY(preferences.favorites().isEmpty());
+        preferences.savePlace("Existing place", 50, 20);
+        QTest::qWait(10);
+        QVERIFY(weather.locationName().isEmpty());
+        QCOMPARE(selection.places().size(), 1);
+    }
     void legacySelectionKeepsTheMovedPlaceWhenItsOldCoordinatesAreReused()
     {
         QTemporaryDir directory;

@@ -5,6 +5,11 @@ import pl.meteo.desktop
 
 ForecastWindow {
     id: window
+    function beginSetup() {
+        if (UserPreferences.places.length) placesDialog.open();
+        else { locationDialog.firstRun = true; locationDialog.place = ({}); locationDialog.open(); }
+    }
+    Component.onCompleted: Qt.callLater(() => { if (!window.smokeTest && !window.weather.locationName.length) window.beginSetup(); })
     pageStack.initialPage: Kirigami.Page {
         padding: 0
         title: I18n.i18n("Meteogram")
@@ -18,7 +23,7 @@ ForecastWindow {
             anchors.fill: parent
             weather: window.weather
             onConfigureRequested: placesDialog.open()
-            onAddLocationRequested: { locationDialog.place = ({}); locationDialog.open(); }
+            onAddLocationRequested: { locationDialog.firstRun = UserPreferences.places.length === 0; locationDialog.place = ({}); locationDialog.open(); }
             onModelSelected: model => window.selectForecast(window.weather.locationName, window.weather.latitude, window.weather.longitude, model)
             onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude)
         }

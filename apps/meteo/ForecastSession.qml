@@ -14,9 +14,9 @@ QtObject {
         id: settings
         objectName: "locationSettings"
         category: "Location"
-        property string locationName: "Warszawa"
-        property real latitude: 52.2297
-        property real longitude: 21.0122
+        property string locationName: ""
+        property real latitude: 0
+        property real longitude: 0
         property string model: "um4_60"
     }
     property WeatherModel forecast: WeatherModel {

@@ -14,7 +14,7 @@ Kirigami.ApplicationWindow {
     minimumWidth: Kirigami.Settings.isMobile ? 320 : 400
     minimumHeight: 440
     visible: true
-    title: weather.locationName + " · Meteo"
+    title: weather.locationName.length ? weather.locationName + " · Meteo" : "Meteo"
     ForecastSession { id: session }
     function selectLocation(name, latitude, longitude) { session.selectLocation(name, latitude, longitude); }
     function selectForecast(name, latitude, longitude, model) { session.selectForecast(name, latitude, longitude, model); }

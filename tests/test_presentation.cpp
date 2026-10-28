@@ -31,6 +31,91 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void firstRunRequiresAnExplicitPlace()
+    {
+        QFETCH(bool, mobile);
+        QSettings settings;
+        settings.beginGroup("Location");
+        QVariantMap original;
+        for (const auto &key : settings.childKeys()) original[key] = settings.value(key);
+        settings.remove(""); settings.sync();
+        const auto restore = qScopeGuard([&] {
+            settings.remove("");
+            for (auto it = original.cbegin(); it != original.cend(); ++it) settings.setValue(it.key(), it.value());
+            settings.sync();
+        });
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/") + (mobile ? "Mobile.qml" : "Main.qml")));
+        QScopedPointer<QObject> window(component.createWithInitialProperties({{"smokeTest", true}}));
+        QVERIFY2(window, qPrintable(component.errorString()));
+        auto *weather = window->findChild<WeatherModel *>("appForecastModel");
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QVERIFY(weather && preferences);
+        QTest::qWait(100);
+        QVERIFY(weather->locationName().isEmpty());
+        QVERIFY(preferences->favorites().isEmpty());
+        QVERIFY(!weather->busy());
+        QObject *setup = window.data();
+        QObject *navigation = nullptr;
+        if (mobile) {
+            navigation = window->findChild<QObject *>("mobilePageStack");
+            QVERIFY(navigation);
+            setup = navigation->property("currentItem").value<QObject *>();
+        }
+        QVERIFY(setup);
+        QVERIFY(QMetaObject::invokeMethod(setup, "beginSetup"));
+        QObject *form = nullptr;
+        if (mobile) {
+            QTRY_COMPARE(navigation->property("depth").toInt(), 2);
+            form = navigation->property("currentItem").value<QObject *>();
+        } else form = window->findChild<QObject *>("locationDialog");
+        QVERIFY(form);
+        QVERIFY(form->property("firstRun").toBool());
+        QCOMPARE(form->property("title").toString(), "Welcome to Meteo");
+        auto *editor = form->findChild<QObject *>("locationEditor");
+        QVERIFY(editor && !editor->property("valid").toBool());
+        editor->setProperty("locationName", "A name without a point");
+        QVERIFY(!editor->property("valid").toBool());
+        if (mobile) {
+            QTRY_VERIFY(!navigation->property("busy").toBool());
+            QTest::keyClick(qobject_cast<QQuickWindow *>(window.data()), Qt::Key_Back);
+            QTRY_COMPARE(navigation->property("depth").toInt(), 1);
+            QTRY_VERIFY(!navigation->property("busy").toBool());
+            QObject *panel = nullptr;
+            for (auto *candidate : window->findChildren<QObject *>())
+                if (QByteArray(candidate->metaObject()->className()).startsWith("ForecastPanel_")) { panel = candidate; break; }
+            QVERIFY(panel);
+            QVERIFY(QMetaObject::invokeMethod(panel, "addLocationRequested"));
+            QTRY_COMPARE(navigation->property("depth").toInt(), 2);
+            form = navigation->property("currentItem").value<QObject *>();
+        } else {
+            QVERIFY(QMetaObject::invokeMethod(form, "reject"));
+            QVERIFY(QMetaObject::invokeMethod(setup, "beginSetup"));
+        }
+        QVERIFY(preferences->favorites().isEmpty());
+        QVERIFY(weather->locationName().isEmpty());
+        editor = form->findChild<QObject *>("locationEditor");
+        QVERIFY(editor);
+        if (mobile) QTRY_VERIFY(!navigation->property("busy").toBool());
+        const QVariantMap place{{"name", "Kielce"}, {"latitude", 50.8661}, {"longitude", 20.6286}};
+        QVERIFY(QMetaObject::invokeMethod(editor, "selectPlace", Q_ARG(QVariant, place)));
+        if (mobile) {
+            auto *save = form->findChild<QObject *>("mobileSavePlaceButton");
+            QVERIFY(save && save->property("enabled").toBool());
+            QVERIFY(QMetaObject::invokeMethod(save, "clicked"));
+        } else QVERIFY(QMetaObject::invokeMethod(form, "save"));
+        QTRY_COMPARE(weather->locationName(), "Kielce");
+        if (mobile) QTRY_COMPARE(navigation->property("depth").toInt(), 1);
+        QCOMPARE(preferences->favorites().size(), 1);
+        QCOMPARE(preferences->favorites().first().toMap()["name"].toString(), "Kielce");
+        QVERIFY(!preferences->isFavorite(52.2297, 21.0122));
+    }
+    void firstRunRequiresAnExplicitPlace_data()
+    {
+        QTest::addColumn<bool>("mobile");
+        QTest::newRow("desktop") << false;
+        QTest::newRow("mobile") << true;
+    }
     void widgetLocationSettingsFollowAnEditedPlace()
     {
         QQmlEngine engine;

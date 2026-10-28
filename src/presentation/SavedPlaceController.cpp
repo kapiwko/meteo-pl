@@ -114,6 +114,7 @@ void SavedPlaceController::schedule(bool collectionChanged)
 }
 void SavedPlaceController::trackSelection()
 {
+    if (m_weather && !m_weather->locationName().isEmpty()) m_hadSelection = true;
     m_selectedId = m_weather && m_preferences && !m_weather->locationName().isEmpty()
         ? m_preferences->placeAt(m_weather->latitude(), m_weather->longitude()).value("id").toString() : QString{};
 }
@@ -145,6 +146,7 @@ void SavedPlaceController::reconcile()
 {
     if (!m_weather || !m_preferences)
         return;
+    if (!m_hadSelection && m_weather->locationName().isEmpty()) return;
     const auto available = places();
     if (!m_selectedId.isEmpty())
         for (const auto &entry : available) {
