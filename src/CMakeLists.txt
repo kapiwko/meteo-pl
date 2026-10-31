@@ -168,3 +168,6 @@ set_source_files_properties(qml/DailyForecastView.qml PROPERTIES QT_RESOURCE_ALI
 qt_target_qml_sources(meteo_ui QML_FILES qml/DailyForecastView.qml)
 set_source_files_properties(qml/MapLegend.qml PROPERTIES QT_RESOURCE_ALIAS MapLegend.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/MapLegend.qml)
+
+set_source_files_properties(qml/ForecastActivity.qml PROPERTIES QT_RESOURCE_ALIAS ForecastActivity.qml)
+qt_target_qml_sources(meteo_ui QML_FILES qml/ForecastActivity.qml)

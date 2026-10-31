@@ -9,6 +9,7 @@ ColumnLayout {
     required property WeatherModel weather
     property bool showDays: true
     property bool showPlacePicker: true
+    property bool showActivity: true
     readonly property bool loading: weatherSymbol.loading
     property var places: UserPreferences.places
     function chooseLocation() { placePicker.chooseLocation(); }
@@ -19,6 +20,7 @@ ColumnLayout {
     spacing: Kirigami.Units.largeSpacing
 
     PreferenceWriteNotice {}
+    ForecastActivity { Layout.fillWidth: true; weather: root.weather; active: root.showActivity }
 
     PlacePicker {
         id: placePicker

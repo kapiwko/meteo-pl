@@ -366,6 +366,7 @@ Item {
             background: null
             contentItem: ColumnLayout {
             spacing: 10
+            ForecastActivity { Layout.fillWidth: true; weather: root.weather; active: root.mobileLayout }
             ForecastHeader {
                 id: forecastHeader
                 visible: !root.mobileLayout
@@ -379,7 +380,7 @@ Item {
                 Layout.fillWidth: true
                 active: root.mobileLayout && root.viewMode !== 0
                 visible: active
-                sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false }
+                sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false; showActivity: false }
             }
             ProfileUpdateNotice { Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: !root.mobileLayout && root.weather.error.length > 0; text: root.weather.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
@@ -576,7 +577,7 @@ Item {
                     Layout.fillWidth: true
                     active: root.mobileLayout && chartsScroll.height >= 300
                     visible: active
-                    sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false }
+                    sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false; showActivity: false }
                 }
                 Repeater {
                     id: charts

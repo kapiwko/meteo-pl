@@ -26,6 +26,7 @@ GridLayout {
             onAddLocationRequested: root.addLocationRequested()
             onLocationSelected: (name, latitude, longitude) => root.locationSelected(name, latitude, longitude)
         }
+        ForecastActivity { Layout.fillWidth: true; weather: root.weather }
         RowLayout {
             visible: root.weather.locationName.length > 0
             Layout.fillWidth: true

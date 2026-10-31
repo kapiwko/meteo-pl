@@ -66,6 +66,10 @@ Expand **Technical details** to find the configuration-file path.
 
 ## Forecast header and chart readings
 
+An activity indicator distinguishes locating the device, resolving its place name
+and downloading a forecast. Refreshing already cached data also shows progress;
+the existing forecast remains visible.
+
 The header groups the place, forecast timestamp, temperature, wind, pressure and
 sunrise/sunset icons. Solar times describe the current forecast day or the
 labeled historical date. Model/run details are in settings and About. The summary

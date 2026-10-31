@@ -8,6 +8,8 @@
 #include "GpuPlot.hpp"
 #include "UserPreferences.hpp"
 #include "Fixture.hpp"
+#include "ServiceFixture.hpp"
+#include "PositionFixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -724,6 +726,51 @@ private slots:
         weather->setModel("gfs");
         QVERIFY(QMetaObject::invokeMethod(session.data(), "selectModel", Q_ARG(QVariant, "um4_60")));
         QCOMPARE(weather->model(), "um4_60");
+    }
+    void forecastActivityShowsDeviceLookupAndRefreshWithCachedData()
+    {
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        const auto first = QDateTime::currentSecsSinceEpoch() - 1800;
+        server.response = [first](const QUrl &url) {
+            if (url.path().endsWith("/available")) return QJsonDocument(QJsonObject{{"um4_60", QJsonArray{first}}}).toJson();
+            return forecastFixture(first);
+        };
+        auto *source = new PositionFixture;
+        WeatherModel weather(nullptr, server.endpoint(), source);
+        weather.setAutoRefresh(false); weather.setLatitude(51.345678); weather.setLongitude(20.456789);
+        weather.refresh(true);
+        QTRY_VERIFY(!weather.busy()); QVERIFY(weather.hasData());
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastActivity");
+        QScopedPointer<QObject> activity(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}}));
+        QVERIFY2(activity, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(420, 180);
+        auto *item = qobject_cast<QQuickItem *>(activity.data());
+        item->setParentItem(window.contentItem()); item->setWidth(400); window.show();
+        QTest::qWait(50);
+        QVERIFY(!activity->property("visible").toBool());
+        weather.currentLocation()->setEnabled(true); weather.currentLocation()->setForeground(true);
+        QVERIFY2(activity->property("visible").toBool(), qPrintable(QString("enabled=%1 busy=%2 locating=%3 active=%4")
+            .arg(weather.currentLocation()->enabled()).arg(weather.currentLocation()->busy())
+            .arg(activity->property("locating").toBool()).arg(activity->property("active").toBool())));
+        QVERIFY(activity->property("locating").toBool());
+        source->send(weather.latitude(), weather.longitude());
+        QVERIFY(!activity->property("visible").toBool());
+        weather.refresh(true);
+        QVERIFY(weather.hasData() && weather.busy());
+        QVERIFY(activity->property("visible").toBool());
+        QTRY_VERIFY(!weather.busy());
+        QVERIFY(!activity->property("visible").toBool());
+        QVERIFY(weather.hasData());
+        server.status = 503;
+        weather.refresh(true);
+        QVERIFY(activity->property("visible").toBool());
+        QTRY_VERIFY(!weather.busy());
+        QVERIFY(!activity->property("visible").toBool());
+        QVERIFY(weather.hasData());
+        emit source->errorOccurred(QGeoPositionInfoSource::AccessError);
+        QVERIFY(activity->property("visible").toBool());
+        QVERIFY(!activity->property("positionError").toString().isEmpty());
     }
     void mobileNavigationAndSettingsUsePages()
     {
