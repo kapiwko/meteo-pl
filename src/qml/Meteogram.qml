@@ -188,7 +188,9 @@ ColumnLayout {
             if (["hidden", "direction", "type", "storm", "flash"].indexOf(field.kind) >= 0) continue;
             if (isRightField(field) !== Boolean(right)) continue;
             for (const point of field.points.concat(field.lowerPoints || [])) {
-                if (point.time < startTime || point.time > endTime || !valid(point.value)) continue;
+                // Keep vertical scales tied to the complete forecast. Panning
+                // changes only the horizontal viewport, not these bounds.
+                if (!valid(point.value)) continue;
                 low = Math.min(low, point.value); high = Math.max(high, point.value);
             }
         }
@@ -208,7 +210,7 @@ ColumnLayout {
     }
     function valuesFor(key) {
         const field = fields.find(f => f.key === key);
-        return field ? field.points.filter(p => p.time >= startTime && p.time <= endTime && valid(p.value)).map(p => p.value) : [];
+        return field ? field.points.filter(p => valid(p.value)).map(p => p.value) : [];
     }
     function tickLabel(value, right) {
         const kind = right ? rightScale : scaleKind;

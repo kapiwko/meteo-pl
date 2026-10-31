@@ -73,6 +73,58 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void chartAxesStayFixedWhilePanning_data()
+    {
+        QTest::addColumn<QString>("leftScale");
+        QTest::addColumn<QString>("rightScale");
+        QTest::addColumn<QString>("leftKey");
+        QTest::addColumn<QString>("rightKey");
+        QTest::newRow("temperature-pressure") << "temperature" << "pressure" << "airtmp_point" << "slpres_point";
+        QTest::newRow("rain-humidity") << "precipitation" << "humidity" << "pcpttl_aver" << "realhum_aver";
+        QTest::newRow("wind-linked") << "wind" << "linked" << "wind10_sd_true_prev_point" << "wind_gust_max";
+        QTest::newRow("mixed-linear") << "linear" << "linear" << "airtmp_point" << "slpres_point";
+    }
+    void chartAxesStayFixedWhilePanning()
+    {
+        QFETCH(QString, leftScale); QFETCH(QString, rightScale);
+        QFETCH(QString, leftKey); QFETCH(QString, rightKey);
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false); QVERIFY(weather.hasData());
+        const auto first = weather.firstTimestamp();
+        const auto field = [first](const QString &key, const QString &side) {
+            auto style = defaultSeriesStyle(key);
+            QVariantList points;
+            const QList<double> values = side == "left" ? QList<double>{2, 3, 20, 8} : QList<double>{60, 65, 98, 45};
+            const QList<int> hours{0, 1, 30, 40};
+            for (int i = 0; i < hours.size(); ++i)
+                points.append(QVariantMap{{"time", first + hours[i] * 3600}, {"value", values[i]}, {"interval", 3600}});
+            style["kind"] = "line"; style["axis"] = side; style["points"] = points;
+            return style;
+        };
+        const QVariantList fields{field(leftKey, "left"), field(rightKey, "right")};
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "Meteogram");
+        QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)},
+            {"title", "Axes"}, {"groupKey", "test"}, {"fields", fields},
+            {"chartConfiguration", QVariantMap{{"leftScale", leftScale}, {"rightScale", rightScale}}}}));
+        QVERIFY2(chart, qPrintable(component.errorString()));
+        const auto left = chart->property("bounds").toMap(), right = chart->property("rightBounds").toMap();
+        QSignalSpy leftChanges(chart.data(), SIGNAL(boundsChanged()));
+        QSignalSpy rightChanges(chart.data(), SIGNAL(rightBoundsChanged()));
+        for (const auto &[begin, end] : QList<QPair<int, int>>{{0, 12}, {24, 36}, {36, 47}, {0, 47}}) {
+            chart->setProperty("startTime", first + begin * 3600);
+            chart->setProperty("endTime", first + end * 3600);
+            QCOMPARE(chart->property("bounds").toMap(), left);
+            QCOMPARE(chart->property("rightBounds").toMap(), right);
+        }
+        // Panning must neither change the scale nor rescan the series for it.
+        QCOMPARE(leftChanges.size(), 0); QCOMPARE(rightChanges.size(), 0);
+        chart->setProperty("chartConfiguration", QVariantMap{{"leftScale", leftScale}, {"rightScale", rightScale},
+            {"leftMin", 0}, {"leftMax", 100}, {"rightMin", 0}, {"rightMax", 100}});
+        QCOMPARE(chart->property("bounds").toMap()["low"].toDouble(), 0);
+        QCOMPARE(chart->property("bounds").toMap()["high"].toDouble(), 100);
+        QCOMPARE(chart->property("rightBounds").toMap()["low"].toDouble(), 0);
+        QCOMPARE(chart->property("rightBounds").toMap()["high"].toDouble(), 100);
+    }
     void forecastTimeWindowsStartAtTheBeginning()
     {
         QFETCH(bool, mobile); QFETCH(bool, preloaded); QFETCH(int, samples);
