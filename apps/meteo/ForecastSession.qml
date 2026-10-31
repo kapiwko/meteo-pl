@@ -18,6 +18,7 @@ QtObject {
         property real latitude: 0
         property real longitude: 0
         property string model: "um4_60"
+        property bool followCurrentLocation: false
     }
     property WeatherModel forecast: WeatherModel {
         id: forecastModel
@@ -27,18 +28,41 @@ QtObject {
         longitude: session.temporaryLocation ? session.startupForecast.longitude : settings.longitude
         model: session.temporaryLocation ? session.startupForecast.model : settings.model
         autoRefresh: session.startupReady && !session.smokeTest && locationName.length > 0
+            && (!currentLocation.enabled || currentLocation.hasPosition)
         windUnit: UserPreferences.windUnit
         utc: UserPreferences.utc
     }
     function selectLocation(name, latitude, longitude) {
         selectForecast(name, latitude, longitude, forecastModel.model);
     }
-    Component.onCompleted: startupReady = true
-    property SavedPlaceSelection selection: SavedPlaceSelection { weather: session.startupReady && !session.temporaryLocation ? forecastModel : null; onLocationSelected: (name, latitude, longitude) => session.selectLocation(name, latitude, longitude) }
+    Component.onCompleted: {
+        forecastModel.currentLocation.enabled = !smokeTest && !temporaryLocation && settings.followCurrentLocation;
+        startupReady = true;
+    }
+    property Connections tracking: Connections {
+        target: forecastModel.currentLocation
+        function onStateChanged() {
+            if (forecastModel.currentLocation.enabled) session.temporaryLocation = false;
+            if (!session.smokeTest) settings.followCurrentLocation = forecastModel.currentLocation.enabled;
+        }
+    }
+    property SavedPlaceSelection selection: SavedPlaceSelection { weather: session.startupReady && !session.temporaryLocation && !forecastModel.currentLocation.enabled ? forecastModel : null; onLocationSelected: (name, latitude, longitude) => session.selectLocation(name, latitude, longitude) }
+    function selectModel(model) {
+        settings.model = LocationRules.modelFor(forecastModel.latitude, forecastModel.longitude, model);
+        forecastModel.model = Qt.binding(() => settings.model);
+    }
     function selectForecast(name, latitude, longitude, model) {
+        forecastModel.currentLocation.enabled = false;
         settings.model = name.length ? LocationRules.modelFor(latitude, longitude, model) : model;
         settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
         temporaryLocation = false;
+        // Device fixes update the model from C++. Choosing the previously
+        // selected saved place may leave every Settings value unchanged, so
+        // explicitly restore its bindings rather than relying on change signals.
+        forecastModel.model = Qt.binding(() => settings.model);
+        forecastModel.locationName = Qt.binding(() => settings.locationName);
+        forecastModel.latitude = Qt.binding(() => settings.latitude);
+        forecastModel.longitude = Qt.binding(() => settings.longitude);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
 }

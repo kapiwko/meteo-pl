@@ -36,6 +36,7 @@ Dialog {
             background: null
             contentItem: PlacesView {
                 weather: root.weather
+                onCurrentLocationSelected: root.close()
                 onAddRequested: { editor.firstRun = UserPreferences.places.length === 0; editor.place = ({}); editor.open(); }
                 onEditRequested: place => { editor.firstRun = false; editor.place = place; editor.open(); }
                 onLocationSelected: (name, latitude, longitude) => { root.locationSelected(name, latitude, longitude); root.close(); }

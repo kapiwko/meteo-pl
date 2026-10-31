@@ -47,6 +47,18 @@ forecast. Search covers Poland by default, with optional worldwide search.
 System positioning needs a working Qt Positioning provider; search and map
 selection remain available without one.
 
+**Use my location** is a one-time lookup: the form opens a map at the detected
+point and looks up its town or village name. Review the marker and name before
+pressing **Add**.
+
+Choose **Current location** in **My places**, or use the location button beside
+the desktop/widget place selector, to keep following the device. Meteo updates
+its forecast after a movement of at least one kilometre and pauses location
+updates while the application is in the background. GPS points are not added to
+saved or recent places. Choosing a saved place switches back to a fixed forecast.
+Location access can be denied; the last forecast stays available and the status
+explains how to enable access or retry. Models outside UM4 coverage use GFS.
+
 Choose the model separately in **Settings → Forecast**: UM4 60 h, UM4 120 h or
 GFS 240 h. UM4 covers 44.5–66.482°N and 8.21–30.176°E; GFS is global.
 **Settings → About** shows authorship, data sources and the retrieved forecast.

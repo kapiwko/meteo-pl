@@ -1,4 +1,5 @@
 #include "core/Localization.hpp"
+#include "core/Locations.hpp"
 #include "WeatherModel.hpp"
 #include "core/ForecastAggregation.hpp"
 #include "core/ForecastSampling.hpp"
@@ -14,8 +15,19 @@
 #include <QUrlQuery>
 
 
-WeatherModel::WeatherModel(QObject *parent, QUrl endpoint) : QObject(parent), m_repository(nullptr,std::move(endpoint))
+WeatherModel::WeatherModel(QObject *parent, QUrl endpoint, QGeoPositionInfoSource *positionSource)
+    : QObject(parent), m_currentLocation(this, positionSource), m_repository(nullptr,std::move(endpoint))
 {
+    connect(&m_currentLocation, &LocationTracker::positionAccepted, this, [this](double latitude, double longitude) {
+        if (!Meteo::validLocation(latitude, longitude, m_model)) setModel(QStringLiteral("gfs"));
+        setLocationName(Meteo::i18n("Current location"));
+        setLatitude(latitude);
+        setLongitude(longitude);
+    });
+    connect(&m_currentLocation, &LocationTracker::stateChanged, this, [this] {
+        if (m_currentLocation.enabled() && !m_currentLocation.placeName().isEmpty())
+            setLocationName(m_currentLocation.placeName());
+    });
     m_debounce.setSingleShot(true);
     m_debounce.setInterval(0);
     connect(&m_debounce, &QTimer::timeout, this, [this] { refresh(false); });

@@ -126,7 +126,7 @@ void SavedPlaceController::select(const QVariantMap &place)
 }
 void SavedPlaceController::rememberCurrent()
 {
-    if (!m_weather || !m_preferences)
+    if (!m_weather || !m_preferences || m_weather->currentLocation()->enabled())
         return;
     if (m_weather->locationName().isEmpty()) {
         reconcile();
@@ -144,7 +144,7 @@ void SavedPlaceController::rememberCurrent()
 }
 void SavedPlaceController::reconcile()
 {
-    if (!m_weather || !m_preferences)
+    if (!m_weather || !m_preferences || m_weather->currentLocation()->enabled())
         return;
     if (!m_hadSelection && m_weather->locationName().isEmpty()) return;
     const auto available = places();

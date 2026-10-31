@@ -9,7 +9,7 @@ ForecastWindow {
         if (UserPreferences.places.length) placesDialog.open();
         else { locationDialog.firstRun = true; locationDialog.place = ({}); locationDialog.open(); }
     }
-    Component.onCompleted: Qt.callLater(() => { if (!window.smokeTest && !window.weather.locationName.length) window.beginSetup(); })
+    Component.onCompleted: Qt.callLater(() => { if (!window.smokeTest && !window.weather.locationName.length && !window.weather.currentLocation.enabled) window.beginSetup(); })
     pageStack.initialPage: Kirigami.Page {
         padding: 0
         title: I18n.i18n("Meteogram")
@@ -24,7 +24,7 @@ ForecastWindow {
             weather: window.weather
             onConfigureRequested: placesDialog.open()
             onAddLocationRequested: { locationDialog.firstRun = UserPreferences.places.length === 0; locationDialog.place = ({}); locationDialog.open(); }
-            onModelSelected: model => window.selectForecast(window.weather.locationName, window.weather.latitude, window.weather.longitude, model)
+            onModelSelected: model => window.selectModel(model)
             onLocationSelected: (name, latitude, longitude) => window.selectLocation(name, latitude, longitude)
         }
     }

@@ -1,6 +1,8 @@
 #include "presentation/SavedPlaceController.hpp"
+#include "PositionFixture.hpp"
 #include <QSettings>
 #include <QTemporaryDir>
+#include <QScopeGuard>
 #include <QtTest>
 #include <array>
 
@@ -8,6 +10,41 @@ class PlacesTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void followingTheDeviceDoesNotSaveGpsPointsAsPlaces()
+    {
+        QTemporaryDir directory;
+        const auto previousCache = qgetenv("XDG_CACHE_HOME");
+        qputenv("XDG_CACHE_HOME", (directory.path() + "/cache").toUtf8());
+        const auto restoreCache = qScopeGuard([&] { if (previousCache.isEmpty()) qunsetenv("XDG_CACHE_HOME"); else qputenv("XDG_CACHE_HOME", previousCache); });
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        UserPreferences preferences;
+        auto *source = new PositionFixture;
+        WeatherModel weather(nullptr, QUrl("http://127.0.0.1:1"), source);
+        weather.setAutoRefresh(false); weather.setLocationName("");
+        SavedPlaceController selection;
+        selection.setWeather(&weather); selection.setPreferences(&preferences); selection.componentComplete();
+        weather.currentLocation()->setEnabled(true);
+        source->send(50.87, 20.63);
+        QTest::qWait(10);
+        QCOMPARE(weather.latitude(), 50.87);
+        QCOMPARE(weather.longitude(), 20.63);
+        QVERIFY(preferences.favorites().isEmpty()); QVERIFY(preferences.recentPlaces().isEmpty());
+        source->send(40.7, -74.0);
+        QTest::qWait(10);
+        QCOMPARE(weather.model(), "gfs");
+        QCOMPARE(weather.latitude(), 40.7);
+        QVERIFY(preferences.favorites().isEmpty());
+        preferences.savePlace("Saved", 51, 21);
+        QVERIFY2(preferences.error().isEmpty(), qPrintable(preferences.error()));
+        QTest::qWait(10);
+        QCOMPARE(weather.latitude(), 40.7);
+        weather.currentLocation()->setEnabled(false);
+        weather.setLocationName("Saved"); weather.setLatitude(51); weather.setLongitude(21);
+        QTest::qWait(10);
+        QCOMPARE(preferences.favorites().size(), 1);
+        source->send(40.8, -74.0);
+        QCOMPARE(weather.latitude(), 51.0);
+    }
     void anEmptyViewDoesNotSelectOrAddADefaultPlace()
     {
         QTemporaryDir directory;

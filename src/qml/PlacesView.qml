@@ -10,6 +10,7 @@ ColumnLayout {
     property WeatherModel weather: null
     property var removed: null
     property string error: ""
+    signal currentLocationSelected()
     signal addRequested()
     signal editRequested(var place)
     signal locationSelected(string name, real latitude, real longitude)
@@ -41,6 +42,17 @@ ColumnLayout {
             onTriggered: root.undoRemoval()
         }]
     }
+    ItemDelegate {
+        objectName: "currentLocationPlace"
+        Layout.fillWidth: true
+        visible: root.weather !== null
+        text: I18n.i18n("Current location")
+        icon.name: "find-location"
+        highlighted: root.weather && root.weather.currentLocation.enabled
+        onClicked: { root.weather.currentLocation.enabled = true; root.currentLocationSelected(); }
+        ToolTip.text: I18n.i18n("Update the forecast as your location changes")
+        ToolTip.visible: hovered
+    }
     Pane {
         Layout.fillWidth: true
         padding: 0
@@ -69,7 +81,7 @@ ColumnLayout {
                     required property var modelData
                     objectName: "savedPlace-" + modelData.id
                     Layout.fillWidth: true
-                    highlighted: root.weather && LocationRules.samePlace(modelData.latitude, modelData.longitude, root.weather.latitude, root.weather.longitude)
+                    highlighted: root.weather && !root.weather.currentLocation.enabled && LocationRules.samePlace(modelData.latitude, modelData.longitude, root.weather.latitude, root.weather.longitude)
                     Accessible.name: I18n.i18n("Show forecast: %1").arg(modelData.name)
                     onClicked: root.locationSelected(modelData.name, modelData.latitude, modelData.longitude)
                     contentItem: RowLayout {

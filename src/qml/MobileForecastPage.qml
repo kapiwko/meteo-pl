@@ -25,12 +25,13 @@ Kirigami.Page {
         else if (destination !== 0) showDestination(0);
         else if (forecastView !== 0) forecastPanel.viewMode = 0;
     }
+    signal modelSelected(string model)
     signal forecastSelected(string name, real latitude, real longitude, string model)
     padding: 0
     title: I18n.i18n("Meteo")
     function showDestination(index) { forecastPanel.viewMode = index === 0 ? forecastView : index === 1 ? 3 : newsView; }
     function openSettings() { navigationStack.push(settingsPage); }
-    Component.onCompleted: Qt.callLater(() => { if (root.offerSetup && !root.weather.locationName.length) root.beginSetup(); })
+    Component.onCompleted: Qt.callLater(() => { if (root.offerSetup && !root.weather.locationName.length && !root.weather.currentLocation.enabled) root.beginSetup(); })
     function beginSetup() {
         if (UserPreferences.places.length) chooseLocation();
         else navigationStack.push(locationPage, {firstRun: true});
@@ -48,8 +49,8 @@ Kirigami.Page {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 implicitHeight: root.shortLandscape ? 48 : 56
-                icon.name: "mark-location"
-                text: root.weather.locationName || I18n.i18n("Choose location")
+                icon.name: root.weather.currentLocation.enabled ? "find-location" : "mark-location"
+                text: root.weather.currentLocation.enabled && !root.weather.currentLocation.hasPosition ? I18n.i18n("Current location") : root.weather.locationName || I18n.i18n("Choose location")
                 Accessible.name: I18n.i18n("My places · choose a forecast")
                 onClicked: placesSheet.open()
             }
@@ -132,7 +133,7 @@ Kirigami.Page {
             mobileLayout: true
             onConfigureRequested: root.chooseLocation()
             onAddLocationRequested: root.addLocation()
-            onModelSelected: model => root.forecastSelected(root.weather.locationName, root.weather.latitude, root.weather.longitude, model)
+            onModelSelected: model => root.modelSelected(model)
             onSettingsRequested: root.openSettings()
             onLocationSelected: (name, latitude, longitude) => root.forecastSelected(name, latitude, longitude, root.weather.model)
             onViewModeChanged: {
@@ -148,6 +149,14 @@ Kirigami.Page {
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 0
+            ItemDelegate {
+                objectName: "mobileCurrentLocationPlace"
+                Layout.fillWidth: true
+                text: I18n.i18n("Current location")
+                icon.name: "find-location"
+                highlighted: root.weather.currentLocation.enabled
+                onClicked: { root.weather.currentLocation.enabled = true; placesSheet.close(); }
+            }
             Repeater {
                 model: UserPreferences.places
                 delegate: ItemDelegate {
@@ -155,7 +164,7 @@ Kirigami.Page {
                     Layout.fillWidth: true
                     text: modelData.name
                     icon.name: "mark-location"
-                    highlighted: LocationRules.samePlace(modelData.latitude, modelData.longitude, root.weather.latitude, root.weather.longitude)
+                    highlighted: !root.weather.currentLocation.enabled && LocationRules.samePlace(modelData.latitude, modelData.longitude, root.weather.latitude, root.weather.longitude)
                     onClicked: {
                         root.forecastSelected(modelData.name, modelData.latitude, modelData.longitude, root.weather.model);
                         placesSheet.close();

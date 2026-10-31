@@ -153,3 +153,7 @@ set_tests_properties(bundle_runtime PROPERTIES TIMEOUT 15)
 # Qt may otherwise send diagnostics only to journald when stdout is captured.
 get_property(meteo_tests DIRECTORY PROPERTY TESTS)
 set_tests_properties(${meteo_tests} PROPERTIES ENVIRONMENT_MODIFICATION "QT_FORCE_STDERR_LOGGING=set:1")
+
+qt_add_executable(test_location_tracker test_location_tracker.cpp)
+target_link_libraries(test_location_tracker PRIVATE meteo_ui Qt6::Test)
+add_test(NAME location_tracker COMMAND test_location_tracker)

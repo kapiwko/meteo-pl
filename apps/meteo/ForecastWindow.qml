@@ -16,6 +16,7 @@ Kirigami.ApplicationWindow {
     visible: true
     title: weather.locationName.length ? weather.locationName + " · Meteo" : "Meteo"
     ForecastSession { id: session }
+    function selectModel(model) { session.selectModel(model); }
     function selectLocation(name, latitude, longitude) { session.selectLocation(name, latitude, longitude); }
     function selectForecast(name, latitude, longitude, model) { session.selectForecast(name, latitude, longitude, model); }
 }

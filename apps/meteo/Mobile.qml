@@ -38,6 +38,7 @@ ApplicationWindow {
             weather: window.weather
             offerSetup: !window.smokeTest
             navigationStack: navigation
+            onModelSelected: model => session.selectModel(model)
             onForecastSelected: (name, latitude, longitude, model) => session.selectForecast(name, latitude, longitude, model)
         }
     }

@@ -1,4 +1,5 @@
 #pragma once
+#include "LocationTracker.hpp"
 #include "MeteoUiExport.hpp"
 
 #include "core/Forecast.hpp"
@@ -9,6 +10,7 @@
 
 class METEO_UI_EXPORT WeatherModel : public QObject {
     Q_OBJECT
+    Q_PROPERTY(LocationTracker *currentLocation READ currentLocation CONSTANT)
     QML_ELEMENT
     Q_PROPERTY(quint64 dataRevision READ dataRevision NOTIFY dataChanged)
     Q_PROPERTY(double latitude READ latitude WRITE setLatitude NOTIFY locationChanged)
@@ -45,7 +47,8 @@ class METEO_UI_EXPORT WeatherModel : public QObject {
     Q_PROPERTY(QString sunTimes READ sunTimes NOTIFY stateChanged)
     Q_PROPERTY(QVariantMap solarTimes READ solarTimes NOTIFY stateChanged)
 public:
-    explicit WeatherModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://devmgramapi.meteo.pl")));
+    LocationTracker *currentLocation() { return &m_currentLocation; }
+    explicit WeatherModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://devmgramapi.meteo.pl")), QGeoPositionInfoSource *positionSource = nullptr);
     quint64 dataRevision() const { return m_dataRevision; }
     double latitude() const { return m_latitude; }
     double longitude() const { return m_longitude; }
@@ -107,6 +110,7 @@ signals:
 private slots:
     void updateCurrentTime() { emit stateChanged(); }
 private:
+    LocationTracker m_currentLocation;
     void resetLocation();
     void apply(const Meteo::Forecast &forecast);
     bool loadCache();

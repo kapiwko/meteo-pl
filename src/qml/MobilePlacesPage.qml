@@ -14,6 +14,7 @@ Kirigami.ScrollablePage {
     PlacesView {
         width: root.availableWidth
         weather: root.weather
+        onCurrentLocationSelected: root.navigationStack.pop()
         onAddRequested: root.navigationStack.push(editorPage)
         onEditRequested: place => root.navigationStack.push(editorPage, {place: place})
         onLocationSelected: (name, latitude, longitude) => { root.locationSelected(name, latitude, longitude); root.navigationStack.pop(); }

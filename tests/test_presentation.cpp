@@ -703,6 +703,28 @@ private slots:
         QVERIFY(!geocoder->busy());
         QCOMPARE(object->property("locationName").toString(), "Other");
     }
+    void savedSelectionRestoresCoordinatesAfterDeviceUpdates()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/ForecastSession.qml")));
+        QScopedPointer<QObject> session(component.createWithInitialProperties({{"smokeTest",true}}));
+        QVERIFY2(session, qPrintable(component.errorString()));
+        auto *weather = session->findChild<WeatherModel *>(); QVERIFY(weather);
+        const auto select = [&] {
+            return QMetaObject::invokeMethod(session.data(), "selectForecast", Q_ARG(QVariant, "Kielce"), Q_ARG(QVariant, 50.8661), Q_ARG(QVariant, 20.6286), Q_ARG(QVariant, "um4_60"));
+        };
+        QVERIFY(select());
+        // The positioning source changes these C++ properties independently
+        // of the last saved Location settings.
+        weather->setLocationName("New York"); weather->setLatitude(40.7); weather->setLongitude(-74); weather->setModel("gfs");
+        QVERIFY(select());
+        QCOMPARE(weather->locationName(), "Kielce");
+        QCOMPARE(weather->latitude(), 50.8661); QCOMPARE(weather->longitude(), 20.6286);
+        QCOMPARE(weather->model(), "um4_60");
+        weather->setModel("gfs");
+        QVERIFY(QMetaObject::invokeMethod(session.data(), "selectModel", Q_ARG(QVariant, "um4_60")));
+        QCOMPARE(weather->model(), "um4_60");
+    }
     void mobileNavigationAndSettingsUsePages()
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));

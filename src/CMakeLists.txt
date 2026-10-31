@@ -67,6 +67,7 @@ qt_add_qml_module(meteo_ui
         presentation/CacheStorage.cpp presentation/CacheStorage.hpp
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/ReverseGeocoder.cpp presentation/ReverseGeocoder.hpp
+        presentation/LocationTracker.cpp presentation/LocationTracker.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/ProfileFileCodec.cpp presentation/ProfileFileCodec.hpp
         presentation/JsonSchemaValidator.cpp presentation/JsonSchemaValidator.hpp
@@ -105,7 +106,7 @@ set_source_files_properties(qml/HourlyForecastTable.qml PROPERTIES QT_RESOURCE_A
 qt_target_qml_sources(meteo_ui QML_FILES qml/HourlyForecastTable.qml)
 set_source_files_properties(qml/ProfileUpdateNotice.qml PROPERTIES QT_RESOURCE_ALIAS ProfileUpdateNotice.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/ProfileUpdateNotice.qml)
-target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
+target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml Qt6::Positioning PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)
 qt_add_resources(meteo_ui "license" PREFIX "/meteo" BASE "${PROJECT_SOURCE_DIR}"

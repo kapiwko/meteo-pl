@@ -69,7 +69,7 @@ PlasmoidItem {
 
     WeatherModel {
         id: forecastModel
-        autoRefresh: locationName.length > 0
+        autoRefresh: locationName.length > 0 && (!currentLocation.enabled || currentLocation.hasPosition)
         latitude: root.weatherConfiguration.latitude
         longitude: root.weatherConfiguration.longitude
         locationName: root.weatherConfiguration.locationName
@@ -77,7 +77,13 @@ PlasmoidItem {
         windUnit: UserPreferences.windUnit
         utc: UserPreferences.utc
     }
+    Component.onCompleted: forecastModel.currentLocation.enabled = weatherConfiguration.followCurrentLocation
+    Connections {
+        target: forecastModel.currentLocation
+        function onStateChanged() { Plasmoid.configuration.followCurrentLocation = forecastModel.currentLocation.enabled; }
+    }
     function selectLocation(name, latitude, longitude) {
+        forecastModel.currentLocation.enabled = false;
         if (name.length) includePlace(placeSelection.placeKey(latitude, longitude));
         Plasmoid.configuration.locationName = name;
         Plasmoid.configuration.latitude = latitude;
@@ -97,7 +103,7 @@ PlasmoidItem {
     }
     SavedPlaceSelection {
         id: placeSelection
-        weather: forecastModel
+        weather: forecastModel.currentLocation.enabled ? null : forecastModel
         visibleKeys: root.weatherConfiguration.visiblePlaces
         orderKeys: root.weatherConfiguration.placeOrder
         onIncludePlaceRequested: key => root.includePlace(key)
