@@ -642,6 +642,45 @@ private slots:
         QCOMPARE(search->query(), QString());
         QVERIFY(object->property("hasPoint").toBool());
     }
+    void mobileLandscapeKeepsChartsVisible()
+    {
+        QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
+        const QVariantMap startup{{"locationName", "Warszawa"}, {"latitude", 52.2297}, {"longitude", 21.0122}, {"model", "um4_60"}};
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}, {"startupForecast", startup}, {"width", 360}, {"height", 800}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *weather = object->findChild<WeatherModel *>();
+        QVERIFY(weather); weather->refresh(false); QVERIFY(weather->hasData());
+        auto *window = qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
+        const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
+            if (parent->objectName() == name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        QQuickItem *scroll = nullptr;
+        QTRY_VERIFY(scroll = find(find, window->contentItem(), "meteogramScrollView"));
+        for (const QSize size : {QSize(360,800), QSize(800,420), QSize(800,360), QSize(920,320), QSize(360,800)}) {
+            window->resize(size);
+            QTest::qWait(300);
+            const double viewportHeight = scroll->height();
+            QVERIFY2(viewportHeight >= 60, qPrintable(QStringLiteral("Charts viewport is %1 px at %2x%3").arg(scroll->height()).arg(size.width()).arg(size.height())));
+            QVERIFY(scroll->isVisible());
+            auto *plot = find(find, scroll, "plot-temperature");
+            QVERIFY(plot && plot->height() > 60);
+            const auto top = scroll->mapToScene({0,0}).y();
+            QVERIFY(top >= 0 && top + scroll->height() <= window->height());
+            const QRectF viewport(scroll->mapToScene({0,0}), scroll->size());
+            const QRectF plotArea(plot->mapToScene({0,0}), plot->size());
+            const auto visibleHeight = viewport.intersected(plotArea).height();
+            QVERIFY2(visibleHeight >= std::min(100.0, viewportHeight * 0.6),
+                qPrintable(QStringLiteral("Only %1 px of the plot is visible at %2x%3")
+                    .arg(visibleHeight).arg(size.width()).arg(size.height())));
+        }
+        destroyTestWindow(object);
+    }
     void mobileNavigationAndSettingsUsePages()
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));

@@ -377,7 +377,7 @@ Item {
             Loader {
                 id: mobileHeader
                 Layout.fillWidth: true
-                active: root.mobileLayout
+                active: root.mobileLayout && root.viewMode !== 0
                 visible: active
                 sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false }
             }
@@ -572,6 +572,12 @@ Item {
             ColumnLayout {
                 width: chartsScroll.availableWidth
                 spacing: 22
+                Loader {
+                    Layout.fillWidth: true
+                    active: root.mobileLayout && chartsScroll.height >= 300
+                    visible: active
+                    sourceComponent: CompactForecast { weather: root.weather; showDays: false; showPlacePicker: false }
+                }
                 Repeater {
                     id: charts
                     Component.onCompleted: root.chartRepeater = charts

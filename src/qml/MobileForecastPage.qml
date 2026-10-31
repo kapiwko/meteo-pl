@@ -13,6 +13,7 @@ Kirigami.Page {
     property bool offerSetup: true
     property int forecastView: 0
     property int newsView: 4
+    readonly property bool shortLandscape: Window.window !== null && Window.window.width > Window.window.height && Window.window.height < 480
     readonly property int destination: forecastPanel.viewMode < 3 ? 0 : forecastPanel.viewMode === 3 ? 1 : 2
     readonly property alias panel: forecastPanel
     readonly property bool canNavigateBack: placesSheet.opened || moreSheet.opened || about.opened || destination !== 0 || forecastView !== 0
@@ -46,7 +47,7 @@ Kirigami.Page {
                 visible: root.destination === 0
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                implicitHeight: 56
+                implicitHeight: root.shortLandscape ? 48 : 56
                 icon.name: "mark-location"
                 text: root.weather.locationName || I18n.i18n("Choose location")
                 Accessible.name: I18n.i18n("My places · choose a forecast")
@@ -96,9 +97,9 @@ Kirigami.Page {
         currentIndex: root.destination
         onCurrentIndexChanged: if (currentIndex >= 0) root.showDestination(currentIndex)
         MaterialStyle.Material.background: Kirigami.Theme.backgroundColor
-        MobileTab { text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
-        MobileTab { text: I18n.i18n("Maps"); icon.name: "globe"; icon.color: "transparent"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
-        MobileTab { text: I18n.i18n("News"); icon.name: "view-list-text"; display: TabButton.TextUnderIcon; implicitHeight: 80 }
+        MobileTab { text: I18n.i18n("Forecast"); icon.name: "weather-few-clouds"; icon.color: "transparent"; display: root.shortLandscape ? TabButton.TextBesideIcon : TabButton.TextUnderIcon; implicitHeight: root.shortLandscape ? 48 : 80 }
+        MobileTab { text: I18n.i18n("Maps"); icon.name: "globe"; icon.color: "transparent"; display: root.shortLandscape ? TabButton.TextBesideIcon : TabButton.TextUnderIcon; implicitHeight: root.shortLandscape ? 48 : 80 }
+        MobileTab { text: I18n.i18n("News"); icon.name: "view-list-text"; display: root.shortLandscape ? TabButton.TextBesideIcon : TabButton.TextUnderIcon; implicitHeight: root.shortLandscape ? 48 : 80 }
     }
     ColumnLayout {
         anchors.fill: parent
