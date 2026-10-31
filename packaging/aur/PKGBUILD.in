@@ -6,13 +6,18 @@ pkgdesc='ICM weather forecasts, interactive meteograms and a Plasma 6 widget'
 arch=('x86_64' 'aarch64')
 url='https://github.com/kapiwko/meteo-pl'
 license=('GPL-3.0-or-later')
-depends=('qt6-base' 'qt6-declarative' 'qt6-positioning' 'qt6-svg' 'qt6-wayland'
-         'kirigami' 'ki18n' 'knotifications' 'kcolorscheme' 'qqc2-desktop-style'
+depends=('glibc' 'libgcc' 'libstdc++' 'hicolor-icon-theme'
+         'qt6-base' 'qt6-declarative' 'qt6-positioning' 'qt6-svg' 'qt6-wayland'
+         'kirigami' 'ki18n' 'knotifications' 'kcolorscheme' 'kcoreaddons' 'qqc2-desktop-style'
          'breeze-icons' 'krunner')
-makedepends=('cmake' 'ninja' 'gettext' 'extra-cmake-modules')
-checkdepends=('xorg-server-xvfb' 'xorg-xauth' 'dbus' 'ttf-dejavu' 'python'
+makedepends=('cmake' 'ninja' 'gettext' 'extra-cmake-modules' 'python')
+checkdepends=('xorg-server-xvfb' 'xorg-xauth' 'dbus' 'ttf-dejavu'
               'plasma-workspace' 'plasma-desktop')
-optdepends=('plasma-desktop: Plasma widget and KRunner integration')
+optdepends=('plasma-desktop: Plasma widget and KRunner integration'
+            'libplasma: Plasma widget runtime'
+            'kcmutils: Plasma widget settings')
+# Qt SVG, Wayland, desktop controls and icon themes are loaded at runtime.
+# The AUR repository provides the source signing key under keys/pgp/.
 source=("https://github.com/kapiwko/meteo-pl/releases/download/v${pkgver}/meteo-pl-${pkgver}.tar.gz"
         "meteo-pl-${pkgver}-SHA256SUMS::https://github.com/kapiwko/meteo-pl/releases/download/v${pkgver}/SHA256SUMS"
         "meteo-pl-${pkgver}-SHA256SUMS.asc::https://github.com/kapiwko/meteo-pl/releases/download/v${pkgver}/SHA256SUMS.asc"
