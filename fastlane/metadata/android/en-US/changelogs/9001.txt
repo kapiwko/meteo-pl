@@ -1,1 +1,1 @@
-Fix meteograms after rotation and place suggestions with predictive keyboards. Add Current location mode, automatic place naming with a map, system/light/dark themes, and loading indicators. Improve chart panning and move chart dates and actions into the mobile header.
+Fix meteograms after rotation and place suggestions with predictive keyboards. Add Current location mode, automatic place naming with a map, system/light/dark themes, and loading indicators. Improve chart panning, align settings forms, and move chart dates and actions into the mobile header.

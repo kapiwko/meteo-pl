@@ -9,7 +9,8 @@ import org.kde.kirigami as Kirigami
 ColumnLayout {
     id: root
     objectName: "meteogramDisplaySettings"
-    spacing: Kirigami.Units.largeSpacing
+    property bool mobileLayout: Kirigami.Settings.isMobile
+    spacing: Kirigami.Units.largeSpacing * 2
     property string profileId: UserPreferences.profile
     property var layout: UserPreferences.chartLayoutForProfile(profileId)
     property int profileHeight: UserPreferences.chartHeightForProfile(profileId)
@@ -155,15 +156,16 @@ ColumnLayout {
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
-            Kirigami.FormLayout {
+            SettingsForm {
                 id: profileForm
                 Layout.fillWidth: true
                 RowLayout {
                     Kirigami.FormData.label: I18n.i18n("Editing profile:")
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                    Layout.preferredWidth: profileForm.fieldWidth
                     ComboBox {
+                        objectName: "profileEditorSelector"
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
                         model: UserPreferences.profiles
@@ -244,7 +246,7 @@ ColumnLayout {
                     Kirigami.FormData.label: I18n.i18n("Name:")
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                    Layout.preferredWidth: profileForm.fieldWidth
                     text: root.currentProfile.name
                     maximumLength: 80
                     onEditingFinished: {
@@ -268,18 +270,17 @@ ColumnLayout {
                         Accessible.name: I18n.i18n("Chart height in this profile")
                     }
                 }
-                Label {
+                SettingsHint {
                     Layout.fillWidth: true
                     text: root.profileHeight > 0
                         ? I18n.i18n("Profile height: %1 px. Individual charts can override it.").arg(root.profileHeight)
                         : I18n.i18n("Uses the application height: %1 px. Individual charts can override it.").arg(UserPreferences.chartHeight)
                     wrapMode: Text.WordWrap
-                    opacity: 0.7
                 }
                 Kirigami.ActionToolBar {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                    Layout.preferredWidth: profileForm.fieldWidth
                     actions: [
                         Kirigami.Action { text: I18n.i18n("Import…"); icon.name: "document-import"; onTriggered: importDialog.open() },
                         Kirigami.Action { text: I18n.i18n("Export…"); icon.name: "document-export"; onTriggered: exportSelection.open() }
@@ -287,13 +288,12 @@ ColumnLayout {
                 }
             }
 
-            Label {
+            SettingsHint {
                 Layout.fillWidth: true
                 text: root.currentProfile.builtin
                     ? I18n.i18n("Changes are saved in this profile. Restore defaults to reset this preset.")
                     : I18n.i18n("The name and chart changes are saved automatically.")
                 wrapMode: Text.WordWrap
-                opacity: 0.7
             }
         }
     }
@@ -317,9 +317,10 @@ ColumnLayout {
         showCloseButton: true
     }
     Pane {
+        objectName: "profileChartsPane"
         Layout.fillWidth: true
         padding: 0
-        Kirigami.Theme.inherit: false
+        Kirigami.Theme.inherit: root.mobileLayout
         Kirigami.Theme.colorSet: Kirigami.Theme.View
         contentItem: ColumnLayout {
             spacing: 0
@@ -420,14 +421,14 @@ ColumnLayout {
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.largeSpacing
-                                    Kirigami.FormLayout {
+                                    SettingsForm {
                                         id: chartForm
                                         Layout.fillWidth: true
                                         TextField {
                                             Kirigami.FormData.label: I18n.i18n("Chart name")
                                             Layout.fillWidth: true
                                             Layout.minimumWidth: 0
-                                            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                                            Layout.preferredWidth: chartForm.fieldWidth
                                             text: chartEntry.modelData.title
                                             maximumLength: 80
                                             onEditingFinished: if (text.trim().length) UserPreferences.setChartOptions(chartEntry.modelData.key, {title: text}, root.profileId)
@@ -438,7 +439,7 @@ ColumnLayout {
                                             SpinBox { from: 64; to: 800; stepSize: 10; enabled: (chartEntry.modelData.height || 0) > 0; value: chartEntry.modelData.height || root.profileHeight || UserPreferences.chartHeight; textFromValue: value => value + " px"; onValueModified: UserPreferences.setChartOptions(chartEntry.modelData.key, {height: value}, root.profileId) }
                                         }
                                     }
-                                    Label {
+                                    SettingsHint {
                                         Layout.fillWidth: true
                                         text: chartEntry.modelData.height > 0
                                             ? I18n.i18n("Chart height: %1 px.").arg(chartEntry.modelData.height)
@@ -446,7 +447,6 @@ ColumnLayout {
                                                 ? I18n.i18n("Uses the profile height: %1 px.").arg(root.profileHeight)
                                                 : I18n.i18n("Uses the application height: %1 px.").arg(UserPreferences.chartHeight)
                                         wrapMode: Text.WordWrap
-                                        opacity: 0.7
                                     }
                                     Repeater {
                                         model: chartEntry.modelData.series

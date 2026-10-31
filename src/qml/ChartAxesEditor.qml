@@ -39,21 +39,26 @@ ColumnLayout {
         onEditingFinished: root.commit()
         Accessible.name: (bound.startsWith("left") ? I18n.i18n("Left axis") : I18n.i18n("Right axis")) + " · " + (bound.endsWith("Min") ? I18n.i18n("Minimum") : I18n.i18n("Maximum"))
     }
-    Kirigami.FormLayout {
+    SettingsForm {
+        id: axesForm
         Layout.fillWidth: true
         RowLayout {
             Kirigami.FormData.label: I18n.i18n("Left axis")
+            Layout.preferredWidth: axesForm.fieldWidth
+            Layout.minimumWidth: 0
             Layout.fillWidth: true
             ColumnLayout { Layout.fillWidth: true; Layout.minimumWidth: 0; Label { text: I18n.i18n("Minimum") } LimitField { id: leftLow; bound: "leftMin" } }
             ColumnLayout { Layout.fillWidth: true; Layout.minimumWidth: 0; Label { text: I18n.i18n("Maximum") } LimitField { id: leftHigh; bound: "leftMax" } }
         }
         RowLayout {
             Kirigami.FormData.label: I18n.i18n("Right axis")
+            Layout.preferredWidth: axesForm.fieldWidth
+            Layout.minimumWidth: 0
             Layout.fillWidth: true
             ColumnLayout { Layout.fillWidth: true; Layout.minimumWidth: 0; Label { text: I18n.i18n("Minimum") } LimitField { id: rightLow; bound: "rightMin" } }
             ColumnLayout { Layout.fillWidth: true; Layout.minimumWidth: 0; Label { text: I18n.i18n("Maximum") } LimitField { id: rightHigh; bound: "rightMax" } }
         }
     }
     Kirigami.InlineMessage { Layout.fillWidth: true; visible: text.length > 0; text: root.validationError || root.saveError; type: Kirigami.MessageType.Warning }
-    Label { Layout.fillWidth: true; text: I18n.i18n("Empty limits use automatic scaling. Use a dot or comma for decimals."); wrapMode: Text.WordWrap; opacity: 0.7 }
+    SettingsHint { Layout.fillWidth: true; text: I18n.i18n("Empty limits use automatic scaling. Use a dot or comma for decimals."); wrapMode: Text.WordWrap }
 }

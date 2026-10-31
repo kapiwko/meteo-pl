@@ -28,18 +28,19 @@ ColumnLayout {
         onRangeSelected: (first, last) => root.rangeSelected(first, last)
         onClosed: intervalSelector.currentIndex = Qt.binding(() => root.intervalIndex())
     }
-    spacing: Kirigami.Units.largeSpacing
+    spacing: Kirigami.Units.largeSpacing * 2
     PreferenceWriteNotice {}
     SettingsSection {
         title: I18n.i18n("Current forecast")
         Layout.fillWidth: true
-        contentItem: Kirigami.FormLayout {
+        contentItem: SettingsForm {
+            id: forecastForm
             ComboBox {
                 objectName: "forecastModelSelector"
                 Kirigami.FormData.label: I18n.i18n("Forecast model:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: forecastForm.fieldWidth
                 model: [{id: "um4_60", name: I18n.i18n("UM4 · 60 hours")}, {id: "um4_120", name: I18n.i18n("UM4 · 120 hours")}, {id: "gfs", name: I18n.i18n("GFS · 240 hours")}]
                 textRole: "name"
                 currentIndex: model.findIndex(entry => entry.id === root.weather.model)
@@ -52,17 +53,17 @@ ColumnLayout {
                 }
                 onActivated: index => root.modelSelected(model[index].id)
             }
-            Label {
+            SettingsHint {
                 Layout.fillWidth: true
                 text: I18n.i18n("UM4 covers Poland and Central Europe. GFS covers the whole world.")
                 wrapMode: Text.WordWrap
-                opacity: 0.7
             }
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Chart profile:")
+                objectName: "forecastProfileSelector"
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: forecastForm.fieldWidth
                 Accessible.name: I18n.i18n("Chart profile")
                 model: UserPreferences.profiles
                 textRole: "name"
@@ -75,7 +76,7 @@ ColumnLayout {
                 visible: root.showTimeRange
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: forecastForm.fieldWidth
                 Accessible.name: I18n.i18n("Chart time interval")
                 model: [I18n.i18n("Entire forecast"), I18n.i18n("24 hours"), I18n.i18n("48 hours"), I18n.i18n("72 hours"), I18n.i18n("Custom interval")]
                 id: intervalSelector
@@ -88,9 +89,10 @@ ColumnLayout {
             }
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Model run:")
+                objectName: "forecastRunSelector"
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: forecastForm.fieldWidth
                 Accessible.name: I18n.i18n("Model run, including archived forecasts")
                 model: root.weather.availableRuns.length ? root.weather.availableRuns : [{timestamp: 0, label: I18n.i18n("Latest available")}]
                 textRole: "label"
@@ -106,10 +108,9 @@ ColumnLayout {
             }
         }
     }
-    Label {
+    SettingsHint {
         Layout.fillWidth: true
         text: I18n.i18n("The time interval and model run apply to this view. The selected profile is remembered.")
-        opacity: 0.7
         wrapMode: Text.WordWrap
     }
 }

@@ -62,14 +62,14 @@ Dialog {
                 else root.close();
             }
         }
-        Kirigami.FormLayout {
+        SettingsForm {
             id: styleForm
             width: formScroll.availableWidth
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Drawing:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: styleForm.fieldWidth
                 model: root.renderers
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === root.seriesStyle.render)
@@ -79,7 +79,7 @@ Dialog {
                 Kirigami.FormData.label: I18n.i18n("Value axis:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: styleForm.fieldWidth
                 model: [{id:"auto",name:I18n.i18n("Automatic by unit")}, {id:"left",name:I18n.i18n("Left axis")}, {id:"right",name:I18n.i18n("Right axis")}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === root.seriesStyle.axis)
@@ -90,7 +90,7 @@ Dialog {
                 visible: root.seriesStyle.render === "area"
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: styleForm.fieldWidth
                 model: [{id:"solid",name:I18n.i18n("Series color")}, {id:"pressure",name:I18n.i18n("ICM pressure palette")}, {id:"wind",name:I18n.i18n("ICM wind palette")}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === root.seriesStyle.fill)
@@ -106,7 +106,7 @@ Dialog {
                     enabled: !root.automaticColor
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                    Layout.preferredWidth: styleForm.fieldWidth
                     Rectangle { Layout.preferredWidth: 22; Layout.preferredHeight: 22; color: root.seriesStyle[colorRow.modelData.key]; border.color: Kirigami.Theme.disabledTextColor }
                     ToolButton {
                         icon.name: "color-picker"
@@ -127,13 +127,12 @@ Dialog {
                     }
                 }
             }
-            Label {
+            SettingsHint {
                 Layout.fillWidth: true
                 visible: root.automaticColor || root.paletteFill
                 text: root.automaticColor ? I18n.i18n("Colors are set automatically from the weather values.")
                     : I18n.i18n("The palette sets the fill colors. The chosen series color is used for its outline.")
                 wrapMode: Text.WordWrap
-                opacity: 0.7
             }
             CheckBox {
                 visible: root.seriesStyle.key === "pcpttl_aver" || root.seriesStyle.key === "pcpttl_max"
@@ -170,7 +169,7 @@ Dialog {
                 visible: root.hasLineStyle
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.preferredWidth: styleForm.fieldWidth
                 model: [{id:"solid",name:I18n.i18n("Solid")}, {id:"dashed",name:I18n.i18n("Dashed")}, {id:"dotted",name:I18n.i18n("Dotted")}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === root.seriesStyle.lineStyle)
@@ -178,12 +177,11 @@ Dialog {
             }
             CheckBox { id: advanced; text: I18n.i18n("Advanced options") }
             SpinBox { visible: advanced.checked; Kirigami.FormData.label: I18n.i18n("Layer order:"); from: 0; to: 100; value: root.seriesStyle.layer; onValueModified: root.change({layer: value}); ToolTip.text: I18n.i18n("Higher values draw a series later within its layer; fills stay below lines"); ToolTip.visible: hovered }
-            Label {
+            SettingsHint {
                 visible: advanced.checked
                 Layout.fillWidth: true
                 text: I18n.i18n("Higher values draw a series later within its layer; fills stay below lines")
                 wrapMode: Text.WordWrap
-                opacity: 0.7
             }
         }
     }

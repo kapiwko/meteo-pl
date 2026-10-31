@@ -71,7 +71,8 @@ Kirigami.ScrollablePage {
             padding: Kirigami.Units.largeSpacing * 2
             header: MobilePageHeader { title: sectionView.title; onBackRequested: root.navigationStack.pop() }
             Loader {
-                width: sectionView.availableWidth
+                width: Math.min(sectionView.availableWidth, Kirigami.Units.gridUnit * 32)
+                x: Math.max(0, (sectionView.availableWidth - width) / 2)
                 sourceComponent: [forecastSettings, profileSettings, readingSettings, applicationSettings][sectionView.section]
             }
         }
@@ -88,7 +89,7 @@ Kirigami.ScrollablePage {
             onRangeSelected: (first, last) => root.forecastPanel.setRange(first, last)
         }
     }
-    Component { id: profileSettings; DisplaySettings { weather: root.weather } }
-    Component { id: readingSettings; ReadingSettings {} }
+    Component { id: profileSettings; DisplaySettings { weather: root.weather; mobileLayout: true } }
+    Component { id: readingSettings; ReadingSettings { touchMode: true } }
     Component { id: applicationSettings; ApplicationSettings {} }
 }

@@ -32,12 +32,15 @@ Dialog {
         Keys.onShortcutOverride: event => { if (event.key === Qt.Key_Back) event.accepted = true; }
         Keys.onPressed: event => { if (event.key === Qt.Key_Back) { event.accepted = true; root.reject(); } }
         spacing: Kirigami.Units.largeSpacing
-        Kirigami.FormLayout {
+        SettingsForm {
+            id: intervalForm
             Layout.fillWidth: true
             DateTimeField {
                 objectName: "intervalStart"
                 Kirigami.FormData.label: I18n.i18n("From:")
                 Layout.fillWidth: true
+                Layout.preferredWidth: intervalForm.fieldWidth
+                Layout.minimumWidth: 0
                 minimum: root.minimum; maximum: root.maximum
                 timestamp: root.draftStart
                 onEdited: value => root.draftStart = value
@@ -46,12 +49,14 @@ Dialog {
                 objectName: "intervalEnd"
                 Kirigami.FormData.label: I18n.i18n("To:")
                 Layout.fillWidth: true
+                Layout.preferredWidth: intervalForm.fieldWidth
+                Layout.minimumWidth: 0
                 minimum: root.minimum; maximum: root.maximum
                 timestamp: root.draftEnd
                 onEdited: value => root.draftEnd = value
             }
         }
-        Label { Layout.fillWidth: true; text: UserPreferences.utc ? I18n.i18n("Times are shown in UTC.") : I18n.i18n("Times are shown in your local time zone."); wrapMode: Text.WordWrap; opacity: 0.7 }
+        SettingsHint { text: UserPreferences.utc ? I18n.i18n("Times are shown in UTC.") : I18n.i18n("Times are shown in your local time zone.") }
         Kirigami.InlineMessage { Layout.fillWidth: true; visible: root.validationError.length > 0; text: root.validationError; type: Kirigami.MessageType.Warning }
     }
     footer: DialogButtonBox {

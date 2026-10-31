@@ -2315,6 +2315,95 @@ private slots:
         QTest::newRow("medium") << 720;
         QTest::newRow("wide") << 1280;
     }
+    void mobileSettingsFieldsShareTheSameMargins_data()
+    {
+        QTest::addColumn<int>("width");
+        QTest::addColumn<double>("fontScale");
+        QTest::newRow("phone") << 360 << 1.0;
+        QTest::newRow("small-phone") << 320 << 1.0;
+        QTest::newRow("large-text") << 360 << 1.4;
+        QTest::newRow("landscape") << 800 << 1.0;
+    }
+    void mobileSettingsFieldsShareTheSameMargins()
+    {
+        QFETCH(int, width); QFETCH(double, fontScale);
+        const QFont originalFont = QGuiApplication::font();
+        const auto restoreFont = qScopeGuard([&] { QGuiApplication::setFont(originalFont); });
+        auto font = originalFont;
+        if (font.pointSizeF() > 0) font.setPointSizeF(font.pointSizeF() * fontScale);
+        else font.setPixelSize(qRound(font.pixelSize() * fontScale));
+        QGuiApplication::setFont(font);
+        QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import QtQuick.Controls
+            import pl.meteo.desktop
+            ApplicationWindow {
+                width: 360; height: 840; visible: true
+                property alias navigation: stack
+                WeatherModel { id: forecastWeather; autoRefresh: false }
+                ForecastPanel { id: forecast; weather: forecastWeather; visible: false }
+                StackView {
+                    id: stack; anchors.fill: parent
+                    initialItem: MobileSettingsPage {
+                        weather: forecastWeather; forecastPanel: forecast; navigationStack: stack
+                    }
+                }
+            }
+        )", QUrl("inmemory:SettingsMargins.qml"));
+        QTRY_VERIFY(component.status() != QQmlComponent::Loading);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
+        window->resize(width, 840);
+        auto *stack = object->property("navigation").value<QObject *>(); QVERIFY(stack);
+        const auto currentPage = [&] { return stack->property("currentItem").value<QQuickItem *>(); };
+        const auto find = [](auto &&self, QQuickItem *item, const QString &name) -> QQuickItem * {
+            if (item->objectName() == name) return item;
+            for (auto *child : item->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        const QList<QStringList> controls{
+            {"forecastModelSelector", "forecastProfileSelector", "settingsTimeRange", "forecastRunSelector"},
+            {"profileNameField", "profileEditorSelector"},
+            {"probeModeSetting"},
+            {"themeSetting", "rendererSetting", "windUnitSetting"}
+        };
+        for (int section = 0; section < controls.size(); ++section) {
+            auto *entry = find(find, currentPage(), "mobileSettingsSection-" + QString::number(section)); QVERIFY(entry);
+            QVERIFY(QMetaObject::invokeMethod(entry, "clicked"));
+            QTRY_VERIFY(!stack->property("busy").toBool());
+            QTRY_COMPARE(currentPage()->objectName(), "mobileSettingsDetail-" + QString::number(section));
+            QVERIFY(waitForStableLayout(currentPage()));
+            for (const auto &name : controls[section]) {
+                auto *control = find(find, currentPage(), name); QVERIFY2(control, qPrintable(name));
+                auto *form = control->parentItem();
+                while (form && form->objectName() != "settingsForm") form = form->parentItem();
+                QVERIFY2(form, qPrintable(name));
+                const auto position = control->mapToItem(form, {0, 0});
+                QVERIFY2(control->width() > 0 && position.x() >= -1 && position.x() + control->width() <= form->width() + 1,
+                    qPrintable(QString("%1 exceeds its form at width %2").arg(name).arg(width)));
+                if (!form->property("wideMode").toBool()) {
+                    QVERIFY2(qAbs(position.x()) < 1, qPrintable(QString("%1 has an extra %2 px inset").arg(name).arg(position.x())));
+                    if (name != "profileEditorSelector")
+                        QVERIFY2(qAbs(control->width() - form->width()) < 1, qPrintable(name + " does not fill the available width"));
+                }
+            }
+            if (const auto directory = qEnvironmentVariable("METEO_FORM_SCREENSHOTS"); !directory.isEmpty()) {
+                QDir().mkpath(directory);
+                QVERIFY(window->grabWindow().save(directory + "/" + QTest::currentDataTag() + "-" + QString::number(section) + ".png"));
+            }
+            auto *back = find(find, currentPage(), "mobileBackButton"); QVERIFY(back);
+            QVERIFY(QMetaObject::invokeMethod(back, "clicked"));
+            QTRY_VERIFY(!stack->property("busy").toBool());
+            QTRY_COMPARE(currentPage()->objectName(), "mobileSettingsPage");
+        }
+        destroyTestWindow(object);
+    }
     void responsiveSettingsAndForecastControls()
     {
         QFETCH(int, width);

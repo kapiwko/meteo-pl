@@ -6,9 +6,13 @@ import org.kde.kirigami as Kirigami
 
 GroupBox {
     id: root
+    objectName: "settingsSection"
     Layout.fillWidth: true
     Layout.minimumWidth: 0
     padding: 0
+    leftPadding: 0
+    rightPadding: 0
+    bottomPadding: 0
     topPadding: label.implicitHeight + Kirigami.Units.smallSpacing
     background: null
     label: RowLayout {

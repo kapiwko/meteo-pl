@@ -11,18 +11,20 @@ ColumnLayout {
     onVisibleChanged: if (visible) { cacheCleared = false; CacheStorage.refresh(); }
     Component.onCompleted: if (visible) CacheStorage.refresh()
     Connections { target: CacheStorage; function onCleared() { root.cacheCleared = true; } }
-    spacing: Kirigami.Units.largeSpacing
+    spacing: Kirigami.Units.largeSpacing * 2
     PreferenceWriteNotice {}
     SettingsSection {
         title: I18n.i18n("Appearance")
         Layout.fillWidth: true
-        contentItem: Kirigami.FormLayout {
+        contentItem: SettingsForm {
+            id: appearanceForm
+            twinFormLayouts: [chartsForm]
             ComboBox {
                 objectName: "themeSetting"
                 Kirigami.FormData.label: I18n.i18n("Color theme:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
+                Layout.preferredWidth: appearanceForm.fieldWidth
                 model: [{id: "automatic", name: I18n.i18n("Automatic (system)")}, {id: "light", name: I18n.i18n("Light")}, {id: "dark", name: I18n.i18n("Dark")}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === UserPreferences.theme)
@@ -33,14 +35,14 @@ ColumnLayout {
     SettingsSection {
         title: I18n.i18n("Charts")
         Layout.fillWidth: true
-        contentItem: Kirigami.FormLayout {
+        contentItem: SettingsForm {
             id: chartsForm
             ComboBox {
                 objectName: "rendererSetting"
                 Kirigami.FormData.label: I18n.i18n("Renderer:")
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
+                Layout.preferredWidth: chartsForm.fieldWidth
                 model: [{id: "gpu", name: I18n.i18n("GPU acceleration (default)")}, {id: "cpu", name: I18n.i18n("CPU rendering")}]
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === UserPreferences.renderer)
@@ -53,28 +55,32 @@ ColumnLayout {
                 textFromValue: value => value + " px"
                 onValueModified: UserPreferences.chartHeight = value
             }
-            Label {
+            SettingsHint {
                 Layout.fillWidth: true
                 text: I18n.i18n("Profiles and individual charts can override this height.")
                 wrapMode: Text.WordWrap
-                opacity: 0.7
             }
-            CheckBox { text: I18n.i18n("Shade nighttime"); checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
+            CheckBox { Layout.fillWidth: true; Layout.minimumWidth: 0; text: I18n.i18n("Shade nighttime"); checked: UserPreferences.showNight; onToggled: UserPreferences.showNight = checked }
         }
     }
     SettingsSection {
         title: I18n.i18n("Units and time")
         Layout.fillWidth: true
-        contentItem: Kirigami.FormLayout {
+        contentItem: SettingsForm {
+            id: unitsForm
             twinFormLayouts: [chartsForm]
             ComboBox {
                 Kirigami.FormData.label: I18n.i18n("Wind speed:")
+                objectName: "windUnitSetting"
+                Layout.preferredWidth: unitsForm.fieldWidth
+                Layout.minimumWidth: 0
+                Layout.fillWidth: true
                 model: ["m/s", "km/h", "kt"]
                 currentIndex: model.indexOf(UserPreferences.windUnit)
                 onActivated: UserPreferences.windUnit = currentText
             }
-            CheckBox { text: I18n.i18n("Show UTC time"); checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
-            Label { text: I18n.i18n("The system time zone is used by default."); Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: 0.7 }
+            CheckBox { Layout.fillWidth: true; Layout.minimumWidth: 0; text: I18n.i18n("Show UTC time"); checked: UserPreferences.utc; onToggled: UserPreferences.utc = checked }
+            SettingsHint { text: I18n.i18n("The system time zone is used by default."); Layout.fillWidth: true; wrapMode: Text.WordWrap }
         }
     }
     SettingsSection {
@@ -82,7 +88,7 @@ ColumnLayout {
         Layout.fillWidth: true
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
-            Kirigami.FormLayout {
+            SettingsForm {
                 twinFormLayouts: [chartsForm]
                 Layout.fillWidth: true
                 Label { Kirigami.FormData.label: I18n.i18n("Forecasts:"); text: CacheStorage.forecastSize }
@@ -102,11 +108,10 @@ ColumnLayout {
                     onClicked: { root.cacheCleared = false; CacheStorage.clear(); }
                 }
             }
-            Label {
+            SettingsHint {
                 Layout.fillWidth: true
                 text: I18n.i18n("Data will be downloaded again when needed. Saved places and profiles will be kept.")
                 wrapMode: Text.WordWrap
-                opacity: 0.7
             }
             Kirigami.InlineMessage {
                 Layout.fillWidth: true
