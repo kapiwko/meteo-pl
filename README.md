@@ -46,9 +46,7 @@ wind speed, gusts and direction in one view.*
 
 ## Screenshots
 
-These screenshots were captured on 28 October 2026 from the running application
-and Plasma widget with real ICM weather data. The Android image comes from the
-APK running in an Android 15 emulator with its default 72-hour view.
+Meteo on the desktop, in a Plasma widget and on Android.
 Click an image to view it at full size.
 
 | Interactive weather map | Thematic maps |
@@ -69,15 +67,18 @@ Click an image to view it at full size.
 | KDE Plasma widget | Android |
 | :---: | :---: |
 | <a href="docs/images/plasma.png"><img src="docs/images/plasma.png" height="540" alt="Plasma popup with temperature and wind charts expanded, other charts collapsed, and a button to open the full application"></a> | <a href="docs/images/android.png"><img src="docs/images/android.png" height="540" alt="Android Material interface showing meteograms, forecast tabs and bottom navigation"></a> |
-| Independently expandable charts inside Plasma's native popup. | Touch navigation with forecast, map and news views. |
+| Independently expandable charts inside Plasma's native popup. | Touch gestures and compact chart controls, with forecast, map and news views. |
 
 ## Install
 
-This project is under active development. GitHub Actions builds downloadable
-artifacts; there is no stable release yet. Open a successful run in
-[Actions](https://github.com/kapiwko/meteo-pl/actions) and download the artifact
-for your system. Each package directory includes SHA-256 checksums and a build
-report.
+Download Linux packages and the Android APK from
+[Releases](https://github.com/kapiwko/meteo-pl/releases/latest). The release tag
+and checksum manifest carry the maintainer's GPG signature; Android APKs use the
+persistent application release key.
+
+Development snapshots are available from successful runs in
+[Actions](https://github.com/kapiwko/meteo-pl/actions). Each package artifact
+includes SHA-256 checksums and a build report.
 
 | System | Package | Includes the Plasma widget |
 | --- | --- | --- |
