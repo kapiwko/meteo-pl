@@ -699,6 +699,37 @@ private slots:
         QCOMPARE(search->query(), QString());
         QVERIFY(object->property("hasPoint").toBool());
     }
+    void placeSuggestionsClearlyOfferSelection()
+    {
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [](const QUrl &) { return QByteArray(R"({"features":[{"properties":{"name":"Kielce","state":"świętokrzyskie"},"geometry":{"coordinates":[20.6286,50.8661]}}]})"); };
+        PlaceSearchModel search(nullptr, server.endpoint());
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "LocationEditor");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"searchModel", QVariant::fromValue(&search)}}));
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *editor = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(360, 800); editor->setParentItem(window.contentItem()); editor->setWidth(336); window.show();
+        search.setQuery("Kiel"); search.search();
+        QTRY_COMPARE(search.results().size(), 1);
+        auto *suggestions = object->findChild<QQuickItem *>("placeSearchSuggestions"); QVERIFY(suggestions);
+        QTRY_VERIFY(suggestions->isVisible());
+        const auto find = [](auto &&self, QQuickItem *parent) -> QQuickItem * {
+            if (parent->objectName() == "placeSuggestion-Kielce") return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child)) return found;
+            return nullptr;
+        };
+        QQuickItem *result = nullptr; QTRY_VERIFY(result = find(find, editor));
+        QTRY_VERIFY(result->width() > 100 && result->height() >= 48);
+        QQmlExpression accessibleName(qmlContext(result), result, "Accessible.name");
+        QCOMPARE(accessibleName.evaluate().toString(), QStringLiteral("Select place: Kielce. świętokrzyskie"));
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, result->mapToScene({result->width()/2, result->height()/2}).toPoint());
+        QTRY_VERIFY(object->property("valid").toBool());
+        QCOMPARE(object->property("locationName").toString(), "Kielce");
+        QCOMPARE(object->property("latitude").toDouble(), 50.8661);
+        QCOMPARE(object->property("longitude").toDouble(), 20.6286);
+        QVERIFY(!suggestions->isVisible());
+    }
     void mobileLandscapeKeepsChartsVisible()
     {
         QQmlEngine engine;

@@ -2503,3 +2503,19 @@ msgstr ""
 #: src/qml/CompactForecast.qml:133 src/qml/ForecastHeader.qml:85
 msgid "system local time"
 msgstr ""
+
+#: src/qml/LocationEditor.qml:157
+msgid "Search results"
+msgstr ""
+
+#: src/qml/LocationEditor.qml:189
+msgid "Select"
+msgstr ""
+
+#: src/qml/LocationEditor.qml:159
+msgid "Select a place from the list to continue."
+msgstr ""
+
+#: src/qml/LocationEditor.qml:178
+msgid "Select place"
+msgstr ""

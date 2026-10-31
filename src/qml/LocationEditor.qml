@@ -22,9 +22,9 @@ ColumnLayout {
     property bool positionRequested: false
     readonly property var duplicatePlace: hasPoint ? UserPreferences.places.find(place => place.id !== editingId && LocationRules.samePlace(place.latitude, place.longitude, latitude, longitude)) || null : null
     readonly property bool valid: hasPoint && locationName.trim().length > 0 && !duplicatePlace
-        && !placeSearch.busy && !positionRequested && !geocoder.busy && LocationRules.valid(latitude, longitude, "gfs")
+        && !root.searchModel.busy && !positionRequested && !geocoder.busy && LocationRules.valid(latitude, longitude, "gfs")
         && (!manual.checked || (latField.acceptableInput && lonField.acceptableInput))
-    onVisibleChanged: if (!visible) { positionRequested = false; placeSearch.query = ""; geocoder.cancel(); }
+    onVisibleChanged: if (!visible) { positionRequested = false; root.searchModel.query = ""; geocoder.cancel(); }
     spacing: Kirigami.Units.largeSpacing
 
 
@@ -35,7 +35,7 @@ ColumnLayout {
         latitude = hasPoint ? lat : NaN; longitude = hasPoint ? lon : NaN;
         mapLatitude = Number.isFinite(lat) ? lat : 52.2297;
         mapLongitude = Number.isFinite(lon) ? lon : 21.0122;
-        searchField.text = ""; placeSearch.query = ""; positionError = "";
+        searchField.text = ""; root.searchModel.query = ""; positionError = "";
         positionRequested = false; showMap = false; mapZoom = 7; manual.checked = false;
     }
     function selectPlace(place) {
@@ -45,8 +45,9 @@ ColumnLayout {
         latitude = place.latitude; longitude = place.longitude;
         hasPoint = true;
         mapLatitude = latitude; mapLongitude = longitude;
-        searchField.text = place.name; placeSearch.query = "";
+        searchField.text = place.name; root.searchModel.query = "";
         positionError = "";
+        Qt.inputMethod.hide();
     }
     function selectLocatedPosition(lat, lon) {
         Qt.inputMethod.hide();
@@ -65,7 +66,7 @@ ColumnLayout {
         positionRequested = true;
         if (locationPermission.status === Qt.PermissionStatus.Undetermined) locationPermission.request();
     }
-    PlaceSearchModel { id: placeSearch }
+    property PlaceSearchModel searchModel: PlaceSearchModel {}
     ReverseGeocoder {
         id: geocoder
         onResolved: name => { root.locationName = name; searchField.text = name; }
@@ -127,58 +128,79 @@ ColumnLayout {
                         root.hasPoint = false;
                         // Predictive keyboards (including Samsung Keyboard) can
                         // keep the entire place name in the IME preedit buffer.
-                        placeSearch.query = text.slice(0, cursorPosition) + preeditText + text.slice(cursorPosition);
+                        root.searchModel.query = text.slice(0, cursorPosition) + preeditText + text.slice(cursorPosition);
                     }
-                    onTextChanged: if (!text.length) placeSearch.query = ""
+                    onTextChanged: if (!text.length) root.searchModel.query = ""
                     onTextEdited: updateQuery()
                     onPreeditTextChanged: if (activeFocus && (preeditText.length > 0 || !root.hasPoint)) updateQuery()
                     onAccepted: {
                         const queryText = text.slice(0, cursorPosition) + preeditText + text.slice(cursorPosition);
                         Qt.inputMethod.commit();
-                        if (!queryText.trim().length) { placeSearch.query = ""; return; }
-                        if (placeSearch.results.length && placeSearch.query.trim() === queryText.trim()) root.selectPlace(placeSearch.results[0]);
-                        else { placeSearch.query = queryText; placeSearch.search(); }
+                        if (!queryText.trim().length) { root.searchModel.query = ""; return; }
+                        if (root.searchModel.results.length && root.searchModel.query.trim() === queryText.trim()) root.selectPlace(root.searchModel.results[0]);
+                        else { root.searchModel.query = queryText; root.searchModel.search(); }
                     }
                 }
                 Item {
                     Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
                     Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-                    visible: placeSearch.busy
-                    BusyIndicator { anchors.fill: parent; running: placeSearch.busy }
+                    visible: root.searchModel.busy
+                    BusyIndicator { anchors.fill: parent; running: root.searchModel.busy }
                 }
             }
-            CheckBox { text: I18n.i18n("Search outside Poland too"); checked: !placeSearch.polandOnly; onToggled: placeSearch.polandOnly = !checked }
-            Pane {
+            CheckBox { text: I18n.i18n("Search outside Poland too"); checked: !root.searchModel.polandOnly; onToggled: root.searchModel.polandOnly = !checked }
+            ColumnLayout {
+                objectName: "placeSearchSuggestions"
                 Layout.fillWidth: true
-                visible: placeSearch.results.length > 0
-                padding: 0
-                Kirigami.Theme.inherit: false
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                contentItem: ColumnLayout {
-                    spacing: 0
-                    Repeater {
-                        model: placeSearch.results
-                        delegate: ItemDelegate {
-                            id: resultDelegate
-                            required property var modelData
-                            Layout.fillWidth: true
-                            onClicked: root.selectPlace(modelData)
-                            contentItem: ColumnLayout {
-                                spacing: Kirigami.Units.smallSpacing / 2
-                                Label { text: resultDelegate.modelData.name; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
-                                Label { text: resultDelegate.modelData.description; opacity: 0.7; font: Kirigami.Theme.smallFont; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                visible: root.searchModel.results.length > 0
+                spacing: Kirigami.Units.smallSpacing
+                Kirigami.Heading { text: I18n.i18n("Search results"); level: 4 }
+                Label {
+                    text: I18n.i18n("Select a place from the list to continue.")
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    font: Kirigami.Theme.smallFont
+                }
+                Frame {
+                    Layout.fillWidth: true
+                    padding: 0
+                    contentItem: ColumnLayout {
+                        spacing: 0
+                        Repeater {
+                            model: root.searchModel.results
+                            delegate: ItemDelegate {
+                                id: resultDelegate
+                                required property var modelData
+                                objectName: "placeSuggestion-" + modelData.name
+                                Layout.fillWidth: true
+                                implicitHeight: Math.max(48, implicitContentHeight + topPadding + bottomPadding)
+                                onClicked: root.selectPlace(modelData)
+                                Accessible.name: I18n.i18n("Select place") + ": " + modelData.name + ". " + modelData.description
+                                contentItem: RowLayout {
+                                    spacing: Kirigami.Units.largeSpacing
+                                    Kirigami.Icon { source: "mark-location"; Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium; Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
+                                        spacing: Kirigami.Units.smallSpacing / 2
+                                        Label { text: resultDelegate.modelData.name; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
+                                        Label { text: resultDelegate.modelData.description; color: Kirigami.Theme.disabledTextColor; font: Kirigami.Theme.smallFont; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+                                    }
+                                    Label { text: I18n.i18n("Select"); color: Kirigami.Theme.linkColor }
+                                    Kirigami.Icon { source: "go-next"; Layout.preferredWidth: Kirigami.Units.iconSizes.small; Layout.preferredHeight: Kirigami.Units.iconSizes.small }
+                                }
                             }
                         }
                     }
                 }
             }
             Label {
-                visible: placeSearch.query.length >= 2 && !placeSearch.busy && !placeSearch.results.length && !placeSearch.error
+                visible: root.searchModel.query.length >= 2 && !root.searchModel.busy && !root.searchModel.results.length && !root.searchModel.error
                 text: I18n.i18n("No places found. Refine the name or choose a point on the map.")
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }
-            Kirigami.InlineMessage { visible: placeSearch.error.length > 0; text: placeSearch.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
+            Kirigami.InlineMessage { visible: root.searchModel.error.length > 0; text: root.searchModel.error; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Flow {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing

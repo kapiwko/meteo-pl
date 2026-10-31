@@ -2707,3 +2707,19 @@ msgstr "czas lokalny systemu"
 
 #~ msgid "Selected: "
 #~ msgstr "Wybrano: "
+
+#: src/qml/LocationEditor.qml:157
+msgid "Search results"
+msgstr "Wyniki wyszukiwania"
+
+#: src/qml/LocationEditor.qml:189
+msgid "Select"
+msgstr "Wybierz"
+
+#: src/qml/LocationEditor.qml:159
+msgid "Select a place from the list to continue."
+msgstr "Wybierz miejscowość z listy, aby kontynuować."
+
+#: src/qml/LocationEditor.qml:178
+msgid "Select place"
+msgstr "Wybierz miejscowość"
