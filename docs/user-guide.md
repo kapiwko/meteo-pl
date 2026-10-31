@@ -184,7 +184,11 @@ a second slider appears when only part of the forecast is visible.
   interval opens bounded start/end calendars and hour controls.
 - **Profiles:** chart/series editing and profile import/export.
 - **Readings:** identification scope and initial legend visibility.
-- **Application:** renderer, units, time zone, global chart height and cache.
+- **Application:** color theme, renderer, units, time zone, global chart height and cache.
+
+Choose **Automatic (system)**, **Light** or **Dark** in Application settings.
+The automatic theme follows system changes. The Plasma widget uses its Plasma
+theme.
 
 Forms use `Kirigami.FormLayout` and standard Qt Quick controls with insets around
 tabs, content and footer buttons. Profile actions use `Kirigami.ActionToolBar`,

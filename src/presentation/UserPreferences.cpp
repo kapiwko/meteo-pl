@@ -126,6 +126,18 @@ void UserPreferences::setProbeMode(const QString &value)
         m_store.setValue("display/probeMode", value);
     });
 }
+QString UserPreferences::theme() const
+{
+    const auto value = m_store.value("display/theme", "automatic").toString();
+    return QStringList{"automatic", "light", "dark"}.contains(value) ? value : QStringLiteral("automatic");
+}
+void UserPreferences::setTheme(const QString &value)
+{
+    change([&] {
+        if (value == theme() || !QStringList{"automatic", "light", "dark"}.contains(value)) return;
+        m_store.setValue("display/theme", value);
+    });
+}
 QString UserPreferences::renderer() const
 {
     return m_store.value("display/renderer", "gpu").toString() == "cpu" ? "cpu" : "gpu";

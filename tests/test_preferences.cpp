@@ -20,6 +20,19 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void colorThemeIsValidatedAndPersists()
+    {
+        QTemporaryDir config;
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        UserPreferences preferences;
+        QCOMPARE(preferences.theme(), "automatic");
+        preferences.setTheme("dark");
+        QCOMPARE(preferences.theme(), "dark");
+        { UserPreferences reopened; QCOMPARE(reopened.theme(), "dark"); }
+        preferences.setTheme("invalid"); QCOMPARE(preferences.theme(), "dark");
+        preferences.setTheme("light"); QCOMPARE(preferences.theme(), "light");
+        preferences.setTheme("automatic"); QCOMPARE(preferences.theme(), "automatic");
+    }
     void axisValidationIsAtomicAndProfileExportIncludesUntouchedPresets()
     {
         QTemporaryDir config;

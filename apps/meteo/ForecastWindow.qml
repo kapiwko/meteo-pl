@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import org.kde.kirigami as Kirigami
+import pl.meteo.desktop
 
 Kirigami.ApplicationWindow {
     id: window
@@ -15,6 +16,7 @@ Kirigami.ApplicationWindow {
     minimumHeight: 440
     visible: true
     title: weather.locationName.length ? weather.locationName + " · Meteo" : "Meteo"
+    ApplicationTheme { mode: UserPreferences.theme }
     ForecastSession { id: session }
     function selectModel(model) { session.selectModel(model); }
     function selectLocation(name, latitude, longitude) { session.selectLocation(name, latitude, longitude); }

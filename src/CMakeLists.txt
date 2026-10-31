@@ -68,6 +68,7 @@ qt_add_qml_module(meteo_ui
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/ReverseGeocoder.cpp presentation/ReverseGeocoder.hpp
         presentation/LocationTracker.cpp presentation/LocationTracker.hpp
+        presentation/ApplicationTheme.cpp presentation/ApplicationTheme.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/ProfileFileCodec.cpp presentation/ProfileFileCodec.hpp
         presentation/JsonSchemaValidator.cpp presentation/JsonSchemaValidator.hpp
@@ -171,3 +172,14 @@ qt_target_qml_sources(meteo_ui QML_FILES qml/MapLegend.qml)
 
 set_source_files_properties(qml/ForecastActivity.qml PROPERTIES QT_RESOURCE_ALIAS ForecastActivity.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/ForecastActivity.qml)
+
+if(NOT ANDROID)
+    find_package(KF6ColorScheme 6.6 REQUIRED)
+    target_link_libraries(meteo_ui PRIVATE KF6::ColorScheme)
+    target_compile_definitions(meteo_ui PRIVATE METEO_NATIVE_COLOR_SCHEMES)
+    qt_add_resources(meteo_ui "application_color_schemes" PREFIX "/org.kde.kcolorscheme/color-schemes"
+        BASE "${PROJECT_SOURCE_DIR}/resources/colors"
+        FILES "${PROJECT_SOURCE_DIR}/resources/colors/BreezeLight.colors" "${PROJECT_SOURCE_DIR}/resources/colors/BreezeDark.colors")
+endif()
+
+install(FILES "${PROJECT_SOURCE_DIR}/resources/licenses/Breeze-LGPL-2.0.txt" DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/meteo-pl/breeze-colors")

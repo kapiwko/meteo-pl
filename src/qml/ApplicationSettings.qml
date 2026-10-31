@@ -14,6 +14,23 @@ ColumnLayout {
     spacing: Kirigami.Units.largeSpacing
     PreferenceWriteNotice {}
     SettingsSection {
+        title: I18n.i18n("Appearance")
+        Layout.fillWidth: true
+        contentItem: Kirigami.FormLayout {
+            ComboBox {
+                objectName: "themeSetting"
+                Kirigami.FormData.label: I18n.i18n("Color theme:")
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
+                model: [{id: "automatic", name: I18n.i18n("Automatic (system)")}, {id: "light", name: I18n.i18n("Light")}, {id: "dark", name: I18n.i18n("Dark")}]
+                textRole: "name"
+                currentIndex: model.findIndex(item => item.id === UserPreferences.theme)
+                onActivated: index => UserPreferences.theme = model[index].id
+            }
+        }
+    }
+    SettingsSection {
         title: I18n.i18n("Charts")
         Layout.fillWidth: true
         contentItem: Kirigami.FormLayout {

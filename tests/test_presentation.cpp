@@ -772,6 +772,28 @@ private slots:
         QVERIFY(activity->property("visible").toBool());
         QVERIFY(!activity->property("positionError").toString().isEmpty());
     }
+    void applicationThemeChangesWithoutRestart()
+    {
+        QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto original = preferences->theme();
+        const auto restore = qScopeGuard([&] { preferences->setTheme(original); });
+        for (const QString type : {QStringLiteral("Mobile"), QStringLiteral("Main")}) {
+            QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/") + type + ".qml"));
+            QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest", true}}));
+            QVERIFY2(object, qPrintable(component.errorString()));
+            auto *window = qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
+            for (const QString theme : {QStringLiteral("dark"), QStringLiteral("light"), QStringLiteral("dark"), QStringLiteral("automatic")}) {
+                preferences->setTheme(theme);
+                if (theme != "automatic")
+                    QTRY_COMPARE(window->color().lightnessF() < 0.5, theme == "dark");
+            }
+            destroyTestWindow(object);
+        }
+    }
     void mobileNavigationAndSettingsUsePages()
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));

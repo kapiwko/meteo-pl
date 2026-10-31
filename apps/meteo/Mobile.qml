@@ -10,7 +10,7 @@ ApplicationWindow {
     readonly property alias weather: session.weather
     property alias smokeTest: session.smokeTest
     property alias startupForecast: session.startupForecast
-    property int colorScheme: Application.styleHints.colorScheme
+    property int colorScheme: UserPreferences.theme === "dark" ? Qt.Dark : UserPreferences.theme === "light" ? Qt.Light : Application.styleHints.colorScheme
     width: 420; height: 840
     minimumWidth: 320; minimumHeight: 440
     visible: true
@@ -26,6 +26,7 @@ ApplicationWindow {
         if (navigation.depth > 1) navigation.pop();
         else forecastPage.navigateBack();
     }
+    ApplicationTheme { mode: UserPreferences.theme }
     ForecastSession { id: session }
     StackView {
         id: navigation

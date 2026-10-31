@@ -20,6 +20,7 @@ class subinfo(info.infoclass):
         self.runtimeDependencies["virtual/base"] = None
         self.buildDependencies["kde/frameworks/extra-cmake-modules"] = None
         if not CraftCore.compiler.platform.isAndroid:
+            self.runtimeDependencies["kde/frameworks/tier2/kcolorscheme"] = None
             self.buildDependencies["libs/gettext"] = None
         self.runtimeDependencies["kde/frameworks/tier1/ki18n"] = None
         self.runtimeDependencies["libs/qt6/qtbase"] = None
@@ -31,6 +32,7 @@ class subinfo(info.infoclass):
         self.runtimeDependencies["kde/frameworks/tier3/kiconthemes"] = None
         self.runtimeDependencies["kde/frameworks/tier3/knotifications"] = None
         if not CraftCore.compiler.platform.isAndroid:
+            self.runtimeDependencies["kde/frameworks/tier2/kcolorscheme"] = None
             self.runtimeDependencies["kde/frameworks/tier3/qqc2-desktop-style"] = None
             self.runtimeDependencies["kde/plasma/breeze"] = None
         if CraftCore.compiler.platform.isWindows:
