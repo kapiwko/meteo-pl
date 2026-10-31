@@ -40,6 +40,19 @@ private slots:
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 5), polish ? QStringLiteral("Wybrano 5 wykresów") : QStringLiteral("5 charts selected"));
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 12), polish ? QStringLiteral("Wybrano 12 wykresów") : QStringLiteral("12 charts selected"));
     }
+    void weatherLabelsKeepTheirMeaningWhenFollowedByAValue()
+    {
+        const QList<QPair<const char *, QString>> labels{
+            {"Feels like", QStringLiteral("Odczuw.")}, {"Precipitation", QStringLiteral("Opady")},
+            {"Precipitation chance", QStringLiteral("Szansa opadu")}, {"Clouds", QStringLiteral("Chmury")},
+            {"Wind", QStringLiteral("Wiatr")}, {"Gusts", QStringLiteral("Porywy")},
+            {"Pressure", QStringLiteral("Ciśnienie")}, {"Sunrise", QStringLiteral("Wschód")},
+            {"Sunset", QStringLiteral("Zachód")}};
+        QCOMPARE(Meteo::i18n(": "), QStringLiteral(": "));
+        for (const auto &[source, translated] : labels)
+            QCOMPARE(Meteo::i18n(source) + Meteo::i18n(": ") + "12",
+                     (polish ? translated : QString::fromUtf8(source)) + ": 12");
+    }
     void translatesBundledJsonProfileNames()
     {
         const auto profiles = builtinChartProfiles();

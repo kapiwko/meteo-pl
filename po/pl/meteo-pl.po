@@ -88,7 +88,7 @@ msgstr "72 godziny"
 #: src/qml/CompactForecast.qml:131 src/qml/ForecastHeader.qml:83
 #: src/qml/MobileHourlyForecast.qml:63
 msgid ": "
-msgstr " słońca: "
+msgstr ": "
 
 #: src/qml/ProfileUpdateNotice.qml:12
 msgid ""
