@@ -251,3 +251,5 @@ Copyright © 2026 **Kamil Piwowarski** · [kapiwko@gmail.com](mailto:kapiwko@gma
 
 Licensed under **[GNU GPL version 3 or later](LICENSE)**
 (`GPL-3.0-or-later`).
+
+Source package preparation is described in the [AUR publication guide](docs/store-publication.md).
