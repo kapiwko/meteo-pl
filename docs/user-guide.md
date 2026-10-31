@@ -26,10 +26,22 @@ ctest --preset dev
 
 ## Places and forecast models
 
-First launch asks you to add a place instead of selecting a default city. Search
-by name, choose a map point, use system positioning or expand the coordinate
-fields. A name alone is insufficient: a geographic point must be selected.
-Coordinates accept a decimal dot or comma.
+On Android, first launch opens a welcome screen with location mode, forecast
+model, chart profile, color theme and wind units. **Current location** is
+preselected, but the app requests location access only after **Continue**.
+**Remember this choice** keeps this mode for future launches; otherwise it is
+used only for the current session. **Choose location** opens place search
+without requesting location access. These options can be changed later in
+Settings and My places.
+
+If permission is denied, positioning is unavailable or the lookup times out,
+place search opens with an explanation. A manually selected place is remembered
+instead of being replaced by device positioning on the next launch.
+
+The desktop application asks you to add a place instead of selecting a default
+city. Search by name, select a result, choose a map point, use system positioning
+or expand the coordinate fields. A name alone is insufficient: a geographic
+point must be selected. Coordinates accept a decimal dot or comma.
 
 **My places** opens the saved-place list. **Add location** opens a blank form;
 the edit action changes an existing name or position. Selecting a row opens its

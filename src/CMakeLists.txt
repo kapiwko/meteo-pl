@@ -99,7 +99,7 @@ set_source_files_properties(qml/WidgetChartSelection.qml PROPERTIES QT_RESOURCE_
 qt_target_qml_sources(meteo_ui QML_FILES qml/WidgetChartSelection.qml)
 set_source_files_properties(qml/ChartGestures.qml PROPERTIES QT_RESOURCE_ALIAS ChartGestures.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/ChartGestures.qml)
-foreach(component MobilePageHeader MobileLocationPage MobileSettingsPage MobileForecastPage MobileSheet MobileHourlyForecast)
+foreach(component MobilePageHeader MobileLocationPage MobileSettingsPage MobileForecastPage MobileSheet MobileHourlyForecast MobileWelcomePage)
     set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)
     qt_target_qml_sources(meteo_ui QML_FILES qml/${component}.qml)
 endforeach()

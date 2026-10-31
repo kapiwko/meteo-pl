@@ -31,7 +31,7 @@ ApplicationWindow {
         else forecastPage.navigateBack();
     }
     ApplicationTheme { mode: UserPreferences.theme }
-    ForecastSession { id: session }
+    ForecastSession { id: session; mobileSetup: true }
     StackView {
         id: navigation
         objectName: "mobilePageStack"
@@ -42,6 +42,9 @@ ApplicationWindow {
             id: forecastPage
             weather: window.weather
             offerSetup: !window.smokeTest
+            initialLocationError: session.initialLocationError
+            welcomeRequired: session.needsInitialSetup
+            onInitialSetupCompleted: options => session.applyInitialSetup(options)
             navigationStack: navigation
             onModelSelected: model => session.selectModel(model)
             onForecastSelected: (name, latitude, longitude, model) => session.selectForecast(name, latitude, longitude, model)

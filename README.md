@@ -159,6 +159,12 @@ the first installation for Plasma to discover the module.
 5. Enable the pipette in the chart status bar to inspect values. Click a chart
    to pin the reading; use **Export…** to save selected charts together.
 
+On Android, a welcome screen lets you choose your location mode, forecast model,
+chart profile, theme and wind units. **Current location** asks for permission
+after you continue; you can remember this mode for future launches. If
+positioning is unavailable or permission is denied, place search remains
+available. Choosing a saved place keeps that choice for future launches.
+
 On Android, Material controls follow the system theme. The bottom bar switches
 between **Forecast**, **Maps** and **News**. Forecast contains the meteogram,
 hourly and daily views; News contains synoptic commentary and articles. Tap the

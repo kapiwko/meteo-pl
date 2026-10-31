@@ -372,7 +372,7 @@ private slots:
         } else form = window->findChild<QObject *>("locationDialog");
         QVERIFY(form);
         QVERIFY(form->property("firstRun").toBool());
-        QCOMPARE(form->property("title").toString(), "Welcome to Meteo");
+        QCOMPARE(form->property("title").toString(), mobile ? "Choose location" : "Welcome to Meteo");
         auto *editor = form->findChild<QObject *>("locationEditor");
         QVERIFY(editor && !editor->property("valid").toBool());
         editor->setProperty("locationName", "A name without a point");
@@ -416,6 +416,157 @@ private slots:
         QTest::addColumn<bool>("mobile");
         QTest::newRow("desktop") << false;
         QTest::newRow("mobile") << true;
+    }
+    void mobileWelcomeOffersSettingsBeforePositioning()
+    {
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import QtQuick.Controls
+            import pl.meteo.desktop
+            Window {
+                width: 360; height: 800; visible: true
+                WeatherModel { id: fixtureWeather; objectName: "welcomeWeather"; autoRefresh: false; locationName: "" }
+                StackView {
+                    id: stack; objectName: "welcomeStack"; anchors.fill: parent
+                    initialItem: MobileForecastPage {
+                        objectName: "welcomeForecast"; weather: fixtureWeather; navigationStack: stack
+                        offerSetup: false; welcomeRequired: true
+                    }
+                }
+            }
+        )", {});
+        QScopedPointer<QObject> window(component.create()); QVERIFY2(window, qPrintable(component.errorString()));
+        auto *stack = window->findChild<QObject *>("welcomeStack"); QVERIFY(stack);
+        auto *forecast = window->findChild<QObject *>("welcomeForecast"); QVERIFY(forecast);
+        auto *weather = window->findChild<WeatherModel *>("welcomeWeather"); QVERIFY(weather);
+        QTest::qWait(100);
+        QVERIFY(!weather->currentLocation()->enabled());
+        QVERIFY(QMetaObject::invokeMethod(forecast, "beginSetup"));
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        auto *welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
+        QCOMPARE(welcome->objectName(), "mobileWelcomePage");
+        QVERIFY(!weather->currentLocation()->enabled());
+        QVERIFY(welcome->property("useCurrentLocation").toBool());
+        auto *theme = welcome->findChild<QObject *>("welcomeTheme"); QVERIFY(theme);
+        QCOMPARE(theme->property("currentIndex").toInt(), 0);
+        auto *testWindow = qobject_cast<QQuickWindow *>(window.data()); QVERIFY(testWindow);
+        for (int width : {320, 360, 800}) {
+            testWindow->resize(width, 800);
+            for (const auto &name : {"welcomeModel", "welcomeProfile", "welcomeTheme", "welcomeWindUnit"}) {
+                auto *field = welcome->findChild<QQuickItem *>(name); QVERIFY(field);
+                QTRY_VERIFY(field->width() > 100);
+                QTRY_VERIFY(field->mapToScene({0,0}).x() >= 8);
+                QTRY_VERIFY(field->mapToScene({field->width(),0}).x() <= width - 8);
+            }
+        }
+        welcome->setProperty("rememberLocation", false); welcome->setProperty("selectedModel", "gfs");
+        welcome->setProperty("selectedProfile", "basic"); welcome->setProperty("selectedTheme", "dark");
+        welcome->setProperty("selectedWindUnit", "km/h");
+        QSignalSpy completed(forecast, SIGNAL(initialSetupCompleted(QVariant)));
+        auto *button = welcome->findChild<QObject *>("welcomeContinueButton"); QVERIFY(button);
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+        QTRY_COMPARE(completed.size(), 1); QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        const auto choices = completed.first().first().toMap();
+        QVERIFY(choices["useCurrentLocation"].toBool()); QVERIFY(!choices["rememberLocation"].toBool());
+        QCOMPARE(choices["model"].toString(), "gfs"); QCOMPARE(choices["profile"].toString(), "basic");
+        QCOMPARE(choices["theme"].toString(), "dark"); QCOMPARE(choices["windUnit"].toString(), "km/h");
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        QVERIFY(QMetaObject::invokeMethod(forecast, "beginSetup"));
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
+        welcome->setProperty("useCurrentLocation", false);
+        button = welcome->findChild<QObject *>("welcomeContinueButton"); QVERIFY(button);
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+        QTRY_COMPARE(completed.size(), 2);
+        QTRY_COMPARE(stack->property("currentItem").value<QObject *>()->objectName(), "mobileLocationPage");
+        QVERIFY(!weather->currentLocation()->enabled());
+        destroyTestWindow(window);
+    }
+    void mobileWelcomeAppliesSettingsAndRemembersManualChoice_data()
+    {
+        QTest::addColumn<bool>("remember");
+        QTest::newRow("remember") << true;
+        QTest::newRow("this-session-only") << false;
+    }
+    void mobileWelcomeAppliesSettingsAndRemembersManualChoice()
+    {
+        QFETCH(bool, remember);
+        QSettings settings; settings.beginGroup("Location");
+        QVariantMap original;
+        for (const auto &key : settings.childKeys()) original[key] = settings.value(key);
+        settings.remove(""); settings.sync();
+        const auto restore = qScopeGuard([&] {
+            settings.remove("");
+            for (auto it = original.cbegin(); it != original.cend(); ++it) settings.setValue(it.key(), it.value());
+            settings.sync();
+        });
+        QQmlEngine engine; QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/ForecastSession.qml")));
+        QScopedPointer<QObject> session(component.createWithInitialProperties({{"mobileSetup", true}}));
+        QVERIFY2(session, qPrintable(component.errorString()));
+        auto *weather = session->findChild<WeatherModel *>("appForecastModel"); QVERIFY(weather);
+        auto *store = session->findChild<QObject *>("locationSettings"); QVERIFY(store);
+        QVERIFY(session->property("needsInitialSetup").toBool());
+        QVERIFY(!weather->currentLocation()->enabled());
+        weather->currentLocation()->setForeground(false);
+        const QVariantMap options{{"useCurrentLocation", true}, {"rememberLocation", remember}, {"model", "um4_120"},
+            {"profile", "basic"}, {"theme", "dark"}, {"windUnit", "km/h"}};
+        QVERIFY(QMetaObject::invokeMethod(session.data(), "applyInitialSetup", Q_ARG(QVariant, options)));
+        QVERIFY(weather->currentLocation()->enabled());
+        QCOMPARE(store->property("followCurrentLocation").toBool(), remember);
+        QCOMPARE(weather->model(), "um4_120");
+        QVERIFY(!session->property("needsInitialSetup").toBool());
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QCOMPARE(preferences->profile(), "basic"); QCOMPARE(preferences->theme(), "dark");
+        QCOMPARE(preferences->windUnit(), "km/h");
+        QVERIFY(QMetaObject::invokeMethod(session.data(), "selectForecast", Q_ARG(QVariant, "Kielce"),
+            Q_ARG(QVariant, 50.8661), Q_ARG(QVariant, 20.6286), Q_ARG(QVariant, "um4_60")));
+        QVERIFY(!weather->currentLocation()->enabled());
+        QVERIFY(!store->property("followCurrentLocation").toBool());
+        session.reset();
+        session.reset(component.createWithInitialProperties({{"mobileSetup", true}}));
+        QVERIFY2(session, qPrintable(component.errorString()));
+        weather = session->findChild<WeatherModel *>("appForecastModel"); QVERIFY(weather);
+        QVERIFY(!weather->currentLocation()->enabled());
+        QCOMPARE(weather->locationName(), "Kielce");
+        QVERIFY(!session->property("initialLocationLookup").toBool());
+    }
+    void mobileInitialLocationFailureOffersSearchOnlyOnce()
+    {
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import QtQuick.Controls
+            import pl.meteo.desktop
+            Window {
+                width: 360; height: 800; visible: true
+                WeatherModel { id: fixtureWeather; autoRefresh: false; locationName: "" }
+                StackView {
+                    id: stack; objectName: "fallbackStack"; anchors.fill: parent
+                    initialItem: MobileForecastPage {
+                        objectName: "fallbackForecast"; weather: fixtureWeather; navigationStack: stack
+                        offerSetup: false
+                    }
+                }
+            }
+        )", {});
+        QScopedPointer<QObject> window(component.create()); QVERIFY2(window, qPrintable(component.errorString()));
+        auto *stack = window->findChild<QObject *>("fallbackStack"); QVERIFY(stack);
+        auto *forecast = window->findChild<QObject *>("fallbackForecast"); QVERIFY(forecast);
+        QTest::qWait(100);
+        QCOMPARE(stack->property("depth").toInt(), 1);
+        forecast->setProperty("offerSetup", true);
+        forecast->setProperty("initialLocationError", "Location permission denied");
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        auto *form = stack->property("currentItem").value<QObject *>(); QVERIFY(form);
+        QCOMPARE(form->objectName(), "mobileLocationPage");
+        QCOMPARE(form->property("setupError").toString(), "Location permission denied");
+        QVERIFY(form->property("firstRun").toBool());
+        QVERIFY(QMetaObject::invokeMethod(forecast, "offerLocationFallback"));
+        QCOMPARE(stack->property("depth").toInt(), 2);
+        destroyTestWindow(window);
     }
     void widgetLocationSettingsFollowAnEditedPlace()
     {

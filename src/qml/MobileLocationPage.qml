@@ -12,9 +12,10 @@ Kirigami.ScrollablePage {
     property var place: ({})
     property bool firstRun: false
     property string saveError: ""
+    property string setupError: ""
     readonly property bool editing: !!place.id
     signal placeSaved(var place, bool added)
-    title: firstRun ? I18n.i18n("Welcome to Meteo") : editing ? I18n.i18n("Edit place") : I18n.i18n("Add location")
+    title: firstRun ? I18n.i18n("Choose location") : editing ? I18n.i18n("Edit place") : I18n.i18n("Add location")
     padding: Kirigami.Units.largeSpacing
     header: MobilePageHeader { title: root.title; onBackRequested: root.navigationStack.pop() }
     ColumnLayout {
@@ -22,8 +23,15 @@ Kirigami.ScrollablePage {
         Label {
             Layout.fillWidth: true
             visible: root.firstRun
-            text: I18n.i18n("Add your first place to get started. Search by name, choose a point on the map or use your location.")
+            text: root.setupError.length ? I18n.i18n("Choose a place to see its forecast. You can enable Current location later from My places.")
+                : I18n.i18n("Add your first place to get started. Search by name, choose a point on the map or use your location.")
             wrapMode: Text.WordWrap
+        }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            visible: root.setupError.length > 0
+            text: root.setupError
+            type: Kirigami.MessageType.Information
         }
         LocationEditor {
             id: editor

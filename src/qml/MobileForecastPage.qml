@@ -11,6 +11,10 @@ Kirigami.Page {
     required property WeatherModel weather
     required property var navigationStack
     property bool offerSetup: true
+    property string initialLocationError: ""
+    property bool locationFallbackOffered: false
+    property bool welcomeRequired: false
+    property var pendingWelcomeOptions: null
     property int forecastView: 0
     property int newsView: 4
     readonly property bool shortLandscape: Window.window !== null && Window.window.width > Window.window.height && Window.window.height < 480
@@ -33,14 +37,36 @@ Kirigami.Page {
     }
     signal modelSelected(string model)
     signal forecastSelected(string name, real latitude, real longitude, string model)
+    signal initialSetupCompleted(var options)
     padding: 0
     title: I18n.i18n("Meteo")
     function showDestination(index) { forecastPanel.viewMode = index === 0 ? forecastView : index === 1 ? 3 : newsView; }
     function openSettings() { navigationStack.push(settingsPage); }
-    Component.onCompleted: Qt.callLater(() => { if (root.offerSetup && !root.weather.locationName.length && !root.weather.currentLocation.enabled) root.beginSetup(); })
+    Component.onCompleted: Qt.callLater(() => {
+        if (root.initialLocationError.length) root.offerLocationFallback();
+        else if (root.offerSetup && !root.weather.locationName.length && !root.weather.currentLocation.enabled) root.beginSetup();
+    })
+    onInitialLocationErrorChanged: Qt.callLater(() => root.offerLocationFallback())
+    function offerLocationFallback() {
+        if (!offerSetup || !initialLocationError.length || locationFallbackOffered) return;
+        locationFallbackOffered = true;
+        navigationStack.push(locationPage, {firstRun: true, setupError: initialLocationError});
+    }
     function beginSetup() {
         if (UserPreferences.places.length) chooseLocation();
+        else if (welcomeRequired) navigationStack.push(welcomePage);
         else navigationStack.push(locationPage, {firstRun: true});
+    }
+    function finishWelcome() {
+        if (!pendingWelcomeOptions || navigationStack.busy) return;
+        const options = pendingWelcomeOptions;
+        pendingWelcomeOptions = null;
+        root.initialSetupCompleted(options);
+        if (!options.useCurrentLocation) navigationStack.push(locationPage, {firstRun: true});
+    }
+    Connections {
+        target: root.navigationStack
+        function onBusyChanged() { root.finishWelcome(); }
     }
     function chooseLocation() { navigationStack.push(placesPage); }
     function addLocation() { navigationStack.push(locationPage, {firstRun: UserPreferences.places.length === 0}); }
@@ -206,7 +232,11 @@ Kirigami.Page {
                 text: I18n.i18n("Current location")
                 icon.name: "find-location"
                 highlighted: root.weather.currentLocation.enabled
-                onClicked: { root.weather.currentLocation.enabled = true; placesSheet.close(); }
+                onClicked: {
+                    if (root.weather.currentLocation.enabled) root.weather.currentLocation.retry();
+                    else root.weather.currentLocation.enabled = true;
+                    placesSheet.close();
+                }
             }
             Repeater {
                 model: UserPreferences.places
@@ -257,6 +287,18 @@ Kirigami.Page {
         MenuItem { text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onTriggered: about.open() }
     }
     MeteoAbout { id: about; weather: root.weather }
+    Component {
+        id: welcomePage
+        MobileWelcomePage {
+            selectedModel: root.weather.model
+            onCompleted: options => {
+                root.pendingWelcomeOptions = options;
+                root.navigationStack.pop();
+                root.finishWelcome();
+            }
+            onSkipped: root.navigationStack.pop()
+        }
+    }
     Component { id: settingsPage; MobileSettingsPage { weather: root.weather; navigationStack: root.navigationStack; forecastPanel: root.panel } }
     Component {
         id: locationPage

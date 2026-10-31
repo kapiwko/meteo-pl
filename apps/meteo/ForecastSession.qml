@@ -10,6 +10,13 @@ QtObject {
     property var startupForecast: ({})
     property bool temporaryLocation: startupForecast.locationName !== undefined
     property bool startupReady: false
+    property bool mobileSetup: false
+    property bool setupCompletedThisSession: false
+    property bool persistTrackingChoice: true
+    readonly property bool needsInitialSetup: mobileSetup && !smokeTest && !temporaryLocation && !setupCompletedThisSession
+        && !settings.locationName.length && !settings.followCurrentLocation && !UserPreferences.places.length
+    property bool initialLocationLookup: false
+    property string initialLocationError: ""
     property Settings settingsStore: Settings {
         id: settings
         objectName: "locationSettings"
@@ -36,14 +43,35 @@ QtObject {
         selectForecast(name, latitude, longitude, forecastModel.model);
     }
     Component.onCompleted: {
-        forecastModel.currentLocation.enabled = !smokeTest && !temporaryLocation && settings.followCurrentLocation;
+        initialLocationLookup = !smokeTest && !temporaryLocation && settings.followCurrentLocation;
+        forecastModel.currentLocation.enabled = initialLocationLookup;
         startupReady = true;
+    }
+    function applyInitialSetup(options) {
+        setupCompletedThisSession = true;
+        initialLocationError = "";
+        persistTrackingChoice = options.rememberLocation;
+        settings.model = options.model;
+        forecastModel.model = Qt.binding(() => settings.model);
+        UserPreferences.profile = options.profile;
+        UserPreferences.theme = options.theme;
+        UserPreferences.windUnit = options.windUnit;
+        settings.followCurrentLocation = options.useCurrentLocation && options.rememberLocation;
+        initialLocationLookup = options.useCurrentLocation;
+        forecastModel.currentLocation.enabled = options.useCurrentLocation;
     }
     property Connections tracking: Connections {
         target: forecastModel.currentLocation
         function onStateChanged() {
+            if (session.initialLocationLookup) {
+                if (forecastModel.currentLocation.hasPosition) session.initialLocationLookup = false;
+                else if (forecastModel.currentLocation.error.length) {
+                    session.initialLocationLookup = false;
+                    session.initialLocationError = forecastModel.currentLocation.error;
+                } else if (!forecastModel.currentLocation.enabled) session.initialLocationLookup = false;
+            }
             if (forecastModel.currentLocation.enabled) session.temporaryLocation = false;
-            if (!session.smokeTest) settings.followCurrentLocation = forecastModel.currentLocation.enabled;
+            if (!session.smokeTest && session.persistTrackingChoice) settings.followCurrentLocation = forecastModel.currentLocation.enabled;
         }
     }
     property SavedPlaceSelection selection: SavedPlaceSelection { weather: session.startupReady && !session.temporaryLocation && !forecastModel.currentLocation.enabled ? forecastModel : null; onLocationSelected: (name, latitude, longitude) => session.selectLocation(name, latitude, longitude) }
@@ -52,6 +80,7 @@ QtObject {
         forecastModel.model = Qt.binding(() => settings.model);
     }
     function selectForecast(name, latitude, longitude, model) {
+        persistTrackingChoice = true;
         forecastModel.currentLocation.enabled = false;
         settings.model = name.length ? LocationRules.modelFor(latitude, longitude, model) : model;
         settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
