@@ -2,6 +2,22 @@
 
 ## AUR: source package
 
+The published package is [meteo-pl](https://aur.archlinux.org/packages/meteo-pl).
+It includes the application, Plasma widget and KRunner integration. To build it
+manually, review the `PKGBUILD`, compare the public key fingerprint with a trusted
+copy, import the key and run `makepkg`:
+
+```sh
+git clone https://aur.archlinux.org/meteo-pl.git
+cd meteo-pl
+gpg --show-keys --fingerprint keys/pgp/1C0C43EF3001F658C11971D1A4A884E5B7A2A8A1.asc
+gpg --import keys/pgp/1C0C43EF3001F658C11971D1A4A884E5B7A2A8A1.asc
+makepkg --syncdeps --install
+```
+
+The public key is included in the AUR repository, so verification does not depend
+on finding it on a keyserver. The application's license remains GPL-3.0-or-later.
+
 `scripts/prepare-aur.py` generates a `PKGBUILD` and `.SRCINFO` from a published
 release. It verifies the maintainer's GPG signature in a temporary keyring and
 checks the source archive against the signed checksum manifest. The package
@@ -11,21 +27,21 @@ separate, checksummed source input, so CMake does not fetch it during compilatio
 On Arch Linux, after publishing a release:
 
 ```sh
-python3 scripts/prepare-aur.py --version 0.9.0 --output dist/aur/meteo-pl
+python3 scripts/prepare-aur.py --version 0.9.2 --output dist/aur/meteo-pl
 ```
 
 To reuse locally downloaded release assets:
 
 ```sh
-python3 scripts/prepare-aur.py --version 0.9.0 \
-  --release-dir dist/signed-0.9.0 --output dist/aur/meteo-pl
+python3 scripts/prepare-aur.py --version 0.9.2 \
+  --release-dir dist/signed-0.9.2 --output dist/aur/meteo-pl
 ```
 
 Use a fresh output directory. For local `makepkg` verification, import the public
 release key and confirm its fingerprint using a separately trusted copy:
 
 ```sh
-gpg --import dist/signed-0.9.0/SIGNING-KEY.asc
+gpg --import dist/signed-0.9.2/SIGNING-KEY.asc
 gpg --fingerprint 1C0C43EF3001F658C11971D1A4A884E5B7A2A8A1
 cd dist/aur/meteo-pl
 makepkg --verifysource
@@ -40,14 +56,21 @@ package contents as well as the build result.
 An AUR account and an SSH public key registered to that account are required.
 Check whether the package name already exists and follow the
 [AUR submission guidelines](https://wiki.archlinux.org/title/AUR_submission_guidelines).
-For a new package, prepare an AUR checkout and review the two generated files:
+Update an AUR checkout with the generated files. Set the author identity locally
+before committing: changing published AUR history is difficult, and global Git
+settings may use a different email address. Preserve the repository's license and
+public key; only the two generated files need replacing for a version update.
 
 ```sh
-git clone ssh://aur@aur.archlinux.org/meteo-pl.git /tmp/meteo-pl-aur
+git -c init.defaultBranch=master clone ssh://aur@aur.archlinux.org/meteo-pl.git /tmp/meteo-pl-aur
+git -C /tmp/meteo-pl-aur config --local user.name 'Kamil Piwowarski'
+git -C /tmp/meteo-pl-aur config --local user.email kapiwko@gmail.com
 cp dist/aur/meteo-pl/PKGBUILD dist/aur/meteo-pl/.SRCINFO /tmp/meteo-pl-aur/
 git -C /tmp/meteo-pl-aur add PKGBUILD .SRCINFO
-git -C /tmp/meteo-pl-aur commit -m 'Initial package: Meteo 0.9.0'
-git -C /tmp/meteo-pl-aur push
+git -C /tmp/meteo-pl-aur diff --cached --check
+git -C /tmp/meteo-pl-aur commit -m 'Update to Meteo 0.9.2'
+git -C /tmp/meteo-pl-aur show -s --format='Author: %an <%ae>%nCommitter: %cn <%ce>'
+git -C /tmp/meteo-pl-aur push origin master
 ```
 
 The preparation script never pushes to AUR. Do not put SSH private keys or

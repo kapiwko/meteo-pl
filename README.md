@@ -76,6 +76,10 @@ Download Linux packages and the Android APK from
 and checksum manifest carry the maintainer's GPG signature; Android APKs use the
 persistent application release key.
 
+Arch Linux users can also build [meteo-pl from the AUR](https://aur.archlinux.org/packages/meteo-pl).
+See the [AUR build and signing-key instructions](docs/store-publication.md#aur-source-package)
+for a manual installation.
+
 Development snapshots are available from successful runs in
 [Actions](https://github.com/kapiwko/meteo-pl/actions). Each package artifact
 includes SHA-256 checksums and a build report.
