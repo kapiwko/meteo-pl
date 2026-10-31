@@ -7,6 +7,7 @@ add_library(meteo_core STATIC
     core/EditorialContent.cpp core/EditorialContent.hpp
     core/Localization.cpp core/Localization.hpp
     core/Locations.cpp core/Locations.hpp
+    core/DocumentFile.hpp
     core/WebLink.cpp core/WebLink.hpp
     network/MeteoClient.cpp network/MeteoClient.hpp
     network/JsonRequest.cpp network/JsonRequest.hpp

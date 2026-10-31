@@ -346,16 +346,16 @@ msgid "Choose a date"
 msgstr ""
 
 #: src/presentation/ReadingsExporter.cpp:12
-msgid "Choose a local CSV file."
+msgid "Choose a CSV file."
 msgstr ""
 
 #: src/presentation/ChartExporter.cpp:43
-msgid "Choose a local PNG file."
+msgid "Choose a PNG file."
 msgstr ""
 
 #: src/presentation/ProfileFileCodec.cpp:83
 #: src/presentation/ProfileFileCodec.cpp:95
-msgid "Choose a local file."
+msgid "Choose a file."
 msgstr ""
 
 #: src/qml/ForecastPanel.qml:398

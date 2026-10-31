@@ -2,6 +2,7 @@
 #include "ChartConfiguration.hpp"
 #include "JsonSchemaValidator.hpp"
 #include "core/Localization.hpp"
+#include "core/DocumentFile.hpp"
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
@@ -79,9 +80,9 @@ std::optional<QVariantList> ProfileFileCodec::read(const QUrl &url, QString *err
             *error = message;
         return std::nullopt;
     };
-    if (!url.isLocalFile() || (QFileInfo(url.toLocalFile()).exists() && !QFileInfo(url.toLocalFile()).isFile()))
-        return fail(Meteo::i18n("Choose a local file."));
-    QFile file(url.toLocalFile());
+    if (!Meteo::isDocumentFile(url) || (url.isLocalFile() && QFileInfo(url.toLocalFile()).exists() && !QFileInfo(url.toLocalFile()).isFile()))
+        return fail(Meteo::i18n("Choose a file."));
+    QFile file(Meteo::documentPath(url));
     if (!file.open(QIODevice::ReadOnly))
         return fail(Meteo::i18n("Could not open the file: ") + file.errorString());
     if (file.size() > maximumBytes)
@@ -90,15 +91,16 @@ std::optional<QVariantList> ProfileFileCodec::read(const QUrl &url, QString *err
 }
 bool ProfileFileCodec::write(const QUrl &url, const QVariantList &profiles, QString *error)
 {
-    if (!url.isLocalFile()) {
+    if (!Meteo::isDocumentFile(url)) {
         if (error)
-            *error = Meteo::i18n("Choose a local file.");
+            *error = Meteo::i18n("Choose a file.");
         return false;
     }
     const auto bytes = encode(profiles, error);
     if (!bytes)
         return false;
-    QSaveFile file(url.toLocalFile());
+    QSaveFile file(Meteo::documentPath(url));
+    file.setDirectWriteFallback(Meteo::isContentDocument(url));
     if (!file.open(QIODevice::WriteOnly) || file.write(*bytes) != bytes->size() || !file.commit()) {
         if (error)
             *error = Meteo::i18n("Could not save the file: ") + file.errorString();

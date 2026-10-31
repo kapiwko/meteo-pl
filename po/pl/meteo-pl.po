@@ -358,17 +358,17 @@ msgid "Choose a date"
 msgstr "Wybierz datę"
 
 #: src/presentation/ReadingsExporter.cpp:12
-msgid "Choose a local CSV file."
-msgstr "Wybierz lokalny plik CSV."
+msgid "Choose a CSV file."
+msgstr "Wybierz plik CSV."
 
 #: src/presentation/ChartExporter.cpp:43
-msgid "Choose a local PNG file."
-msgstr "Wybierz lokalny plik PNG."
+msgid "Choose a PNG file."
+msgstr "Wybierz plik PNG."
 
 #: src/presentation/ProfileFileCodec.cpp:83
 #: src/presentation/ProfileFileCodec.cpp:95
-msgid "Choose a local file."
-msgstr "Wybierz plik lokalny."
+msgid "Choose a file."
+msgstr "Wybierz plik."
 
 #: src/qml/ForecastPanel.qml:398
 msgid "Choose a place to download its meteogram."

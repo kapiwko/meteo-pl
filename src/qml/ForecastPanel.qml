@@ -558,7 +558,7 @@ Item {
                 Connections { target: root; function onExportReported() { exportNotice.visible = true; } }
                 actions: [
                     Kirigami.Action { text: I18n.i18n("Open"); icon.name: "document-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFile(root.exportedFile) },
-                    Kirigami.Action { text: I18n.i18n("Open folder"); icon.name: "folder-open"; visible: !root.exportFailed; onTriggered: ExportNotifications.openFolder(root.exportedFile) }
+                    Kirigami.Action { text: I18n.i18n("Open folder"); icon.name: "folder-open"; visible: !root.exportFailed && root.exportedFile.toString().startsWith("file:"); onTriggered: ExportNotifications.openFolder(root.exportedFile) }
                 ]
             }
 

@@ -1,4 +1,5 @@
 #include "core/Localization.hpp"
+#include "core/DocumentFile.hpp"
 #include "ReadingsExporter.hpp"
 #include <QDateTime>
 #include <QFileInfo>
@@ -9,7 +10,7 @@
 QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readings, const QVariantMap &metadata) const
 {
     const auto failure = [](const QString &error) -> QVariantMap { return {{"ok", false}, {"error", error}}; };
-    if (!url.isLocalFile() || url.toLocalFile().isEmpty()) return failure(Meteo::i18n("Choose a local CSV file."));
+    if (!Meteo::isDocumentFile(url)) return failure(Meteo::i18n("Choose a CSV file."));
     if (readings.isEmpty() || readings.size() > 1000) return failure(Meteo::i18n("No parameters to export."));
     const auto timestamp = metadata.value("timestamp").toDouble();
     if (!std::isfinite(timestamp) || timestamp <= 0 || timestamp > 253402300799.0)
@@ -43,10 +44,10 @@ QVariantMap ReadingsExporter::saveCsv(const QUrl &url, const QVariantList &readi
             sourceTime(reading.value("sourceTimestamp")), sourceTime(reading.value("intervalFrom")),
             sourceTime(reading.value("intervalTo")), reading.value("sampling").toString()});
     }
-    auto path = url.toLocalFile();
-    if (QFileInfo(path).suffix().isEmpty()) path += QStringLiteral(".csv");
-    QSaveFile file(path);
+    const auto destination = Meteo::withDefaultDocumentSuffix(url, QStringLiteral("csv"));
+    QSaveFile file(Meteo::documentPath(destination));
+    file.setDirectWriteFallback(Meteo::isContentDocument(destination));
     if (!file.open(QIODevice::WriteOnly) || file.write(data) != data.size() || !file.commit())
         return failure(Meteo::i18n("Could not save the reading: ") + file.errorString());
-    return {{"ok", true}, {"file", QUrl::fromLocalFile(path)}, {"path", path}};
+    return {{"ok", true}, {"file", destination}, {"path", Meteo::documentDisplayPath(destination)}};
 }

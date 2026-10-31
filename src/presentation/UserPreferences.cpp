@@ -1,4 +1,5 @@
 #include "UserPreferences.hpp"
+#include "core/DocumentFile.hpp"
 #include "ChartConfiguration.hpp"
 #include "ForecastFields.hpp"
 #include "ProfileFileCodec.hpp"
@@ -274,7 +275,7 @@ QVariantMap UserPreferences::exportProfilesByIds(const QUrl &url, const QStringL
     if (exported.isEmpty()) return {{"ok", false}, {"error", Meteo::i18n("Select at least one profile.")}};
     QString error;
     if (!ProfileFileCodec::write(url, exported, &error)) return {{"ok", false}, {"error", error}};
-    return {{"ok", true}, {"count", exported.size()}, {"path", url.toLocalFile()}};
+    return {{"ok", true}, {"count", exported.size()}, {"path", Meteo::documentDisplayPath(url)}};
 }
 
 QVariantMap UserPreferences::importProfiles(const QUrl &url, bool activate)

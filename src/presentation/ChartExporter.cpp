@@ -1,4 +1,5 @@
 #include "core/Localization.hpp"
+#include "core/DocumentFile.hpp"
 #include "ChartExporter.hpp"
 #include <QMetaProperty>
 #include <QDir>
@@ -40,7 +41,7 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
 {
     if (m_busy) return false;
     m_error.clear();
-    if (!file.isLocalFile() || file.toLocalFile().isEmpty()) { fail(Meteo::i18n("Choose a local PNG file.")); return false; }
+    if (!Meteo::isDocumentFile(file)) { fail(Meteo::i18n("Choose a PNG file.")); return false; }
     if (items.isEmpty() || items.size() > 50) { fail(Meteo::i18n("Select between 1 and 50 charts to export.")); return false; }
     int contentWidth = 0;
     qint64 contentHeight = 0;
@@ -93,9 +94,7 @@ bool ChartExporter::savePng(const QUrl &file, const QVariantList &items, const Q
         painter.drawText(QRect(margin, margin + titleHeight + 6, contentWidth, detailsHeight), Qt::TextWordWrap, details);
         painter.drawText(QRect(margin, int(height) - margin - footerHeight, contentWidth, footerHeight), Qt::TextWordWrap, source);
     }
-    auto path = file.toLocalFile();
-    if (QFileInfo(path).suffix().isEmpty()) path += QStringLiteral(".png");
-    m_file = QUrl::fromLocalFile(path);
+    m_file = Meteo::withDefaultDocumentSuffix(file, QStringLiteral("png"));
     m_index = 0; m_busy = true;
     const auto generation = ++m_generation;
     for (const auto &capture : std::as_const(m_items)) {
@@ -127,7 +126,8 @@ void ChartExporter::captureNext()
         if (!capture.item || capture.item->property("exportRevision") != capture.revision) { viewChanged(); return; }
     }
     if (m_index == m_items.size()) {
-        QSaveFile file(m_file.toLocalFile());
+        QSaveFile file(Meteo::documentPath(m_file));
+        file.setDirectWriteFallback(Meteo::isContentDocument(m_file));
         if (!file.open(QIODevice::WriteOnly)) { fail(Meteo::i18n("Could not save PNG: ") + file.errorString()); return; }
         QImageWriter writer(&file, "png");
         writer.setCompression(3);
@@ -135,7 +135,7 @@ void ChartExporter::captureNext()
         if (!file.commit()) { fail(Meteo::i18n("Could not save PNG: ") + file.errorString()); return; }
         const auto savedFile = m_file;
         restore(); m_busy = false;
-        emit stateChanged(); emit saved(savedFile, savedFile.toLocalFile());
+        emit stateChanged(); emit saved(savedFile, Meteo::documentDisplayPath(savedFile));
         return;
     }
     const auto &capture = m_items[m_index];
