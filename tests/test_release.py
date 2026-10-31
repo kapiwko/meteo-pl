@@ -115,7 +115,9 @@ class ReleaseTest(unittest.TestCase):
             for invalid in ("v1.0.0","1.0","01.0.0","1.1000.0","1.0.1000","2101.0.0"):
                 with self.assertRaises(ValueError):versions.set_version(root,invalid)
                 self.assertEqual((root/"VERSION").read_text(),"0.1.0\n")
+            (root/".fdroid.yml").write_text("CurrentVersion: 0.1.0\nCurrentVersionCode: 1000\n")
             versions.set_version(root,"1.0.0")
+            self.assertEqual((root/".fdroid.yml").read_text(), "CurrentVersion: 1.0.0\nCurrentVersionCode: 1000000\n")
             self.assertEqual((root/"VERSION").read_text(),"1.0.0\n")
             self.assertEqual(json.loads(metadata.read_text())["KPlugin"]["Version"],"1.0.0")
             self.assertNotIn("0.1.0",(root/"README.md").read_text())

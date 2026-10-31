@@ -1,0 +1,41 @@
+Categories:
+  - Weather
+License: GPL-3.0-or-later
+AuthorName: Kamil Piwowarski
+AuthorEmail: kapiwko@gmail.com
+WebSite: https://github.com/kapiwko/meteo-pl
+SourceCode: https://github.com/kapiwko/meteo-pl
+IssueTracker: https://github.com/kapiwko/meteo-pl/issues
+Changelog: https://github.com/kapiwko/meteo-pl/releases
+
+AutoName: Meteo
+RepoType: git
+Repo: https://github.com/kapiwko/meteo-pl.git
+
+AntiFeatures:
+  - NonFreeNet
+
+MaintainerNotes: |
+  Upstream is requesting packaging; this is metadata, not an enabled build recipe.
+  The Android application ID is pl.meteo.desktop. Version 0.9.0 has versionCode
+  9000 and the signed source tag v0.9.0.
+
+  The app uses Qt Quick/Kirigami/C++ and Android's foreground location API.
+  It does not require Google Play Services, Firebase, analytics or API keys.
+  Forecasts depend on ICM UW/meteo.pl services; their forecast data are not
+  covered by the app's GPL license. Place lookups use meteo.pl-hosted geocoding.
+
+  The current upstream Android build uses KDE's pinned SDK container and Craft
+  binary caches. It is NOT an F-Droid source-build recipe. Qt/KDE runtime
+  libraries must be built from source or supplied by an approved source before
+  enabling builds here. Do not bypass dependency scanning for those binaries.
+
+  Source and dependency entry points: CMakeLists.txt, src/CMakeLists.txt,
+  packaging/craft/meteo-pl/meteo-pl.py, scripts/build-portable.py.
+  Upstream source-built dependency recipes and an offline F-Droid build remain
+  to be integrated and verified with fdroidserver. See docs/store-publication.md.
+
+AutoUpdateMode: None
+UpdateCheckMode: None
+CurrentVersion: 0.9.0
+CurrentVersionCode: 9000

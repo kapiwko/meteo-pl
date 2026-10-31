@@ -1,4 +1,4 @@
-# AUR publication
+# AUR and F-Droid publication
 
 ## AUR: source package
 
@@ -54,3 +54,57 @@ The preparation script never pushes to AUR. Do not put SSH private keys or
 signing passwords in this repository. Regenerate the files for each release;
 the version, source hash and signature hash must change together.
 
+## F-Droid: request for the main repository
+
+The [submission guide](https://f-droid.org/docs/Submitting_to_F-Droid_Quick_Start_Guide/)
+describes a source-build review, rather than an APK upload. Upstream descriptions
+and release notes are in `fastlane/metadata/android/en-US/`; the application
+metadata are in `.fdroid.yml`.
+
+Prepare a reviewable request with the existing real Android screenshot and icon:
+
+```sh
+python3 scripts/prepare-fdroid.py --output dist/fdroid-submission
+```
+
+This creates `metadata/pl.meteo.desktop.yml`, localized store text, artwork and a
+request draft. It does not contact F-Droid or enable an unverified build.
+The draft is ready for the [Requests For Packaging](https://gitlab.com/fdroid/rfp)
+process. It explicitly requests help coordinating the native Qt/KDE dependency
+recipes. Once those recipes are verified, submit the build metadata as a merge
+request to [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
+
+### Remaining build integration
+
+The existing GitHub Android workflow uses KDE's SDK container and Craft binary
+caches. A passing upstream APK build does not establish compliance with the
+main repository's [inclusion policy](https://f-droid.org/en/docs/Inclusion_Policy/).
+Qt/KDE runtime libraries must come from approved sources or be built from source.
+The dependency entry points are `scripts/build-portable.py`,
+`packaging/craft/meteo-pl/meteo-pl.py` and `src/CMakeLists.txt`.
+
+An enabled F-Droid build needs all of the following:
+
+- Pinned source recipes for the Qt/KDE runtime dependencies and host tools, with
+  hashes and licenses; no silent fallback to the Craft binary cache.
+- An offline native build after the declared inputs have been fetched, using
+  the Android SDK/NDK and Gradle inputs accepted by fdroidserver.
+- A scanner review and successful `fdroid lint` and `fdroid build --on-server`.
+  Do not add blanket scanner exceptions to make prebuilt runtime libraries pass.
+- A release tag containing those recipes and store metadata. The templated
+  Android manifest currently does not provide an automatic tag-version check,
+  so auto-update checks remain disabled in the draft.
+
+The draft declares `NonFreeNet` because forecasts depend on ICM UW/meteo.pl
+services. The application's GPL license does not change ownership of forecast
+or article content. Optional location access sends coordinates to the selected
+weather and geocoding services. There is no tracking SDK or account requirement.
+
+The Android application ID is currently `pl.meteo.desktop`. Discuss namespace
+ownership with the F-Droid reviewer before first inclusion; the app is independent
+of the meteo.pl service. Changing the ID creates a separate Android application.
+
+By default F-Droid signs its own builds. They cannot update an installation signed
+with the GitHub release key. Keeping the upstream signature requires a verified
+reproducible-build arrangement; it has not been established here. Do not add a
+`Binaries` field claiming upstream reproducibility until that verification passes.

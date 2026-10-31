@@ -20,9 +20,18 @@ def set_version(root, value):
     metadata["KPlugin"]["Version"] = value
     readme = (root / "README.md").read_text().replace(f"meteo-pl-{previous}-", f"meteo-pl-{value}-")
     readme = readme.replace(f"meteo-pl_{previous}-", f"meteo-pl_{value}-")
+    fdroid_path = root / ".fdroid.yml"
+    fdroid = None
+    if fdroid_path.exists():
+        fdroid, versions = re.subn(r"^CurrentVersion: .+$", "CurrentVersion: " + value, fdroid_path.read_text(), flags=re.M)
+        fdroid, codes = re.subn(r"^CurrentVersionCode: [0-9]+$", "CurrentVersionCode: " + str(major * 1000000 + minor * 1000 + patch), fdroid, flags=re.M)
+        if versions != 1 or codes != 1:
+            raise ValueError("F-Droid metadata must contain one CurrentVersion and CurrentVersionCode")
     (root / "VERSION").write_text(value + "\n")
     metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
     (root / "README.md").write_text(readme)
+    if fdroid is not None:
+        fdroid_path.write_text(fdroid)
 
 
 if __name__ == "__main__":

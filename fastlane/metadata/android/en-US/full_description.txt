@@ -1,0 +1,16 @@
+Explore ICM UW weather forecasts from meteo.pl in a native, open source application.
+
+• Detailed meteograms: temperature ranges, precipitation, humidity, pressure, wind direction, clouds, visibility and fog
+• Hourly and daily forecasts
+• UM4 forecasts for Poland and Central Europe, and global GFS forecasts
+• Custom chart profiles, mixed series, styles and configurable axes
+• Pinch to zoom and swipe through the forecast
+• Weather maps with color legends and preloaded animation
+• Place search, saved locations and optional system location access
+• PNG chart exports and PNG/CSV parameter readings
+• Synoptic commentary and articles
+• Data caching for faster loading and access to previously downloaded forecasts
+
+Meteo contains no advertisements, tracking, account requirements or API keys. Location access is optional. Coordinates are sent to the weather and geocoding services when those features are used.
+
+This is an independent application. Forecasts and articles are provided by ICM UW/meteo.pl; their content is subject to the providers' terms and is not covered by the application's GPL license.

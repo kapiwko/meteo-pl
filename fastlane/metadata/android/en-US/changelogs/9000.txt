@@ -1,0 +1,1 @@
+Initial public release: interactive meteograms, hourly and daily forecasts, custom chart profiles, weather maps and animations, saved places, optional device location, chart and reading exports, and persistent caches. Built with Qt 6 and KDE Kirigami.
