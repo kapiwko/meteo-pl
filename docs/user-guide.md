@@ -26,7 +26,7 @@ ctest --preset dev
 
 ## Places and forecast models
 
-On Android, first launch opens a setup wizard: a welcome screen, location mode,
+First launch opens a setup wizard: a welcome screen, location mode,
 forecast model and chart profile, then color theme and wind units. **Back** and
 **Next** let you review your choices before applying them.
 **Current location** is preselected and remembers the mode for future launches.
@@ -39,7 +39,7 @@ If permission is denied, positioning is unavailable or the lookup times out,
 place search opens with an explanation. A manually selected place is remembered
 instead of being replaced by device positioning on the next launch.
 
-The desktop application asks you to add a place instead of selecting a default
+The application asks you to choose a location mode instead of selecting a default
 city. Search by name, select a result, choose a map point, use system positioning
 or expand the coordinate fields. A name alone is insufficient: a geographic
 point must be selected. Coordinates accept a decimal dot or comma.

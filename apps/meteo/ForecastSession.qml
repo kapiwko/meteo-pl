@@ -10,9 +10,8 @@ QtObject {
     property var startupForecast: ({})
     property bool temporaryLocation: startupForecast.locationName !== undefined
     property bool startupReady: false
-    property bool mobileSetup: false
     property bool setupCompletedThisSession: false
-    readonly property bool needsInitialSetup: mobileSetup && !smokeTest && !temporaryLocation && !setupCompletedThisSession
+    readonly property bool needsInitialSetup: !smokeTest && !temporaryLocation && !setupCompletedThisSession
         && !settings.locationName.length && !settings.followCurrentLocation && !UserPreferences.places.length
     property bool initialLocationLookup: false
     property string initialLocationError: ""

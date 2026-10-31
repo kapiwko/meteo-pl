@@ -66,7 +66,7 @@ endif()
 add_test(NAME presentation COMMAND test_presentation)
 set_tests_properties(presentation PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
 foreach(style Fusion Material)
-    add_test(NAME responsive_layout_${style} COMMAND test_presentation responsiveSettingsAndForecastControls mobileSettingsFieldsShareTheSameMargins)
+    add_test(NAME responsive_layout_${style} COMMAND test_presentation responsiveSettingsAndForecastControls mobileSettingsFieldsShareTheSameMargins desktopWelcomeOffersSetupBeforePositioning)
     set_tests_properties(responsive_layout_${style} PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=${style};QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
         TIMEOUT 90)

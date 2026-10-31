@@ -6,7 +6,9 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.ScrollablePage {
     id: root
-    objectName: "mobileWelcomePage"
+    objectName: "welcomeWizard"
+    property bool mobileLayout: Kirigami.Settings.isMobile
+    property bool showHeader: true
     property int step: 0
     readonly property int stepCount: 4
     readonly property bool canNavigateBack: step > 0
@@ -26,7 +28,7 @@ Kirigami.ScrollablePage {
     onStepChanged: { if (flickable) flickable.contentY = 0; }
     title: [I18n.i18n("Meteo"), I18n.i18n("Location"), I18n.i18n("Forecast"), I18n.i18n("Appearance")][step]
     padding: Kirigami.Units.largeSpacing * 2
-    header: MobilePageHeader { title: root.title; showBack: false }
+    header: MobilePageHeader { title: root.title; showBack: false; visible: root.showHeader }
     ColumnLayout {
         width: Math.min(root.availableWidth, Kirigami.Units.gridUnit * 32)
         x: (root.availableWidth - width) / 2
@@ -164,6 +166,7 @@ Kirigami.ScrollablePage {
             }
             RowLayout {
                 Layout.fillWidth: true
+                Item { Layout.fillWidth: true; visible: !root.mobileLayout }
                 Button {
                     objectName: "welcomeBackButton"
                     text: root.canNavigateBack ? I18n.i18n("Back") : I18n.i18n("Not now")
@@ -171,7 +174,7 @@ Kirigami.ScrollablePage {
                 }
                 Button {
                     objectName: "welcomeContinueButton"
-                    Layout.fillWidth: true
+                    Layout.fillWidth: root.mobileLayout
                     text: root.step < root.stepCount - 1 ? I18n.i18n("Next")
                         : root.useCurrentLocation ? I18n.i18n("Show forecast") : I18n.i18n("Choose location")
                     highlighted: true

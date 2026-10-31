@@ -159,7 +159,7 @@ the first installation for Plasma to discover the module.
 5. Enable the pipette in the chart status bar to inspect values. Click a chart
    to pin the reading; use **Export…** to save selected charts together.
 
-On Android, a setup wizard lets you choose your location mode, forecast model,
+On first launch, a setup wizard lets you choose your location mode, forecast model,
 chart profile, theme and wind units. **Current location** remembers the mode and
 asks for permission after you finish setup. You can save multiple places and
 switch between them from the location name. If

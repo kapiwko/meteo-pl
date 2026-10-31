@@ -102,7 +102,7 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:48 src/qml/PlaceEditorDialog.qml:38
+#: src/qml/MobileLocationPage.qml:48 src/qml/PlaceEditorDialog.qml:39
 msgid "Add"
 msgstr ""
 
@@ -119,7 +119,7 @@ msgid "Add chart"
 msgstr ""
 
 #: src/qml/ForecastPanel.qml:400 src/qml/MobileForecastPage.qml:256
-#: src/qml/MobileLocationPage.qml:18 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:18 src/qml/PlaceEditorDialog.qml:15
 #: src/qml/PlacePicker.qml:61 src/qml/PlacesView.qml:67
 #: src/qml/PlacesView.qml:71
 msgid "Add location"
@@ -129,7 +129,7 @@ msgstr ""
 msgid "Add series"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:27 src/qml/PlaceEditorDialog.qml:71
+#: src/qml/MobileLocationPage.qml:27 src/qml/PlaceEditorDialog.qml:73
 msgid ""
 "Add your first place to get started. Search by name, choose a point on the "
 "map or use your location."
@@ -172,8 +172,8 @@ msgstr ""
 msgid "Animate"
 msgstr ""
 
-#: src/qml/ApplicationSettings.qml:17 src/qml/MobileWelcomePage.qml:27
-#: src/qml/SeriesSettings.qml:34
+#: src/qml/ApplicationSettings.qml:17 src/qml/SeriesSettings.qml:34
+#: src/qml/WelcomeWizard.qml:29
 msgid "Appearance"
 msgstr ""
 
@@ -214,7 +214,7 @@ msgstr ""
 msgid "Automatic"
 msgstr ""
 
-#: src/qml/ApplicationSettings.qml:28 src/qml/MobileWelcomePage.qml:136
+#: src/qml/ApplicationSettings.qml:28 src/qml/WelcomeWizard.qml:138
 msgid "Automatic (system)"
 msgstr ""
 
@@ -228,7 +228,7 @@ msgstr ""
 msgid "Automatic by unit"
 msgstr ""
 
-#: src/qml/MobilePageHeader.qml:24 src/qml/MobileWelcomePage.qml:169
+#: src/qml/MobilePageHeader.qml:24 src/qml/WelcomeWizard.qml:172
 msgid "Back"
 msgstr ""
 
@@ -302,7 +302,7 @@ msgid "Chart profile"
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configAppearance.qml:28
-#: src/qml/ForecastSettings.qml:62 src/qml/MobileWelcomePage.qml:117
+#: src/qml/ForecastSettings.qml:62 src/qml/WelcomeWizard.qml:119
 msgid "Chart profile:"
 msgstr ""
 
@@ -363,7 +363,7 @@ msgstr ""
 msgid "Choose a place to download its meteogram."
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:26
+#: src/qml/MobileLocationPage.qml:26 src/qml/PlaceEditorDialog.qml:72
 msgid ""
 "Choose a place to see its forecast. You can enable Current location later "
 "from My places."
@@ -385,9 +385,9 @@ msgstr ""
 #: integrations/plasma/package/contents/ui/configGeneral.qml:52
 #: integrations/plasma/package/contents/ui/main.qml:43
 #: src/qml/ForecastPanel.qml:400 src/qml/MobileForecastPage.qml:90
-#: src/qml/MobileLocationPage.qml:18 src/qml/MobileWelcomePage.qml:85
-#: src/qml/MobileWelcomePage.qml:176 src/qml/PlacePicker.qml:22
-#: src/qml/PlacePicker.qml:39
+#: src/qml/MobileLocationPage.qml:18 src/qml/PlaceEditorDialog.qml:15
+#: src/qml/PlacePicker.qml:22 src/qml/PlacePicker.qml:39
+#: src/qml/WelcomeWizard.qml:87 src/qml/WelcomeWizard.qml:179
 msgid "Choose location"
 msgstr ""
 
@@ -496,7 +496,7 @@ msgstr ""
 msgid "Color by precipitation type"
 msgstr ""
 
-#: src/qml/ApplicationSettings.qml:24 src/qml/MobileWelcomePage.qml:132
+#: src/qml/ApplicationSettings.qml:24 src/qml/WelcomeWizard.qml:134
 msgid "Color theme:"
 msgstr ""
 
@@ -649,7 +649,7 @@ msgstr ""
 msgid "Daily forecast"
 msgstr ""
 
-#: src/qml/ApplicationSettings.qml:28 src/qml/MobileWelcomePage.qml:136
+#: src/qml/ApplicationSettings.qml:28 src/qml/WelcomeWizard.qml:138
 msgid "Dark"
 msgstr ""
 
@@ -737,7 +737,7 @@ msgstr ""
 msgid "Earlier interval"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:18 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:18 src/qml/PlaceEditorDialog.qml:15
 #: src/qml/PlacesView.qml:94
 msgid "Edit place"
 msgstr ""
@@ -861,14 +861,14 @@ msgstr ""
 msgid "Follow my current location"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:82
+#: src/qml/WelcomeWizard.qml:84
 msgid ""
 "Follow your position when you use Meteo. Location access is requested when "
 "you finish setup."
 msgstr ""
 
 #: src/qml/MeteoSettings.qml:83 src/qml/MobileForecastPage.qml:178
-#: src/qml/MobileSettingsPage.qml:15 src/qml/MobileWelcomePage.qml:27
+#: src/qml/MobileSettingsPage.qml:15 src/qml/WelcomeWizard.qml:29
 msgid "Forecast"
 msgstr ""
 
@@ -885,7 +885,7 @@ msgid "Forecast model to display."
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configGeneral.qml:59
-#: src/qml/ForecastSettings.qml:40 src/qml/MobileWelcomePage.qml:105
+#: src/qml/ForecastSettings.qml:40 src/qml/WelcomeWizard.qml:107
 msgid "Forecast model:"
 msgstr ""
 
@@ -902,7 +902,7 @@ msgid "From:"
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configGeneral.qml:62
-#: src/qml/ForecastSettings.qml:44 src/qml/MobileWelcomePage.qml:109
+#: src/qml/ForecastSettings.qml:44 src/qml/WelcomeWizard.qml:111
 msgid "GFS · 240 hours"
 msgstr ""
 
@@ -1104,7 +1104,7 @@ msgstr ""
 msgid "License:"
 msgstr ""
 
-#: src/qml/ApplicationSettings.qml:28 src/qml/MobileWelcomePage.qml:136
+#: src/qml/ApplicationSettings.qml:28 src/qml/WelcomeWizard.qml:138
 msgid "Light"
 msgstr ""
 
@@ -1225,7 +1225,7 @@ msgstr ""
 msgid "Medium clouds"
 msgstr ""
 
-#: src/qml/MobileForecastPage.qml:42 src/qml/MobileWelcomePage.qml:27
+#: src/qml/MobileForecastPage.qml:42 src/qml/WelcomeWizard.qml:29
 msgid "Meteo"
 msgstr ""
 
@@ -1233,7 +1233,7 @@ msgstr ""
 msgid "Meteo · ICM meteograms"
 msgstr ""
 
-#: apps/meteo/Main.qml:15
+#: apps/meteo/Main.qml:32
 #: integrations/plasma/package/contents/ui/configAppearance.qml:23
 #: src/qml/ForecastPanel.qml:99 src/qml/ForecastPanel.qml:347
 #: src/qml/MobileForecastPage.qml:191
@@ -1341,7 +1341,7 @@ msgstr ""
 msgid "My location"
 msgstr ""
 
-#: apps/meteo/Main.qml:17 src/qml/MobileForecastPage.qml:225
+#: apps/meteo/Main.qml:34 src/qml/MobileForecastPage.qml:225
 #: src/qml/MobileForecastPage.qml:285 src/qml/MobilePlacesPage.qml:12
 #: src/qml/PlacesDialog.qml:11 src/qml/PlacesView.qml:65
 msgid "My places"
@@ -1379,7 +1379,7 @@ msgstr ""
 msgid "News"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:175
+#: src/qml/WelcomeWizard.qml:178
 msgid "Next"
 msgstr ""
 
@@ -1458,7 +1458,7 @@ msgstr ""
 msgid "Not enough memory for the meteogram image."
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:169
+#: src/qml/WelcomeWizard.qml:172
 msgid "Not now"
 msgstr ""
 
@@ -1703,7 +1703,7 @@ msgstr ""
 msgid "Readings"
 msgstr ""
 
-#: apps/meteo/Main.qml:19
+#: apps/meteo/Main.qml:36
 #: integrations/plasma/package/contents/ui/ForecastPopup.qml:98
 #: integrations/plasma/package/contents/ui/main.qml:27
 #: integrations/plasma/package/contents/ui/main.qml:167
@@ -1777,7 +1777,7 @@ msgstr ""
 msgid "Sampling"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:48 src/qml/PlaceEditorDialog.qml:38
+#: src/qml/MobileLocationPage.qml:48 src/qml/PlaceEditorDialog.qml:39
 msgid "Save"
 msgstr ""
 
@@ -1827,7 +1827,7 @@ msgstr ""
 msgid "Search for a place"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:90
+#: src/qml/WelcomeWizard.qml:92
 msgid "Search for a town or choose a point on the map."
 msgstr ""
 
@@ -1899,11 +1899,11 @@ msgstr ""
 msgid "Series removed."
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:63
+#: src/qml/WelcomeWizard.qml:65
 msgid "Set up your forecast. You can change these options later in Settings."
 msgstr ""
 
-#: apps/meteo/Main.qml:18 src/qml/MeteoSettings.qml:18
+#: apps/meteo/Main.qml:35 src/qml/MeteoSettings.qml:18
 #: src/qml/MobileForecastPage.qml:286 src/qml/MobileSettingsPage.qml:20
 msgid "Settings"
 msgstr ""
@@ -1937,7 +1937,7 @@ msgstr ""
 msgid "Show all saved places, including new ones"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:176
+#: src/qml/WelcomeWizard.qml:179
 msgid "Show forecast"
 msgstr ""
 
@@ -2003,7 +2003,7 @@ msgid ""
 "Specify a location name, valid coordinates and a supported model together."
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:161
+#: src/qml/WelcomeWizard.qml:163
 msgid "Step %1 of %2"
 msgstr ""
 
@@ -2285,17 +2285,17 @@ msgstr ""
 msgid "UM model:"
 msgstr ""
 
-#: src/qml/ForecastSettings.qml:58 src/qml/MobileWelcomePage.qml:114
+#: src/qml/ForecastSettings.qml:58 src/qml/WelcomeWizard.qml:116
 msgid "UM4 covers Poland and Central Europe. GFS covers the whole world."
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configGeneral.qml:62
-#: src/qml/ForecastSettings.qml:44 src/qml/MobileWelcomePage.qml:109
+#: src/qml/ForecastSettings.qml:44 src/qml/WelcomeWizard.qml:111
 msgid "UM4 · 120 hours"
 msgstr ""
 
 #: integrations/plasma/package/contents/ui/configGeneral.qml:62
-#: src/qml/ForecastSettings.qml:44 src/qml/MobileWelcomePage.qml:109
+#: src/qml/ForecastSettings.qml:44 src/qml/WelcomeWizard.qml:111
 msgid "UM4 · 60 hours"
 msgstr ""
 
@@ -2455,7 +2455,7 @@ msgstr ""
 msgid "WAM · significant wave height"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:58
+#: src/qml/WelcomeWizard.qml:60
 msgid "Weather forecasts, meteograms and maps from meteo.pl."
 msgstr ""
 
@@ -2463,7 +2463,7 @@ msgstr ""
 msgid "Weather layer"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:50 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/WelcomeWizard.qml:52
 msgid "Welcome to Meteo"
 msgstr ""
 
@@ -2512,7 +2512,7 @@ msgstr ""
 msgid "Wind speed and gusts"
 msgstr ""
 
-#: src/qml/ApplicationSettings.qml:73 src/qml/MobileWelcomePage.qml:143
+#: src/qml/ApplicationSettings.qml:73 src/qml/WelcomeWizard.qml:145
 msgid "Wind speed:"
 msgstr ""
 
@@ -2520,7 +2520,7 @@ msgstr ""
 msgid "Year"
 msgstr ""
 
-#: src/qml/MobileWelcomePage.qml:97
+#: src/qml/WelcomeWizard.qml:99
 msgid ""
 "You can save multiple places and switch between them using the location name "
 "above the forecast."

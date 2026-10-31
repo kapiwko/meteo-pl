@@ -372,7 +372,7 @@ private slots:
         } else form = window->findChild<QObject *>("locationDialog");
         QVERIFY(form);
         QVERIFY(form->property("firstRun").toBool());
-        QCOMPARE(form->property("title").toString(), mobile ? "Choose location" : "Welcome to Meteo");
+        QCOMPARE(form->property("title").toString(), QStringLiteral("Choose location"));
         auto *editor = form->findChild<QObject *>("locationEditor");
         QVERIFY(editor && !editor->property("valid").toBool());
         editor->setProperty("locationName", "A name without a point");
@@ -417,6 +417,97 @@ private slots:
         QTest::newRow("desktop") << false;
         QTest::newRow("mobile") << true;
     }
+    void desktopWelcomeOffersSetupBeforePositioning_data()
+    {
+        QTest::addColumn<bool>("useCurrentLocation");
+        QTest::newRow("current-location-with-search-fallback") << true;
+        QTest::newRow("choose-place") << false;
+    }
+    void desktopWelcomeOffersSetupBeforePositioning()
+    {
+        QFETCH(bool, useCurrentLocation);
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));
+        QSettings settings; settings.beginGroup("Location");
+        QVariantMap original;
+        for (const auto &key : settings.childKeys()) original[key] = settings.value(key);
+        settings.remove(""); settings.sync();
+        const auto restore = qScopeGuard([&] {
+            settings.remove("");
+            for (auto it = original.cbegin(); it != original.cend(); ++it) settings.setValue(it.key(), it.value());
+            settings.sync();
+        });
+        QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
+        QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Main.qml")));
+        QScopedPointer<QObject> object(component.create()); QVERIFY2(object, qPrintable(component.errorString()));
+        auto *window = qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
+        auto *weather = object->findChild<WeatherModel *>("appForecastModel"); QVERIFY(weather);
+        auto *store = object->findChild<QObject *>("locationSettings"); QVERIFY(store);
+        weather->currentLocation()->setForeground(false);
+        auto *dialog = object->findChild<QObject *>("welcomeDialog"); QVERIFY(dialog);
+        auto *wizard = dialog->findChild<QQuickItem *>("welcomeWizard"); QVERIFY(wizard);
+        auto *placeDialog = object->findChild<QObject *>("locationDialog"); QVERIFY(placeDialog);
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QVERIFY(weather->locationName().isEmpty()); QVERIFY(!weather->currentLocation()->enabled());
+        QCOMPARE(wizard->property("step").toInt(), 0);
+        QVERIFY(!wizard->property("showHeader").toBool());
+        QVERIFY(!wizard->property("mobileLayout").toBool());
+        wizard->setProperty("selectedModel", "gfs");
+        QVERIFY(QMetaObject::invokeMethod(dialog, "reject"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(weather->model(), "um4_60");
+        QVERIFY(!weather->currentLocation()->enabled());
+        QVERIFY(object->property("needsInitialSetup").toBool());
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "beginSetup"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QCOMPARE(wizard->property("step").toInt(), 0);
+        QCOMPARE(wizard->property("selectedModel").toString(), "um4_60");
+        wizard->setProperty("useCurrentLocation", useCurrentLocation);
+        wizard->setProperty("selectedModel", "um4_120");
+        wizard->setProperty("selectedProfile", "basic");
+        wizard->setProperty("selectedWindUnit", "km/h");
+        QSignalSpy completed(dialog, SIGNAL(completed(QVariant)));
+        auto *next = wizard->findChild<QQuickItem *>("welcomeContinueButton"); QVERIFY(next);
+        for (const QSize size : {QSize(480,500), QSize(960,800)}) {
+            window->resize(size);
+            QTRY_VERIFY(next->isVisible() && next->width() > 0);
+            QTRY_VERIFY(next->mapToScene({0,0}).x() >= 8);
+            QTRY_VERIFY(next->mapToScene({next->width(),next->height()}).x() <= size.width() - 8);
+            QTRY_VERIFY(next->mapToScene({next->width(),next->height()}).y() <= size.height() - 8);
+        }
+        for (int step = 1; step < 4; ++step) {
+            QVERIFY(QMetaObject::invokeMethod(next, "clicked"));
+            QCOMPARE(wizard->property("step").toInt(), step);
+            QCOMPARE(completed.size(), 0);
+            QVERIFY(!weather->currentLocation()->enabled());
+        }
+        QVERIFY(QMetaObject::invokeMethod(next, "clicked"));
+        QTRY_COMPARE(completed.size(), 1);
+        QVERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(weather->model(), "um4_120");
+        QCOMPARE(store->property("followCurrentLocation").toBool(), useCurrentLocation);
+        QCOMPARE(weather->currentLocation()->enabled(), useCurrentLocation);
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        QCOMPARE(preferences->profile(), "basic"); QCOMPARE(preferences->windUnit(), "km/h");
+        if (useCurrentLocation) {
+            QVERIFY(!placeDialog->property("visible").toBool());
+            auto *session = store->parent(); QVERIFY(session);
+            QVERIFY(session->setProperty("initialLocationError", "Location access was denied."));
+        }
+        QTRY_VERIFY(placeDialog->property("opened").toBool());
+        QVERIFY(placeDialog->property("firstRun").toBool());
+        QCOMPARE(placeDialog->property("title").toString(), "Choose location");
+        if (useCurrentLocation) {
+            QCOMPARE(placeDialog->property("setupError").toString(), "Location access was denied.");
+            QVERIFY(QMetaObject::invokeMethod(placeDialog, "reject"));
+            QTRY_VERIFY(!placeDialog->property("visible").toBool());
+            QVERIFY(QMetaObject::invokeMethod(object.data(), "offerLocationFallback"));
+            QVERIFY(!placeDialog->property("visible").toBool());
+        }
+        destroyTestWindow(object);
+    }
     void mobileWelcomeOffersSettingsBeforePositioning()
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign|Failed to load).*"));
@@ -449,7 +540,7 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(forecast, "beginSetup"));
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         auto *welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
-        QCOMPARE(welcome->objectName(), "mobileWelcomePage");
+        QCOMPARE(welcome->objectName(), "welcomeWizard");
         QVERIFY(!weather->currentLocation()->enabled());
         QVERIFY(welcome->property("useCurrentLocation").toBool());
         QCOMPARE(welcome->property("step").toInt(), 0);
@@ -545,7 +636,7 @@ private slots:
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         QTRY_VERIFY(!stack->property("busy").toBool());
         auto *welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
-        QCOMPARE(welcome->objectName(), "mobileWelcomePage");
+        QCOMPARE(welcome->objectName(), "welcomeWizard");
         QVERIFY(QMetaObject::invokeMethod(welcome, "advance"));
         QVERIFY(QMetaObject::invokeMethod(welcome, "advance"));
         for (int step : {1, 0}) {
@@ -577,7 +668,7 @@ private slots:
             settings.sync();
         });
         QQmlEngine engine; QQmlComponent component(&engine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/ForecastSession.qml")));
-        QScopedPointer<QObject> session(component.createWithInitialProperties({{"mobileSetup", true}}));
+        QScopedPointer<QObject> session(component.create());
         QVERIFY2(session, qPrintable(component.errorString()));
         auto *weather = session->findChild<WeatherModel *>("appForecastModel"); QVERIFY(weather);
         auto *store = session->findChild<QObject *>("locationSettings"); QVERIFY(store);
@@ -599,12 +690,13 @@ private slots:
         QVERIFY(!weather->currentLocation()->enabled());
         QVERIFY(!store->property("followCurrentLocation").toBool());
         session.reset();
-        session.reset(component.createWithInitialProperties({{"mobileSetup", true}}));
+        session.reset(component.create());
         QVERIFY2(session, qPrintable(component.errorString()));
         weather = session->findChild<WeatherModel *>("appForecastModel"); QVERIFY(weather);
         QVERIFY(!weather->currentLocation()->enabled());
         QCOMPARE(weather->locationName(), "Kielce");
         QVERIFY(!session->property("initialLocationLookup").toBool());
+        QVERIFY(!session->property("needsInitialSetup").toBool());
     }
     void mobileInitialLocationFailureOffersSearchOnlyOnce()
     {

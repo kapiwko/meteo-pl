@@ -289,7 +289,8 @@ Kirigami.Page {
     MeteoAbout { id: about; weather: root.weather }
     Component {
         id: welcomePage
-        MobileWelcomePage {
+        WelcomeWizard {
+            mobileLayout: true
             selectedModel: root.weather.model
             onCompleted: options => {
                 root.pendingWelcomeOptions = options;

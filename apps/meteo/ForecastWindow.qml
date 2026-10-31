@@ -10,6 +10,8 @@ Kirigami.ApplicationWindow {
     property alias startupForecast: session.startupForecast
     property alias temporaryLocation: session.temporaryLocation
     property alias startupReady: session.startupReady
+    readonly property alias needsInitialSetup: session.needsInitialSetup
+    readonly property alias initialLocationError: session.initialLocationError
     width: 860
     height: 900
     minimumWidth: Kirigami.Settings.isMobile ? 320 : 400
@@ -21,4 +23,5 @@ Kirigami.ApplicationWindow {
     function selectModel(model) { session.selectModel(model); }
     function selectLocation(name, latitude, longitude) { session.selectLocation(name, latitude, longitude); }
     function selectForecast(name, latitude, longitude, model) { session.selectForecast(name, latitude, longitude, model); }
+    function applyInitialSetup(options) { session.applyInitialSetup(options); }
 }

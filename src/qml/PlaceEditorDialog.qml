@@ -9,9 +9,10 @@ Dialog {
     property var place: ({})
     property bool firstRun: false
     property string saveError: ""
+    property string setupError: ""
     readonly property bool editing: !!place.id
     signal placeSaved(var place, bool added)
-    title: firstRun ? I18n.i18n("Welcome to Meteo") : editing ? I18n.i18n("Edit place") : I18n.i18n("Add location")
+    title: firstRun ? I18n.i18n("Choose location") : editing ? I18n.i18n("Edit place") : I18n.i18n("Add location")
     parent: Overlay.overlay
     anchors.centerIn: parent
     width: Math.min(640, parent ? parent.width - 24 : 640)
@@ -68,9 +69,11 @@ Dialog {
                 Label {
                     width: parent.width
                     visible: root.firstRun
-                    text: I18n.i18n("Add your first place to get started. Search by name, choose a point on the map or use your location.")
+                    text: root.setupError.length ? I18n.i18n("Choose a place to see its forecast. You can enable Current location later from My places.")
+                        : I18n.i18n("Add your first place to get started. Search by name, choose a point on the map or use your location.")
                     wrapMode: Text.WordWrap
                 }
+                Kirigami.InlineMessage { width: parent.width; visible: root.setupError.length > 0; text: root.setupError; type: Kirigami.MessageType.Information }
                 LocationEditor { id: editor; width: parent.width }
                 Kirigami.InlineMessage { width: parent.width; visible: root.saveError.length > 0; text: root.saveError; type: Kirigami.MessageType.Error }
             }

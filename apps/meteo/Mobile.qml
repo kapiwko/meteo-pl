@@ -32,7 +32,7 @@ ApplicationWindow {
         else forecastPage.navigateBack();
     }
     ApplicationTheme { mode: UserPreferences.theme }
-    ForecastSession { id: session; mobileSetup: true }
+    ForecastSession { id: session }
     StackView {
         id: navigation
         objectName: "mobilePageStack"
