@@ -14,6 +14,12 @@ Kirigami.Page {
     property int forecastView: 0
     property int newsView: 4
     readonly property bool shortLandscape: Window.window !== null && Window.window.width > Window.window.height && Window.window.height < 480
+    readonly property bool chartActionsVisible: destination === 0 && forecastPanel.viewMode === 0 && weather.hasData
+    readonly property real compactIntervalWidth: Math.ceil(intervalMetrics.advanceWidth) + 8
+    readonly property bool inlineChartActions: width >= Math.max(360, compactIntervalWidth + 208
+        + Math.min(140, placeMetrics.advanceWidth + placeButton.leftPadding + placeButton.rightPadding))
+    TextMetrics { id: intervalMetrics; font: Kirigami.Theme.smallFont; text: "00.00 00:00" + (root.weather.utc ? " UTC" : "") }
+    TextMetrics { id: placeMetrics; font: placeButton.font; text: placeButton.text }
     readonly property int destination: forecastPanel.viewMode < 3 ? 0 : forecastPanel.viewMode === 3 ? 1 : 2
     readonly property alias panel: forecastPanel
     readonly property bool canNavigateBack: placesSheet.opened || moreSheet.opened || about.opened || destination !== 0 || forecastView !== 0
@@ -44,15 +50,56 @@ Kirigami.Page {
         contentItem: RowLayout {
             spacing: Kirigami.Units.smallSpacing
             ToolButton {
+                id: placeButton
                 objectName: "mobilePlaceButton"
                 visible: root.destination === 0
-                Layout.fillWidth: true
+                Layout.fillWidth: !root.chartActionsVisible
+                Layout.preferredWidth: root.chartActionsVisible ? Math.min(root.inlineChartActions && root.width < 600 ? 140 : 220, implicitWidth) : implicitWidth
                 Layout.minimumWidth: 0
                 implicitHeight: root.shortLandscape ? 48 : 56
                 icon.name: root.weather.currentLocation.enabled ? "find-location" : "mark-location"
+                display: root.chartActionsVisible && root.width < 420 ? AbstractButton.TextOnly : AbstractButton.TextBesideIcon
                 text: root.weather.currentLocation.enabled && !root.weather.currentLocation.hasPosition ? I18n.i18n("Current location") : root.weather.locationName || I18n.i18n("Choose location")
                 Accessible.name: I18n.i18n("My places · choose a forecast")
                 onClicked: placesSheet.open()
+            }
+            Label {
+                id: intervalLabel
+                objectName: "mobileVisibleInterval"
+                visible: root.chartActionsVisible
+                Layout.preferredWidth: root.width >= 600 ? implicitWidth : root.compactIntervalWidth
+                Layout.maximumWidth: root.width >= 600 ? 280 : root.compactIntervalWidth
+                font: Kirigami.Theme.smallFont
+                text: root.weather.formatTime(forecastPanel.viewportStart, root.width >= 600 ? "d MMM HH:mm" : "dd.MM HH:mm")
+                    + (root.width >= 600 ? " – " : "\n")
+                    + root.weather.formatTime(forecastPanel.viewportEnd, root.width >= 600 ? "d MMM HH:mm" : "dd.MM HH:mm")
+                    + (root.weather.utc ? " UTC" : "")
+                Accessible.name: I18n.i18n("Visible interval") + ": " + text
+                ToolTip.text: Accessible.name
+                ToolTip.visible: intervalHover.hovered
+                HoverHandler { id: intervalHover }
+            }
+            Item { visible: root.chartActionsVisible; Layout.fillWidth: true }
+            ToolButton {
+                objectName: "mobileIdentificationButton"
+                visible: root.chartActionsVisible && root.inlineChartActions
+                icon.name: "color-picker"
+                implicitWidth: 44; implicitHeight: 48
+                checkable: true
+                checked: forecastPanel.identificationEnabled
+                Accessible.name: I18n.i18n("Parameter identification mode")
+                onClicked: forecastPanel.identificationEnabled = checked
+                ToolTip.text: Accessible.name; ToolTip.visible: hovered
+            }
+            ToolButton {
+                objectName: "mobileChartExportButton"
+                visible: root.chartActionsVisible && root.inlineChartActions
+                icon.name: "document-export"
+                implicitWidth: 44; implicitHeight: 48
+                enabled: !forecastPanel.exportBusy
+                Accessible.name: I18n.i18n("Export charts")
+                onClicked: forecastPanel.chooseExport()
+                ToolTip.text: Accessible.name; ToolTip.visible: hovered
             }
             Kirigami.Heading {
                 objectName: "mobileDestinationTitle"
@@ -65,6 +112,7 @@ Kirigami.Page {
             }
             ToolButton {
                 visible: root.destination === 0
+                objectName: "mobileRefreshButton"
                 icon.name: "view-refresh"
                 implicitWidth: 48; implicitHeight: 48
                 enabled: !root.weather.busy
@@ -72,6 +120,7 @@ Kirigami.Page {
                 onClicked: root.weather.refresh()
             }
             ToolButton {
+                id: moreButton
                 objectName: "mobileMoreButton"
                 icon.name: "overflow-menu"
                 implicitWidth: 48; implicitHeight: 48
@@ -174,17 +223,36 @@ Kirigami.Page {
         }
         footer: Component { Button { text: I18n.i18n("Add location"); icon.name: "list-add"; highlighted: true; onClicked: { placesSheet.close(); root.addLocation(); } } }
     }
-    MobileSheet {
+    Menu {
         id: moreSheet
         objectName: "mobileMoreSheet"
         title: I18n.i18n("More options")
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 0
-            ItemDelegate { visible: root.destination === 0; Layout.fillWidth: true; text: I18n.i18n("My places"); icon.name: "mark-location"; onClicked: { moreSheet.close(); root.chooseLocation(); } }
-            ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("Settings"); icon.name: "configure"; onClicked: { moreSheet.close(); root.openSettings(); } }
-            ItemDelegate { Layout.fillWidth: true; text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onClicked: { moreSheet.close(); about.open(); } }
+        parent: moreButton
+        x: moreButton.width - width
+        y: moreButton.height
+        width: Math.min(360, root.width - Kirigami.Units.largeSpacing * 2)
+        readonly property bool chartActions: root.chartActionsVisible && !root.inlineChartActions
+        MenuItem {
+            objectName: "mobileIdentificationAction"
+            visible: moreSheet.chartActions
+            text: I18n.i18n("Parameter identification mode")
+            icon.name: "color-picker"
+            checkable: true
+            checked: forecastPanel.identificationEnabled
+            onTriggered: forecastPanel.identificationEnabled = checked
         }
+        MenuItem {
+            objectName: "mobileExportAction"
+            visible: moreSheet.chartActions
+            enabled: !forecastPanel.exportBusy
+            text: I18n.i18n("Export charts")
+            icon.name: "document-export"
+            onTriggered: forecastPanel.chooseExport()
+        }
+        MenuSeparator { visible: moreSheet.chartActions }
+        MenuItem { visible: root.destination === 0; text: I18n.i18n("My places"); icon.name: "mark-location"; onTriggered: root.chooseLocation() }
+        MenuItem { text: I18n.i18n("Settings"); icon.name: "configure"; onTriggered: root.openSettings() }
+        MenuItem { text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onTriggered: about.open() }
     }
     MeteoAbout { id: about; weather: root.weather }
     Component { id: settingsPage; MobileSettingsPage { weather: root.weather; navigationStack: root.navigationStack; forecastPanel: root.panel } }

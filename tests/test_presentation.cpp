@@ -847,6 +847,34 @@ private slots:
         QTRY_VERIFY(hidden->property("renderEnabled").toBool());
         QTRY_VERIFY(paints.size() > 0);
     }
+    void mobileHeaderKeepsTheEmptyStateHiddenDuringLoading()
+    {
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        const auto first = QDateTime::currentSecsSinceEpoch() - 1800;
+        server.response = [first](const QUrl &url) {
+            return url.path().endsWith("/available") ? QJsonDocument(QJsonObject{{"um4_60", QJsonArray{first}}}).toJson() : forecastFixture(first);
+        };
+        auto *source = new PositionFixture;
+        WeatherModel weather(nullptr, server.endpoint(), source);
+        weather.setAutoRefresh(false); weather.setLatitude(51.112233); weather.setLongitude(20.445566);
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastPanel");
+        QScopedPointer<QObject> panel(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"mobileLayout",true}}));
+        QVERIFY2(panel, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(420,700);
+        auto *item = qobject_cast<QQuickItem *>(panel.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        auto *empty = panel->findChild<QQuickItem *>("forecastEmptyState"); QVERIFY(empty);
+        QTRY_VERIFY(empty->isVisible());
+        weather.refresh(true);
+        QVERIFY(!empty->isVisible());
+        QTRY_VERIFY(!weather.busy()); QVERIFY(weather.hasData());
+        QVERIFY(!empty->isVisible());
+        weather.setLatitude(51.112234);
+        weather.currentLocation()->setEnabled(true); weather.currentLocation()->setForeground(true);
+        QVERIFY(!weather.hasData()); QVERIFY(weather.currentLocation()->busy());
+        QVERIFY(!empty->isVisible());
+    }
     void mobileNavigationAndSettingsUsePages()
     {
         QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));
@@ -948,12 +976,30 @@ private slots:
         auto *more = page->findChild<QObject *>("mobileMoreSheet");
         QVERIFY(more);
         QTRY_VERIFY(more->property("opened").toBool());
-        QVERIFY(more->property("leftPadding").toDouble() > 0);
-        QVERIFY(more->property("topPadding").toDouble() > 0);
-        QVERIFY(more->property("height").toDouble() > more->property("topPadding").toDouble() + more->property("bottomPadding").toDouble());
-        QVERIFY(more->property("bottomPadding").toDouble() >= more->property("topPadding").toDouble());
+        QVERIFY(more->property("height").toDouble() > 0);
+        QVERIFY(more->property("width").toDouble() < window->width());
+        auto *status = find(find, page, "chartStatusBar");
+        auto *interval = find(find, page, "mobileVisibleInterval");
+        auto *identify = find(find, page, "mobileIdentificationButton");
+        auto *exportChart = find(find, page, "mobileChartExportButton");
+        QVERIFY(status && !status->isVisible());
+        QVERIFY(interval && interval->isVisible());
+        QVERIFY(identify && exportChart);
+        QVERIFY(interval->mapToScene({0,0}).y() < 80);
+        window->resize(640, 800);
+        QTRY_VERIFY(identify->isVisible() && exportChart->isVisible());
+        QVERIFY(exportChart->mapToScene({exportChart->width(), 0}).x() <= window->width());
+        const auto originalFont = object->property("font").value<QFont>();
+        auto largeFont = originalFont;
+        if (largeFont.pixelSize() > 0) largeFont.setPixelSize(qRound(largeFont.pixelSize() * 1.5));
+        else largeFont.setPointSizeF(largeFont.pointSizeF() * 1.5);
+        QVERIFY(object->setProperty("font", largeFont));
         window->resize(360, 700);
         QTRY_VERIFY(more->property("height").toDouble() <= window->height() * 0.8);
+        auto *refreshButton = find(find, page, "mobileRefreshButton"); QVERIFY(refreshButton);
+        QTRY_VERIFY(interval->mapToScene({interval->width(), 0}).x() <= refreshButton->mapToScene({0,0}).x());
+        QTRY_VERIFY(placeButton->mapToScene({placeButton->width(), 0}).x() <= interval->mapToScene({0,0}).x());
+        QVERIFY(object->setProperty("font", originalFont));
         window->resize(360, 800);
         QTest::keyClick(window, Qt::Key_Back);
         QTRY_VERIFY(!more->property("visible").toBool());
@@ -962,6 +1008,16 @@ private slots:
         QVERIFY(desktopNavigation && !desktopNavigation->isVisible());
         auto *zoom = find(find, page, "chartZoomSlider");
         QVERIFY(zoom && !zoom->isVisible());
+        window->resize(640, 800);
+        QTRY_VERIFY(identify->isVisible() && exportChart->isVisible());
+        click(identify); QCOMPARE(panel->property("identificationEnabled").toBool(), true);
+        click(identify); QCOMPARE(panel->property("identificationEnabled").toBool(), false);
+        click(exportChart);
+        auto *exportDialog = panel->findChild<QObject *>("chartExportSelection"); QVERIFY(exportDialog);
+        QTRY_VERIFY(exportDialog->property("opened").toBool());
+        QVERIFY(QMetaObject::invokeMethod(exportDialog, "reject"));
+        QTRY_VERIFY(!exportDialog->property("visible").toBool());
+        window->resize(360, 800);
         QVERIFY(QMetaObject::invokeMethod(panel, "setHours", Q_ARG(QVariant, 24)));
         auto *hourly = findButton(findButton, page, "Hourly");
         QVERIFY(hourly); click(hourly);

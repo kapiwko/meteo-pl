@@ -178,6 +178,12 @@ shorter. A custom interval starts at the chosen date. Zoom stops at 24 hours,
 clamped to the whole range of shorter forecasts. Ctrl+mouse wheel also zooms;
 a second slider appears when only part of the forecast is visible.
 
+On phones, the visible interval sits beside the place name in the app bar.
+Parameter identification and chart export use two compact header actions. On
+narrow screens or with larger text, those actions move into the overflow menu.
+There is no status bar below the mobile charts; pinch, horizontal swipe and
+double-tap control the visible interval.
+
 **Settings** opens the shared settings interface:
 
 - **Forecast:** model, chart profile, time interval and model run. A custom

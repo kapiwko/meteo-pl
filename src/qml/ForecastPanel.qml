@@ -12,6 +12,7 @@ Item {
     property int viewMode: 0
     property bool touchMode: Kirigami.Settings.isMobile
     property bool mobileLayout: false
+    readonly property bool exportBusy: chartExporter.busy
     function navigateBack() {
         if (viewMode < 4) return false;
         const page = mainViewLoader.item as Pane;
@@ -387,8 +388,11 @@ Item {
             Kirigami.InlineMessage { visible: root.weather.archive; text: I18n.i18n("Archived model run. Chart dates and times refer to the selected forecast."); type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Kirigami.InlineMessage { visible: root.weather.stale; text: I18n.i18n("The forecast may be outdated. Last downloaded: ") + root.weather.updatedText; type: Kirigami.MessageType.Warning; Layout.fillWidth: true }
             Kirigami.PlaceholderMessage {
+                objectName: "forecastEmptyState"
                 Layout.fillWidth: true
-                visible: !root.weather.hasData && !(root.mobileLayout ? mobileHeader.item && mobileHeader.item.loading : forecastHeader.loading)
+                visible: !root.weather.hasData && !root.weather.busy
+                    && !(root.weather.autoRefresh && root.weather.locationName.length > 0 && !root.weather.error.length)
+                    && !(root.weather.currentLocation.enabled && root.weather.currentLocation.busy)
                 icon.name: "mark-location"
                 text: I18n.i18n("No forecast")
                 explanation: I18n.i18n("Choose a place to download its meteogram.")
@@ -405,7 +409,7 @@ Item {
             Frame {
                 id: chartStatus
                 objectName: "chartStatusBar"
-                visible: root.viewMode === 0 && root.weather.hasData
+                visible: !root.mobileLayout && root.viewMode === 0 && root.weather.hasData
                 Layout.fillWidth: true
                 padding: 4
                 readonly property real fullSpan: Math.max(1, root.weather.lastTimestamp - root.weather.firstTimestamp)
