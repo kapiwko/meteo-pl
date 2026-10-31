@@ -1,12 +1,25 @@
 #pragma once
 #include "MeteoUiExport.hpp"
 #include <QQuickItem>
+#include <QAbstractListModel>
 #include <QColor>
 #include <QFont>
 #include <QTransform>
 #include <QVariantList>
 #include <QVector>
 #include <QtQml/qqmlregistration.h>
+
+class METEO_UI_EXPORT PlotTextModel : public QAbstractListModel {
+    Q_OBJECT
+public:
+    using QAbstractListModel::QAbstractListModel;
+    int rowCount(const QModelIndex &parent = {}) const override { return parent.isValid() ? 0 : m_labels.size(); }
+    QVariant data(const QModelIndex &index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    void synchronize(const QVariantList &labels);
+private:
+    QVariantList m_labels;
+};
 
 // Records chart primitives on the GUI thread and submits colored triangles to
 // Qt Quick's render thread. No intermediate chart image or QPainter is used.
@@ -21,11 +34,13 @@ class METEO_UI_EXPORT GpuPlot : public QQuickItem {
     Q_PROPERTY(QString textAlign MEMBER m_textAlign)
     Q_PROPERTY(QString textBaseline MEMBER m_textBaseline)
     Q_PROPERTY(QVariantList textLabels READ textLabels NOTIFY textLabelsChanged)
+    Q_PROPERTY(QAbstractItemModel *textModel READ textModel CONSTANT)
     Q_PROPERTY(QFont labelFont READ labelFont CONSTANT)
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged)
 public:
     explicit GpuPlot(QQuickItem *parent = nullptr);
     QVariantList textLabels() const { return m_labels; }
+    QAbstractItemModel *textModel() { return &m_textModel; }
     QFont labelFont() const {
         QFont result("sans-serif");
         result.setPixelSize(10);
@@ -63,8 +78,10 @@ signals:
     void cursorPaintRequested();
     void frameCountChanged();
 protected:
+    void updatePolish() override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 private:
+    PlotTextModel m_textModel{this};
     struct Vertex { float x, y; unsigned char r, g, b, a; };
     struct State {
         QColor fill, stroke;

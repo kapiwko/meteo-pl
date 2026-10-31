@@ -20,6 +20,8 @@ ColumnLayout {
     property bool identificationEnabled: false
     property bool touchNavigationEnabled: false
     property bool compactAxes: false
+    property bool renderEnabled: true
+    onRenderEnabledChanged: if (renderEnabled) plot.requestPaint()
     // The desktop panel shares its exporter and status message across charts.
     // Standalone charts (including Plasma) use the same native save workflow.
     property var exportHandler: null
@@ -417,6 +419,7 @@ ColumnLayout {
         layer.enabled: activeRenderer === "gpu"
         layer.samples: 4
         function requestPaint() {
+            if (!root.renderEnabled && !root.exportMode) return;
             if (activeRenderer === "gpu") {
                 const target = renderer.item as GpuPlot;
                 if (target) target.requestPaint();
@@ -426,6 +429,7 @@ ColumnLayout {
             }
         }
         function requestCursorPaint() {
+            if (!root.renderEnabled && !root.exportMode) return;
             if (activeRenderer === "gpu") {
                 const target = renderer.item as GpuPlot;
                 if (target) target.requestCursorPaint();
@@ -439,6 +443,7 @@ ColumnLayout {
         Loader {
             id: renderer
             anchors.fill: parent
+            visible: root.renderEnabled || root.exportMode
             sourceComponent: plot.activeRenderer === "gpu" ? gpuComponent : cpuComponent
             onLoaded: plot.requestPaint()
         }
@@ -447,19 +452,24 @@ ColumnLayout {
             GpuPlot {
                 id: gpuPlot
                 objectName: "gpu-base-" + root.groupKey
-                onPaint: { Style.paintChart(root, plot, getContext("2d"), false); gpuCursor.requestPaint(); }
+                onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root, plot, getContext("2d"), false); gpuCursor.requestPaint(); }
                 onCursorPaintRequested: gpuCursor.requestPaint()
                 onSoftwareBackend: plot.softwareFallback = true
                 Repeater {
-                    model: gpuPlot.textLabels
+                    model: gpuPlot.textModel
                     delegate: Text {
-                        required property var modelData
-                        text: modelData.text
-                        color: modelData.color
+                        required property string labelText
+                        required property color labelColor
+                        required property real labelX
+                        required property real labelY
+                        required property string labelAlign
+                        required property string labelBaseline
+                        text: labelText
+                        color: labelColor
                         renderType: Text.NativeRendering
                         font: gpuPlot.labelFont
-                        x: modelData.x - (modelData.align === "center" ? implicitWidth / 2 : modelData.align === "right" ? implicitWidth : 0)
-                        y: modelData.y - (modelData.baseline === "middle" ? implicitHeight / 2 : implicitHeight)
+                        x: labelX - (labelAlign === "center" ? implicitWidth / 2 : labelAlign === "right" ? implicitWidth : 0)
+                        y: labelY - (labelBaseline === "middle" ? implicitHeight / 2 : implicitHeight)
                     }
                 }
                 GpuPlot {
@@ -474,8 +484,9 @@ ColumnLayout {
             id: cpuComponent
             Canvas {
                 objectName: "cpu-base-" + root.groupKey
+                property int renderedFrames: 0
                 renderTarget: Canvas.Image
-                onPaint: Style.paintChart(root, plot, getContext("2d"))
+                onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root, plot, getContext("2d")); ++renderedFrames; }
             }
         }
 
@@ -562,7 +573,7 @@ ColumnLayout {
         function onLeftMarginChanged() { plot.requestPaint(); }
         function onRightMarginChanged() { plot.requestPaint(); }
         function onSelectedTimeChanged() { plot.requestCursorPaint(); }
-        function onExportModeChanged() { plot.requestCursorPaint(); }
+        function onExportModeChanged() { plot.requestPaint(); }
         function onStartTimeChanged() { plot.requestPaint(); }
         function onEndTimeChanged() { plot.requestPaint(); }
         function onTextColorChanged() { plot.requestPaint(); }

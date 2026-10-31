@@ -597,6 +597,8 @@ Item {
                         identificationEnabled: root.identificationEnabled
                         touchNavigationEnabled: true
                         compactAxes: root.mobileLayout
+                        renderEnabled: y + height >= chartsScroll.contentItem.contentY
+                            && y <= chartsScroll.contentItem.contentY + chartsScroll.availableHeight
                         exportHandler: chart => root.saveCharts([chart])
                         nights: UserPreferences.showNight ? root.weather.nightIntervals : []
                         onProbeMoved: (timestamp, position) => root.showProbe(timestamp, position, groupKey)

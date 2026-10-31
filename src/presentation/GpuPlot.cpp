@@ -14,18 +14,53 @@ qreal cross(QPointF a, QPointF b, QPointF c) { return (b.x()-a.x())*(c.y()-a.y()
 bool finite(QPointF p) { return std::isfinite(p.x()) && std::isfinite(p.y()); }
 }
 GpuPlot::GpuPlot(QQuickItem *parent) : QQuickItem(parent) { setFlag(ItemHasContents); }
+QHash<int, QByteArray> PlotTextModel::roleNames() const
+{
+    return {{Qt::UserRole, "labelText"}, {Qt::UserRole + 1, "labelColor"}, {Qt::UserRole + 2, "labelX"},
+        {Qt::UserRole + 3, "labelY"}, {Qt::UserRole + 4, "labelAlign"}, {Qt::UserRole + 5, "labelBaseline"}};
+}
+QVariant PlotTextModel::data(const QModelIndex &index, int role) const
+{
+    static const QStringList keys{"text", "color", "x", "y", "align", "baseline"};
+    const auto key = role - Qt::UserRole;
+    if (!index.isValid() || index.row() < 0 || index.row() >= m_labels.size() || key < 0 || key >= keys.size()) return {};
+    return m_labels[index.row()].toMap().value(keys[key]);
+}
+void PlotTextModel::synchronize(const QVariantList &labels)
+{
+    if (m_labels == labels) return;
+    const auto common = std::min(m_labels.size(), labels.size());
+    for (int i = 0; i < common; ++i) {
+        if (m_labels[i] == labels[i]) continue;
+        m_labels[i] = labels[i];
+        emit dataChanged(index(i), index(i));
+    }
+    if (m_labels.size() > labels.size()) {
+        beginRemoveRows({}, labels.size(), m_labels.size() - 1);
+        m_labels.resize(labels.size());
+        endRemoveRows();
+    } else if (m_labels.size() < labels.size()) {
+        beginInsertRows({}, m_labels.size(), labels.size() - 1);
+        for (auto i = m_labels.size(); i < labels.size(); ++i) m_labels.append(labels[i]);
+        endInsertRows();
+    }
+}
 void GpuPlot::requestPaint()
 {
     if (m_pending) return;
     m_pending = true;
-    QTimer::singleShot(0, this, [this] {
-        m_pending = false;
-        emit paint();
-        ++m_frameCount;
-        emit frameCountChanged();
-        if (m_previousLabels != m_labels) { m_previousLabels = m_labels; emit textLabelsChanged(); }
-        update();
-    });
+    polish();
+}
+void GpuPlot::updatePolish()
+{
+    if (!m_pending) return;
+    m_pending = false;
+    emit paint();
+    ++m_frameCount;
+    emit frameCountChanged();
+    m_textModel.synchronize(m_labels);
+    if (m_previousLabels != m_labels) { m_previousLabels = m_labels; emit textLabelsChanged(); }
+    update();
 }
 void GpuPlot::reset()
 {

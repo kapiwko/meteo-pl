@@ -1,6 +1,7 @@
 #include "WeatherModel.hpp"
 #include "PlaceSearchModel.hpp"
 #include "ReverseGeocoder.hpp"
+#include <QAbstractItemModelTester>
 #include <QInputMethodEvent>
 #include "ChartConfiguration.hpp"
 #include "ChartExporter.hpp"
@@ -793,6 +794,58 @@ private slots:
             }
             destroyTestWindow(object);
         }
+    }
+    void gpuTextModelUpdatesLabelsWithoutResettingDelegates()
+    {
+        PlotTextModel model;
+        QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::QtTest);
+        QSignalSpy resets(&model, &QAbstractItemModel::modelReset);
+        QSignalSpy changes(&model, &QAbstractItemModel::dataChanged);
+        model.synchronize({QVariantMap{{"text","00"},{"x",10},{"y",20},{"color","black"},{"align","left"},{"baseline","middle"}}});
+        QPersistentModelIndex label(model.index(0));
+        model.synchronize({QVariantMap{{"text","02"},{"x",15},{"y",20},{"color","black"},{"align","left"},{"baseline","middle"}}});
+        QVERIFY(label.isValid());
+        QCOMPARE(label.data(Qt::UserRole).toString(), "02");
+        QCOMPARE(label.data(Qt::UserRole+2).toInt(), 15);
+        QCOMPARE(changes.size(), 1); QCOMPARE(resets.size(), 0);
+        model.synchronize({}); QVERIFY(!label.isValid()); QCOMPARE(model.rowCount(), 0);
+    }
+    void offscreenChartsWaitUntilTheyEnterViewport()
+    {
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false); QVERIFY(weather.hasData());
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "ForecastPanel");
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        const auto original = preferences->renderer();
+        const auto restore = qScopeGuard([&] { preferences->setRenderer(original); });
+        preferences->setRenderer("cpu"); preferences->setProfile("classic");
+        QScopedPointer<QObject> panel(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}, {"mobileLayout", true}}));
+        QVERIFY2(panel, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(420, 620);
+        auto *item = qobject_cast<QQuickItem *>(panel.data());
+        item->setParentItem(window.contentItem()); item->setSize(window.size()); window.show();
+        const auto find = [](auto &&self, QQuickItem *parent, const QString &name) -> QQuickItem * {
+            if (parent->objectName() == name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        QQuickItem *hidden = nullptr, *canvas = nullptr, *scroll = nullptr;
+        QTRY_VERIFY(hidden = find(find, item, "chart-clouds"));
+        QTRY_VERIFY(canvas = find(find, item, "cpu-base-clouds"));
+        QTRY_VERIFY(scroll = find(find, item, "meteogramScrollView"));
+        QTRY_VERIFY(!hidden->property("renderEnabled").toBool());
+        QTest::qWait(100);
+        QSignalSpy paints(canvas, SIGNAL(renderedFramesChanged())); QVERIFY(paints.isValid());
+        for (int step = 0; step < 5; ++step) {
+            const auto first = weather.firstTimestamp() + step * 3600;
+            QVERIFY(QMetaObject::invokeMethod(panel.data(), "setRange", Q_ARG(QVariant, first), Q_ARG(QVariant, first + 24*3600)));
+            QTest::qWait(25);
+        }
+        QCOMPARE(paints.size(), 0);
+        auto *flickable = scroll->property("contentItem").value<QObject *>(); QVERIFY(flickable);
+        flickable->setProperty("contentY", std::max(0.0, flickable->property("contentHeight").toDouble() - scroll->property("availableHeight").toDouble()));
+        QTRY_VERIFY(hidden->property("renderEnabled").toBool());
+        QTRY_VERIFY(paints.size() > 0);
     }
     void mobileNavigationAndSettingsUsePages()
     {
