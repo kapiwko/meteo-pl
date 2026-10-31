@@ -6,7 +6,7 @@
     "Description": "meteo.pl meteograms: temperature, precipitation, wind and pressure",
     "Description[pl]": "Meteogramy meteo.pl: temperatura, opady, wiatr i ciśnienie",
     "Icon": "pl.meteo.desktop",
-    "Version": "0.9.1",
+    "Version": "0.9.2",
     "Category": "Environment",
     "Authors": [
       {
