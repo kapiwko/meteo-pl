@@ -22,6 +22,7 @@ ApplicationWindow {
     // Kirigami follows visual ancestors; a Window is outside that item tree.
     Binding { target: window.contentItem.Kirigami.Theme; property: "inherit"; value: false }
     Binding { target: window.contentItem.Kirigami.Theme; property: "colorSet"; value: window.colorScheme === Qt.Dark ? Kirigami.Theme.Complementary : Kirigami.Theme.Window }
+    Binding { target: window.contentItem.Kirigami.Theme; property: "disabledTextColor"; value: Qt.alpha(window.Kirigami.Theme.textColor, 0.6) }
     readonly property bool canNavigateBack: Qt.inputMethod.visible || Qt.inputMethod.animating || navigation.depth > 1 || forecastPage.canNavigateBack
     function navigateBack() {
         if (Qt.inputMethod.visible || Qt.inputMethod.animating) { Qt.inputMethod.hide(); return; }

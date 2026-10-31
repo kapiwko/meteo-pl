@@ -67,7 +67,7 @@ foreach(style Fusion Material)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=${style};QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
         TIMEOUT 90)
 endforeach()
-add_test(NAME mobile_palette COMMAND test_presentation mobilePagesKeepTheWindowPalette)
+add_test(NAME mobile_palette COMMAND test_presentation mobilePagesKeepTheWindowPalette applicationThemeChangesWithoutRestart)
 set_tests_properties(mobile_palette PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 30)

@@ -776,6 +776,7 @@ private slots:
     }
     void applicationThemeChangesWithoutRestart()
     {
+        QTest::failOnWarning(QRegularExpression(".*(Binding loop|TypeError|ReferenceError).*"));
         QQmlEngine engine;
 #if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
         engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
@@ -796,6 +797,9 @@ private slots:
                     QQmlExpression contentColor(QQmlEngine::contextForObject(window), window->contentItem(), "Kirigami.Theme.backgroundColor");
                     QTRY_COMPARE(contentColor.evaluate().value<QColor>().lightnessF() < 0.5, theme == "dark");
                     QVERIFY2(!contentColor.hasError(), qPrintable(contentColor.error().toString()));
+                    QQmlExpression secondaryColor(QQmlEngine::contextForObject(window), window->contentItem(), "Kirigami.Theme.disabledTextColor");
+                    QTRY_COMPARE(secondaryColor.evaluate().value<QColor>().lightnessF() > 0.5, theme == "dark");
+                    QVERIFY2(!secondaryColor.hasError(), qPrintable(secondaryColor.error().toString()));
                 }
             }
             destroyTestWindow(object);
