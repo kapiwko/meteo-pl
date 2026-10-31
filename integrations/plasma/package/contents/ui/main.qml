@@ -129,12 +129,13 @@ PlasmoidItem {
         function chooseLocation() { if (forecastView.item) forecastView.item.chooseLocation(); }
         readonly property bool charts: root.weatherConfiguration.popupView === "charts"
         Layout.minimumWidth: Kirigami.Units.gridUnit * 20
-        Layout.minimumHeight: Kirigami.Units.gridUnit * 14
+        Layout.minimumHeight: Math.min(Screen.height * 0.85, Kirigami.Units.gridUnit * (charts ? 26 : 14))
         Layout.maximumHeight: Screen.height * 0.85
         implicitWidth: Kirigami.Units.gridUnit * (charts ? 30 : 24)
-        implicitHeight: Math.min(Screen.height * 0.85,
-            Math.max(Kirigami.Units.gridUnit * 18, contentPane.implicitHeight
-                + (header.visible ? header.implicitHeight : 0) + footer.implicitHeight))
+        // ListView's content height is an estimate while delegates are created,
+        // collapsed or replaced after a forecast refresh. It must not resize
+        // the host popup, which also persists the user's last popup size.
+        implicitHeight: Math.min(Screen.height * 0.85, Kirigami.Units.gridUnit * (charts ? 34 : 24))
         collapseMarginsHint: true
 
         header: PlasmaExtras.BasicPlasmoidHeading {

@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import QtQuick.Layouts
 import pl.meteo.desktop
 import pl.meteo.testfixtures
 
@@ -11,6 +12,8 @@ QtObject {
     required property var actions
     required property string appletIcon
     property int phase: 0
+    property real initialPopupHeight: 0
+    property int collapseUntil: 0
     property int ticks: 0
     property bool sawLoading: false
     property bool sawLocationLoading: false
@@ -108,6 +111,7 @@ QtObject {
             if (!temperature || !precipitation) return;
             if (phase === 0) {
                 require(temperature.expanded && precipitation.expanded, "Incorrect default section state");
+                initialPopupHeight = frame.implicitHeight;
                 phase = 1;
                 temperature.collapse(); precipitation.collapse();
                 FixtureDriver.keyClick(precipitation, Qt.Key_Space);
@@ -129,6 +133,15 @@ QtObject {
                 const selector = find(frame, "headerLocationSelector");
                 require(selector.popup.visible, "Choose location action did not open selector");
                 selector.popup.close();
+                for (let i = 0; i < sections.count; ++i) {
+                    const row = sections.itemAtIndex(i);
+                    if (row) row.collapse();
+                }
+                collapseUntil = ticks + 12;
+                phase = 5;
+            } else if (phase === 5 && ticks >= collapseUntil) {
+                require(frame.implicitHeight === initialPopupHeight, "Collapsing charts changes popup size: " + initialPopupHeight + " -> " + frame.implicitHeight);
+                require(frame.Layout.minimumHeight >= 400, "Popup minimum is too short to show chart sections: " + frame.Layout.minimumHeight);
                 finish(() => action("openForecastAction").trigger());
             }
         } catch (error) {
