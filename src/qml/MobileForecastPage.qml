@@ -17,7 +17,7 @@ Kirigami.Page {
     readonly property bool chartActionsVisible: destination === 0 && forecastPanel.viewMode === 0 && weather.hasData
     readonly property real compactIntervalWidth: Math.ceil(intervalMetrics.advanceWidth) + 8
     readonly property bool inlineChartActions: width >= Math.max(360, compactIntervalWidth + 208
-        + Math.min(140, placeMetrics.advanceWidth + placeButton.leftPadding + placeButton.rightPadding))
+        + Math.min(140, placeMetrics.advanceWidth + placeButton.leftPadding + placeButton.rightPadding + placeButton.icon.width + placeButton.spacing))
     TextMetrics { id: intervalMetrics; font: Kirigami.Theme.smallFont; text: "00.00 00:00" + (root.weather.utc ? " UTC" : "") }
     TextMetrics { id: placeMetrics; font: placeButton.font; text: placeButton.text }
     readonly property int destination: forecastPanel.viewMode < 3 ? 0 : forecastPanel.viewMode === 3 ? 1 : 2
@@ -58,7 +58,9 @@ Kirigami.Page {
                 Layout.minimumWidth: 0
                 implicitHeight: root.shortLandscape ? 48 : 56
                 icon.name: root.weather.currentLocation.enabled ? "find-location" : "mark-location"
-                display: root.chartActionsVisible && root.width < 420 ? AbstractButton.TextOnly : AbstractButton.TextBesideIcon
+                icon.width: Kirigami.Units.iconSizes.smallMedium
+                icon.height: Kirigami.Units.iconSizes.smallMedium
+                display: AbstractButton.TextBesideIcon
                 text: root.weather.currentLocation.enabled && !root.weather.currentLocation.hasPosition ? I18n.i18n("Current location") : root.weather.locationName || I18n.i18n("Choose location")
                 Accessible.name: I18n.i18n("My places · choose a forecast")
                 onClicked: placesSheet.open()

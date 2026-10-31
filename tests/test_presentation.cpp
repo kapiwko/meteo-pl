@@ -1074,6 +1074,8 @@ private slots:
         QCOMPARE(QQmlProperty(meteogram, "icon.name").read().toString(), "office-chart-line");
         QQuickItem *placeButton = nullptr;
         QTRY_VERIFY(placeButton = find(find, page, "mobilePlaceButton"));
+        QQmlExpression placeIconVisible(qmlContext(placeButton), placeButton, "display === AbstractButton.TextBesideIcon");
+        QVERIFY(placeIconVisible.evaluate().toBool());
         click(placeButton);
         auto *places = page->findChild<QObject *>("mobilePlacesSheet");
         QVERIFY(places);
