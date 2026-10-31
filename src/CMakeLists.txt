@@ -66,6 +66,7 @@ qt_add_qml_module(meteo_ui
         presentation/ImagePreloader.cpp presentation/ImagePreloader.hpp
         presentation/CacheStorage.cpp presentation/CacheStorage.hpp
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
+        presentation/ReverseGeocoder.cpp presentation/ReverseGeocoder.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/ProfileFileCodec.cpp presentation/ProfileFileCodec.hpp
         presentation/JsonSchemaValidator.cpp presentation/JsonSchemaValidator.hpp

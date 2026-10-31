@@ -17,26 +17,29 @@ ColumnLayout {
     property real mapLatitude: 52.2297
     property real mapLongitude: 21.0122
     property bool showMap: false
+    property int mapZoom: 7
     property string positionError: ""
     property bool positionRequested: false
     readonly property var duplicatePlace: hasPoint ? UserPreferences.places.find(place => place.id !== editingId && LocationRules.samePlace(place.latitude, place.longitude, latitude, longitude)) || null : null
     readonly property bool valid: hasPoint && locationName.trim().length > 0 && !duplicatePlace
-        && !placeSearch.busy && !positionRequested && LocationRules.valid(latitude, longitude, "gfs")
+        && !placeSearch.busy && !positionRequested && !geocoder.busy && LocationRules.valid(latitude, longitude, "gfs")
         && (!manual.checked || (latField.acceptableInput && lonField.acceptableInput))
-    onVisibleChanged: if (!visible) { positionRequested = false; placeSearch.query = ""; }
+    onVisibleChanged: if (!visible) { positionRequested = false; placeSearch.query = ""; geocoder.cancel(); }
     spacing: Kirigami.Units.largeSpacing
 
 
     function resetDraft(name, lat, lon) {
+        geocoder.cancel();
         hasPoint = name.trim().length > 0 && LocationRules.valid(lat, lon, "gfs");
         locationName = name;
         latitude = hasPoint ? lat : NaN; longitude = hasPoint ? lon : NaN;
         mapLatitude = Number.isFinite(lat) ? lat : 52.2297;
         mapLongitude = Number.isFinite(lon) ? lon : 21.0122;
         searchField.text = ""; placeSearch.query = ""; positionError = "";
-        positionRequested = false; showMap = false; manual.checked = false;
+        positionRequested = false; showMap = false; mapZoom = 7; manual.checked = false;
     }
     function selectPlace(place) {
+        geocoder.cancel();
         positionRequested = false;
         locationName = place.name;
         latitude = place.latitude; longitude = place.longitude;
@@ -45,7 +48,15 @@ ColumnLayout {
         searchField.text = place.name; placeSearch.query = "";
         positionError = "";
     }
+    function selectLocatedPosition(lat, lon) {
+        Qt.inputMethod.hide();
+        selectPlace({name: I18n.i18n("My location"), latitude: lat, longitude: lon});
+        mapZoom = 12;
+        showMap = true;
+        geocoder.lookup(lat, lon);
+    }
     function requestPosition() {
+        Qt.inputMethod.hide();
         positionError = "";
         if (locationPermission.status === Qt.PermissionStatus.Denied) {
             positionError = I18n.i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again.");
@@ -55,6 +66,10 @@ ColumnLayout {
         if (locationPermission.status === Qt.PermissionStatus.Undetermined) locationPermission.request();
     }
     PlaceSearchModel { id: placeSearch }
+    ReverseGeocoder {
+        id: geocoder
+        onResolved: name => { root.locationName = name; searchField.text = name; }
+    }
     LocationPermission {
         id: locationPermission
         accuracy: LocationPermission.Approximate
@@ -80,7 +95,7 @@ ColumnLayout {
             active: false
             onPositionChanged: {
                 if (!root.positionRequested || !position.coordinate.isValid) return;
-                root.selectPlace({name: I18n.i18n("My location"), latitude: position.coordinate.latitude, longitude: position.coordinate.longitude});
+                root.selectLocatedPosition(position.coordinate.latitude, position.coordinate.longitude);
             }
             onSourceErrorChanged: {
                 if (!root.positionRequested || sourceError === PositionSource.NoError) return;
@@ -107,13 +122,14 @@ ColumnLayout {
                     placeholderText: I18n.i18n("Town or village name…")
                     Accessible.name: I18n.i18n("Search for a place")
                     autoAccept: false
-                    onTextChanged: if (!text.length) placeSearch.query = ""
                     function updateQuery() {
+                        geocoder.cancel();
                         root.hasPoint = false;
                         // Predictive keyboards (including Samsung Keyboard) can
                         // keep the entire place name in the IME preedit buffer.
                         placeSearch.query = text.slice(0, cursorPosition) + preeditText + text.slice(cursorPosition);
                     }
+                    onTextChanged: if (!text.length) placeSearch.query = ""
                     onTextEdited: updateQuery()
                     onPreeditTextChanged: if (activeFocus && (preeditText.length > 0 || !root.hasPoint)) updateQuery()
                     onAccepted: {
@@ -176,6 +192,13 @@ ColumnLayout {
                 }
             }
             Kirigami.InlineMessage { visible: root.positionError.length > 0; text: root.positionError; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.positionRequested || geocoder.busy
+                BusyIndicator { running: parent.visible; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
+                Label { Layout.fillWidth: true; text: root.positionRequested ? I18n.i18n("Determining your location…") : I18n.i18n("Finding the place name…"); wrapMode: Text.WordWrap }
+            }
+            Kirigami.InlineMessage { visible: geocoder.error.length > 0; text: geocoder.error; type: Kirigami.MessageType.Information; Layout.fillWidth: true }
             Loader {
                 id: locationMap
                 Layout.fillWidth: true
@@ -183,6 +206,8 @@ ColumnLayout {
                 active: root.showMap
                 visible: active
                 sourceComponent: TileMap {
+                    objectName: "locatedPointMap"
+                    zoom: root.mapZoom
                     latitude: root.mapLatitude; longitude: root.mapLongitude
                     markerLatitude: root.hasPoint ? root.latitude : NaN; markerLongitude: root.hasPoint ? root.longitude : NaN
                     markerName: root.locationName
@@ -216,7 +241,7 @@ ColumnLayout {
             Layout.preferredWidth: Math.min(root.width, Kirigami.Units.gridUnit * 18)
             text: root.locationName
             maximumLength: 100
-            onTextEdited: root.locationName = text
+            onTextEdited: { geocoder.cancel(); root.locationName = text; }
         }
     }
     ToolButton {

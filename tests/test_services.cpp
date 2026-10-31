@@ -1,4 +1,5 @@
 #include "PlaceSearchModel.hpp"
+#include "ReverseGeocoder.hpp"
 #include "WeatherLayersModel.hpp"
 #include "ThematicMapsModel.hpp"
 #include "EditorialModel.hpp"
@@ -180,6 +181,26 @@ private slots:
         QCOMPARE(places.size(), 2);
         QCOMPARE(places[0].toMap()["latitude"].toDouble(), 50.123456);
         QVERIFY(places[0].toMap()["description"].toString().contains(QStringLiteral("świętokrzyskie")));
+    }
+    void reverseGeocodingUsesTheCityNameAndCachesTheResult()
+    {
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [](const QUrl &) { return QByteArray(R"({"features":[{"properties":{"name":"Ogrodowa","city":"Kielce"}}]})"); };
+        ReverseGeocoder geocoder(nullptr, server.endpoint().resolved(QUrl("/reverse")));
+        QSignalSpy names(&geocoder, &ReverseGeocoder::resolved);
+        geocoder.lookup(50.8661, 20.6286); QVERIFY(geocoder.busy());
+        QTRY_COMPARE(names.size(), 1);
+        QCOMPARE(names.first().first().toString(), "Kielce");
+        QVERIFY(!geocoder.busy()); QVERIFY(geocoder.error().isEmpty());
+        QCOMPARE(QUrlQuery(server.requests.last()).queryItemValue("lat"), "50.866100");
+        QCOMPARE(QUrlQuery(server.requests.last()).queryItemValue("lon"), "20.628600");
+        geocoder.lookup(50.8661, 20.6286);
+        QTRY_COMPARE(names.size(), 2); QCOMPARE(server.requests.size(), 1);
+        geocoder.lookup(1, 2); geocoder.cancel();
+        QTest::qWait(100); QCOMPARE(names.size(), 2);
+        QVERIFY(!geocoder.busy());
+        QVERIFY(ReverseGeocoder::placeName(QJsonDocument::fromJson("{}")).isEmpty());
+        QCOMPARE(ReverseGeocoder::placeName(QJsonDocument::fromJson(R"({"features":[{"properties":{"village":"Nowa Wieś","name":"Road"}}]})")), "Nowa Wieś");
     }
     void searchEncodesPolishNamesAndClearsOldResults()
     {

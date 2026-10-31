@@ -1,5 +1,6 @@
 #include "WeatherModel.hpp"
 #include "PlaceSearchModel.hpp"
+#include "ReverseGeocoder.hpp"
 #include <QInputMethodEvent>
 #include "ChartConfiguration.hpp"
 #include "ChartExporter.hpp"
@@ -680,6 +681,27 @@ private slots:
                     .arg(visibleHeight).arg(size.width()).arg(size.height())));
         }
         destroyTestWindow(object);
+    }
+    void locatedPointAlwaysOpensTheMap()
+    {
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "LocationEditor");
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "selectLocatedPosition", Q_ARG(QVariant, 50.8661), Q_ARG(QVariant, 20.6286)));
+        QVERIFY(object->property("showMap").toBool());
+        QVERIFY(object->property("hasPoint").toBool());
+        QCOMPARE(object->property("latitude").toDouble(), 50.8661);
+        QCOMPARE(object->property("mapLatitude").toDouble(), 50.8661);
+        auto *geocoder = object->findChild<ReverseGeocoder *>(); QVERIFY(geocoder && geocoder->busy());
+        auto *name = object->findChild<QObject *>("customLocationName"); QVERIFY(name);
+        name->setProperty("text", "Home");
+        QVERIFY(QMetaObject::invokeMethod(name, "textEdited"));
+        QCOMPARE(object->property("locationName").toString(), "Home");
+        QVERIFY(!geocoder->busy());
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "selectPlace", Q_ARG(QVariant, (QVariantMap{{"name","Other"},{"latitude",51},{"longitude",21}}))));
+        QVERIFY(!geocoder->busy());
+        QCOMPARE(object->property("locationName").toString(), "Other");
     }
     void mobileNavigationAndSettingsUsePages()
     {
