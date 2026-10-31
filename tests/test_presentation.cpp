@@ -1,4 +1,6 @@
 #include "WeatherModel.hpp"
+#include "PlaceSearchModel.hpp"
+#include <QInputMethodEvent>
 #include "ChartConfiguration.hpp"
 #include "ChartExporter.hpp"
 #include "ReadingsExporter.hpp"
@@ -606,6 +608,39 @@ private slots:
         QTRY_COMPARE(span(), fullSpan);
         QCOMPARE(start(), double(weather.firstTimestamp()));
         QTest::qWait(100); // Drain the final touch release before destroying its window.
+    }
+    void placeSearchIncludesUncommittedKeyboardText()
+    {
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.loadFromModule("pl.meteo.desktop", "LocationEditor");
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        auto *editor = qobject_cast<QQuickItem *>(object.data());
+        QQuickWindow window; window.resize(420,800); editor->setParentItem(window.contentItem()); editor->setWidth(400); window.show();
+        auto *field = object->findChild<QQuickItem *>("placeSearchField");
+        auto *search = object->findChild<PlaceSearchModel *>(); QVERIFY(field && search);
+        field->forceActiveFocus();
+        QInputMethodEvent composing(QStringLiteral("Kielce"), {});
+        QCoreApplication::sendEvent(field, &composing);
+        QCOMPARE(field->property("preeditText").toString(), "Kielce");
+        QCOMPARE(search->query(), "Kielce");
+        QVERIFY(QMetaObject::invokeMethod(field, "accepted"));
+        QCOMPARE(search->query(), "Kielce");
+        QInputMethodEvent commit; commit.setCommitString("Kielce");
+        QCoreApplication::sendEvent(field, &commit);
+        QCOMPARE(search->query(), "Kielce");
+        field->setProperty("cursorPosition", 2);
+        QInputMethodEvent insert(QStringLiteral("xx"), {});
+        QCoreApplication::sendEvent(field, &insert);
+        QCOMPARE(search->query(), "Kixxelce");
+        QInputMethodEvent cancel; QCoreApplication::sendEvent(field, &cancel);
+        QCOMPARE(search->query(), "Kielce");
+        QInputMethodEvent pending(QStringLiteral("Gdańsk"), {});
+        QCoreApplication::sendEvent(field, &pending);
+        QVERIFY(!field->property("preeditText").toString().isEmpty());
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "selectPlace", Q_ARG(QVariant, (QVariantMap{{"name","Gdańsk"},{"latitude",54.35},{"longitude",18.65}}))));
+        QCOMPARE(search->query(), QString());
+        QVERIFY(object->property("hasPoint").toBool());
     }
     void mobileNavigationAndSettingsUsePages()
     {

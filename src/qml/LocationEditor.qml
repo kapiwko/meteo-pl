@@ -108,10 +108,20 @@ ColumnLayout {
                     Accessible.name: I18n.i18n("Search for a place")
                     autoAccept: false
                     onTextChanged: if (!text.length) placeSearch.query = ""
-                    onTextEdited: { root.hasPoint = false; placeSearch.query = text; }
+                    function updateQuery() {
+                        root.hasPoint = false;
+                        // Predictive keyboards (including Samsung Keyboard) can
+                        // keep the entire place name in the IME preedit buffer.
+                        placeSearch.query = text.slice(0, cursorPosition) + preeditText + text.slice(cursorPosition);
+                    }
+                    onTextEdited: updateQuery()
+                    onPreeditTextChanged: if (activeFocus && (preeditText.length > 0 || !root.hasPoint)) updateQuery()
                     onAccepted: {
-                        if (!text.length) { placeSearch.query = ""; return; }
-                        if (placeSearch.results.length) root.selectPlace(placeSearch.results[0]); else placeSearch.search();
+                        const queryText = text.slice(0, cursorPosition) + preeditText + text.slice(cursorPosition);
+                        Qt.inputMethod.commit();
+                        if (!queryText.trim().length) { placeSearch.query = ""; return; }
+                        if (placeSearch.results.length && placeSearch.query.trim() === queryText.trim()) root.selectPlace(placeSearch.results[0]);
+                        else { placeSearch.query = queryText; placeSearch.search(); }
                     }
                 }
                 Item {
