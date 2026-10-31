@@ -164,6 +164,37 @@ class PortablePackagingTest(unittest.TestCase):
             self.assertEqual(result["Packager"]["RepositoryUrl"],"https://mirror.example/craft/Qt6/")
             self.assertFalse(result["CodeSigning"].getboolean("Enabled"))
 
+    def test_bootstrap_pins_repositories_before_installing_dependencies(self):
+        template = '''def setup(boot):
+    boot.setSettingsValue("Packager", "RepositoryUrl", "https://files.kde.org/craft/Qt6/")
+    boot.writeSettings()
+'''
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); work = root / "build's folder"; work.mkdir()
+            bootstrap = root / "bootstrap.py"; bootstrap.write_text(template)
+            script = portable.prepare_bootstrap(bootstrap, work, "https://mirror.example/craft/Qt6/")
+            observed = {}
+            class Boot:
+                def setSettingsValue(self, section, key, value): observed[section, key] = value
+                def writeSettings(self):
+                    pins = configparser.ConfigParser()
+                    pins.read(observed["Blueprints", "Settings"])
+                    observed["pins_at_install"] = {section: dict(pins[section]) for section in pins.sections()}
+            namespace = {}; exec(compile(script.read_text(), str(script), "exec"), namespace)
+            namespace["setup"](Boot())
+            self.assertEqual(observed["pins_at_install"]["craft/craft-core"]["revision"], portable.CRAFT_REVISION)
+            self.assertEqual(observed["pins_at_install"]["craft/craft-blueprints-kde"]["revision"], portable.BLUEPRINTS_REVISION)
+            self.assertEqual(observed["BlueprintVersions", "EnableDailyUpdates"], "False")
+            self.assertEqual(observed["Packager", "RepositoryUrl"], "https://mirror.example/craft/Qt6/")
+            self.assertEqual(bootstrap.read_text(), template)
+
+    def test_bootstrap_refuses_to_guess_a_changed_settings_hook(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary); bootstrap = root / "bootstrap.py"
+            bootstrap.write_text("# no settings hook\n")
+            with self.assertRaisesRegex(RuntimeError, "settings hook changed"):
+                portable.prepare_bootstrap(bootstrap, root)
+
     def test_foreign_native_target_is_rejected_before_any_download(self):
         with patch.object(portable.platform,"system",return_value="Linux"), patch.object(portable,"run") as run:
             for target in ("windows","macos"):

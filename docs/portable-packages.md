@@ -42,6 +42,10 @@ choose a short path such as `--craft-root C:/MeteoCraft` to avoid compiler path
 limits. The first build downloads a substantial Qt/KDE SDK and needs several GB
 of disk space and access to the `files.kde.org` cache.
 
+Native bootstrap pins Craft and KDE blueprints before dependency installation.
+Reused desktop SDKs must match the pinned Craft revision. Use a fresh
+`--craft-root` when changing that revision.
+
 Desktop applications run `--smoke-test` before packaging and again from the
 extracted ZIP or mounted DMG without Craft's library search paths. The check
 rejects QML loading errors. Android reports that device startup is untested;

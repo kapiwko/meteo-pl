@@ -62,6 +62,28 @@ def configure_craft(craft_root, cache_url=None):
     with path.open("w", encoding="utf-8") as output: settings.write(output)
 
 
+def prepare_bootstrap(bootstrap, work, cache_url=None):
+    """Pin repositories before bootstrap installs its own package manager."""
+    source = bootstrap.read_text()
+    if cache_url:
+        default_url = "https://files.kde.org/craft/Qt6/"
+        if source.count(default_url) != 1: raise RuntimeError("Craft bootstrap URL setting changed")
+        source = source.replace(default_url, cache_url)
+    pins = work / "CraftBlueprintPins.ini"
+    settings = configparser.ConfigParser(interpolation=None)
+    settings["craft/craft-core"] = {"revision": CRAFT_REVISION}
+    settings["craft/craft-blueprints-kde"] = {"revision": BLUEPRINTS_REVISION}
+    with pins.open("w", encoding="utf-8") as output: settings.write(output)
+    marker = "    boot.writeSettings()\n"
+    if source.count(marker) != 1: raise RuntimeError("Craft bootstrap settings hook changed")
+    source = source.replace(marker,
+        f'    boot.setSettingsValue("Blueprints", "Settings", {str(pins)!r})\n'
+        '    boot.setSettingsValue("BlueprintVersions", "EnableDailyUpdates", "False")\n' + marker)
+    configured = work / "CraftBootstrap-configured.py"
+    configured.write_text(source)
+    return configured
+
+
 def build_environment(target):
     environment = os.environ.copy()
     if target != "android":
@@ -232,18 +254,14 @@ def build(args):
     environment.setdefault("REQUESTS_CA_BUNDLE", certificates)
     craft = craft_root / "craft/bin/craft.py"
     if not craft.is_file():
-        bootstrap_script = bootstrap / "setup/CraftBootstrap.py"
-        if args.cache_url:
-            # The pinned bootstrap has no CLI option for its repository URL.
-            # Configure only that literal in a generated copy, retaining its
-            # license headers and leaving the checkout untouched.
-            source = bootstrap_script.read_text()
-            default_url = "https://files.kde.org/craft/Qt6/"
-            if source.count(default_url) != 1: raise RuntimeError("Craft bootstrap URL setting changed")
-            bootstrap_script = work / "CraftBootstrap-configured.py"
-            bootstrap_script.write_text(source.replace(default_url, args.cache_url))
+        # Bootstrap normally updates Craft itself to master halfway through
+        # dependency installation. That mixes package ownership from different
+        # recipes (notably dmgbuild/mac-alias). Pin both repositories up front.
+        bootstrap_script = prepare_bootstrap(bootstrap / "setup/CraftBootstrap.py", work, args.cache_url)
         run([sys.executable, bootstrap_script, "--use-defaults", "--localDev", bootstrap,
              "--prefix", craft_root], env=environment)
+    if args.target != "android":
+        checkout("https://github.com/KDE/craft.git", CRAFT_REVISION, craft_root / "craft")
     configure_craft(craft_root, args.cache_url)
     blueprints = craft_root / "etc/blueprints/locations/craft-blueprints-kde"
     # Bootstrap initializes this repository itself. Pin it without discarding
