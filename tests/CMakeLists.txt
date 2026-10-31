@@ -67,6 +67,10 @@ foreach(style Fusion Material)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=${style};QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
         TIMEOUT 45)
 endforeach()
+add_test(NAME mobile_palette COMMAND test_presentation mobilePagesKeepTheWindowPalette)
+set_tests_properties(mobile_palette PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 30)
 add_test(NAME mobile_material_ui COMMAND test_presentation mobileLandscapeKeepsChartsVisible mobileHeaderKeepsTheEmptyStateHiddenDuringLoading placeSearchIncludesUncommittedKeyboardText locatedPointAlwaysOpensTheMap forecastActivityShowsDeviceLookupAndRefreshWithCachedData mobileNavigationAndSettingsUsePages mobileSynopticSwipesChangeDatesAndKeepVerticalScrolling customIntervalUsesValidatedDatesAndCanBeCancelled calendarUsesNativeMonthGridAndBounds axisEditorKeepsInvalidDraftAndAcceptsPolishDecimals profileEditorCanUndoDeletionWithoutChangingForecast placeSaveButtonKeepsTheFormOpenOnErrorAndAcceptsOnce)
 set_tests_properties(mobile_material_ui PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"

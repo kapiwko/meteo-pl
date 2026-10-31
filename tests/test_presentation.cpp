@@ -16,6 +16,7 @@
 #include <QFile>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QQmlExpression>
 #include <QQmlProperty>
 #include <QQuickItem>
 #include <QQuickWindow>
@@ -791,9 +792,82 @@ private slots:
                 preferences->setTheme(theme);
                 if (theme != "automatic")
                     QTRY_COMPARE(window->color().lightnessF() < 0.5, theme == "dark");
+                if (type == "Mobile" && theme != "automatic") {
+                    QQmlExpression contentColor(QQmlEngine::contextForObject(window), window->contentItem(), "Kirigami.Theme.backgroundColor");
+                    QTRY_COMPARE(contentColor.evaluate().value<QColor>().lightnessF() < 0.5, theme == "dark");
+                    QVERIFY2(!contentColor.hasError(), qPrintable(contentColor.error().toString()));
+                }
             }
             destroyTestWindow(object);
         }
+    }
+    void mobilePagesKeepTheWindowPalette()
+    {
+        QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import QtQuick.Controls
+            import org.kde.kirigami as Kirigami
+            import pl.meteo.desktop
+            ApplicationWindow {
+                id: fixture
+                width: 420; height: 840; visible: true
+                property bool dark: false
+                Kirigami.Theme.inherit: false
+                Kirigami.Theme.backgroundColor: dark ? "midnightblue" : "ivory"
+                Kirigami.Theme.textColor: dark ? "white" : "black"
+                Binding { target: fixture.contentItem.Kirigami.Theme; property: "inherit"; value: false }
+                Binding { target: fixture.contentItem.Kirigami.Theme; property: "backgroundColor"; value: fixture.Kirigami.Theme.backgroundColor }
+                Binding { target: fixture.contentItem.Kirigami.Theme; property: "textColor"; value: fixture.Kirigami.Theme.textColor }
+                readonly property color pageBackground: navigation.currentItem ? navigation.currentItem.Kirigami.Theme.backgroundColor : "transparent"
+                readonly property color pageText: navigation.currentItem ? navigation.currentItem.Kirigami.Theme.textColor : "transparent"
+                readonly property string pageName: navigation.currentItem ? navigation.currentItem.objectName : ""
+                readonly property bool navigationBusy: navigation.busy
+                function openPage(index) { navigation.push(index === 0 ? places : location); }
+                WeatherModel { id: forecastWeather; autoRefresh: false }
+                ForecastPanel { id: forecast; weather: forecastWeather; visible: false }
+                StackView {
+                    id: navigation; anchors.fill: parent
+                    initialItem: MobileSettingsPage { weather: forecastWeather; forecastPanel: forecast; navigationStack: navigation }
+                }
+                Component { id: places; MobilePlacesPage { weather: forecastWeather; navigationStack: navigation } }
+                Component { id: location; MobileLocationPage { navigationStack: navigation } }
+            }
+        )", QUrl("inmemory:MobileThemeProbe.qml"));
+        QTRY_VERIFY(component.status() != QQmlComponent::Loading);
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY2(object, qPrintable(component.errorString()));
+        const auto checkPalette = [&] {
+            for (bool dark : {true, false, true}) {
+                object->setProperty("dark", dark);
+                QTRY_COMPARE(object->property("pageBackground").value<QColor>(), QColor(dark ? "midnightblue" : "ivory"));
+                QTRY_COMPARE(object->property("pageText").value<QColor>(), QColor(dark ? "white" : "black"));
+            }
+        };
+        checkPalette();
+        auto *window = qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
+        const auto find = [](auto &&self, QQuickItem *item, const QString &name) -> QQuickItem * {
+            if (item->objectName() == name) return item;
+            for (auto *child : item->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        auto *application = find(find, window->contentItem(), "mobileSettingsSection-3"); QVERIFY(application);
+        QVERIFY(QMetaObject::invokeMethod(application, "clicked"));
+        QTRY_COMPARE(object->property("pageName").toString(), "mobileSettingsDetail-3");
+        checkPalette();
+        QTRY_VERIFY(!object->property("navigationBusy").toBool());
+        for (int page : {0, 1}) {
+            QVERIFY(QMetaObject::invokeMethod(object.data(), "openPage", Q_ARG(QVariant, page)));
+            QTRY_COMPARE(object->property("pageName").toString(), page == 0 ? "mobilePlacesPage" : "mobileLocationPage");
+            checkPalette();
+            QTRY_VERIFY(!object->property("navigationBusy").toBool());
+        }
+        destroyTestWindow(object);
     }
     void gpuTextModelUpdatesLabelsWithoutResettingDelegates()
     {

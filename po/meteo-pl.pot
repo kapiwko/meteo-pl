@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-31 13:09+0100\n"
+"POT-Creation-Date: 2026-10-31 14:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -98,11 +98,11 @@ msgid ""
 msgstr ""
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:31
-#: src/qml/MobileForecastPage.qml:255 src/qml/MobileSettingsPage.qml:55
+#: src/qml/MobileForecastPage.qml:255 src/qml/MobileSettingsPage.qml:56
 msgid "About"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:39 src/qml/PlaceEditorDialog.qml:38
+#: src/qml/MobileLocationPage.qml:40 src/qml/PlaceEditorDialog.qml:38
 msgid "Add"
 msgstr ""
 
@@ -119,7 +119,7 @@ msgid "Add chart"
 msgstr ""
 
 #: src/qml/ForecastPanel.qml:400 src/qml/MobileForecastPage.qml:224
-#: src/qml/MobileLocationPage.qml:16 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:17 src/qml/PlaceEditorDialog.qml:14
 #: src/qml/PlacePicker.qml:61 src/qml/PlacesView.qml:67
 #: src/qml/PlacesView.qml:71
 msgid "Add location"
@@ -129,7 +129,7 @@ msgstr ""
 msgid "Add series"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:24 src/qml/PlaceEditorDialog.qml:71
+#: src/qml/MobileLocationPage.qml:25 src/qml/PlaceEditorDialog.qml:71
 msgid ""
 "Add your first place to get started. Search by name, choose a point on the "
 "map or use your location."
@@ -176,7 +176,7 @@ msgstr ""
 msgid "Appearance"
 msgstr ""
 
-#: src/qml/MeteoSettings.qml:86 src/qml/MobileSettingsPage.qml:17
+#: src/qml/MeteoSettings.qml:86 src/qml/MobileSettingsPage.qml:18
 msgid "Application"
 msgstr ""
 
@@ -329,7 +329,7 @@ msgstr ""
 msgid "Charts in profile"
 msgstr ""
 
-#: src/qml/MobileSettingsPage.qml:15
+#: src/qml/MobileSettingsPage.qml:16
 msgid "Charts, series and appearance"
 msgstr ""
 
@@ -728,7 +728,7 @@ msgstr ""
 msgid "Earlier interval"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:16 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:17 src/qml/PlaceEditorDialog.qml:14
 #: src/qml/PlacesView.qml:94
 msgid "Edit place"
 msgstr ""
@@ -849,7 +849,7 @@ msgid "Follow my current location"
 msgstr ""
 
 #: src/qml/MeteoSettings.qml:83 src/qml/MobileForecastPage.qml:150
-#: src/qml/MobileSettingsPage.qml:14
+#: src/qml/MobileSettingsPage.qml:15
 msgid "Forecast"
 msgstr ""
 
@@ -1322,7 +1322,7 @@ msgid "My location"
 msgstr ""
 
 #: apps/meteo/Main.qml:17 src/qml/MobileForecastPage.qml:197
-#: src/qml/MobileForecastPage.qml:253 src/qml/MobilePlacesPage.qml:11
+#: src/qml/MobileForecastPage.qml:253 src/qml/MobilePlacesPage.qml:12
 #: src/qml/PlacesDialog.qml:11 src/qml/PlacesView.qml:65
 msgid "My places"
 msgstr ""
@@ -1480,7 +1480,7 @@ msgstr ""
 msgid "Parameter identification"
 msgstr ""
 
-#: src/qml/MobileSettingsPage.qml:16
+#: src/qml/MobileSettingsPage.qml:17
 msgid "Parameter identification and legends"
 msgstr ""
 
@@ -1618,11 +1618,11 @@ msgstr ""
 msgid "Profile removed."
 msgstr ""
 
-#: src/qml/MobileSettingsPage.qml:14
+#: src/qml/MobileSettingsPage.qml:15
 msgid "Profile, time interval and model run"
 msgstr ""
 
-#: src/qml/MeteoSettings.qml:84 src/qml/MobileSettingsPage.qml:15
+#: src/qml/MeteoSettings.qml:84 src/qml/MobileSettingsPage.qml:16
 msgid "Profiles"
 msgstr ""
 
@@ -1671,7 +1671,7 @@ msgstr ""
 msgid "Reading scope"
 msgstr ""
 
-#: src/qml/MeteoSettings.qml:85 src/qml/MobileSettingsPage.qml:16
+#: src/qml/MeteoSettings.qml:85 src/qml/MobileSettingsPage.qml:17
 msgid "Readings"
 msgstr ""
 
@@ -1708,7 +1708,7 @@ msgstr ""
 msgid "Removed: %1"
 msgstr ""
 
-#: src/qml/MobileSettingsPage.qml:17
+#: src/qml/MobileSettingsPage.qml:18
 msgid "Renderer, units and cache"
 msgstr ""
 
@@ -1749,7 +1749,7 @@ msgstr ""
 msgid "Sampling"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:39 src/qml/PlaceEditorDialog.qml:38
+#: src/qml/MobileLocationPage.qml:40 src/qml/PlaceEditorDialog.qml:38
 msgid "Save"
 msgstr ""
 
@@ -1852,7 +1852,7 @@ msgid "Series removed."
 msgstr ""
 
 #: apps/meteo/Main.qml:18 src/qml/MeteoSettings.qml:18
-#: src/qml/MobileForecastPage.qml:254 src/qml/MobileSettingsPage.qml:19
+#: src/qml/MobileForecastPage.qml:254 src/qml/MobileSettingsPage.qml:20
 msgid "Settings"
 msgstr ""
 
@@ -2399,7 +2399,7 @@ msgstr ""
 msgid "Weather layer"
 msgstr ""
 
-#: src/qml/MobileLocationPage.qml:16 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:17 src/qml/PlaceEditorDialog.qml:14
 msgid "Welcome to Meteo"
 msgstr ""
 

@@ -3,6 +3,7 @@ import QtQuick
 import org.kde.kirigami as Kirigami
 
 Kirigami.ScrollablePage {
+    Kirigami.Theme.inherit: true
     id: root
     objectName: "mobilePlacesPage"
     required property WeatherModel weather

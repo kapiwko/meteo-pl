@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 Kirigami.ScrollablePage {
+    Kirigami.Theme.inherit: true
     id: root
     objectName: "mobileLocationPage"
     required property var navigationStack

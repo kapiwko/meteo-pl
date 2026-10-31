@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
 Kirigami.ScrollablePage {
+    Kirigami.Theme.inherit: true
     id: root
     objectName: "mobileSettingsPage"
     required property WeatherModel weather
@@ -62,6 +63,7 @@ Kirigami.ScrollablePage {
     Component {
         id: sectionPage
         Kirigami.ScrollablePage {
+            Kirigami.Theme.inherit: true
             id: sectionView
             required property int section
             objectName: "mobileSettingsDetail-" + section

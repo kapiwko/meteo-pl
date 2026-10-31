@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-10-31 13:09+0100\n"
+"POT-Creation-Date: 2026-10-31 14:09+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -99,11 +99,11 @@ msgstr ""
 "Twoje zmiany i zachowa starą kopię."
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:31
-#: src/qml/MobileForecastPage.qml:255 src/qml/MobileSettingsPage.qml:55
+#: src/qml/MobileForecastPage.qml:255 src/qml/MobileSettingsPage.qml:56
 msgid "About"
 msgstr "O aplikacji"
 
-#: src/qml/MobileLocationPage.qml:39 src/qml/PlaceEditorDialog.qml:38
+#: src/qml/MobileLocationPage.qml:40 src/qml/PlaceEditorDialog.qml:38
 msgid "Add"
 msgstr "Dodaj"
 
@@ -120,7 +120,7 @@ msgid "Add chart"
 msgstr "Dodaj wykres"
 
 #: src/qml/ForecastPanel.qml:400 src/qml/MobileForecastPage.qml:224
-#: src/qml/MobileLocationPage.qml:16 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:17 src/qml/PlaceEditorDialog.qml:14
 #: src/qml/PlacePicker.qml:61 src/qml/PlacesView.qml:67
 #: src/qml/PlacesView.qml:71
 msgid "Add location"
@@ -130,7 +130,7 @@ msgstr "Dodaj lokalizację"
 msgid "Add series"
 msgstr "Dodaj serię"
 
-#: src/qml/MobileLocationPage.qml:24 src/qml/PlaceEditorDialog.qml:71
+#: src/qml/MobileLocationPage.qml:25 src/qml/PlaceEditorDialog.qml:71
 msgid ""
 "Add your first place to get started. Search by name, choose a point on the "
 "map or use your location."
@@ -182,7 +182,7 @@ msgstr "Animuj"
 msgid "Appearance"
 msgstr "Wygląd"
 
-#: src/qml/MeteoSettings.qml:86 src/qml/MobileSettingsPage.qml:17
+#: src/qml/MeteoSettings.qml:86 src/qml/MobileSettingsPage.qml:18
 msgid "Application"
 msgstr "Aplikacja"
 
@@ -341,7 +341,7 @@ msgstr "Wyeksportowano wykresy"
 msgid "Charts in profile"
 msgstr "Wykresy w profilu"
 
-#: src/qml/MobileSettingsPage.qml:15
+#: src/qml/MobileSettingsPage.qml:16
 msgid "Charts, series and appearance"
 msgstr "Wykresy, serie i wygląd"
 
@@ -753,7 +753,7 @@ msgstr "Wcześniej"
 msgid "Earlier interval"
 msgstr "Wcześniejszy przedział"
 
-#: src/qml/MobileLocationPage.qml:16 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:17 src/qml/PlaceEditorDialog.qml:14
 #: src/qml/PlacesView.qml:94
 msgid "Edit place"
 msgstr "Edytuj miejsce"
@@ -878,7 +878,7 @@ msgid "Follow my current location"
 msgstr "Podążaj za moją pozycją"
 
 #: src/qml/MeteoSettings.qml:83 src/qml/MobileForecastPage.qml:150
-#: src/qml/MobileSettingsPage.qml:14
+#: src/qml/MobileSettingsPage.qml:15
 msgid "Forecast"
 msgstr "Prognoza"
 
@@ -1359,7 +1359,7 @@ msgid "My location"
 msgstr "Moja pozycja"
 
 #: apps/meteo/Main.qml:17 src/qml/MobileForecastPage.qml:197
-#: src/qml/MobileForecastPage.qml:253 src/qml/MobilePlacesPage.qml:11
+#: src/qml/MobileForecastPage.qml:253 src/qml/MobilePlacesPage.qml:12
 #: src/qml/PlacesDialog.qml:11 src/qml/PlacesView.qml:65
 msgid "My places"
 msgstr "Moje miejsca"
@@ -1521,7 +1521,7 @@ msgstr "Parametr"
 msgid "Parameter identification"
 msgstr "Identyfikacja parametrów"
 
-#: src/qml/MobileSettingsPage.qml:16
+#: src/qml/MobileSettingsPage.qml:17
 msgid "Parameter identification and legends"
 msgstr "Odczyt parametrów i legendy"
 
@@ -1660,11 +1660,11 @@ msgstr ""
 msgid "Profile removed."
 msgstr "Usunięto profil."
 
-#: src/qml/MobileSettingsPage.qml:14
+#: src/qml/MobileSettingsPage.qml:15
 msgid "Profile, time interval and model run"
 msgstr "Profil, zakres czasu i start modelu"
 
-#: src/qml/MeteoSettings.qml:84 src/qml/MobileSettingsPage.qml:15
+#: src/qml/MeteoSettings.qml:84 src/qml/MobileSettingsPage.qml:16
 msgid "Profiles"
 msgstr "Profile"
 
@@ -1713,7 +1713,7 @@ msgstr "Odczyt przypięty · kliknij wykres, aby odpiąć"
 msgid "Reading scope"
 msgstr "Zakres odczytu"
 
-#: src/qml/MeteoSettings.qml:85 src/qml/MobileSettingsPage.qml:16
+#: src/qml/MeteoSettings.qml:85 src/qml/MobileSettingsPage.qml:17
 msgid "Readings"
 msgstr "Odczyt"
 
@@ -1750,7 +1750,7 @@ msgstr "Usuń serię"
 msgid "Removed: %1"
 msgstr "Usunięto: %1"
 
-#: src/qml/MobileSettingsPage.qml:17
+#: src/qml/MobileSettingsPage.qml:18
 msgid "Renderer, units and cache"
 msgstr "Renderer, jednostki i pamięć podręczna"
 
@@ -1791,7 +1791,7 @@ msgstr "Próbka: %1"
 msgid "Sampling"
 msgstr "Próbkowanie"
 
-#: src/qml/MobileLocationPage.qml:39 src/qml/PlaceEditorDialog.qml:38
+#: src/qml/MobileLocationPage.qml:40 src/qml/PlaceEditorDialog.qml:38
 msgid "Save"
 msgstr "Zapisz"
 
@@ -1894,7 +1894,7 @@ msgid "Series removed."
 msgstr "Usunięto serię."
 
 #: apps/meteo/Main.qml:18 src/qml/MeteoSettings.qml:18
-#: src/qml/MobileForecastPage.qml:254 src/qml/MobileSettingsPage.qml:19
+#: src/qml/MobileForecastPage.qml:254 src/qml/MobileSettingsPage.qml:20
 msgid "Settings"
 msgstr "Ustawienia"
 
@@ -2458,7 +2458,7 @@ msgstr "WAM · wysokość fali znacznej"
 msgid "Weather layer"
 msgstr "Warstwa pogodowa"
 
-#: src/qml/MobileLocationPage.qml:16 src/qml/PlaceEditorDialog.qml:14
+#: src/qml/MobileLocationPage.qml:17 src/qml/PlaceEditorDialog.qml:14
 msgid "Welcome to Meteo"
 msgstr "Witaj w Meteo"
 
