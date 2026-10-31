@@ -523,21 +523,28 @@ private slots:
         QTRY_COMPARE(stack->property("currentItem").value<QObject *>()->objectName(), "mobileLocationPage");
         QVERIFY(!weather->currentLocation()->enabled());
         destroyTestWindow(window);
-
+    }
+    void mobileWelcomeHandlesSystemBack()
+    {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign).*"));
         // The Android Back callback shares this route with the hardware key.
         // It must go to the preceding wizard step before leaving setup.
-        component.loadUrl(QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
-        window.reset(component.createWithInitialProperties({{"smokeTest", true}, {"width", 360}, {"height", 800}}));
-        QVERIFY2(window, qPrintable(component.errorString()));
-        testWindow = qobject_cast<QQuickWindow *>(window.data()); QVERIFY(testWindow);
+        QQmlEngine appEngine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        appEngine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
+        QQmlComponent appComponent(&appEngine, QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
+        QScopedPointer<QObject> application(appComponent.createWithInitialProperties({{"smokeTest", true}, {"width", 360}, {"height", 800}}));
+        QVERIFY2(application, qPrintable(appComponent.errorString()));
+        auto *testWindow = qobject_cast<QQuickWindow *>(application.data()); QVERIFY(testWindow);
         testWindow->requestActivate(); QTRY_VERIFY(testWindow->isActive());
-        forecast = window->findChild<QObject *>("mobileForecastPage"); QVERIFY(forecast);
+        auto *forecast = application->findChild<QObject *>("mobileForecastPage"); QVERIFY(forecast);
         forecast->setProperty("welcomeRequired", true);
         QVERIFY(QMetaObject::invokeMethod(forecast, "beginSetup"));
-        stack = window->findChild<QObject *>("mobilePageStack"); QVERIFY(stack);
+        auto *stack = application->findChild<QObject *>("mobilePageStack"); QVERIFY(stack);
         QTRY_COMPARE(stack->property("depth").toInt(), 2);
         QTRY_VERIFY(!stack->property("busy").toBool());
-        welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
+        auto *welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
         QCOMPARE(welcome->objectName(), "mobileWelcomePage");
         QVERIFY(QMetaObject::invokeMethod(welcome, "advance"));
         QVERIFY(QMetaObject::invokeMethod(welcome, "advance"));
@@ -548,8 +555,8 @@ private slots:
         }
         QTest::keyClick(testWindow, Qt::Key_Back);
         QTRY_COMPARE(stack->property("depth").toInt(), 1);
-        QVERIFY(!window->findChild<WeatherModel *>("appForecastModel")->currentLocation()->enabled());
-        destroyTestWindow(window);
+        QVERIFY(!application->findChild<WeatherModel *>("appForecastModel")->currentLocation()->enabled());
+        destroyTestWindow(application);
     }
     void mobileWelcomeAppliesSettingsAndRemembersManualChoice_data()
     {
