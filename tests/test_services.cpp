@@ -206,21 +206,21 @@ private slots:
     {
         ServiceFixture server;
         QVERIFY(server.listen(QHostAddress::LocalHost));
-        server.response = [](const QUrl &) { return QByteArray(R"([{"city":"Chęciny","lat":50.8,"lon":20.4,"tags":{"state":"świętokrzyskie"}}])"); };
-        PlaceSearchModel model(nullptr, server.endpoint().resolved(QUrl("/lookup")), server.endpoint().resolved(QUrl("/photon")));
+        server.response = [](const QUrl &) { return QByteArray(R"({"features":[{"geometry":{"coordinates":[20.4,50.8]},"properties":{"name":"Chęciny","state":"świętokrzyskie","countrycode":"PL"}}]})"); };
+        PlaceSearchModel model(nullptr, server.endpoint().resolved(QUrl("/photon")));
         model.setQuery(QStringLiteral("Chęciny"));
         model.search();
         QTRY_VERIFY(!model.busy());
         QCOMPARE(model.results().size(), 1);
         const QUrlQuery query(server.requests.last());
-        QCOMPARE(query.queryItemValue("term"), QStringLiteral("Chęciny"));
-        QCOMPARE(query.queryItemValue("country"), "pl");
+        QCOMPARE(query.queryItemValue("q"), QStringLiteral("Chęciny"));
+        QCOMPARE(query.queryItemValue("countrycode"), "PL");
         model.setQuery("London");
         QVERIFY(model.results().isEmpty());
         model.setPolandOnly(false);
         model.search();
         QTRY_VERIFY(!model.busy());
-        QVERIFY(!QUrlQuery(server.requests.last()).hasQueryItem("country"));
+        QVERIFY(!QUrlQuery(server.requests.last()).hasQueryItem("countrycode"));
         QCOMPARE(QUrlQuery(server.requests.last()).queryItemValue("q"), "London");
         model.setQuery("");
         QVERIFY(!model.busy());
@@ -232,6 +232,32 @@ private slots:
         QTRY_VERIFY(!model.busy());
         QCOMPARE(model.results().size(),1);
         QCOMPARE(server.requests.size(),count);
+    }
+    void incompletePlaceNamesAreDebouncedAndReturnSuggestions()
+    {
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [](const QUrl &url) {
+            if (QUrlQuery(url).queryItemValue("q") != "Kiel") return QByteArray(R"({"features":[]})");
+            return QByteArray(R"({"features":[
+                {"geometry":{"coordinates":[20.6286,50.8661]},"properties":{"name":"Kielce","state":"świętokrzyskie","countrycode":"PL"}},
+                {"geometry":{"coordinates":[18.34,54.45]},"properties":{"name":"Kielno","state":"pomorskie","countrycode":"PL"}}
+            ]})");
+        };
+        PlaceSearchModel model(nullptr, server.endpoint().resolved(QUrl("/photon")));
+        model.setQuery("K"); QVERIFY(!model.busy());
+        model.setQuery("Ki"); model.setQuery("Kiel");
+        QVERIFY(model.busy()); QVERIFY(server.requests.isEmpty());
+        QTRY_VERIFY(!model.busy());
+        QCOMPARE(server.requests.size(), 1);
+        QCOMPARE(model.results().size(), 2);
+        QCOMPARE(model.results().first().toMap()["name"].toString(), "Kielce");
+        QCOMPARE(model.results().last().toMap()["name"].toString(), "Kielno");
+        const QUrlQuery query(server.requests.first());
+        QCOMPARE(query.queryItemValue("q"), "Kiel");
+        QCOMPARE(query.queryItemValue("countrycode"), "PL");
+        QCOMPARE(query.queryItemValue("osm_tag"), "place");
+        QCOMPARE(query.queryItemValue("limit"), "20");
+        model.setQuery(""); QVERIFY(model.results().isEmpty()); QVERIFY(!model.busy());
     }
     void metadataCacheHonorsExpiryCancellationAndForcedRefresh()
     {

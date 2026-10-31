@@ -179,8 +179,10 @@ entries, with retention accounting for recent reads.
 
 ## Maps and place search
 
-`PlaceSearchModel` queries NOM for Poland and Photon worldwide with a 350 ms
-debounce and stale-result rejection. `Locations` validates both formats.
+`PlaceSearchModel` uses Photon autocomplete for partial names in Poland and
+worldwide, with a 350 ms debounce and stale-result rejection. Poland-only search
+sets the `countrycode=PL` filter; both modes restrict suggestions to places.
+`Locations` validates the returned coordinates and removes duplicate results.
 `UserPreferences` exposes the shared saved-place collection.
 `SavedPlaceController` tracks each view's selection independently and follows
 renames, moved coordinates and deletion. The selected place remains in the app

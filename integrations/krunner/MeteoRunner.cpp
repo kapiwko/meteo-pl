@@ -56,7 +56,7 @@ void MeteoRunner::match(KRunner::RunnerContext &context)
     if (count || term->size() < 2 || !context.isValid()) return;
     // KRunner calls match in a worker thread. Keep requests local to this query,
     // and abort them as soon as the user replaces it with another query.
-    PlaceSearchModel search(nullptr, {}, m_endpoint);
+    PlaceSearchModel search(nullptr, m_endpoint);
     search.setPolandOnly(false);
     QEventLoop loop;
     QTimer deadline, cancelled;

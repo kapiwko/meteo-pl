@@ -14,8 +14,7 @@ class METEO_UI_EXPORT PlaceSearchModel : public QObject {
     Q_PROPERTY(QString error READ error NOTIFY stateChanged)
     Q_PROPERTY(QVariantList results READ results NOTIFY stateChanged)
 public:
-    explicit PlaceSearchModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://nom-api.dev.meteo.pl/api/geocode")),
-                              QUrl globalEndpoint = QUrl(QStringLiteral("https://photon.dev.meteo.pl/api/")));
+    explicit PlaceSearchModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://photon.dev.meteo.pl/api/")));
     QString query() const { return m_query; }
     bool polandOnly() const { return m_polandOnly; }
     bool busy() const { return m_busy; }
@@ -32,7 +31,6 @@ private:
     QVariantList m_results;
     bool m_polandOnly = true, m_busy = false;
     QUrl m_endpoint;
-    QUrl m_globalEndpoint;
 signals:
     void queryChanged();
     void stateChanged();

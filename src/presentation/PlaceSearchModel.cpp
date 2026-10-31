@@ -2,8 +2,8 @@
 #include "core/Locations.hpp"
 #include <QUrlQuery>
 
-PlaceSearchModel::PlaceSearchModel(QObject *parent, QUrl endpoint, QUrl globalEndpoint)
-    : QObject(parent), m_endpoint(std::move(endpoint)), m_globalEndpoint(std::move(globalEndpoint))
+PlaceSearchModel::PlaceSearchModel(QObject *parent, QUrl endpoint)
+    : QObject(parent), m_endpoint(std::move(endpoint))
 {
     m_delay.setSingleShot(true);
     m_delay.setInterval(350);
@@ -47,15 +47,15 @@ void PlaceSearchModel::search()
 {
     m_delay.stop();
     if (m_query.trimmed().size() < 2) return;
-    QUrl url(m_polandOnly ? m_endpoint : m_globalEndpoint);
+    QUrl url(m_endpoint);
     QUrlQuery query;
-    query.addQueryItem(m_polandOnly ? QStringLiteral("term") : QStringLiteral("q"), m_query.trimmed());
-    if (m_polandOnly) query.addQueryItem(QStringLiteral("country"), QStringLiteral("pl"));
-    else {
-        query.addQueryItem(QStringLiteral("limit"), QStringLiteral("20"));
-        query.addQueryItem(QStringLiteral("osm_tag"), QStringLiteral("place"));
-        query.addQueryItem(QStringLiteral("lang"), QStringLiteral("en"));
-    }
+    // Photon supports incomplete names; the legacy geocoder only found full
+    // names. Keep the same autocomplete service when restricting the country.
+    query.addQueryItem(QStringLiteral("q"), m_query.trimmed());
+    query.addQueryItem(QStringLiteral("limit"), QStringLiteral("20"));
+    query.addQueryItem(QStringLiteral("osm_tag"), QStringLiteral("place"));
+    query.addQueryItem(QStringLiteral("lang"), QStringLiteral("en"));
+    if (m_polandOnly) query.addQueryItem(QStringLiteral("countrycode"), QStringLiteral("PL"));
     url.setQuery(query);
     m_busy = true;
     emit stateChanged();
