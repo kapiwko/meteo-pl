@@ -26,13 +26,14 @@ ctest --preset dev
 
 ## Places and forecast models
 
-On Android, first launch opens a welcome screen with location mode, forecast
-model, chart profile, color theme and wind units. **Current location** is
-preselected, but the app requests location access only after **Continue**.
-**Remember this choice** keeps this mode for future launches; otherwise it is
-used only for the current session. **Choose location** opens place search
-without requesting location access. These options can be changed later in
-Settings and My places.
+On Android, first launch opens a setup wizard: a welcome screen, location mode,
+forecast model and chart profile, then color theme and wind units. **Back** and
+**Next** let you review your choices before applying them.
+**Current location** is preselected and remembers the mode for future launches.
+The app requests location access only after **Show forecast** on the final step.
+**Choose location** opens place search without requesting location access.
+You can save multiple places and switch between them using the location name
+above the forecast. These options can be changed later in Settings and My places.
 
 If permission is denied, positioning is unavailable or the lookup times out,
 place search opens with an explanation. A manually selected place is remembered

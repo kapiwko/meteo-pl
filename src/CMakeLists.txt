@@ -114,6 +114,9 @@ qt_target_qml_sources(meteo_ui QML_FILES qml/ProfileUpdateNotice.qml)
 target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml Qt6::Positioning PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)
+qt_add_resources(meteo_ui "application_icon" PREFIX "/icons"
+    BASE "${PROJECT_SOURCE_DIR}/integrations/plasma/package/contents/images"
+    FILES "${PROJECT_SOURCE_DIR}/integrations/plasma/package/contents/images/meteo.svg")
 qt_add_resources(meteo_ui "license" PREFIX "/meteo" BASE "${PROJECT_SOURCE_DIR}"
     FILES "${PROJECT_SOURCE_DIR}/LICENSE")
 file(GLOB METEO_PROFILE_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/resources/profiles/*.json")

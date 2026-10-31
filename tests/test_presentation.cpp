@@ -419,7 +419,11 @@ private slots:
     }
     void mobileWelcomeOffersSettingsBeforePositioning()
     {
+        QTest::failOnWarning(QRegularExpression(".*(TypeError|ReferenceError|[Bb]inding loop|Cannot read|Cannot assign|Failed to load).*"));
         QQmlEngine engine; QQmlComponent component(&engine);
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme", QStringLiteral("org.kde.desktop"));
+#endif
         component.setData(R"(
             import QtQuick
             import QtQuick.Controls
@@ -448,28 +452,63 @@ private slots:
         QCOMPARE(welcome->objectName(), "mobileWelcomePage");
         QVERIFY(!weather->currentLocation()->enabled());
         QVERIFY(welcome->property("useCurrentLocation").toBool());
+        QCOMPARE(welcome->property("step").toInt(), 0);
+        QVERIFY(QFile::exists(":/icons/meteo.svg"));
+        auto *logo = welcome->findChild<QQuickItem *>("welcomeLogo"); QVERIFY(logo);
+        QTRY_VERIFY(logo->isVisible() && logo->width() > 0);
+        QVERIFY(!welcome->findChild<QObject *>("welcomeRememberLocation"));
         auto *theme = welcome->findChild<QObject *>("welcomeTheme"); QVERIFY(theme);
         QCOMPARE(theme->property("currentIndex").toInt(), 0);
-        auto *testWindow = qobject_cast<QQuickWindow *>(window.data()); QVERIFY(testWindow);
-        for (int width : {320, 360, 800}) {
-            testWindow->resize(width, 800);
-            for (const auto &name : {"welcomeModel", "welcomeProfile", "welcomeTheme", "welcomeWindUnit"}) {
-                auto *field = welcome->findChild<QQuickItem *>(name); QVERIFY(field);
-                QTRY_VERIFY(field->width() > 100);
-                QTRY_VERIFY(field->mapToScene({0,0}).x() >= 8);
-                QTRY_VERIFY(field->mapToScene({field->width(),0}).x() <= width - 8);
-            }
-        }
-        welcome->setProperty("rememberLocation", false); welcome->setProperty("selectedModel", "gfs");
-        welcome->setProperty("selectedProfile", "basic"); welcome->setProperty("selectedTheme", "dark");
-        welcome->setProperty("selectedWindUnit", "km/h");
         QSignalSpy completed(forecast, SIGNAL(initialSetupCompleted(QVariant)));
         auto *button = welcome->findChild<QObject *>("welcomeContinueButton"); QVERIFY(button);
+        auto *back = welcome->findChild<QObject *>("welcomeBackButton"); QVERIFY(back);
         QTRY_VERIFY(!stack->property("busy").toBool());
+        QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+        QCOMPARE(welcome->property("step").toInt(), 1);
+        QVERIFY(!logo->isVisible());
+        auto *placesHint = welcome->findChild<QQuickItem *>("welcomeMultiplePlacesHint"); QVERIFY(placesHint);
+        QTRY_VERIFY(placesHint->isVisible());
+        QCOMPARE(completed.size(), 0);
+        QVERIFY(!weather->currentLocation()->enabled());
+        auto *manualChoice = welcome->findChild<QObject *>("welcomeChoosePlace"); QVERIFY(manualChoice);
+        QVERIFY(QMetaObject::invokeMethod(manualChoice, "clicked"));
+        QVERIFY(!welcome->property("useCurrentLocation").toBool());
+        QVERIFY(QMetaObject::invokeMethod(back, "clicked"));
+        QCOMPARE(welcome->property("step").toInt(), 0);
+        QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+        QVERIFY(!welcome->property("useCurrentLocation").toBool());
+        auto *currentChoice = welcome->findChild<QObject *>("welcomeCurrentLocation"); QVERIFY(currentChoice);
+        QVERIFY(QMetaObject::invokeMethod(currentChoice, "clicked"));
+        auto *testWindow = qobject_cast<QQuickWindow *>(window.data()); QVERIFY(testWindow);
+        for (int step : {2, 3}) {
+            QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+            QCOMPARE(welcome->property("step").toInt(), step);
+            QCOMPARE(completed.size(), 0);
+            QVERIFY(!weather->currentLocation()->enabled());
+            const QStringList fields = step == 2 ? QStringList{"welcomeModel", "welcomeProfile"}
+                                                : QStringList{"welcomeTheme", "welcomeWindUnit"};
+            for (const QSize size : {QSize(320,800), QSize(360,800), QSize(800,360)}) {
+                testWindow->resize(size);
+                for (const auto &name : fields) {
+                    auto *field = welcome->findChild<QQuickItem *>(name); QVERIFY(field);
+                    QTRY_VERIFY(field->isVisible() && field->width() > 100);
+                    QTRY_VERIFY(field->mapToScene({0,0}).x() >= 8);
+                    QTRY_VERIFY(field->mapToScene({field->width(),0}).x() <= size.width() - 8);
+                }
+            }
+        }
+        welcome->setProperty("selectedModel", "gfs");
+        welcome->setProperty("selectedProfile", "basic"); welcome->setProperty("selectedTheme", "dark");
+        welcome->setProperty("selectedWindUnit", "km/h");
+        QVERIFY(QMetaObject::invokeMethod(back, "clicked"));
+        QCOMPARE(welcome->property("step").toInt(), 2);
+        QCOMPARE(welcome->property("selectedModel").toString(), "gfs");
+        QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+        QCOMPARE(welcome->property("selectedTheme").toString(), "dark");
         QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
         QTRY_COMPARE(completed.size(), 1); QTRY_COMPARE(stack->property("depth").toInt(), 1);
         const auto choices = completed.first().first().toMap();
-        QVERIFY(choices["useCurrentLocation"].toBool()); QVERIFY(!choices["rememberLocation"].toBool());
+        QVERIFY(choices["useCurrentLocation"].toBool()); QVERIFY(!choices.contains("rememberLocation"));
         QCOMPARE(choices["model"].toString(), "gfs"); QCOMPARE(choices["profile"].toString(), "basic");
         QCOMPARE(choices["theme"].toString(), "dark"); QCOMPARE(choices["windUnit"].toString(), "km/h");
         QTRY_VERIFY(!stack->property("busy").toBool());
@@ -479,21 +518,48 @@ private slots:
         welcome->setProperty("useCurrentLocation", false);
         button = welcome->findChild<QObject *>("welcomeContinueButton"); QVERIFY(button);
         QTRY_VERIFY(!stack->property("busy").toBool());
-        QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
+        for (int step = 0; step < 4; ++step) QVERIFY(QMetaObject::invokeMethod(button, "clicked"));
         QTRY_COMPARE(completed.size(), 2);
         QTRY_COMPARE(stack->property("currentItem").value<QObject *>()->objectName(), "mobileLocationPage");
         QVERIFY(!weather->currentLocation()->enabled());
         destroyTestWindow(window);
+
+        // The Android Back callback shares this route with the hardware key.
+        // It must go to the preceding wizard step before leaving setup.
+        component.loadUrl(QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
+        window.reset(component.createWithInitialProperties({{"smokeTest", true}, {"width", 360}, {"height", 800}}));
+        QVERIFY2(window, qPrintable(component.errorString()));
+        testWindow = qobject_cast<QQuickWindow *>(window.data()); QVERIFY(testWindow);
+        testWindow->requestActivate(); QTRY_VERIFY(testWindow->isActive());
+        forecast = window->findChild<QObject *>("mobileForecastPage"); QVERIFY(forecast);
+        forecast->setProperty("welcomeRequired", true);
+        QVERIFY(QMetaObject::invokeMethod(forecast, "beginSetup"));
+        stack = window->findChild<QObject *>("mobilePageStack"); QVERIFY(stack);
+        QTRY_COMPARE(stack->property("depth").toInt(), 2);
+        QTRY_VERIFY(!stack->property("busy").toBool());
+        welcome = stack->property("currentItem").value<QObject *>(); QVERIFY(welcome);
+        QCOMPARE(welcome->objectName(), "mobileWelcomePage");
+        QVERIFY(QMetaObject::invokeMethod(welcome, "advance"));
+        QVERIFY(QMetaObject::invokeMethod(welcome, "advance"));
+        for (int step : {1, 0}) {
+            QTest::keyClick(testWindow, Qt::Key_Back);
+            QTRY_COMPARE(welcome->property("step").toInt(), step);
+            QCOMPARE(stack->property("depth").toInt(), 2);
+        }
+        QTest::keyClick(testWindow, Qt::Key_Back);
+        QTRY_COMPARE(stack->property("depth").toInt(), 1);
+        QVERIFY(!window->findChild<WeatherModel *>("appForecastModel")->currentLocation()->enabled());
+        destroyTestWindow(window);
     }
     void mobileWelcomeAppliesSettingsAndRemembersManualChoice_data()
     {
-        QTest::addColumn<bool>("remember");
-        QTest::newRow("remember") << true;
-        QTest::newRow("this-session-only") << false;
+        QTest::addColumn<bool>("useCurrentLocation");
+        QTest::newRow("current-location") << true;
+        QTest::newRow("choose-place") << false;
     }
     void mobileWelcomeAppliesSettingsAndRemembersManualChoice()
     {
-        QFETCH(bool, remember);
+        QFETCH(bool, useCurrentLocation);
         QSettings settings; settings.beginGroup("Location");
         QVariantMap original;
         for (const auto &key : settings.childKeys()) original[key] = settings.value(key);
@@ -511,11 +577,11 @@ private slots:
         QVERIFY(session->property("needsInitialSetup").toBool());
         QVERIFY(!weather->currentLocation()->enabled());
         weather->currentLocation()->setForeground(false);
-        const QVariantMap options{{"useCurrentLocation", true}, {"rememberLocation", remember}, {"model", "um4_120"},
+        const QVariantMap options{{"useCurrentLocation", useCurrentLocation}, {"model", "um4_120"},
             {"profile", "basic"}, {"theme", "dark"}, {"windUnit", "km/h"}};
         QVERIFY(QMetaObject::invokeMethod(session.data(), "applyInitialSetup", Q_ARG(QVariant, options)));
-        QVERIFY(weather->currentLocation()->enabled());
-        QCOMPARE(store->property("followCurrentLocation").toBool(), remember);
+        QCOMPARE(weather->currentLocation()->enabled(), useCurrentLocation);
+        QCOMPARE(store->property("followCurrentLocation").toBool(), useCurrentLocation);
         QCOMPARE(weather->model(), "um4_120");
         QVERIFY(!session->property("needsInitialSetup").toBool());
         auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");

@@ -27,7 +27,8 @@ ApplicationWindow {
     function navigateBack() {
         if (Qt.inputMethod.visible || Qt.inputMethod.animating) { Qt.inputMethod.hide(); return; }
         if (navigation.busy) return;
-        if (navigation.depth > 1) navigation.pop();
+        if (navigation.depth > 1 && navigation.currentItem.canNavigateBack) navigation.currentItem.navigateBack();
+        else if (navigation.depth > 1) navigation.pop();
         else forecastPage.navigateBack();
     }
     ApplicationTheme { mode: UserPreferences.theme }
