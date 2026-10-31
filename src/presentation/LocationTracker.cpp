@@ -4,9 +4,15 @@
 #include <QGuiApplication>
 #include <QLocationPermission>
 
-LocationTracker::LocationTracker(QObject *parent, QGeoPositionInfoSource *source)
+LocationTracker::LocationTracker(QObject *parent, QGeoPositionInfoSource *source, int lookupTimeoutMs)
     : QObject(parent), m_source(source), m_injectedSource(source != nullptr)
 {
+    m_lookupDeadline.setSingleShot(true);
+    m_lookupDeadline.setInterval(qMax(1, lookupTimeoutMs));
+    connect(&m_lookupDeadline, &QTimer::timeout, this, [this] {
+        if (m_enabled && m_foreground && m_busy)
+            fail(Meteo::i18n("Location lookup timed out. You can choose a point on the map."));
+    });
     if (source) source->setParent(this);
     if (auto *app = qobject_cast<QGuiApplication *>(QCoreApplication::instance())) {
         m_foreground = app->applicationState() == Qt::ApplicationActive;
@@ -24,6 +30,7 @@ void LocationTracker::setEnabled(bool enabled)
 {
     if (m_enabled == enabled) return;
     m_enabled = enabled;
+    m_lookupDeadline.stop();
     m_error.clear();
     m_busy = false;
     m_coordinate = {};
@@ -39,6 +46,7 @@ void LocationTracker::setForeground(bool foreground)
     m_foreground = foreground;
     if (foreground) { if (m_enabled) start(); }
     else {
+        m_lookupDeadline.stop();
         if (m_source) m_source->stopUpdates();
         m_busy = false;
         emit stateChanged();
@@ -47,6 +55,7 @@ void LocationTracker::setForeground(bool foreground)
 void LocationTracker::retry() { if (m_enabled) start(); }
 void LocationTracker::fail(const QString &error)
 {
+    m_lookupDeadline.stop();
     m_busy = false;
     m_error = error;
     emit stateChanged();
@@ -95,14 +104,16 @@ void LocationTracker::startSource()
       });
     }
     m_source->setUpdateInterval(60000);
+    m_lookupDeadline.start();
     m_source->startUpdates();
-    m_source->requestUpdate(15000);
+    m_source->requestUpdate(m_lookupDeadline.interval());
 }
 void LocationTracker::acceptPosition(const QGeoPositionInfo &position)
 {
     if (!m_enabled || !m_foreground || !position.isValid()) return;
     const auto age = position.timestamp().secsTo(QDateTime::currentDateTimeUtc());
     if (age > 300 || age < -60) return;
+    m_lookupDeadline.stop();
     m_busy = false;
     m_error.clear();
     const auto coordinate = position.coordinate();

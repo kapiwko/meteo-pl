@@ -7,6 +7,31 @@
 class LocationTrackerTest : public QObject {
     Q_OBJECT
 private slots:
+    void silentProviderTimesOutAndAValidFixCancelsTheDeadline()
+    {
+        auto *source = new PositionFixture;
+        LocationTracker tracker(nullptr, source, 30);
+        tracker.setEnabled(true); QVERIFY(tracker.busy());
+        source->send(50.86, 20.63, 3600); // A stale fix must not cancel the deadline.
+        QTRY_VERIFY(!tracker.busy());
+        QVERIFY(!tracker.error().isEmpty());
+        QCOMPARE(source->error(), QGeoPositionInfoSource::NoError);
+        tracker.retry(); QVERIFY(tracker.busy());
+        source->send(50.86, 20.63);
+        QVERIFY(tracker.hasPosition()); QVERIFY(!tracker.busy());
+        QTest::qWait(60);
+        QVERIFY(tracker.error().isEmpty());
+    }
+    void backgroundAndDisabledTrackingCancelTheDeadline()
+    {
+        auto *source = new PositionFixture;
+        LocationTracker tracker(nullptr, source, 30);
+        tracker.setEnabled(true); tracker.setForeground(false);
+        QTest::qWait(60); QVERIFY(tracker.error().isEmpty()); QVERIFY(!tracker.busy());
+        tracker.setForeground(true); QVERIFY(tracker.busy());
+        tracker.setEnabled(false);
+        QTest::qWait(60); QVERIFY(tracker.error().isEmpty()); QVERIFY(!tracker.busy());
+    }
     void tracksOnlyInForegroundAndIgnoresJitterAndOldPositions()
     {
         auto *source = new PositionFixture;
