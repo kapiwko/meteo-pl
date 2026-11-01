@@ -2357,7 +2357,10 @@ private slots:
         QVERIFY(image.height() > window.height() + 150);
         QVERIFY(image.text("Title").contains("All"));
         const auto background = readings->property("color").value<QColor>();
-        QCOMPARE(image.pixelColor(image.width()/2, image.height()/2), background);
+        // The centre may fall on a label with different platform font metrics.
+        // Check the blank gutter inside the captured readings instead.
+        const auto captureLeft = (image.width() - qCeil(readings->width())) / 2;
+        QCOMPARE(image.pixelColor(captureLeft + 1, image.height()/2), background);
         int finalReadingPixels = 0;
         for (int y = image.height()*3/4; y < image.height(); ++y)
             for (int x = 0; x < image.width()/2; ++x)
