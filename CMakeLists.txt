@@ -13,6 +13,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(GNUInstallDirs)
 include(CTest)
+# A Qt Core-only target runs the real filesystem contracts on Windows too.
+option(METEO_FILESYSTEM_TESTS_ONLY "Build only filesystem contract tests" OFF)
+if(METEO_FILESYSTEM_TESTS_ONLY)
+    find_package(Qt6 6.6 REQUIRED COMPONENTS Core Test)
+    add_executable(test_disk_cache tests/test_disk_cache.cpp src/network/DiskCacheBudget.cpp src/network/CacheFiles.cpp)
+    target_include_directories(test_disk_cache PRIVATE src)
+    target_link_libraries(test_disk_cache PRIVATE Qt6::Core Qt6::Test)
+    add_test(NAME disk_cache COMMAND test_disk_cache)
+    return()
+endif()
+
 install(FILES integrations/plasma/package/contents/images/meteo.svg
     DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps" RENAME pl.meteo.desktop.svg)
 install(FILES apps/meteo/pl.meteo.desktop.notifyrc DESTINATION "${CMAKE_INSTALL_DATADIR}/knotifications6")

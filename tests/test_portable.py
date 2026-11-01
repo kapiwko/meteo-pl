@@ -81,6 +81,27 @@ class PortablePackagingTest(unittest.TestCase):
                 archive.writestr(prefix+"icons/48/weather-showers.svg", "<svg/>")
             self.assertEqual(portable.check_android_icons(apk),len(icons)+1)
 
+    def test_installer_smoke_installs_runs_and_uninstalls_the_current_package(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            installer = directory / "current.exe"
+            observed = []
+            def run(command, **kwargs):
+                observed.append(list(map(str, command)))
+                destination = directory / "installed"
+                if command[0] == installer:
+                    (destination / "bin").mkdir(parents=True)
+                    (destination / "bin/meteo-pl.exe").write_bytes(b"current")
+                    (destination / "uninstall.exe").write_bytes(b"uninstaller")
+                elif Path(command[0]).name == "uninstall.exe":
+                    (destination / "bin/meteo-pl.exe").unlink()
+                return SimpleNamespace(stdout="meteo-pl " + (portable.ROOT / "VERSION").read_text().strip(), stderr="")
+            with patch.object(portable,"run",side_effect=run):
+                portable.check_windows_installer(installer,{},directory)
+            self.assertEqual(observed[0], [str(installer), "/S", f"/D={directory / 'installed'}"])
+            self.assertEqual([c[-1] for c in observed[1:3]], ["--version", "--smoke-test"])
+            self.assertTrue(observed[-1][-1].startswith("_?="))
+
     def test_windows_smoke_uses_only_the_explicit_current_archive(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

@@ -163,6 +163,53 @@ def check_android_style(apk):
             raise RuntimeError("Android APK is missing the Material controls style")
 
 
+def check_windows_installer(installer, environment, directory):
+    """Exercise the published NSIS package in an isolated installation directory."""
+    destination = directory / "installed"
+    run([installer, "/S", f"/D={destination}"], env=environment, timeout=120)
+    try:
+        executables = list(destination.rglob("meteo-pl.exe"))
+        if len(executables) != 1:
+            raise RuntimeError(f"Installer did not produce one application: {executables}")
+        version = run([executables[0], "--version"], env=environment, capture_output=True, text=True, timeout=30)
+        if version.stdout.strip() != "meteo-pl " + (ROOT / "VERSION").read_text().strip():
+            raise RuntimeError("Installed application has an unexpected version")
+        result = run([executables[0], "--smoke-test"], env=environment, capture_output=True, text=True, timeout=60)
+        if QML_ERRORS.search(result.stdout + result.stderr):
+            raise RuntimeError("Installed application's QML smoke test failed")
+    finally:
+        uninstallers = list(destination.glob("*ninstall*.exe"))
+        if len(uninstallers) != 1:
+            raise RuntimeError(f"Installer did not provide an uninstaller: {uninstallers}")
+        # _?= prevents NSIS copying itself to a detached process, so wait really
+        # covers uninstallation. It must remain the last, unquoted argument.
+        run([uninstallers[0], "/S", f"_?={destination}"], env=environment, timeout=120)
+    if list(destination.rglob("meteo-pl.exe")):
+        raise RuntimeError("Uninstaller left the application behind")
+
+
+def check_native_rendering(command, craft_root, work, environment):
+    environment = environment | {"METEO_RENDER_ARTIFACTS": str(work / "rendering-artifacts")}
+    directory = work / "rendering-tests"
+    prefix = [*command, "--run"]
+    run([*prefix, "cmake", "-S", ROOT, "-B", directory, "-G", "Ninja",
+         "-DBUILD_TESTING=ON", "-DMETEO_BUILD_APP=OFF", "-DMETEO_BUILD_PLASMOID=OFF",
+         "-DMETEO_BUILD_KRUNNER=OFF", f"-DCMAKE_PREFIX_PATH={craft_root}"], env=environment)
+    run([*prefix, "cmake", "--build", directory, "--parallel", "2", "--target",
+         "test_renderers", "test_presentation", "test_maps"], env=environment)
+    run([*prefix, "ctest", "--test-dir", directory, "--output-on-failure", "-R",
+         "^(renderer_parity|gpu_geometry|map_animation_gpu)$"], env=environment)
+
+
+def check_filesystem_contracts(command, craft_root, work, environment):
+    directory = work / "filesystem-tests"
+    prefix = [*command, "--run"]
+    run([*prefix, "cmake", "-S", ROOT, "-B", directory, "-G", "Ninja",
+         "-DMETEO_FILESYSTEM_TESTS_ONLY=ON", f"-DCMAKE_PREFIX_PATH={craft_root}"], env=environment)
+    run([*prefix, "cmake", "--build", directory], env=environment)
+    run([*prefix, "ctest", "--test-dir", directory, "--output-on-failure", "--timeout", "30"], env=environment)
+
+
 def check_packaged_desktop(target, packages, craft_root, environment):
     clean = environment.copy()
     for key in ("KDEROOT", "QML_IMPORT_PATH", "QML2_IMPORT_PATH", "QT_PLUGIN_PATH", "LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
@@ -187,6 +234,10 @@ def check_packaged_desktop(target, packages, craft_root, environment):
                 run(["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, images[0]])
                 mounted = True
                 executables = list(mount.rglob("meteo-pl.app/Contents/MacOS/meteo-pl"))
+            if target == "windows":
+                installers = [path for path in packages if path.suffix == ".exe"]
+                if len(installers) > 1: raise RuntimeError("Expected a single current Windows installer")
+                if installers: check_windows_installer(installers[0], clean, directory)
             if len(executables) != 1: raise RuntimeError(f"Expected one bundled executable, found {executables}")
             version = run([executables[0], "--version"], env=clean, capture_output=True, text=True, timeout=30)
             expected_version = (ROOT / "VERSION").read_text().strip()
@@ -286,6 +337,8 @@ def build(args):
                 result = run([*staged_command, "--run", executable, "--smoke-test"], env=smoke_env, capture_output=True, text=True, timeout=60)
                 print(result.stdout + result.stderr)
                 if QML_ERRORS.search(result.stdout + result.stderr): raise RuntimeError("QML smoke test failed")
+            check_filesystem_contracts(staged_command, craft_root, work, environment)
+            check_native_rendering(staged_command, craft_root, work, environment)
             smoke = "passed"
     artifacts = package_current_build(command, args.target, work, dist, craft_root, environment, prepare, args.include_alternatives)
     report = {"version": (ROOT / "VERSION").read_text().strip(), "target": args.target,
@@ -293,6 +346,9 @@ def build(args):
               "smokeTest": smoke, "releaseSigned": args.target == "android" and android_signing_key() is not None, "bootstrapRevision": CRAFT_REVISION,
               "blueprintsRevision": BLUEPRINTS_REVISION, "artifacts": [p.name for p in artifacts]}
     report["cacheUrl"] = args.cache_url or "https://files.kde.org/craft/Qt6/"
+    report["nativeRenderingTests"] = "not-run" if args.target == "android" else "passed"
+    report["filesystemTests"] = "not-run" if args.target == "android" else "passed"
+    if args.target == "windows": report["installerSmokeTest"] = "passed"
     report["bundleSmokeTest"] = "not-run" if args.target == "android" else "passed"
     report["artifactBytes"] = {p.name: p.stat().st_size for p in artifacts}
     report["includeAlternatives"] = args.include_alternatives

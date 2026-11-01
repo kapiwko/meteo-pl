@@ -127,6 +127,14 @@ target_link_libraries(test_renderers PRIVATE meteo_ui Qt6::Test Qt6::Quick Qt6::
 # Qt 6.8's offscreen/GLX readback can corrupt the window header. Use a real
 # virtual X11 surface for RHI image checks when available; keep RHI mandatory.
 set(METEO_GPU_QPA offscreen)
+set(METEO_GPU_RHI opengl)
+if(WIN32)
+    set(METEO_GPU_QPA windows)
+    set(METEO_GPU_RHI d3d11)
+elseif(APPLE)
+    set(METEO_GPU_QPA cocoa)
+    set(METEO_GPU_RHI metal)
+endif()
 set(METEO_GPU_TEST_WRAPPER)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_program(METEO_XVFB_RUN xvfb-run)
@@ -137,21 +145,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 add_test(NAME renderer_parity COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_renderers>)
 set_tests_properties(renderer_parity PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=${METEO_GPU_RHI};QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 180
     LABELS "gpu;visual"
 )
 
 add_test(NAME gpu_geometry COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_presentation> nativeGpuRendererDrawsClippedGeometry)
 set_tests_properties(gpu_geometry PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=${METEO_GPU_RHI};METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 30
     LABELS "gpu;geometry"
 )
 
 add_test(NAME map_animation_gpu COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_maps> preparedThematicFramesUseTwoImages)
 set_tests_properties(map_animation_gpu PROPERTIES
-    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=${METEO_GPU_RHI};METEO_REQUIRE_GPU=1;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 30 LABELS "gpu;animation")
 
 find_package(Python3 3.11 REQUIRED COMPONENTS Interpreter)

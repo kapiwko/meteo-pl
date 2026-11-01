@@ -234,6 +234,10 @@ void RendererTest::appearanceMatches()
         auto *gpuPlot=object->findChild<GpuPlot *>("gpu-base-"+group);
         QTRY_VERIFY(gpuPlot->frameCount()>0);
         QVERIFY2(window->rendererInterface()->graphicsApi()!=QSGRendererInterface::Software,"Parity tests require the RHI renderer; CPU fallback would hide GPU bugs");
+        const auto backend=qEnvironmentVariable("QSG_RHI_BACKEND");
+        if (backend=="d3d11") QCOMPARE(window->rendererInterface()->graphicsApi(),QSGRendererInterface::Direct3D11);
+        if (backend=="metal") QCOMPARE(window->rendererInterface()->graphicsApi(),QSGRendererInterface::Metal);
+        if (backend=="opengl") QCOMPARE(window->rendererInterface()->graphicsApi(),QSGRendererInterface::OpenGL);
         QTest::qWait(80);
         const auto gpu=window->grabWindow().convertToFormat(QImage::Format_RGB32);
         QCOMPARE(cpu.size(),gpu.size());
