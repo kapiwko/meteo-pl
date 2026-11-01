@@ -75,3 +75,14 @@ the forecast, widget and profile settings offers **Update and keep old copy**.
 Updating installs the new factory content and saves the edited snapshot as a
 named profile with an `(old)` suffix, translated to `(stary)` in Polish. Name
 collisions receive a number. The backup keeps its series, appearance and height.
+
+## Rendering limits and capabilities
+
+Renderer and fill choices are validated together with the quantity. Pressure and
+wind palettes require their matching scale and complete palette data; other
+series use a solid fill. ARGB colors preserve their alpha channel on import and
+export. Grid-dash elements are zero (ignored) or between 0.5 and 100 pixels.
+Normalization clamps legacy settings, and the geometry builder also limits work
+independently of the importer. Numeric wind direction has a 0–360° axis; angular
+wraps break the line rather than drawing through the whole scale. Horizontal
+segments retain signed and zero values and use the quantity's native time policy.

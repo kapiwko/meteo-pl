@@ -48,10 +48,25 @@ Reused desktop SDKs must match the pinned Craft revision. Use a fresh
 
 Desktop applications run `--smoke-test` before packaging and again from the
 extracted ZIP or mounted DMG without Craft's library search paths. The check
-rejects QML loading errors. Android reports that device startup is untested;
-a successful APK build alone does not establish phone compatibility.
-[CPU/GPU visual comparisons](renderer-tests.md) currently run on Linux rather
-than D3D, Metal or phone hardware.
+rejects QML loading errors. Windows also installs the current NSIS artifact in a
+temporary directory, runs its application and uninstalls it. Both desktop builds
+run filesystem contracts and [CPU/GPU visual comparisons](renderer-tests.md)
+using their native D3D/Metal backends. Reports distinguish these checks from
+bundle startup. A successful APK build alone does not establish phone compatibility.
+
+For a disposable Android emulator, run:
+
+```sh
+python3 scripts/android-runtime.py --serial emulator-5556 --apk path/to/meteo.apk
+```
+
+This reinstalls the selected APK, resets application data and exercises setup,
+permission refusal, adding a place without network access, background/foreground,
+system Back, rotation, update and SAF profile export/import. It refuses physical-device serials. Retained artifacts identify
+the tested APK and include logcat and the last UI hierarchy. The emulator must
+be fully booted and responsive before starting the test. When running the ARM64
+APK on an x86 emulator, use a Google Play image with ARM translation and start
+it with `-qemu -cpu host` so AES instructions are available to OpenSSL.
 
 ## Package size
 

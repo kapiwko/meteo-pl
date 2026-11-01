@@ -4,13 +4,14 @@
 renderer, then compares the entire component: series, fills, layer order, axes,
 labels, legend and reading cursor.
 
-It checks all 12 default chart types in three configurations:
+It checks all 12 default chart types, native-interval precipitation areas and an
+imported profile with the minimum allowed dash pattern in three configurations:
 
 - A wide view of the entire forecast, also used for export.
 - A narrow 24-hour view with a reading cursor.
 - A wide view with the dark palette enabled.
 
-This produces 36 image pairs. Local fixtures include negative temperatures,
+This produces 42 image pairs. Local fixtures include negative temperatures,
 min–max ranges, off-scale precipitation, different precipitation types, changing
 wind directions, dense cloud-base points, fog, storms and missing samples.
 Tests do not download forecasts or change user settings.
@@ -56,3 +57,9 @@ bit-for-bit image equality.
 On failure, images are written to `/tmp/meteo-renderer-diffs` by default.
 `METEO_RENDER_ARTIFACTS` selects another directory and also preserves successful
 comparisons. Inspect all three images before changing thresholds.
+
+Portable desktop verification runs these same contracts with Direct3D 11 on
+Windows and Metal on macOS. The test asserts the requested graphics API, so a
+software fallback cannot silently satisfy it. Platform results belong to their
+own CI run; a successful Linux/OpenGL result is not evidence of D3D or Metal
+support. Android runtime tests exercise the packaged application separately.

@@ -27,6 +27,19 @@ flowchart BT
 | `integrations/plasma` | Plasma 6 package, instance settings and compact representation |
 | `tests` | Parsing, local HTTP fixtures, caches, QML rendering and application startup |
 
+The build enforces these dependencies:
+
+| Target | Dependencies and scope |
+| --- | --- |
+| `meteo_core` | Qt Core and localization; forecast values, sampling and aggregation |
+| `meteo_services` | Core and Qt Network; transport, persistent documents, geocoding and launching |
+| `meteo_charts` | Core and Qt Gui; configuration, codecs, prepared series, axes and plot geometry |
+| `meteo_preferences` | Services and charts; pure profile/place rules and transactional preferences |
+| `meteo_ui` | Presentation adapters, Qt QML/Quick/Positioning and desktop notifications |
+
+KRunner links the neutral services target. It does not load the chart renderer,
+QML module, positioning service or UI resources to search saved places.
+
 ## Forecast data flow
 
 1. `WeatherModel` asks `ForecastRepository` for cached data keyed by model,
@@ -79,7 +92,13 @@ builds configurations and normalizes user settings. Each chart stores a title,
 series list, axis assignments, optional bounds and styles for colors, lines,
 points and fills. `UserPreferences` exposes complete named profiles.
 
-`PreferencesStore` owns the INI file, migration and notifications for local and
+`UserPreferences` is a QML facade over `ProfileCatalog`, `ProfileEditor` and
+`SavedPlaces`. These ordinary classes operate on values and can be tested without
+an INI file or GUI. Commands identify charts by stable key rather than row index.
+`PreferencesMigration` transforms decoded settings under the store transaction.
+`PreferencesFile` owns the shared INI encoding and atomic file technique.
+
+`PreferencesStore` owns the transaction and notifications for local and
 cross-process changes. Each mutation takes an interprocess lock, reloads the
 latest file, changes the relevant collection and writes atomically. Public state
 and notifications change only after success; errors appear in the standard
@@ -93,18 +112,30 @@ configuration to available series and assigns units to two axes. A third
 incompatible automatic unit produces an explicit conflict notice. Configuration
 is retained so the user can assign axes. Ranges join by exact timestamps while
 preserving gaps; storm and lightning intervals are combined. Precipitation
-geometry uses each sample's native start and end.
+geometry uses each sample's native start and end. `PreparedSeries` assigns one
+render timestamp shared by lines, areas and probes; interval totals use their
+centres. `PreparedChart` supplies complete axes, units, ticks, nonlinear levels,
+legend entries and capabilities. Quantity timing and drawing geometry are
+separate concepts. The builder prepares this description once per data/style
+revision, independently of the visible viewport.
 
 `ForecastPanel` assembles the configured profile. `Meteogram` uses configured
-renderers and scales; `MeteogramStyle.js` implements ICM scale/palette handling.
+renderers and scales; `MeteogramStyle.js` projects prepared data through an
+explicit pixel/cursor contract and emits drawing commands. QML does not rescan
+forecast values to choose axis policies or reconstruct range/event series.
 `SeriesLegend` shares its preview between legends and appearance editors.
 `ChartConfiguration` restricts special renderers to compatible quantities;
-the editor and import normalization use the same catalog. `DailyForecastView`
+the editor and import normalization use the same catalog. Palette fills are
+available only with a complete palette and compatible quantity. Legend category
+colors come from the actual value-series styles. `DailyForecastView`
 assembles day cards, and `WeatherModel::chartExportMetadata` supplies shared PNG
 metadata.
 
 `MeteogramStyle.paintChart` emits shared drawing commands. The default `GpuPlot`
 converts them into vertex-colored `QSGGeometryNode` triangles for Qt Quick RHI.
+`PlotGeometry` clips before dash tessellation and bounds dash steps and vertices.
+Dash elements have a half-pixel minimum; exhausted work falls back to a solid
+remainder. This also protects callers that bypass profile import.
 Labels use `Text` items and the layer has 4× MSAA. This path does not rasterize
 the plot to an image on the CPU. The alternative `Canvas.Image` is selected in
 preferences or automatically when Qt Quick uses its software backend. Renderer
@@ -121,8 +152,10 @@ at the first forecast hour; mobile starts with the first 72 hours.
 Desktop `MeteoSettings` groups current-forecast controls and global preferences.
 Android uses settings pages in a standard `StackView`. Profile editing has its
 own selected profile and changes the forecast only through **Use for forecast**.
-Scoped undo rejects a conflicting later edit to the same profile while preserving
-unrelated changes. Axis drafts remain visible until valid bounds can be saved
+Profile commands capture their undo token under the same interprocess lock as
+the edit. Tokens cover every changed record, including an automatically created
+old-version copy. Undo checks every record before restoring any; a conflicting
+edit rejects the whole undo and unrelated changes are preserved. Axis drafts remain visible until valid bounds can be saved
 atomically. `ForecastSession` owns each window's state and `QtCore.Settings`
 selection, shared by `ForecastWindow` and `Mobile`. Plasma/KRunner previews stay
 temporary until explicitly selected. `SolarCalendar` supplies day/night icons,
@@ -229,7 +262,9 @@ on the map. Thematic maps fit both viewport dimensions regardless of aspect rati
 
 ## Editorial content and cache management
 
-`EditorialModel` retrieves dated synoptic commentary and paginated articles.
+`EditorialRepository` retrieves and validates dated synoptic commentary and
+paginated articles. `EditorialModel` adapts snapshots to QML while separate
+commentary and article navigation values retain date/page state.
 Future dates issue no request; commentary HTTP 404 means no publication.
 Adapters are separate from QML and accept injectable endpoints in tests.
 Atomic `editorial` entries are keyed by complete URL (date/page). Reopening uses
@@ -243,11 +278,17 @@ while preserving aspect ratios after window resizing.
 `JsonRequest` optionally caches full-URL responses in `metadata`: place queries
 for 24 hours and model-run catalogs for five minutes. Limits are 512 entries and
 32 MiB. Request generations also reject stale asynchronous cache completions.
+`JsonTransport` owns HTTP and validation; `JsonDocumentStore` owns URL identity,
+freshness envelopes, bounded atomic JSON IO and pruning. Forecast persistence
+reuses that IO technique while retaining its forecast-specific envelope.
+HTTP cache restrictions apply to image and JSON reuse: a successful no-store,
+no-cache or expired response invalidates an older document rather than allowing
+it to reappear on the next request. Failed requests preserve offline content.
 JSON and forecast transports share size, inactivity and total-time limits;
 a slow transfer cannot extend the deadline indefinitely.
 
 `CacheStorage` measures and clears only the cache directory in the background,
-without following symlinks. Clearing resets image RAM and invalidates image
+without following symlinks or Windows junctions, including a redirected root. Clearing resets image RAM and invalidates image
 write generations, so image work started before the clear cannot repopulate
 that cache. Forecast, editorial and lookup JSON requests have a separate
 lifecycle: clearing does not cancel them, and a valid response to an active
@@ -296,3 +337,23 @@ the RHI requirement and image tolerances. Separate tests exercise actual RHI and
 software backends and verify geometry semantics as well as image similarity.
 CI installs every Linux package in a separate runtime image without compiler
 headers; reports identify the exact artifact, SHA-256 and installation result.
+
+The application and Plasma use the same `WeatherModel::selectForecast` command
+when leaving GPS tracking for a saved location. Host adapters persist their own
+selection but do not duplicate the model transition. `LocationTracker` provides
+permission, freshness, deadline and foreground handling for continuous tracking
+and one-shot location editors. One-shot acquisition stops after its first fresh
+fix. Both headers use the same solar-event component. Tile and whole-image maps
+share the displayed/pending transition policy; returning to the displayed frame
+always clears an obsolete pending frame.
+
+Portable desktop builds also run the Qt Core-only filesystem contracts against
+their SDK. Windows packaging installs the current NSIS artifact in a temporary
+directory, checks the installed application, and uninstalls it synchronously.
+`python scripts/android-runtime.py --serial emulator-5556 --apk <apk>` exercises
+an explicitly selected disposable emulator. It resets that application's data;
+it refuses physical-device serials. The APK is copied before testing and its
+SHA-256 identifies the result, even if a parallel build replaces the original.
+Logs and the final UI hierarchy are retained
+under `build/android-runtime`. Backend-specific D3D/Metal results must be obtained
+on their respective hosts; Linux/OpenGL parity does not establish them.
