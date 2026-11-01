@@ -247,9 +247,13 @@ JSON and forecast transports share size, inactivity and total-time limits;
 a slow transfer cannot extend the deadline indefinitely.
 
 `CacheStorage` measures and clears only the cache directory in the background,
-without following symlinks. Clearing also resets image RAM and write generations
-so older in-flight work cannot restore deleted content. Settings and profiles
-remain in a separate configuration directory.
+without following symlinks. Clearing resets image RAM and invalidates image
+write generations, so image work started before the clear cannot repopulate
+that cache. Forecast, editorial and lookup JSON requests have a separate
+lifecycle: clearing does not cancel them, and a valid response to an active
+request may create a new cache entry. Content already displayed by a model stays
+available in memory. Settings and profiles remain in a separate configuration
+directory.
 
 ## Plasma integration
 
