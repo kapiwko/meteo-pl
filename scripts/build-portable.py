@@ -181,9 +181,14 @@ def check_windows_installer(installer, environment, directory):
         uninstallers = list(destination.glob("*ninstall*.exe"))
         if len(uninstallers) != 1:
             raise RuntimeError(f"Installer did not provide an uninstaller: {uninstallers}")
-        # _?= prevents NSIS copying itself to a detached process, so wait really
-        # covers uninstallation. It must remain the last, unquoted argument.
-        run([uninstallers[0], "/S", "/CurrentUser", f"_?={destination}"], env=environment, timeout=120)
+        # Keep NSIS's usual temporary copy outside $INSTDIR. Craft stops all
+        # processes within that directory; running there with _?= would include
+        # the uninstaller itself. _?= still makes this copy run synchronously.
+        execution_directory = directory / "uninstaller"
+        execution_directory.mkdir()
+        executable = execution_directory / uninstallers[0].name
+        shutil.copyfile(uninstallers[0], executable)
+        run([executable, "/S", "/CurrentUser", f"_?={destination}"], env=environment, timeout=120)
     if list(destination.rglob("meteo-pl.exe")):
         raise RuntimeError("Uninstaller left the application behind")
 

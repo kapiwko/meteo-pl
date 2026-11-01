@@ -100,6 +100,7 @@ class PortablePackagingTest(unittest.TestCase):
                 portable.check_windows_installer(installer,{},directory)
             self.assertEqual(observed[0], [str(installer), "/S", "/CurrentUser", f"/D={directory / 'installed'}"])
             self.assertEqual([c[-1] for c in observed[1:3]], ["--version", "--smoke-test"])
+            self.assertEqual(Path(observed[-1][0]).parent,directory / "uninstaller")
             self.assertTrue(observed[-1][-1].startswith("_?="))
 
     def test_windows_smoke_uses_only_the_explicit_current_archive(self):
