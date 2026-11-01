@@ -93,18 +93,26 @@ jobs:
         run: |
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          export ANDROID_AVD_HOME="$RUNNER_TEMP/meteo-avds"
+          mkdir -p "$ANDROID_AVD_HOME"
           sudo chmod 666 /dev/kvm
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "emulator" "platform-tools" "system-images;android-35;google_apis_playstore;x86_64"
-          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name meteo-ci --path "$RUNNER_TEMP/meteo-ci.avd" --package "system-images;android-35;google_apis_playstore;x86_64"
-          echo "hw.keyboard=yes" >> "$RUNNER_TEMP/meteo-ci.avd/config.ini"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name meteo-ci --path "$ANDROID_AVD_HOME/meteo-ci.avd" --package "system-images;android-35;google_apis_playstore;x86_64"
+          echo "hw.keyboard=yes" >> "$ANDROID_AVD_HOME/meteo-ci.avd/config.ini"
           mkdir -p build/android-runtime
-          "$ANDROID_HOME/emulator/emulator" -avd meteo-ci -port 5554 -no-window -no-audio -no-snapshot -no-boot-anim -cores 2 -memory 4096 -gpu swiftshader_indirect -qemu -cpu host > build/android-runtime/emulator.log 2>&1 &
-          adb wait-for-device
+          "$ANDROID_HOME/emulator/emulator" -avd meteo-ci -port 5554 -no-window -no-audio -no-snapshot -no-boot-anim -cores 2 -memory 4096 -gpu swiftshader -feature -Vulkan -qemu -cpu host > build/android-runtime/emulator.log 2>&1 &
+          if ! timeout 120 adb wait-for-device; then
+            cat build/android-runtime/emulator.log
+            exit 1
+          fi
           for attempt in $(seq 1 90); do
             if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" == "1" ]]; then break; fi
             sleep 2
           done
-          test "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1"
+          if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]]; then
+            cat build/android-runtime/emulator.log
+            exit 1
+          fi
           adb shell input keyevent KEYCODE_WAKEUP
           adb shell input keyevent KEYCODE_MENU
       - name: Exercise the actual signed APK
