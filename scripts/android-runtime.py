@@ -198,6 +198,18 @@ def exercise(device, apk):
     d.back()
     d.back()
     assert d.foreground(), "Back from settings closed the application"
+    # The APK restart above clears the in-process refusal cache. Check the
+    # other native result while accessibility automation remains active.
+    d.run("emu", "geo", "fix", "20.6286", "50.8661")
+    d.tap("More options", "Więcej opcji")
+    d.tap("My places", "Moje miejsca")
+    d.tap(resource="currentLocationPlace")
+    d.tap(resource="permission_allow_foreground_only_button")
+    d.shown("More options", "Więcej opcji")
+    permissions = d.run("shell", "dumpsys", "package", PACKAGE)
+    assert re.search(r"ACCESS_COARSE_LOCATION: granted=true", permissions), "Location permission was not granted"
+    assert d.foreground(), "Permission grant did not return to the forecast"
+    print("Native permission grant and return to forecast passed", flush=True)
 
 
 def main():

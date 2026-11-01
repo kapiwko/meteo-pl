@@ -3,6 +3,9 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QLocationPermission>
+#ifdef Q_OS_ANDROID
+#include "AndroidLocationPermission.hpp"
+#endif
 #include <utility>
 
 LocationTracker::LocationTracker(QObject *parent, QGeoPositionInfoSource *source, int lookupTimeoutMs, PermissionRequest permissionRequest)
@@ -79,10 +82,13 @@ void LocationTracker::start()
         if (status == Qt::PermissionStatus::Granted) startSource();
         else fail(Meteo::i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again."));
     };
-    // Permission APIs call Android's UI thread. Accessibility callbacks can
-    // synchronously inspect QML on our thread; let that callback unwind before
-    // requesting a system dialog to avoid Qt's deadlock-protection fallback.
-    QTimer::singleShot(0,this,[this,completed] {
+#ifdef Q_OS_ANDROID
+    if (!m_permissionRequest) {
+        requestAndroidLocationPermission(this, completed);
+        return;
+    }
+#endif
+    const auto request = [this,completed] {
         if (!m_enabled || !m_foreground) { m_permissionPending=false; return; }
         if (m_permissionRequest) { m_permissionRequest(this,completed); return; }
         QLocationPermission permission;
@@ -92,7 +98,8 @@ void LocationTracker::start()
         if (status==Qt::PermissionStatus::Undetermined)
             qApp->requestPermission(permission,this,[completed](const QPermission &result) { completed(result.status()); });
         else completed(status);
-    });
+    };
+    QTimer::singleShot(0, this, request);
 }
 void LocationTracker::startSource()
 {

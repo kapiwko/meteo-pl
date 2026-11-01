@@ -137,6 +137,7 @@ qt_add_qml_module(meteo_ui
         presentation/PlaceSearchModel.cpp presentation/PlaceSearchModel.hpp
         presentation/ReverseGeocoder.cpp presentation/ReverseGeocoder.hpp
         presentation/LocationTracker.cpp presentation/LocationTracker.hpp
+        presentation/AndroidLocationPermission.cpp presentation/AndroidLocationPermission.hpp
         presentation/ApplicationTheme.cpp presentation/ApplicationTheme.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
         presentation/SavedPlaceController.cpp presentation/SavedPlaceController.hpp

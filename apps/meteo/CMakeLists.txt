@@ -47,5 +47,7 @@ if(ANDROID)
     configure_file("${PROJECT_SOURCE_DIR}/packaging/android/AndroidManifest.xml.in"
         "${METEO_ANDROID_PACKAGE_DIR}/AndroidManifest.xml" @ONLY)
     file(COPY "${PROJECT_SOURCE_DIR}/packaging/android/res" DESTINATION "${METEO_ANDROID_PACKAGE_DIR}")
+    configure_file("${PROJECT_SOURCE_DIR}/packaging/android/src/pl/meteo/desktop/MeteoActivity.java"
+        "${METEO_ANDROID_PACKAGE_DIR}/src/pl/meteo/desktop/MeteoActivity.java" COPYONLY)
     ecm_add_android_apk(meteo-pl ANDROID_DIR "${METEO_ANDROID_PACKAGE_DIR}")
 endif()
