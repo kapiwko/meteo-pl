@@ -3,9 +3,10 @@
 #include <QCoreApplication>
 #include <QGuiApplication>
 #include <QLocationPermission>
+#include <utility>
 
-LocationTracker::LocationTracker(QObject *parent, QGeoPositionInfoSource *source, int lookupTimeoutMs)
-    : QObject(parent), m_source(source), m_injectedSource(source != nullptr)
+LocationTracker::LocationTracker(QObject *parent, QGeoPositionInfoSource *source, int lookupTimeoutMs, PermissionRequest permissionRequest)
+    : QObject(parent), m_source(source), m_permissionRequest(std::move(permissionRequest)), m_injectedSource(source != nullptr)
 {
     m_lookupDeadline.setSingleShot(true);
     m_lookupDeadline.setInterval(qMax(1, lookupTimeoutMs));
@@ -62,29 +63,29 @@ void LocationTracker::fail(const QString &error)
 }
 void LocationTracker::start()
 {
-    if (!m_enabled || !m_foreground || m_permissionPending) return;
+    if (!m_enabled || !m_foreground) return;
     m_error.clear();
     m_busy = true;
     emit stateChanged();
-    if (m_injectedSource) { startSource(); return; }
+    // Returning from the background resumes the activity indicator even when
+    // the existing system permission prompt has not delivered its result yet.
+    if (m_permissionPending) return;
+    if (m_injectedSource && !m_permissionRequest) { startSource(); return; }
+    m_permissionPending = true;
+    const auto completed = [this](Qt::PermissionStatus status) {
+        m_permissionPending = false;
+        if (!m_enabled || !m_foreground) return;
+        if (status == Qt::PermissionStatus::Granted) startSource();
+        else fail(Meteo::i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again."));
+    };
+    if (m_permissionRequest) { m_permissionRequest(this, completed); return; }
     QLocationPermission permission;
     permission.setAccuracy(QLocationPermission::Approximate);
     permission.setAvailability(QLocationPermission::WhenInUse);
-    switch (qApp->checkPermission(permission)) {
-    case Qt::PermissionStatus::Granted: startSource(); break;
-    case Qt::PermissionStatus::Denied:
-        fail(Meteo::i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again."));
-        break;
-    case Qt::PermissionStatus::Undetermined:
-        m_permissionPending = true;
-        qApp->requestPermission(permission, this, [this](const QPermission &result) {
-            m_permissionPending = false;
-            if (!m_enabled || !m_foreground) return;
-            if (result.status() == Qt::PermissionStatus::Granted) startSource();
-            else fail(Meteo::i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again."));
-        });
-        break;
-    }
+    const auto status = qApp->checkPermission(permission);
+    if (status == Qt::PermissionStatus::Undetermined)
+        qApp->requestPermission(permission, this, [completed](const QPermission &result) { completed(result.status()); });
+    else completed(status);
 }
 void LocationTracker::startSource()
 {
