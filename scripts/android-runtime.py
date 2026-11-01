@@ -65,6 +65,7 @@ class Device:
         resources, texts = [], []
         for node in self.hierarchy():
             a = node.attrib
+            if a.get("visible-to-user") == "false": continue
             text = a.get("text") or a.get("content-desc") or ""
             bounds=list(map(int,re.findall(r"\d+",a.get("bounds",""))))
             if len(bounds)!=4 or bounds[2]<=bounds[0] or bounds[3]<=bounds[1]: continue
@@ -78,35 +79,86 @@ class Device:
         # Qt exposes the obscured page too. Modal controls occur after it.
         return candidates[-1][1] if candidates else None
 
-    def tap(self, *labels, resource="", prefix=False):
+    def scroll_page(self, backwards=False):
+        rectangles=[]
+        for node in self.hierarchy():
+            if node.get("package")!=PACKAGE or node.get("visible-to-user")=="false": continue
+            bounds=list(map(int,re.findall(r"-?\d+",node.get("bounds",""))))
+            if len(bounds)==4 and bounds[2]>bounds[0] and bounds[3]>bounds[1]: rectangles.append(bounds)
+        if rectangles:
+            left,top,right,bottom=rectangles[0]
+        else:
+            width,height=list(map(int,re.findall(r"\d+",self.run("shell","wm","size"))))[-2:]
+            left,top,right,bottom=0,0,width,height
+        x=(left+right)//2
+        start=top+int((bottom-top)*.75)
+        end=top+int((bottom-top)*.3)
+        self.run("shell","input","swipe",x,end if backwards else start,x,start if backwards else end,350)
+
+    def tap(self, *labels, resource="", prefix=False, scroll=False):
         bounds=None
+        stable_since=time.monotonic()
+        scrolls=0
         def locate():
-            nonlocal bounds
-            bounds=self.matches(labels,resource,prefix,action=True)
-            return bounds
+            nonlocal bounds,stable_since,scrolls
+            current=self.matches(labels,resource,prefix,action=True)
+            if not current and scroll and scrolls<6:
+                self.hide_keyboard()
+                self.scroll_page(backwards=scrolls>=3)
+                scrolls+=1
+            if current!=bounds:
+                bounds=current
+                stable_since=time.monotonic()
+            return bounds and time.monotonic()-stable_since>=.75
         self.wait(locate,"Missing action: " + repr(labels or resource))
         x,y,right,bottom=bounds
         self.run("shell", "input", "tap", (x+right)//2, (y+bottom)//2)
         time.sleep(1)
 
-    def shown(self, *labels, prefix=False):
-        self.wait(lambda: self.matches(labels, prefix=prefix), "Missing content: " + repr(labels),seconds=120)
+    def shown(self, *labels, prefix=False, scroll=False):
+        scrolls=0
+        def locate():
+            nonlocal scrolls
+            if self.matches(labels,prefix=prefix): return True
+            if scroll and scrolls<6:
+                self.hide_keyboard()
+                self.scroll_page(backwards=scrolls>=3)
+                scrolls+=1
+            return False
+        self.wait(locate, "Missing content: " + repr(labels),seconds=120)
+
+    def hide_keyboard(self):
+        if re.search(r"mInputShown=true",self.run("shell","dumpsys","input_method")):
+            self.back()
+            self.wait(lambda: not re.search(r"mInputShown=true",self.run("shell","dumpsys","input_method")),
+                      "Keyboard did not close")
 
     def edit(self, resource, text):
         print("Editing " + resource,flush=True)
-        dimensions=list(map(int,re.findall(r"\d+",self.run("shell","wm","size"))))[-2:]
-        width,height=dimensions
+        self.hide_keyboard()
         for _ in range(6):
             if self.matches(resource=resource): break
-            self.run("shell","input","swipe",width//2,int(height*.8),width//2,int(height*.3),350)
-        self.tap(resource=resource)
+            self.scroll_page()
+        def focused():
+            return any(node.get("resource-id", "").endswith(resource) and node.get("focused") == "true"
+                       for node in self.hierarchy())
+        for _ in range(6):
+            self.tap(resource=resource,scroll=True)
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline:
+                if focused(): break
+                time.sleep(.25)
+            if focused(): break
+        else:
+            raise AssertionError("Field did not receive focus: " + resource)
+        self.run("shell", "input", "keycombination", "KEYCODE_CTRL_LEFT", "KEYCODE_A")
+        self.run("shell", "input", "keyevent", "KEYCODE_DEL")
         self.run("shell","input","text",text)
+        self.wait(lambda: any(node.get("resource-id", "").endswith(resource) and node.get("text") == text
+                             for node in self.hierarchy()), "Field did not accept text: " + resource)
         # Hardware-keyboard emulators do not always show an IME; Back must
         # hide the keyboard only, otherwise it would leave the editor.
-        ime=self.run("shell","dumpsys","input_method")
-        if re.search(r"mInputShown=true",ime):
-            time.sleep(.5)
-            self.back()
+        self.hide_keyboard()
 
     def foreground(self):
         return bool(re.search(r"(?:mResumedActivity|topResumedActivity|mFocusedApp)[:=][^\n]*" + re.escape(PACKAGE),
@@ -146,7 +198,8 @@ def exercise(device, apk):
     d.tap(resource="permission_deny_button")
     d.shown("Find a place", "Znajdź miejsce")
     print("Native permission refusal and fallback passed",flush=True)
-    d.tap("Coordinates", "Współrzędne")
+    d.hide_keyboard()
+    d.tap("Coordinates", "Współrzędne",scroll=True)
     d.edit("customLocationName","RuntimeKielce")
     d.edit("manualLatitude","50.8661")
     d.edit("manualLongitude","20.6286")
@@ -193,7 +246,7 @@ def exercise(device, apk):
     print("SAF profile export passed",flush=True)
     d.tap("Import…", "Importuj…")
     d.tap(filename,prefix=True)
-    d.shown("Profiles imported: ", "Zaimportowane profile: ", "Zaimportowano profili: ",prefix=True)
+    d.shown("Profiles imported: ", "Zaimportowane profile: ", "Zaimportowano profili: ",prefix=True,scroll=True)
     print("SAF profile import passed",flush=True)
     d.back()
     d.back()
