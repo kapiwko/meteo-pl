@@ -14,6 +14,7 @@
 #include <QQmlEngine>
 #include <QQuickWindow>
 #include <QQuickStyle>
+#include <QRegularExpression>
 #include <QSGRendererInterface>
 #include <QSignalSpy>
 #include <QTemporaryDir>
@@ -247,7 +248,9 @@ void RendererTest::appearanceMatches()
         const auto directory=configured.isEmpty() ? QDir::tempPath()+"/meteo-renderer-diffs" : configured;
         if (!match || !configured.isEmpty()) {
             QVERIFY(QDir().mkpath(directory));
-            const auto base=directory+"/"+QString::fromLatin1(QTest::currentDataTag());
+            auto name=QString::fromLatin1(QTest::currentDataTag());
+            name.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_.-]")), QStringLiteral("_"));
+            const auto base=directory+"/"+name;
             QVERIFY(cpu.save(base+"-cpu.png")); QVERIFY(gpu.save(base+"-gpu.png")); QVERIFY(difference.image.save(base+"-diff.png"));
         }
         QVERIFY2(match,qPrintable(QString("CPU/GPU difference: mean=%1, unmatched=%2, colored unmatched=%3; images: %4")
