@@ -239,13 +239,22 @@ def exercise(device, apk):
     filename="meteo-runtime-"+str(time.time_ns())+".json"
     d.edit("android:id/title",filename)
     d.tap("Save", "SAVE", "Zapisz", "ZAPISZ", resource="button1")
+    d.wait(d.foreground, "Export picker did not return to the application")
     path="/sdcard/Download/"+filename
     d.wait(lambda: path in d.run("shell", "find", "/sdcard/Download", "-name", "*.json").splitlines(), "SAF did not create the requested document")
-    document = json.loads(d.run("shell", "cat", path))
-    assert document.get("profiles"), "SAF export has no profiles"
+    def exported():
+        # DocumentsUI creates the file before delivering its content URI to
+        # Qt. The callback must finish writing before we inspect the payload.
+        try:
+            value = json.loads(d.run("shell", "cat", path))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return False
+        return isinstance(value, dict) and bool(value.get("profiles"))
+    d.wait(exported, "SAF did not finish writing a valid profile document")
     print("SAF profile export passed",flush=True)
     d.tap("Import…", "Importuj…")
     d.tap(filename,prefix=True)
+    d.wait(d.foreground, "Import picker did not return to the application")
     d.shown("Profiles imported: ", "Zaimportowane profile: ", "Zaimportowano profili: ",prefix=True,scroll=True)
     print("SAF profile import passed",flush=True)
     d.back()
