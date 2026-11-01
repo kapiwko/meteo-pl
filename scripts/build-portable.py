@@ -166,7 +166,7 @@ def check_android_style(apk):
 def check_windows_installer(installer, environment, directory):
     """Exercise the published NSIS package in an isolated installation directory."""
     destination = directory / "installed"
-    run([installer, "/S", f"/D={destination}"], env=environment, timeout=120)
+    run([installer, "/S", "/CurrentUser", f"/D={destination}"], env=environment, timeout=120)
     try:
         executables = list(destination.rglob("meteo-pl.exe"))
         if len(executables) != 1:
@@ -183,7 +183,7 @@ def check_windows_installer(installer, environment, directory):
             raise RuntimeError(f"Installer did not provide an uninstaller: {uninstallers}")
         # _?= prevents NSIS copying itself to a detached process, so wait really
         # covers uninstallation. It must remain the last, unquoted argument.
-        run([uninstallers[0], "/S", f"_?={destination}"], env=environment, timeout=120)
+        run([uninstallers[0], "/S", "/CurrentUser", f"_?={destination}"], env=environment, timeout=120)
     if list(destination.rglob("meteo-pl.exe")):
         raise RuntimeError("Uninstaller left the application behind")
 

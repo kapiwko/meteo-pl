@@ -98,7 +98,7 @@ class PortablePackagingTest(unittest.TestCase):
                 return SimpleNamespace(stdout="meteo-pl " + (portable.ROOT / "VERSION").read_text().strip(), stderr="")
             with patch.object(portable,"run",side_effect=run):
                 portable.check_windows_installer(installer,{},directory)
-            self.assertEqual(observed[0], [str(installer), "/S", f"/D={directory / 'installed'}"])
+            self.assertEqual(observed[0], [str(installer), "/S", "/CurrentUser", f"/D={directory / 'installed'}"])
             self.assertEqual([c[-1] for c in observed[1:3]], ["--version", "--smoke-test"])
             self.assertTrue(observed[-1][-1].startswith("_?="))
 

@@ -67,4 +67,12 @@ class Package(CMakePackageBase):
         self.addExecutableFilter(r"(bin|libexec)/(?!(meteo-pl|snoretoast|update-mime-database)([.-]|$)).*")
         if CraftCore.compiler.platform.isWindows:
             self.defines["icon"] = str(self.buildDir() / "apps/meteo/meteo-pl.ico")
+            source = Path(os.environ["METEO_SOURCE_DIR"])
+            spec = importlib.util.spec_from_file_location("meteo_nsis_template", source / "scripts/nsis_template.py")
+            installer = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(installer)
+            template = installer.preserve_install_directory(Path(self.scriptname).read_text())
+            configured = self.buildDir() / "MeteoInstaller.nsi.in"
+            configured.write_text(template)
+            self.scriptname = configured
         return super().createPackage()
