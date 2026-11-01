@@ -43,7 +43,11 @@ public:
     QVariantList textLabels() const { return m_labels; }
     QAbstractItemModel *textModel() { return &m_textModel; }
     QFont labelFont() const {
-        QFont result("sans-serif");
+        // Canvas resolves the CSS generic family through SansSerif's default,
+        // rather than treating "sans-serif" as a literal installed family.
+        QFont generic;
+        generic.setStyleHint(QFont::SansSerif);
+        QFont result(generic.defaultFamily());
         result.setPixelSize(10);
         // Labels share Canvas's grayscale antialiasing. LCD subpixels leave
         // colored fringes when composited through a transparent MSAA layer.
