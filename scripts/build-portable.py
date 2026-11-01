@@ -193,7 +193,7 @@ def check_native_rendering(command, craft_root, work, environment):
     directory = work / "rendering-tests"
     prefix = [*command, "--run"]
     run([*prefix, "cmake", "-S", ROOT, "-B", directory, "-G", "Ninja",
-         "-DBUILD_TESTING=ON", "-DMETEO_BUILD_APP=OFF", "-DMETEO_BUILD_PLASMOID=OFF",
+         "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_TESTING=ON", "-DMETEO_BUILD_APP=OFF", "-DMETEO_BUILD_PLASMOID=OFF",
          "-DMETEO_BUILD_KRUNNER=OFF", f"-DCMAKE_PREFIX_PATH={craft_root}"], env=environment)
     run([*prefix, "cmake", "--build", directory, "--parallel", "2", "--target",
          "test_renderers", "test_presentation", "test_maps"], env=environment)
@@ -205,7 +205,7 @@ def check_filesystem_contracts(command, craft_root, work, environment):
     directory = work / "filesystem-tests"
     prefix = [*command, "--run"]
     run([*prefix, "cmake", "-S", ROOT, "-B", directory, "-G", "Ninja",
-         "-DMETEO_FILESYSTEM_TESTS_ONLY=ON", f"-DCMAKE_PREFIX_PATH={craft_root}"], env=environment)
+         "-DCMAKE_BUILD_TYPE=Release", "-DMETEO_FILESYSTEM_TESTS_ONLY=ON", f"-DCMAKE_PREFIX_PATH={craft_root}"], env=environment)
     run([*prefix, "cmake", "--build", directory], env=environment)
     run([*prefix, "ctest", "--test-dir", directory, "--output-on-failure", "--timeout", "30"], env=environment)
 
