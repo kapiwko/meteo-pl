@@ -57,8 +57,15 @@ bundle startup. A successful APK build alone does not establish phone compatibil
 For a disposable Android emulator, run:
 
 ```sh
+python3 -m venv build/android-runtime-venv
+. build/android-runtime-venv/bin/activate
+python3 -m pip install --requirement scripts/requirements-android-runtime.txt
 python3 scripts/android-runtime.py --serial emulator-5556 --apk path/to/meteo.apk
 ```
+
+The test keeps one UI Automator session active for the entire run. It starts that
+session before launching the app so repeated hierarchy queries do not toggle
+Android accessibility while Qt constructs controls.
 
 This reinstalls the selected APK, resets application data and exercises setup,
 permission refusal, adding a place without network access, background/foreground,

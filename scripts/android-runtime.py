@@ -29,6 +29,12 @@ class Device:
         self.pids = set()
         artifacts.mkdir(parents=True, exist_ok=True)
         (artifacts / "result.json").unlink(missing_ok=True)
+        # Start one accessibility session before constructing Qt's UI. Repeated
+        # shell dumps toggle accessibility while Qt is creating attached objects.
+        import uiautomator2
+        self.run("start-server")
+        self.ui = uiautomator2.connect(serial)
+        self.ui.dump_hierarchy()
 
     def run(self, *arguments):
         arguments=tuple(map(str,arguments))
@@ -43,8 +49,7 @@ class Device:
             raise subprocess.CalledProcessError(result.returncode,command,result.stdout,result.stderr)
 
     def hierarchy(self):
-        self.run("shell", "uiautomator", "dump", "/sdcard/meteo-runtime.xml")
-        xml = self.run("shell", "cat", "/sdcard/meteo-runtime.xml")
+        xml = self.ui.dump_hierarchy()
         (self.artifacts / "last-ui.xml").write_text(xml)
         return list(ET.fromstring(xml).iter("node"))
 
