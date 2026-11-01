@@ -20,6 +20,39 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void undoStartsUnderTheSameLockAsItsCommand()
+    {
+        QTemporaryDir config; QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,config.path());
+        UserPreferences first,second;
+        const auto old=first.profileState("classic");
+        second.renameProfile("Other process", "classic");
+        QCOMPARE(first.profileState("classic"),old);
+        const auto command=first.profileCommand({{"type","removeSeries"},{"chart","temperature"},{"field","dwptmp_point"}},"classic");
+        QVERIFY(command["ok"].toBool());
+        QVERIFY(first.undoProfileCommand(command["undo"].toMap())["ok"].toBool());
+        QCOMPARE(first.profiles().first().toMap()["name"].toString(),"Other process");
+        QVERIFY(chartFieldKeys(first.chartLayout().first().toMap()["series"].toList()).contains("dwptmp_point"));
+    }
+    void undoResetIncludesTheOldCopyAndRejectsEditsToIt()
+    {
+        QTemporaryDir config; QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,config.path());
+        auto presets=builtinChartProfiles();
+        { UserPreferences old; old.renameProfile("Edited preset","classic"); }
+        auto updated=presets.first().toMap(); updated["revision"]=updated["revision"].toInt()+1; presets[0]=updated;
+        UserPreferences current(nullptr,presets);
+        const auto count=current.profiles().size();
+        for (int i=0;i<2;++i) {
+            const auto command=current.profileCommand({{"type","resetProfile"}},"classic");
+            QCOMPARE(current.profiles().size(),count+1);
+            QVERIFY(current.undoProfileCommand(command["undo"].toMap())["ok"].toBool());
+            QCOMPARE(current.profiles().size(),count);
+        }
+        const auto command=current.profileCommand({{"type","resetProfile"}},"classic");
+        const auto copy=current.profiles().last().toMap()["id"].toString();
+        current.renameProfile("Keep my new edits",copy);
+        QVERIFY(!current.undoProfileCommand(command["undo"].toMap())["ok"].toBool());
+        QCOMPARE(current.profiles().last().toMap()["name"].toString(),"Keep my new edits");
+    }
     void movesTheNamedChartAfterAConcurrentDeletion()
     {
         QTemporaryDir config; QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());

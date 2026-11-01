@@ -99,10 +99,13 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE QVariantMap importProfiles(const QUrl &file, bool activate = true);
     Q_INVOKABLE QVariantMap exportProfilesByIds(const QUrl &file, const QStringList &ids) const;
     Q_INVOKABLE QVariantMap profileState(const QString &id) const;
-    Q_INVOKABLE QVariantMap restoreProfileState(const QVariantMap &before, const QVariantMap &after);
+    Q_INVOKABLE QVariantMap profileCommand(const QVariantMap &command, const QString &profileId = {});
+    Q_INVOKABLE QVariantMap undoProfileCommand(const QVariantMap &token);
+    QVariantMap restoreProfileState(const QVariantMap &before, const QVariantMap &after);
     Q_INVOKABLE void setProfileChartHeightForProfile(const QString &id, int height);
 
   private:
+    QVariantMap profileSnapshot() const;
     bool change(const std::function<void()> &operation);
     void saveLayout(const QString &profile, const QVariantList &layout);
     void saveProfileOptions(const QString &profile, const QVariantMap &options);

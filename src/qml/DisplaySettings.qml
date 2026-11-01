@@ -30,16 +30,14 @@ ColumnLayout {
         }
     }
     function withUndo(operation, message) {
-        const id = profileId;
-        const before = UserPreferences.profileState(id);
-        operation();
-        const after = UserPreferences.profileState(id);
-        if (JSON.stringify(before) === JSON.stringify(after)) return;
-        pendingUndo = {before: before, after: after}; undoMessage = message; undoError = ""; undoNotice.visible = true;
+        const result = UserPreferences.profileCommand(operation, profileId);
+        if (!result.ok) { undoError = result.error; return; }
+        if (!result.undo.records.length) return;
+        pendingUndo = result.undo; undoMessage = message; undoError = ""; undoNotice.visible = true;
     }
     function undo() {
         if (!pendingUndo) return;
-        const result = UserPreferences.restoreProfileState(pendingUndo.before, pendingUndo.after);
+        const result = UserPreferences.undoProfileCommand(pendingUndo);
         if (result.ok) { profileId = result.id; pendingUndo = null; undoNotice.visible = false; }
         else undoError = result.error;
     }
@@ -213,7 +211,7 @@ ColumnLayout {
                                 enabled: root.currentProfile.modified === true
                                 text: I18n.i18n("Restore defaults")
                                 icon.name: "edit-undo"
-                                onTriggered: root.withUndo(() => UserPreferences.resetProfile(root.profileId), I18n.i18n("Profile defaults restored."))
+                                onTriggered: root.withUndo(({type:"resetProfile"}), I18n.i18n("Profile defaults restored."))
                             }
                             MenuItem {
                                 objectName: "restoreDeletedProfilesButton"
@@ -228,7 +226,7 @@ ColumnLayout {
                                 text: I18n.i18n("Delete profile")
                                 icon.name: "edit-delete"
                                 enabled: UserPreferences.profiles.length > 1
-                                onTriggered: root.withUndo(() => UserPreferences.deleteProfile(root.profileId), I18n.i18n("Profile removed."))
+                                onTriggered: root.withUndo(({type:"deleteProfile"}), I18n.i18n("Profile removed."))
                             }
                         }
                     }
@@ -407,7 +405,7 @@ ColumnLayout {
                                         },
                                         Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chartEntry.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.modelData.key, -1, root.profileId) },
                                         Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chartEntry.index < root.layout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.modelData.key, 1, root.profileId) },
-                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: root.withUndo(() => UserPreferences.deleteChart(chartEntry.modelData.key, root.profileId), I18n.i18n("Chart removed.")) }
+                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: root.withUndo(({type:"deleteChart",chart:chartEntry.modelData.key}), I18n.i18n("Chart removed.")) }
                                     ]
                                 }
                             }
@@ -458,7 +456,7 @@ ColumnLayout {
                                             seriesStyle: modelData
                                             available: !root.weather || root.weather.series[modelData.key] !== undefined
                                             expanded: root.expandedSeries === chartKey + "/" + modelData.key
-                                            onRemoveRequested: root.withUndo(() => UserPreferences.removeSeries(chartEntry.modelData.key, modelData.key, root.profileId), I18n.i18n("Series removed."))
+                                            onRemoveRequested: root.withUndo(({type:"removeSeries",chart:chartEntry.modelData.key,field:modelData.key}), I18n.i18n("Series removed."))
                                             onToggleAppearance: root.expandedSeries = expanded ? "" : chartKey + "/" + modelData.key
                                         }
                                     }

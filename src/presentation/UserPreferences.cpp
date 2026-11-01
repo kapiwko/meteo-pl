@@ -878,3 +878,58 @@ bool UserPreferences::change(const std::function<void()> &operation)
 QString UserPreferences::createProfile(const QString &name) { return createProfileFrom(name, profile()); }
 
 QStringList UserPreferences::seriesRenderers(const QString &key) const { return ::seriesRenderers(key); }
+
+QVariantMap UserPreferences::profileSnapshot() const
+{
+    QSet<QString> ids{"custom"};
+    for (const auto &entry : m_factoryProfiles) ids.insert(entry.toMap()["id"].toString());
+    for (const auto &entry : savedProfiles()) ids.insert(entry.toMap()["id"].toString());
+    QVariantMap result;
+    for (const auto &id : ids) result[id] = profileState(id);
+    return result;
+}
+QVariantMap UserPreferences::profileCommand(const QVariantMap &command, const QString &profileId)
+{
+    const auto id = profileId.isEmpty() ? profile() : profileId;
+    QVariantMap result{{"ok",false}};
+    const bool committed = change([&] {
+        const auto before = profileSnapshot();
+        const auto type = command.value("type").toString();
+        if (type == "deleteChart") deleteChart(command.value("chart").toString(),id);
+        else if (type == "removeSeries") removeSeries(command.value("chart").toString(),command.value("field").toString(),id);
+        else if (type == "deleteProfile") deleteProfile(id);
+        else if (type == "resetProfile") resetProfile(id);
+        else { result["error"] = Meteo::i18n("Unknown profile command."); return; }
+        const auto after = profileSnapshot();
+        QSet<QString> ids;
+        for (auto it=before.cbegin();it!=before.cend();++it) ids.insert(it.key());
+        for (auto it=after.cbegin();it!=after.cend();++it) ids.insert(it.key());
+        QVariantList records;
+        for (const auto &key : ids) {
+            const QVariantMap empty{{"id",key},{"deleted",false},{"override",QVariantMap{}}};
+            const auto previous=before.value(key,empty), next=after.value(key,empty);
+            if (previous!=next) records.append(QVariantMap{{"before",previous},{"after",next}});
+        }
+        result={{"ok",true},{"id",id},{"undo",QVariantMap{{"id",id},{"records",records}}}};
+    });
+    return committed ? result : QVariantMap{{"ok",false},{"error",m_error}};
+}
+QVariantMap UserPreferences::undoProfileCommand(const QVariantMap &token)
+{
+    QVariantMap result{{"ok",false},{"error",Meteo::i18n("This profile has changed since that action. It cannot be undone.")}};
+    const bool committed = change([&] {
+        const auto records=token.value("records").toList();
+        if (records.isEmpty()) return;
+        for (const auto &entry : records) {
+            const auto record=entry.toMap(), after=record.value("after").toMap(), before=record.value("before").toMap();
+            const auto id=after.value("id").toString();
+            if (id.isEmpty() || before.value("id")!=id || profileState(id)!=after) return;
+        }
+        for (const auto &entry : records) {
+            const auto record=entry.toMap();
+            restoreProfileState(record["before"].toMap(),record["after"].toMap());
+        }
+        result={{"ok",true},{"id",token["id"]}};
+    });
+    return committed ? result : QVariantMap{{"ok",false},{"error",m_error}};
+}
