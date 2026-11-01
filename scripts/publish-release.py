@@ -138,6 +138,17 @@ def verify_android(apk, apksigner, expected):
         raise ValueError("APK signing certificate does not match the expected release identity")
 
 
+def sign_arch_package(destination, signing_key):
+    packages = list(destination.glob("*.pkg.tar.zst"))
+    if len(packages) != 1:
+        raise ValueError("Expected exactly one Arch package to sign")
+    package = packages[0]
+    signature = package.with_name(package.name + ".sig")
+    run("gpg", "--detach-sign", "--local-user", signing_key,
+        "--output", signature, package)
+    run("gpg", "--verify", signature, package)
+
+
 def prepare(args, sha, version):
     ci_runs(args.linux_run, args.portable_run, sha)
     destination = args.dist_dir.resolve()
@@ -153,6 +164,7 @@ def prepare(args, sha, version):
         collect(inputs, destination, version)
     apk, = destination.glob("*.apk")
     verify_android(apk, args.apksigner, args.android_certificate_sha256)
+    sign_arch_package(destination, args.signing_key)
     provenance = {"repository": REPO, "commit": sha, "version": version,
                   "linuxRun": args.linux_run, "portableRun": args.portable_run,
                   "androidCertificateSha256": args.android_certificate_sha256.lower(),

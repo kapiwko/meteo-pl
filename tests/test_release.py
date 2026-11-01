@@ -10,6 +10,8 @@ import zipfile
 import sys
 import json
 import io
+import shutil
+import subprocess
 
 SPEC=importlib.util.spec_from_file_location("release",Path(__file__).resolve().parents[1]/"scripts/release.py")
 release=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(release)
@@ -22,6 +24,28 @@ VERSION_SPEC=importlib.util.spec_from_file_location("set_version",release.ROOT/"
 versions=importlib.util.module_from_spec(VERSION_SPEC);VERSION_SPEC.loader.exec_module(versions)
 
 class ReleaseTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("gpg"), "GnuPG is required for signature verification")
+    def test_arch_package_signature_verifies_and_rejects_modified_bytes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);keyring=root/"gnupg";keyring.mkdir(mode=0o700)
+            environment=os.environ|{"GNUPGHOME":str(keyring)}
+            with patch.dict(os.environ,environment,clear=True):
+                try:
+                    subprocess.run(["gpg","--batch","--pinentry-mode","loopback","--passphrase","",
+                        "--quick-generate-key","Meteo release test <release@example.invalid>",
+                        "ed25519","sign","1d"],check=True,capture_output=True)
+                    package=root/"meteo.pkg.tar.zst";package.write_bytes(b"verified package bytes")
+                    publisher.sign_arch_package(root,"release@example.invalid")
+                    signature=root/(package.name+".sig")
+                    self.assertTrue(signature.is_file())
+                    subprocess.run(["gpg","--verify",str(signature),str(package)],check=True,capture_output=True)
+                    package.write_bytes(b"modified package bytes")
+                    self.assertNotEqual(subprocess.run(["gpg","--verify",str(signature),str(package)],
+                        capture_output=True).returncode,0)
+                finally:
+                    if shutil.which("gpgconf"):
+                        subprocess.run(["gpgconf","--kill","gpg-agent"],check=False,capture_output=True)
+
     def test_release_rejects_failed_pr_stale_and_unfinished_ci(self):
         good={"headSha":"abc", "headBranch":"main", "event":"push", "name":"Linux CI",
               "status":"completed", "conclusion":"success"}

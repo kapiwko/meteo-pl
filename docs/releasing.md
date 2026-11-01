@@ -55,7 +55,9 @@ checks every checksum and report, and compares source-file contents and metadata
 across Linux jobs, allowing compression differences between zlib versions.
 Debian and Ubuntu binaries retain separate names. It verifies the APK
 signature and expected certificate, signs the checksum manifest and creates
-the signed local tag. Existing tags must point to the same commit and carry
+the signed local tag. The Arch package also receives a detached `.sig` signature
+for pacman; that signature is included in the checksum manifest. Existing tags
+must point to the same commit and carry
 the same GPG identity.
 
 Add `--publish` and use a fresh output directory to publish. The script checks CI
@@ -76,6 +78,18 @@ gpg --import SIGNING-KEY.asc
 gpg --verify SHA256SUMS.asc SHA256SUMS
 sha256sum --check SHA256SUMS
 ```
+
+Pacman has its own keyring. After checking the public key's full fingerprint,
+import it and locally trust it once before installing a signed Arch package:
+
+```sh
+sudo pacman-key --add SIGNING-KEY.asc
+sudo pacman-key --lsign-key FULL_GPG_FINGERPRINT
+sudo pacman -U meteo-pl-VERSION-linux-arch-x86_64.pkg.tar.zst
+```
+
+Keep the matching `.sig` file beside the package. Importing the key into your
+personal GnuPG keyring does not add it to pacman's keyring.
 
 `BUILD-PROVENANCE.json` identifies the source commit, CI run IDs and Android
 certificate. It is covered by the signed checksum manifest, together with
