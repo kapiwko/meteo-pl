@@ -17,6 +17,7 @@
 #include <QRegularExpression>
 #include <QSGRendererInterface>
 #include <QSignalSpy>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTest>
 #include <algorithm>
@@ -25,6 +26,7 @@
 class RendererTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_data;
+    QString m_fixturePath;
     QStringList m_groups;
     static int distance(QRgb a, QRgb b)
     {
@@ -74,6 +76,7 @@ class RendererTest : public QObject {
     }
 private slots:
     void initTestCase();
+    void cleanupTestCase();
     void appearanceMatches_data();
     void appearanceMatches();
     void rejectsMissingGeometryAndChangedColors();
@@ -86,6 +89,10 @@ void RendererTest::initTestCase()
         QVERIFY(m_data.isValid());
         QCoreApplication::setOrganizationName("MeteoRendererTest");
         QCoreApplication::setApplicationName("MeteoRendererTest");
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
+        // These platforms do not redirect QStandardPaths through XDG variables.
+        QStandardPaths::setTestModeEnabled(true);
+#endif
         qputenv("XDG_CACHE_HOME",m_data.path().toUtf8());
         qputenv("XDG_CONFIG_HOME",(m_data.path()+"/config").toUtf8());
         auto document=QJsonDocument::fromJson(forecastFixture()).object();
@@ -127,14 +134,20 @@ void RendererTest::initTestCase()
         }
         document["data"]=fields;
         const auto hash=QCryptographicHash::hash("um4_60:52.229700:21.012200",QCryptographicHash::Sha256).toHex();
-        QVERIFY(QDir().mkpath(m_data.path()+"/meteo-pl"));
-        QFile cache(m_data.path()+"/meteo-pl/"+hash+".json");
+        const auto cacheDirectory=QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)+"/meteo-pl";
+        QVERIFY(QDir().mkpath(cacheDirectory));
+        m_fixturePath=cacheDirectory+'/'+hash+".json";
+        QFile cache(m_fixturePath);
         QVERIFY(cache.open(QIODevice::WriteOnly));
         cache.write(QJsonDocument(QJsonObject{{"model","um4_60"},{"latitude",52.2297},{"longitude",21.0122},
             {"savedAt",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},{"payload",QString::fromUtf8(QJsonDocument(document).toJson())}}).toJson());
         for (const auto &group:forecastCharts()) m_groups.append(group.key);
         m_groups.append("chart:precipitation-area");
         m_groups.append("chart:minimum-dashes");
+    }
+void RendererTest::cleanupTestCase()
+    {
+        if (!m_fixturePath.isEmpty()) QVERIFY(QFile::remove(m_fixturePath));
     }
 void RendererTest::appearanceMatches_data()
     {
