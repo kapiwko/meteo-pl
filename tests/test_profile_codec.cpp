@@ -2,6 +2,7 @@
 #include "presentation/ProfileFileCodec.hpp"
 #include "presentation/JsonSchemaValidator.hpp"
 #include <QFile>
+#include <QColor>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -13,6 +14,24 @@ class ProfileCodecTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void alphaSurvivesImportAndExport()
+    {
+        for (const auto &color : {QStringLiteral("#00112233"), QStringLiteral("#80112233"), QStringLiteral("#ff112233")}) {
+            auto chart = defaultChartLayout("classic").first().toMap();
+            auto styles = chart["series"].toList(); auto style = styles.first().toMap();
+            style["color"] = color; style["darkColor"] = color; style["opacity"] = 0.4;
+            styles[0] = style; chart["series"] = styles;
+            QString error;
+            const auto bytes = ProfileFileCodec::encode({QVariantMap{{"name", "Alpha"}, {"charts", QVariantList{chart}}}}, &error);
+            QVERIFY2(bytes, qPrintable(error));
+            const auto decoded = ProfileFileCodec::decode(*bytes, &error);
+            QVERIFY2(decoded, qPrintable(error));
+            const auto result = decoded->first().toMap()["charts"].toList().first().toMap()["series"].toList().first().toMap();
+            QCOMPARE(QColor(result["color"].toString()), QColor(color));
+            QCOMPARE(QColor(result["darkColor"].toString()), QColor(color));
+            QCOMPARE(result["opacity"].toDouble(), 0.4);
+        }
+    }
     void bundledPresetsUseTheImportFormatWithoutDisabledTemplates()
     {
         const auto presets = builtinChartProfiles();

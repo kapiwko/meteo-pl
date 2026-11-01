@@ -65,7 +65,7 @@ QVariantMap normalizeSeriesStyle(const QVariantMap &value)
     if (renderers.contains(value["render"].toString())) result["render"] = value["render"];
     if (result["lowerKey"].toString().isEmpty() && QStringList{"range", "rangeStems"}.contains(result["render"].toString())) result["render"] = "line";
     if (QStringList{"auto", "left", "right"}.contains(value["axis"].toString())) result["axis"] = value["axis"];
-    for (const auto &key : {"color", "darkColor"}) if (value.contains(key) && QColor(value[key].toString()).isValid()) result[key] = QColor(value[key].toString()).name();
+    for (const auto &key : {"color", "darkColor"}) if (value.contains(key) && QColor(value[key].toString()).isValid()) { const QColor color(value[key].toString()); result[key] = color.name(color.alpha() == 255 ? QColor::HexRgb : QColor::HexArgb); }
     for (const auto &key : {"lineWidth", "opacity"}) if (value.contains(key)) {
         bool valid = false;
         const double number = value[key].toDouble(&valid);
