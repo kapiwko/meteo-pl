@@ -92,8 +92,8 @@ jobs:
       - name: Prepare a disposable Android emulator
         run: |
           sudo chmod 666 /dev/kvm
-          sdkmanager "emulator" "platform-tools" "system-images;android-35;google_apis_playstore;x86_64"
-          echo no | avdmanager create avd --force --name meteo-ci --path "$RUNNER_TEMP/meteo-ci.avd" --package "system-images;android-35;google_apis_playstore;x86_64"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "emulator" "platform-tools" "system-images;android-35;google_apis_playstore;x86_64"
+          echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name meteo-ci --path "$RUNNER_TEMP/meteo-ci.avd" --package "system-images;android-35;google_apis_playstore;x86_64"
           echo "hw.keyboard=yes" >> "$RUNNER_TEMP/meteo-ci.avd/config.ini"
           mkdir -p build/android-runtime
           "$ANDROID_HOME/emulator/emulator" -avd meteo-ci -port 5554 -no-window -no-audio -no-snapshot -no-boot-anim -cores 2 -memory 4096 -gpu swiftshader_indirect -qemu -cpu host > build/android-runtime/emulator.log 2>&1 &
