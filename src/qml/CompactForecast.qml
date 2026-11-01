@@ -66,14 +66,14 @@ ColumnLayout {
             columns: root.width >= Kirigami.Units.gridUnit * 26 ? 2 : 1
             columnSpacing: Kirigami.Units.largeSpacing
             rowSpacing: Kirigami.Units.smallSpacing
-            SolarEvent {
+            SolarEvent { utc: root.weather.utc; dateLabel: root.solar.dateLabel || ""; compact: true;
                 objectName: "compactSunrise"
                 title: I18n.i18n("Sunrise")
                 time: root.solar.sunriseText || "—"
                 icon: "icons/sunrise.svg"
                 visible: !root.solar.status
             }
-            SolarEvent {
+            SolarEvent { utc: root.weather.utc; dateLabel: root.solar.dateLabel || ""; compact: true;
                 objectName: "compactSunset"
                 title: I18n.i18n("Sunset")
                 time: root.solar.sunsetText || "—"
@@ -120,26 +120,5 @@ ColumnLayout {
                 Label { Layout.fillWidth: true; text: day.modelData.rain === null ? "—" : (day.modelData.rainEstimated ? "≈ " : "") + Number(day.modelData.rain).toLocaleString(Qt.locale(), 'f', 1) + " mm"; elide: Text.ElideRight; horizontalAlignment: Text.AlignHCenter; font: Kirigami.Theme.smallFont; color: Kirigami.Theme.disabledTextColor }
             }
         }
-    }
-    component SolarEvent: RowLayout {
-        id: event
-        required property string title
-        required property string time
-        required property string icon
-        spacing: Kirigami.Units.smallSpacing
-        Accessible.role: Accessible.StaticText
-        Accessible.name: title + I18n.i18n(": ") + time + (root.weather.utc ? " UTC" : "")
-        ToolTip.visible: eventHover.hovered
-        ToolTip.text: title + " · " + (root.solar.dateLabel || "") + I18n.i18n(" · approximate time · ") + (root.weather.utc ? "UTC" : I18n.i18n("system local time"))
-        HoverHandler { id: eventHover }
-        Kirigami.Icon {
-            source: Qt.resolvedUrl(event.icon)
-            isMask: true
-            color: Kirigami.Theme.neutralTextColor
-            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-            Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-            Accessible.ignored: true
-        }
-        Label { text: event.time; font.bold: true; Accessible.ignored: true }
     }
 }

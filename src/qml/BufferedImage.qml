@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+import "FrameTransition.js" as Frames
 import QtQuick
 import org.kde.kirigami as Kirigami
 
@@ -20,10 +21,11 @@ Item {
     signal frameCommitted()
     signal failed()
     onSourceChanged: {
-        if (source.toString() === displayedSource.toString()) {
+        const action = Frames.action(source.toString(), displayedSource.toString(), pending ? pending.originalSource.toString() : "");
+        if (action === "displayed") {
             requestDelay.stop(); cancelPending(); error = ""; return;
         }
-        if (pending && pending.originalSource.toString() === source.toString()) {
+        if (action === "pending") {
             requestDelay.stop(); pending.preparing = false; complete(pending);
         } else {
             cancelPending(); requestDelay.restart();
@@ -54,7 +56,7 @@ Item {
         Qt.callLater(() => root.complete(image));
     }
     function complete(image) {
-        if (pending !== image) return;
+        if (!Frames.current(image, pending)) return;
         if (image.status === Image.Ready) {
             image.visible = true;
             if (image.preparing) { image.z = 0; return; }

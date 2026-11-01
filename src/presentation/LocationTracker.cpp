@@ -45,7 +45,7 @@ void LocationTracker::setForeground(bool foreground)
 {
     if (m_foreground == foreground) return;
     m_foreground = foreground;
-    if (foreground) { if (m_enabled) start(); }
+    if (foreground) { if (m_enabled && !(m_oneShot && hasPosition())) start(); }
     else {
         m_lookupDeadline.stop();
         if (m_source) m_source->stopUpdates();
@@ -53,11 +53,12 @@ void LocationTracker::setForeground(bool foreground)
         emit stateChanged();
     }
 }
-void LocationTracker::retry() { if (m_enabled) start(); }
+void LocationTracker::retry() { if (m_enabled && !(m_oneShot && hasPosition())) start(); }
 void LocationTracker::fail(const QString &error)
 {
     m_lookupDeadline.stop();
     m_busy = false;
+    if (m_source) m_source->stopUpdates();
     m_error = error;
     emit stateChanged();
 }
@@ -111,19 +112,20 @@ void LocationTracker::startSource()
 }
 void LocationTracker::acceptPosition(const QGeoPositionInfo &position)
 {
-    if (!m_enabled || !m_foreground || !position.isValid()) return;
+    if (!m_enabled || !m_foreground || (m_oneShot && hasPosition()) || !position.isValid()) return;
     const auto age = position.timestamp().secsTo(QDateTime::currentDateTimeUtc());
     if (age > 300 || age < -60) return;
     m_lookupDeadline.stop();
     m_busy = false;
     m_error.clear();
     const auto coordinate = position.coordinate();
+    if (m_oneShot && m_source) m_source->stopUpdates();
     // A weather grid spans kilometres. Avoid new downloads for GPS jitter.
     if (!m_coordinate.isValid() || m_coordinate.distanceTo(coordinate) >= 1000) {
         m_coordinate = coordinate;
         m_placeName.clear();
         emit positionAccepted(coordinate.latitude(), coordinate.longitude());
-        if (!m_injectedSource) m_geocoder.lookup(coordinate.latitude(), coordinate.longitude());
+        if (!m_injectedSource && !m_oneShot) m_geocoder.lookup(coordinate.latitude(), coordinate.longitude());
     }
     emit stateChanged();
 }

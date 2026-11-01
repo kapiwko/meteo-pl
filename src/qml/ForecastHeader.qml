@@ -69,33 +69,8 @@ GridLayout {
         visible: root.weather.hasData
         Layout.alignment: Qt.AlignBottom | (root.wide ? Qt.AlignRight : Qt.AlignLeft)
         spacing: Kirigami.Units.largeSpacing * 2
-        SolarEvent { title: I18n.i18n("Sunrise"); time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg"; visible: !root.solar.status }
-        SolarEvent { title: I18n.i18n("Sunset"); time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg"; visible: !root.solar.status }
+        SolarEvent { utc: root.weather.utc; dateLabel: root.solar.dateLabel || ""; title: I18n.i18n("Sunrise"); time: root.solar.sunriseText || "—"; icon: "icons/sunrise.svg"; visible: !root.solar.status }
+        SolarEvent { utc: root.weather.utc; dateLabel: root.solar.dateLabel || ""; title: I18n.i18n("Sunset"); time: root.solar.sunsetText || "—"; icon: "icons/sunset.svg"; visible: !root.solar.status }
         Label { text: root.solar.status || ""; visible: text.length > 0 }
-    }
-    component SolarEvent: RowLayout {
-        id: event
-        required property string title
-        required property string time
-        required property string icon
-        spacing: Kirigami.Units.smallSpacing
-        Accessible.role: Accessible.StaticText
-        Accessible.name: title + I18n.i18n(": ") + time + (root.weather.utc ? " UTC" : "")
-        ToolTip.visible: eventHover.hovered
-        ToolTip.text: (root.solar.dateLabel || "") + I18n.i18n(" · approximate time · ") + (root.weather.utc ? "UTC" : I18n.i18n("system local time"))
-        HoverHandler { id: eventHover }
-        Kirigami.Icon {
-            source: Qt.resolvedUrl(event.icon)
-            isMask: true
-            color: Kirigami.Theme.neutralTextColor
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 32
-            Accessible.ignored: true
-        }
-        ColumnLayout {
-            spacing: 0
-            Label { text: event.title + (root.weather.utc ? " · UTC" : ""); color: Kirigami.Theme.disabledTextColor }
-            Label { text: event.time; font.bold: true; font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.4 }
-        }
     }
 }

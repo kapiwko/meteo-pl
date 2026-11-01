@@ -83,18 +83,11 @@ PlasmoidItem {
         function onStateChanged() { Plasmoid.configuration.followCurrentLocation = forecastModel.currentLocation.enabled; }
     }
     function selectLocation(name, latitude, longitude) {
-        forecastModel.currentLocation.enabled = false;
         if (name.length) includePlace(placeSelection.placeKey(latitude, longitude));
         Plasmoid.configuration.locationName = name;
         Plasmoid.configuration.latitude = latitude;
         Plasmoid.configuration.longitude = longitude;
-        if (name.length) Plasmoid.configuration.model = LocationRules.modelFor(latitude, longitude, Plasmoid.configuration.model);
-        // GPS writes directly to WeatherModel. Selecting the saved location
-        // again may leave every configuration value unchanged, without NOTIFY.
-        forecastModel.model = Qt.binding(() => root.weatherConfiguration.model);
-        forecastModel.locationName = Qt.binding(() => root.weatherConfiguration.locationName);
-        forecastModel.latitude = Qt.binding(() => root.weatherConfiguration.latitude);
-        forecastModel.longitude = Qt.binding(() => root.weatherConfiguration.longitude);
+        Plasmoid.configuration.model = forecastModel.selectForecast(name, latitude, longitude, Plasmoid.configuration.model);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
     function includePlace(key) {

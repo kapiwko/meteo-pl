@@ -77,17 +77,9 @@ QtObject {
         forecastModel.model = Qt.binding(() => settings.model);
     }
     function selectForecast(name, latitude, longitude, model) {
-        forecastModel.currentLocation.enabled = false;
-        settings.model = name.length ? LocationRules.modelFor(latitude, longitude, model) : model;
         settings.locationName = name; settings.latitude = latitude; settings.longitude = longitude;
         temporaryLocation = false;
-        // Device fixes update the model from C++. Choosing the previously
-        // selected saved place may leave every Settings value unchanged, so
-        // explicitly restore its bindings rather than relying on change signals.
-        forecastModel.model = Qt.binding(() => settings.model);
-        forecastModel.locationName = Qt.binding(() => settings.locationName);
-        forecastModel.latitude = Qt.binding(() => settings.latitude);
-        forecastModel.longitude = Qt.binding(() => settings.longitude);
+        settings.model = forecastModel.selectForecast(name, latitude, longitude, model);
         if (name.length) UserPreferences.rememberPlace(name, latitude, longitude);
     }
 }

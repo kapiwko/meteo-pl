@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+import "FrameTransition.js" as Frames
 import QtQuick
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
@@ -86,15 +87,16 @@ Item {
             }
         }
         const key = zoom + ":" + JSON.stringify(tiles);
-        if (pending && pending.frameKey === key) return;
+        const action = Frames.action(key, front ? front.frameKey : "", pending ? pending.frameKey : "");
+        if (action === "pending") return;
         if (pending) { pending.destroy(); pending = null; }
         error = "";
-        if (front && front.frameKey === key) return;
+        if (action === "displayed") return;
         pending = frameComponent.createObject(frameContainer, {viewport: root, tiles: tiles, level: zoom, columns: columns,
             firstX: firstX, firstY: firstY, frameKey: key, timeLabel: weatherLayer ? weatherLayer.timeLabel : ""});
     }
     function commitFrame(frame) {
-        if (pending !== frame) return;
+        if (!Frames.current(frame, pending)) return;
         const previous = front;
         front = frame;
         pending = null;
@@ -104,7 +106,7 @@ Item {
         frameCommitted();
     }
     function rejectFrame(frame) {
-        if (pending !== frame) return;
+        if (!Frames.current(frame, pending)) return;
         pending = null;
         frame.destroy();
         error = I18n.i18n("Could not download all tiles. Keeping the previous map visible.");

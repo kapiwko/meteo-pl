@@ -60,6 +60,17 @@ WeatherModel::WeatherModel(QObject *parent, QUrl endpoint, QGeoPositionInfoSourc
     m_debounce.start();
 }
 
+QString WeatherModel::selectForecast(const QString &name, double latitude, double longitude, const QString &model)
+{
+    const auto selectedModel = Meteo::validLocation(latitude, longitude, model) ? model : QStringLiteral("gfs");
+    if (!Meteo::validLocation(latitude, longitude, selectedModel)) return {};
+    m_currentLocation.setEnabled(false);
+    setModel(selectedModel);
+    setLocationName(name);
+    setLatitude(latitude);
+    setLongitude(longitude);
+    return selectedModel;
+}
 
 void WeatherModel::setLatitude(double value)
 {

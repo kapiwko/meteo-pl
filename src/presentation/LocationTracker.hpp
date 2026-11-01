@@ -11,6 +11,7 @@
 class METEO_UI_EXPORT LocationTracker : public QObject {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(bool oneShot READ oneShot WRITE setOneShot NOTIFY stateChanged)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY stateChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY stateChanged)
     Q_PROPERTY(bool naming READ naming NOTIFY stateChanged)
@@ -22,6 +23,8 @@ public:
     using PermissionRequest = std::function<void(QObject *, PermissionResult)>;
     explicit LocationTracker(QObject *parent = nullptr, QGeoPositionInfoSource *source = nullptr, int lookupTimeoutMs = 15000,
                              PermissionRequest permissionRequest = {});
+    bool oneShot() const { return m_oneShot; }
+    void setOneShot(bool value) { if (m_oneShot != value) { m_oneShot=value; emit stateChanged(); } }
     bool enabled() const { return m_enabled; }
     bool busy() const { return m_busy; }
     bool naming() const { return m_geocoder.busy(); }
@@ -41,6 +44,7 @@ private:
     void fail(const QString &error);
     QPointer<QGeoPositionInfoSource> m_source;
     PermissionRequest m_permissionRequest;
+    bool m_oneShot = false;
     bool m_injectedSource = false;
     bool m_sourceConnected = false;
     bool m_enabled = false, m_foreground = true, m_busy = false, m_permissionPending = false;

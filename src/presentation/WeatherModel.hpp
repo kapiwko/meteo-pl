@@ -86,6 +86,7 @@ public:
     void setRequestedRun(double value);
     void setWindUnit(const QString &value);
     void setUtc(bool value);
+    Q_INVOKABLE QString selectForecast(const QString &name, double latitude, double longitude, const QString &model);
     Q_INVOKABLE QVariantList detailsAt(double timestamp) const;
     Q_INVOKABLE QVariantMap chartExportMetadata(const QString &title, double first, double last) const;
     Q_INVOKABLE QVariantList configuredCharts(const QVariantList &layout) const;

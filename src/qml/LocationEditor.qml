@@ -2,8 +2,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtPositioning
-import QtCore
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
@@ -59,52 +57,23 @@ ColumnLayout {
     function requestPosition() {
         Qt.inputMethod.hide();
         positionError = "";
-        if (locationPermission.status === Qt.PermissionStatus.Denied) {
-            positionError = I18n.i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again.");
-            return;
-        }
         positionRequested = true;
-        if (locationPermission.status === Qt.PermissionStatus.Undetermined) locationPermission.request();
+        positionLookup.enabled = false;
+        positionLookup.enabled = true;
     }
+    onPositionRequestedChanged: if (!positionRequested) positionLookup.enabled = false
     property PlaceSearchModel searchModel: PlaceSearchModel {}
     ReverseGeocoder {
         id: geocoder
         onResolved: name => { root.locationName = name; searchField.text = name; }
     }
-    LocationPermission {
-        id: locationPermission
-        accuracy: LocationPermission.Approximate
-        availability: LocationPermission.WhenInUse
-        onStatusChanged: if (root.positionRequested && status === Qt.PermissionStatus.Denied) {
+    LocationTracker {
+        id: positionLookup
+        oneShot: true
+        onPositionAccepted: (lat, lon) => root.selectLocatedPosition(lat, lon)
+        onStateChanged: if (root.positionRequested && error.length) {
+            root.positionError = error;
             root.positionRequested = false;
-            root.positionError = I18n.i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again.");
-        }
-    }
-    Loader {
-        active: root.positionRequested && locationPermission.status === Qt.PermissionStatus.Granted
-        visible: false
-        onLoaded: {
-            if (!root.positionRequested) return;
-            const source = item as PositionSource;
-            if (source && source.valid) source.update(15000);
-            else {
-                root.positionRequested = false;
-                root.positionError = I18n.i18n("The location service is unavailable. Choose a place or a point on the map.");
-            }
-        }
-        sourceComponent: PositionSource {
-            active: false
-            onPositionChanged: {
-                if (!root.positionRequested || !position.coordinate.isValid) return;
-                root.selectLocatedPosition(position.coordinate.latitude, position.coordinate.longitude);
-            }
-            onSourceErrorChanged: {
-                if (!root.positionRequested || sourceError === PositionSource.NoError) return;
-                root.positionRequested = false;
-                root.positionError = sourceError === PositionSource.UpdateTimeoutError
-                    ? I18n.i18n("Location lookup timed out. You can choose a point on the map.")
-                    : I18n.i18n("Could not determine your location. Check the location service or choose a point on the map.");
-            }
         }
     }
 

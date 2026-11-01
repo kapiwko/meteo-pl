@@ -7,6 +7,23 @@
 class LocationTrackerTest : public QObject {
     Q_OBJECT
 private slots:
+    void oneShotStopsAfterItsFirstFreshFixAndDoesNotRestartOnResume()
+    {
+        auto *source=new PositionFixture;
+        LocationTracker tracker(nullptr,source);
+        tracker.setOneShot(true);
+        QSignalSpy positions(&tracker,&LocationTracker::positionAccepted);
+        tracker.setEnabled(true);
+        source->send(50.86,20.63,3600);
+        QVERIFY(tracker.busy());
+        const auto stops=source->stops;
+        source->send(50.86,20.63);
+        QVERIFY(tracker.hasPosition()); QVERIFY(!tracker.busy()); QVERIFY(source->stops>stops);
+        source->send(54.35,18.65); QCOMPARE(positions.size(),1);
+        tracker.setForeground(false); tracker.setForeground(true); QCOMPARE(source->starts,1);
+        tracker.setEnabled(false); tracker.setEnabled(true);
+        source->send(54.35,18.65); QCOMPARE(positions.size(),2);
+    }
     void permissionGrantedAfterReturningFromBackgroundRestoresActivity_data()
     {
         QTest::addColumn<bool>("positionArrives");
