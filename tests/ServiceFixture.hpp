@@ -10,6 +10,7 @@ public:
     std::function<QByteArray(const QUrl &)> response;
     int status = 200;
     QByteArray redirect;
+    QByteArray headers;
     ServiceFixture()
     {
         connect(this, &QTcpServer::newConnection, this, [this] {
@@ -22,7 +23,7 @@ public:
                 requests.append(url);
                 const auto body = response(url);
                 const auto location = redirect.isEmpty() ? QByteArray() : "Location: " + redirect + "\r\n";
-                socket->write("HTTP/1.1 " + QByteArray::number(status) + " Response\r\n" + location + "Content-Type: application/json\r\nConnection: close\r\nContent-Length: " + QByteArray::number(body.size()) + "\r\n\r\n" + body);
+                socket->write("HTTP/1.1 " + QByteArray::number(status) + " Response\r\n" + location + headers + "Content-Type: application/json\r\nConnection: close\r\nContent-Length: " + QByteArray::number(body.size()) + "\r\n\r\n" + body);
                 socket->disconnectFromHost();
             });
         });

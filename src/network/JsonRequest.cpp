@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "JsonRequest.hpp"
+#include "HttpCachePolicy.hpp"
 #include "DiskCacheBudget.hpp"
 #include <QNetworkReply>
 #include <QJsonArray>
@@ -28,13 +29,15 @@ QJsonDocument readCache(const QUrl &url, int seconds)
     const auto entry=QJsonDocument::fromJson(file.readAll()).object();
     const auto saved=QDateTime::fromString(entry.value("savedAt").toString(),Qt::ISODate);
     const auto age=saved.secsTo(QDateTime::currentDateTimeUtc());
+    const auto expires=QDateTime::fromString(entry.value("expiresAt").toString(),Qt::ISODate);
+    if (expires.isValid() && expires<=QDateTime::currentDateTimeUtc()) return {};
     if (entry.value("url").toString()!=url.toString(QUrl::FullyEncoded) || !saved.isValid() || age<0 || age>=seconds) return {};
     const auto value=entry.value("document");
     const auto document = value.isObject()?QJsonDocument(value.toObject()):value.isArray()?QJsonDocument(value.toArray()):QJsonDocument();
     if (!document.isNull()) touchCacheEntry(file.fileName());
     return document;
 }
-void writeCache(const QUrl &url,const QJsonDocument &document)
+void writeCache(const QUrl &url,const QJsonDocument &document,const QDateTime &expires)
 {
     const auto path=cachePath(url);
     QDir directory(QFileInfo(path).absolutePath());
@@ -43,6 +46,7 @@ void writeCache(const QUrl &url,const QJsonDocument &document)
     if (!file.open(QIODevice::WriteOnly)) return;
     const QJsonObject entry{{"url",url.toString(QUrl::FullyEncoded)},
         {"savedAt",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {"expiresAt",expires.toString(Qt::ISODate)},
         {"document",document.isObject()?QJsonValue(document.object()):QJsonValue(document.array())}};
     file.write(QJsonDocument(entry).toJson(QJsonDocument::Compact));
     if (!file.commit()) return;
@@ -108,8 +112,9 @@ void JsonRequest::get(const QUrl &url, int cacheSeconds, bool force, Validator v
             emit failed(Meteo::i18n("Invalid meteo.pl response format."));
             return;
         }
-        const auto policy=reply->rawHeader("Cache-Control").toLower();
-        if (cacheSeconds>0 && !policy.contains("no-store") && !policy.contains("no-cache")) writeCache(url,document);
+        const auto expires=cacheExpiration(reply,QDateTime::currentDateTimeUtc(),cacheSeconds);
+        if (expires.isValid()) writeCache(url,document,expires);
+        else QFile::remove(cachePath(url));
         emit received(document);
     });
 }

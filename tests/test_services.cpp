@@ -259,6 +259,29 @@ private slots:
         QCOMPARE(query.queryItemValue("limit"), "20");
         model.setQuery(""); QVERIFY(model.results().isEmpty()); QVERIFY(!model.busy());
     }
+    void freshNonReusableJsonInvalidatesTheOlderEntry_data()
+    {
+        QTest::addColumn<QByteArray>("headers");
+        QTest::newRow("no-cache") << QByteArray("Cache-Control: no-cache\r\n");
+        QTest::newRow("no-store") << QByteArray("Cache-Control: no-store\r\n");
+        QTest::newRow("max-age zero") << QByteArray("Cache-Control: max-age=0\r\n");
+        QTest::newRow("expired") << QByteArray("Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n");
+    }
+    void freshNonReusableJsonInvalidatesTheOlderEntry()
+    {
+        QFETCH(QByteArray,headers);
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        int value=1; server.response=[&](const QUrl &) { return QByteArray("{\"value\":")+QByteArray::number(value)+'}'; };
+        Meteo::JsonRequest request; QSignalSpy received(&request,&Meteo::JsonRequest::received);
+        const auto url=server.endpoint().resolved(QUrl("/reuse"));
+        request.get(url,60); QTRY_COMPARE(received.size(),1);
+        value=2; server.headers=headers;
+        request.get(url,60,true); QTRY_COMPARE(received.size(),2);
+        value=3; server.headers.clear();
+        request.get(url,60); QTRY_COMPARE(received.size(),3);
+        QCOMPARE(server.requests.size(),3);
+        QCOMPARE(received.last().first().value<QJsonDocument>().object()["value"].toInt(),3);
+    }
     void metadataCacheHonorsExpiryCancellationAndForcedRefresh()
     {
         ServiceFixture server;
