@@ -5,10 +5,11 @@
 #include <algorithm>
 
 namespace Meteo {
-void touchCacheEntry(const QString &path)
+bool touchCacheEntry(const QString &path)
 {
     QFile file(path);
-    if (file.open(QIODevice::ReadOnly)) file.setFileTime(QDateTime::currentDateTimeUtc(),QFileDevice::FileModificationTime);
+    return file.open(QIODevice::ReadWrite | QIODevice::ExistingOnly)
+        && file.setFileTime(QDateTime::currentDateTimeUtc(),QFileDevice::FileModificationTime);
 }
 void pruneDiskCache(const QString &directory, const QStringList &filters, DiskCacheBudget budget, const QString &currentEntry)
 {

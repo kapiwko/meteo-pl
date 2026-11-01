@@ -56,7 +56,7 @@ private slots:
         QVERIFY(write("unused.json",100,20));
         QVERIFY(write("settings.ini",0,100));
         QVERIFY(QFileInfo(directory.filePath("unused.json")).lastModified() < now.addSecs(-50));
-        Meteo::touchCacheEntry(directory.filePath("used.json"));
+        QVERIFY(Meteo::touchCacheEntry(directory.filePath("used.json")));
         QVERIFY(QFileInfo(directory.filePath("used.json")).lastModified() >= now.addSecs(-1));
         Meteo::pruneDiskCache(directory.path(),{"*.json"},{40,2},directory.filePath("current.json"));
         QVERIFY(QFile::exists(directory.filePath("used.json")));
@@ -66,6 +66,15 @@ private slots:
         Meteo::pruneDiskCache(directory.path(),{"*.json"},{40,1},directory.filePath("current.json"));
         QVERIFY(!QFile::exists(directory.filePath("used.json")));
         QVERIFY(QFile::exists(directory.filePath("current.json")));
+    }
+    void touchingNeverCreatesOrTruncatesFiles()
+    {
+        QTemporaryDir directory;
+        const auto path = directory.filePath("missing.json");
+        QVERIFY(!Meteo::touchCacheEntry(path)); QVERIFY(!QFile::exists(path));
+        QFile file(path); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("keep"); file.close();
+        QVERIFY(Meteo::touchCacheEntry(path));
+        QVERIFY(file.open(QIODevice::ReadOnly)); QCOMPARE(file.readAll(), QByteArray("keep"));
     }
     void neverTraversesOtherDirectoriesOrSymbolicLinks()
     {
