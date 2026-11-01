@@ -99,6 +99,29 @@ QtObject {
                 const button = find(frame, "openMeteogramButton");
                 finish(() => button.clicked()); return;
             }
+            if (scenario.startsWith("saved-gps")) {
+                const outside = scenario === "saved-gps-gfs";
+                const latitude = outside ? 40.7 : 50.86, longitude = outside ? -74 : 20.63;
+                if (!weather.hasData || weather.busy) return;
+                if (phase === 0) {
+                    weather.currentLocation.enabled = true;
+                    FixtureDriver.sendPosition(weather, latitude, longitude);
+                    phase = 1;
+                } else if (phase === 1) {
+                    require(weather.latitude === latitude && weather.longitude === longitude, "GPS did not update the forecast");
+                    require(weather.model === (outside ? "gfs" : "um4_60"), "Incorrect GPS model");
+                    require(configuration.locationName === "Warszawa" && configuration.latitude === 52.2297
+                        && configuration.longitude === 21.0122 && configuration.model === "um4_60", "GPS changed the saved widget configuration");
+                    applet.selectLocation("Warszawa", 52.2297, 21.0122);
+                    require(!weather.currentLocation.enabled && weather.locationName === "Warszawa"
+                        && weather.latitude === 52.2297 && weather.longitude === 21.0122
+                        && weather.model === "um4_60", "Saved selection did not restore the weather model after GPS");
+                    // Force a request even if the initial forecast is still cached.
+                    weather.refresh();
+                    phase = 2;
+                } else if (phase === 2) finish();
+                return;
+            }
             if (phase === 3 && weather.busy && !weather.hasData) {
                 const indicator = find(frame, "forecastLoadingIndicator");
                 const icon = find(frame, "forecastWeatherIcon");

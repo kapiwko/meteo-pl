@@ -56,8 +56,8 @@ def scenario(name, args):
 
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, *unused): pass
-            def respond(self):
-                requests.append({'method': self.command, 'path': self.path})
+            def respond(self, request_payload=None):
+                requests.append({'method': self.command, 'path': self.path, 'payload': request_payload})
                 if name == 'loading': time.sleep(0.6)
                 if name == 'ready' and self.command == 'POST' and sum(request['method'] == 'POST' for request in requests) > 1:
                     time.sleep(0.4)
@@ -78,8 +78,8 @@ def scenario(name, args):
                 except (BrokenPipeError, ConnectionResetError): pass
             do_GET = respond
             def do_POST(self):
-                self.rfile.read(int(self.headers.get('Content-Length', '0')))
-                self.respond()
+                body = self.rfile.read(int(self.headers.get('Content-Length', '0')))
+                self.respond(json.loads(body))
 
         server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         thread = threading.Thread(target=server.serve_forever, kwargs={'poll_interval': 0.05}, daemon=True)
@@ -130,6 +130,16 @@ def scenario(name, args):
                 if arguments[:2] != ['--location', expected] or '--model' not in arguments:
                     raise RuntimeError(f'{name}: incorrect application handoff: {arguments}')
             if name == 'empty' and requests: raise RuntimeError('Empty widget made a forecast request')
+            if name.startswith('saved-gps'):
+                forecasts = [request for request in requests if request['method'] == 'POST']
+                outside = name == 'saved-gps-gfs'
+                expected_points = [('52.229700', '21.012200'),
+                                   ('40.700000', '-74.000000') if outside else ('50.860000', '20.630000'),
+                                   ('52.229700', '21.012200')]
+                points = [(request['payload']['point']['lat'], request['payload']['point']['lon']) for request in forecasts]
+                models = [request['path'] for request in forecasts]
+                if points != expected_points or models != ['/meteorograms/um4_60', '/meteorograms/gfs' if outside else '/meteorograms/um4_60', '/meteorograms/um4_60']:
+                    raise RuntimeError(f'{name}: incorrect saved/GPS/saved forecast requests: {forecasts}')
             (args.artifacts / f'{name}.json').write_text(json.dumps({'scenario': name, 'requests': requests, 'passed': True}, indent=2))
             print(f'{name}: passed ({len(requests)} local requests)', flush=True)
         finally:
@@ -144,7 +154,7 @@ def main():
     args = parser.parse_args()
     args.qml_path = args.qml_path.resolve(); args.artifacts = args.artifacts.resolve()
     args.artifacts.mkdir(parents=True, exist_ok=True)
-    for name in ('empty', 'loading', 'failed', 'cached', 'ready'): scenario(name, args)
+    for name in ('empty', 'loading', 'failed', 'cached', 'ready', 'saved-gps', 'saved-gps-gfs'): scenario(name, args)
 
 
 if __name__ == '__main__': main()

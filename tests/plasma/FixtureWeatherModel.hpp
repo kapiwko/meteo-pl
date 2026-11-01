@@ -1,6 +1,7 @@
 #pragma once
 #include "WeatherModel.hpp"
 #include "Fixture.hpp"
+#include "PositionFixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -17,7 +18,12 @@ class FixtureWeatherModel : public WeatherModel {
     QML_ELEMENT
 public:
     explicit FixtureWeatherModel(QObject *parent = nullptr)
-        : WeatherModel(parent, QUrl(qEnvironmentVariable("METEO_TEST_FORECAST_ENDPOINT"))) {}
+        : FixtureWeatherModel(parent, new PositionFixture) {}
+    void sendPosition(double latitude, double longitude) { m_positions->send(latitude, longitude); }
+private:
+    FixtureWeatherModel(QObject *parent, PositionFixture *positions)
+        : WeatherModel(parent, QUrl(qEnvironmentVariable("METEO_TEST_FORECAST_ENDPOINT")), positions), m_positions(positions) {}
+    PositionFixture *m_positions;
 };
 
 class FixtureDriver final : public QObject {
@@ -30,6 +36,13 @@ public:
     using QObject::QObject;
     QString scenario() const { return qEnvironmentVariable("METEO_TEST_SCENARIO"); }
     QString screenshot() const { return qEnvironmentVariable("METEO_TEST_SCREENSHOT"); }
+    Q_INVOKABLE void sendPosition(WeatherModel *weather, double latitude, double longitude)
+    {
+        if (auto *fixture = qobject_cast<FixtureWeatherModel *>(weather)) {
+            fixture->currentLocation()->setForeground(true);
+            fixture->sendPosition(latitude, longitude);
+        }
+    }
     Q_INVOKABLE void prepare()
     {
         auto fixture = QJsonDocument::fromJson(forecastFixture()).object();
