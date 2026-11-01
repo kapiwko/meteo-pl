@@ -1811,6 +1811,14 @@ private slots:
             plot.setProperty("strokeStyle", QColor("#f44336"));
             plot.setProperty("lineWidth", 4);
             plot.beginPath();plot.moveTo(20,150);plot.lineTo(250,150);plot.stroke();
+            // Filled chart segments collapse to triangles when a value meets
+            // the baseline. Repeated corners must not discard the whole fill.
+            plot.setProperty("fillStyle", QColor("#aa00aa"));
+            plot.beginPath(); plot.moveTo(20,140); plot.lineTo(20,100);
+            plot.lineTo(80,140); plot.lineTo(80,140); plot.closePath(); plot.fill();
+            plot.setProperty("fillStyle", QColor("#ff8800"));
+            plot.beginPath(); plot.moveTo(110,140); plot.lineTo(110,140);
+            plot.lineTo(170,100); plot.lineTo(170,140); plot.closePath(); plot.fill();
         });
         window.show();
         plot.requestPaint();
@@ -1821,6 +1829,9 @@ private slots:
         QCOMPARE(frame.pixelColor(175,40),QColor("#1539c0"));
         QCOMPARE(frame.pixelColor(120,40),QColor(Qt::white));
         QCOMPARE(frame.pixelColor(100,150),QColor("#f44336"));
+        QCOMPARE(frame.pixelColor(30,130),QColor("#aa00aa"));
+        QCOMPARE(frame.pixelColor(160,130),QColor("#ff8800"));
+        QCOMPARE(frame.pixelColor(100,130),QColor(Qt::white));
     }
     void rendersAllCharts()
     {

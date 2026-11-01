@@ -127,7 +127,12 @@ void GpuPlot::triangle(QPointF a,QPointF b,QPointF c,const QColor &value)
 }
 void GpuPlot::polygon(const QVector<QPointF> &input,const QColor &value)
 {
-    auto p=input;
+    // Area segments touching their baseline contain repeated corners. Remove
+    // consecutive duplicates before ear clipping, just as a Canvas fill does.
+    QVector<QPointF> p;
+    p.reserve(input.size());
+    for (const auto &point : input)
+        if (p.isEmpty() || p.last()!=point) p.append(point);
     if (p.size()>1 && p.first()==p.last()) p.removeLast();
     if (p.size()<3) return;
     qreal area=0;
