@@ -44,6 +44,17 @@ QStringList seriesRenderers(const QString &key)
     return {};
 }
 
+QStringList seriesFills(const QString &key)
+{
+    QStringList result{"solid"};
+    const auto standard=defaultSeriesStyle(key);
+    if (!standard.value("palette").toList().isEmpty() && !standard.value("paletteFallback").toMap().isEmpty()) {
+        const auto scale=seriesScale(key);
+        if (scale=="pressure" || scale=="wind") result.append(scale);
+    }
+    return result;
+}
+
 QVariantMap normalizeSeriesStyle(const QVariantMap &value)
 {
     auto result = defaultSeriesStyle(value["key"].toString());
@@ -78,7 +89,7 @@ QVariantMap normalizeSeriesStyle(const QVariantMap &value)
         if (valid && std::isfinite(size)) result["pointSize"] = std::clamp(size, 1.0, 10.0);
     }
     if (QStringList{"solid", "dashed", "dotted"}.contains(value["lineStyle"].toString())) result["lineStyle"] = value["lineStyle"];
-    if (QStringList{"solid", "pressure", "wind"}.contains(value["fill"].toString())) result["fill"] = value["fill"];
+    if (value.contains("fill")) result["fill"] = seriesFills(value["key"].toString()).contains(value["fill"].toString()) ? value["fill"] : QVariant("solid");
     return result;
 }
 

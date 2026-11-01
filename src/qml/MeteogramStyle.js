@@ -1,16 +1,17 @@
 .pragma library
 
 // All appearance values come from the chart's JSON configuration.
-function paletteColor(stops, value, dark, fallback) {
+function paletteColor(stops, value, dark, fallback, solid) {
+    if (!stops || typeof stops.length !== "number") return solid;
     for (var i = 0; i < stops.length; ++i)
         if (value < stops[i][0]) return stops[i][dark ? 2 : 1];
-    return fallback[dark ? "darkColor" : "color"];
+    return fallback && fallback[dark ? "darkColor" : "color"] || solid;
 }
 function pressureColor(hPa, dark, field) {
-    return paletteColor(field.palette, hPa, dark, field.paletteFallback);
+    return paletteColor(field.palette, hPa, dark, field.paletteFallback, dark && field.darkColor ? field.darkColor : field.color);
 }
 function windColor(mps, dark, field) {
-    return paletteColor(field.palette, mps, dark, field.paletteFallback);
+    return paletteColor(field.palette, mps, dark, field.paletteFallback, dark && field.darkColor ? field.darkColor : field.color);
 }
 function namedColor(field, name, dark) {
     return field.colors[name][dark ? "darkColor" : "color"];

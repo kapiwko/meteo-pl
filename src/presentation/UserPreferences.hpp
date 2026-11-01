@@ -47,6 +47,7 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     QVariantList profiles() const;
     bool hasDeletedProfiles() const;
     QVariantList chartLayout() const;
+    Q_INVOKABLE QStringList seriesFills(const QString &key) const;
     Q_INVOKABLE QStringList seriesRenderers(const QString &key) const;
     Q_INVOKABLE QVariantList chartLayoutForProfile(const QString &id) const;
     QVariantList chartCatalog() const;

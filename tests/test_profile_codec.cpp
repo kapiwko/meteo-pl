@@ -14,6 +14,23 @@ class ProfileCodecTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void fillsAreCompatibleWithTheirQuantityAndPalette()
+    {
+        for (const auto &entry : chartSeriesCatalog()) {
+            const auto standard=entry.toMap();
+            for (const auto &render : seriesRenderers(standard["key"].toString())) for (const auto &fill : {"solid","pressure","wind"}) {
+                auto style=standard; style["render"]=render; style["fill"]=fill;
+                const auto resolved=normalizeSeriesStyle(style);
+                QVERIFY(seriesFills(style["key"].toString()).contains(resolved["fill"].toString()));
+                if (resolved["fill"]!="solid") {
+                    QVERIFY(!resolved["palette"].toList().isEmpty());
+                    QVERIFY(!resolved["paletteFallback"].toMap().isEmpty());
+                }
+            }
+        }
+        QCOMPARE(seriesFills("airtmp_point"),QStringList{"solid"});
+        QVERIFY(!seriesFills("wind10_sd_true_prev_point").contains("pressure"));
+    }
     void microscopicDashPatternsAreRejectedAtImport()
     {
         auto chart=defaultChartLayout("classic").first().toMap();

@@ -531,6 +531,8 @@ void UserPreferences::setSeriesStyle(const QString &key, const QString &field, c
                 for (auto it = options.cbegin(); it != options.cend(); ++it)
                     if (it.key() != "key")
                         style[it.key()] = it.value();
+                if ((options.contains("color") || options.contains("darkColor"))
+                    && QStringList{"storm","flash"}.contains(style["render"].toString())) style["eventColors"]=false;
                 entry = normalizeSeriesStyle(style);
                 break;
             }
@@ -933,3 +935,5 @@ QVariantMap UserPreferences::undoProfileCommand(const QVariantMap &token)
     });
     return committed ? result : QVariantMap{{"ok",false},{"error",m_error}};
 }
+
+QStringList UserPreferences::seriesFills(const QString &key) const { return ::seriesFills(key); }

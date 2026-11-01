@@ -37,7 +37,6 @@ Dialog {
     readonly property bool automaticColor: ["storm", "flash"].indexOf(seriesStyle.render) >= 0 && seriesStyle.eventColors
     readonly property bool paletteFill: seriesStyle.render === "area" && seriesStyle.fill !== "solid"
     function change(options) {
-        if ((options.color !== undefined || options.darkColor !== undefined) && ["storm", "flash"].indexOf(seriesStyle.render) >= 0) options.eventColors = false;
         UserPreferences.setSeriesStyle(chartKey, seriesStyle.key, options, profileId);
     }
     function chooseColor(option) { colorDialog.option = option; colorDialog.selectedColor = seriesStyle[option]; colorDialog.open(); }
@@ -91,7 +90,7 @@ Dialog {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.preferredWidth: styleForm.fieldWidth
-                model: [{id:"solid",name:I18n.i18n("Series color")}, {id:"pressure",name:I18n.i18n("ICM pressure palette")}, {id:"wind",name:I18n.i18n("ICM wind palette")}]
+                model: [{id:"solid",name:I18n.i18n("Series color")}, {id:"pressure",name:I18n.i18n("ICM pressure palette")}, {id:"wind",name:I18n.i18n("ICM wind palette")}].filter(option => UserPreferences.seriesFills(root.seriesStyle.key).indexOf(option.id) >= 0)
                 textRole: "name"
                 currentIndex: model.findIndex(item => item.id === root.seriesStyle.fill)
                 onActivated: index => root.change({fill: model[index].id})
