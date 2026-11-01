@@ -3,6 +3,7 @@
 #include "GpuPlot.hpp"
 #include "ForecastFields.hpp"
 #include "ChartConfiguration.hpp"
+#include "ProfileFileCodec.hpp"
 #include "Fixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
@@ -132,6 +133,7 @@ void RendererTest::initTestCase()
             {"savedAt",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},{"payload",QString::fromUtf8(QJsonDocument(document).toJson())}}).toJson());
         for (const auto &group:forecastCharts()) m_groups.append(group.key);
         m_groups.append("chart:precipitation-area");
+        m_groups.append("chart:minimum-dashes");
     }
 void RendererTest::appearanceMatches_data()
     {
@@ -155,6 +157,20 @@ void RendererTest::appearanceMatches()
             mean["opacity"] = 0.5; maximum["opacity"] = 0.5;
             definition = weather.configuredCharts({QVariantMap{{"key", group}, {"title", "Precipitation area"},
                 {"enabled", true}, {"series", QVariantList{mean, maximum}}}}).first().toMap();
+        }
+        if (group == "chart:minimum-dashes") {
+            auto chart=defaultChartLayout("classic").first().toMap();
+            chart["key"]=group;
+            auto appearance=defaultChartAppearance();
+            for (const auto &theme : {"light","dark"}) {
+                auto palette=appearance[theme].toMap(); palette["gridDash"]=QVariantList{0.5}; appearance[theme]=palette;
+            }
+            chart["appearance"]=appearance;
+            QString error;
+            const auto encoded=ProfileFileCodec::encode({QVariantMap{{"name","Minimum dashes"},{"charts",QVariantList{chart}}}},&error);
+            QVERIFY2(encoded,qPrintable(error));
+            const auto imported=ProfileFileCodec::decode(*encoded,&error); QVERIFY2(imported,qPrintable(error));
+            definition=weather.configuredCharts(imported->first().toMap()["charts"].toList()).first().toMap();
         }
         QVERIFY(!definition.isEmpty());
         QQmlEngine engine;

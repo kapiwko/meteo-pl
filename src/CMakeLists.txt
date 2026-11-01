@@ -66,7 +66,7 @@ qt_add_qml_module(meteo_ui
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp
         presentation/ReadingsExporter.cpp presentation/ReadingsExporter.hpp
         presentation/ExportNotifications.cpp presentation/ExportNotifications.hpp
-        presentation/GpuPlot.cpp presentation/GpuPlot.hpp
+        presentation/PlotGeometry.cpp presentation/PlotGeometry.hpp presentation/GpuPlot.cpp presentation/GpuPlot.hpp
         presentation/ResponsiveImages.cpp presentation/ResponsiveImages.hpp
         presentation/ImagePreloader.cpp presentation/ImagePreloader.hpp
         presentation/CacheStorage.cpp presentation/CacheStorage.hpp

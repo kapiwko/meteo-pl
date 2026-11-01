@@ -447,9 +447,17 @@
               "minItems": 1,
               "maxItems": 8,
               "items": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 100
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "const": 0
+                  },
+                  {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 100
+                  }
+                ]
               }
             },
             "borderOpacity": {
@@ -526,9 +534,17 @@
               "minItems": 1,
               "maxItems": 8,
               "items": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 100
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "const": 0
+                  },
+                  {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 100
+                  }
+                ]
               }
             },
             "borderOpacity": {

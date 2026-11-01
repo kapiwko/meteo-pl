@@ -14,6 +14,17 @@ class ProfileCodecTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void microscopicDashPatternsAreRejectedAtImport()
+    {
+        auto chart=defaultChartLayout("classic").first().toMap();
+        auto appearance=chart["appearance"].toMap(); auto light=appearance["light"].toMap();
+        light["gridDash"]=QVariantList{1e-9}; appearance["light"]=light; chart["appearance"]=appearance;
+        QString error;
+        QVERIFY(!ProfileFileCodec::encode({QVariantMap{{"name","Tiny"},{"charts",QVariantList{chart}}}},&error));
+        QVERIFY(!error.isEmpty());
+        const auto recovered=normalizeChartLayout({chart}).first().toMap()["appearance"].toMap()["light"].toMap()["gridDash"].toList();
+        QCOMPARE(recovered,QVariantList({0.5,0.5}));
+    }
     void alphaSurvivesImportAndExport()
     {
         for (const auto &color : {QStringLiteral("#00112233"), QStringLiteral("#80112233"), QStringLiteral("#ff112233")}) {

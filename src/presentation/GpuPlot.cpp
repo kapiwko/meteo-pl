@@ -9,10 +9,6 @@
 #include <numbers>
 #include <numeric>
 
-namespace {
-qreal cross(QPointF a, QPointF b, QPointF c) { return (b.x()-a.x())*(c.y()-a.y())-(b.y()-a.y())*(c.x()-a.x()); }
-bool finite(QPointF p) { return std::isfinite(p.x()) && std::isfinite(p.y()); }
-}
 GpuPlot::GpuPlot(QQuickItem *parent) : QQuickItem(parent) { setFlag(ItemHasContents); }
 QHash<int, QByteArray> PlotTextModel::roleNames() const
 {
@@ -64,7 +60,7 @@ void GpuPlot::updatePolish()
 }
 void GpuPlot::reset()
 {
-    m_vertices.clear(); m_labels.clear(); m_paths.clear(); m_stack.clear(); m_dash.clear();
+    m_geometry.clear(); m_labels.clear(); m_paths.clear(); m_stack.clear(); m_dash.clear();
     m_transform.reset(); m_clipped = false;
     m_fill = m_stroke = Qt::black; m_alpha = m_lineWidth = 1;
     m_font = "10px sans-serif"; m_textAlign = "left"; m_textBaseline = "alphabetic";
@@ -95,97 +91,13 @@ void GpuPlot::arc(qreal x,qreal y,qreal radius,qreal start,qreal end)
         if (!i && m_paths.isEmpty()) moveTo(point.x(),point.y()); else lineTo(point.x(),point.y());
     }
 }
-void GpuPlot::triangle(QPointF a,QPointF b,QPointF c,const QColor &value)
-{
-    if (!finite(a)||!finite(b)||!finite(c)||value.alpha()==0) return;
-    QVector<QPointF> points{a,b,c};
-    if (m_clipped) {
-        if (m_clip.isEmpty()) return;
-        for (int edge=0;edge<4;++edge) {
-            QVector<QPointF> output;
-            const auto inside=[&](QPointF p) { return edge==0 ? p.x()>=m_clip.left() : edge==1 ? p.x()<=m_clip.right() : edge==2 ? p.y()>=m_clip.top() : p.y()<=m_clip.bottom(); };
-            const auto intersection=[&](QPointF p,QPointF q) {
-                const bool vertical=edge<2;
-                const qreal boundary=edge==0?m_clip.left():edge==1?m_clip.right():edge==2?m_clip.top():m_clip.bottom();
-                const auto denominator=vertical?q.x()-p.x():q.y()-p.y();
-                const auto t=std::abs(denominator)>1e-12?(boundary-(vertical?p.x():p.y()))/denominator:0;
-                return p+(q-p)*t;
-            };
-            if (points.isEmpty()) return;
-            auto previous=points.last();
-            for (auto p:points) {
-                if (inside(p)!=inside(previous)) output.append(intersection(previous,p));
-                if (inside(p)) output.append(p);
-                previous=p;
-            }
-            points=output;
-        }
-    }
-    const auto alpha=value.alpha();
-    const auto vertex=[&](QPointF p) { return Vertex{float(p.x()),float(p.y()),static_cast<unsigned char>(value.red()*alpha/255),static_cast<unsigned char>(value.green()*alpha/255),static_cast<unsigned char>(value.blue()*alpha/255),static_cast<unsigned char>(alpha)}; };
-    for (qsizetype i=1;i+1<points.size();++i) { m_vertices.append(vertex(points[0])); m_vertices.append(vertex(points[i])); m_vertices.append(vertex(points[i+1])); }
-}
-void GpuPlot::polygon(const QVector<QPointF> &input,const QColor &value)
-{
-    // Area segments touching their baseline contain repeated corners. Remove
-    // consecutive duplicates before ear clipping, just as a Canvas fill does.
-    QVector<QPointF> p;
-    p.reserve(input.size());
-    for (const auto &point : input)
-        if (p.isEmpty() || p.last()!=point) p.append(point);
-    if (p.size()>1 && p.first()==p.last()) p.removeLast();
-    if (p.size()<3) return;
-    qreal area=0;
-    for (qsizetype i=0;i<p.size();++i) area+=p[i].x()*p[(i+1)%p.size()].y()-p[(i+1)%p.size()].x()*p[i].y();
-    if (std::abs(area)<1e-10) return;
-    const auto sign=area>0?1:-1;
-    QVector<int> indices(p.size()); std::iota(indices.begin(),indices.end(),0);
-    while (indices.size()>2) {
-        bool found=false;
-        for (qsizetype i=0;i<indices.size();++i) {
-            const auto a=p[indices[(i+indices.size()-1)%indices.size()]], b=p[indices[i]], c=p[indices[(i+1)%indices.size()]];
-            if (cross(a,b,c)*sign<=1e-10) continue;
-            bool contains=false;
-            for (qsizetype j=0;j<indices.size();++j) {
-                if (j==i || j==(i+1)%indices.size() || j==(i+indices.size()-1)%indices.size()) continue;
-                const auto q=p[indices[j]];
-                if (cross(a,b,q)*sign>=0 && cross(b,c,q)*sign>=0 && cross(c,a,q)*sign>=0) { contains=true; break; }
-            }
-            if (contains) continue;
-            triangle(a,b,c,value); indices.removeAt(i); found=true; break;
-        }
-        if (!found) break;
-    }
-}
-void GpuPlot::fill() { for (const auto &path:m_paths) polygon(path,color(m_fill)); }
-void GpuPlot::segment(QPointF a,QPointF b,const QColor &value)
-{
-    const auto delta=b-a; const auto length=std::hypot(delta.x(),delta.y());
-    if (length<1e-8 || !std::isfinite(length)) return;
-    const QPointF normal(-delta.y()/length*m_lineWidth/2,delta.x()/length*m_lineWidth/2);
-    triangle(a+normal,b+normal,b-normal,value); triangle(a+normal,b-normal,a-normal,value);
-}
+void GpuPlot::fill() { m_geometry.clip=m_clip; m_geometry.clipped=m_clipped; for (const auto &path:m_paths) m_geometry.polygon(path,color(m_fill)); }
 void GpuPlot::stroke()
 {
-    const auto value=color(m_stroke);
-    for (const auto &path:m_paths) {
-        qsizetype dashIndex=0; qreal dashPosition=0;
-        for (qsizetype i=1;i<path.size();++i) {
-            const auto a=path[i-1], b=path[i]; const auto delta=b-a;
-            const auto length=std::hypot(delta.x(),delta.y());
-            if (m_dash.isEmpty()) { segment(a,b,value); continue; }
-            if (length<1e-8 || !std::isfinite(length)) continue;
-            qreal position=0;
-            while (position<length) {
-                const auto count=std::min(length-position,m_dash[dashIndex]-dashPosition);
-                if (!(dashIndex%2)) segment(a+delta*(position/length),a+delta*((position+count)/length),value);
-                position+=count; dashPosition+=count;
-                if (dashPosition>=m_dash[dashIndex]-1e-8) { dashIndex=(dashIndex+1)%m_dash.size(); dashPosition=0; }
-            }
-        }
-    }
+    m_geometry.clip=m_clip; m_geometry.clipped=m_clipped;
+    m_geometry.stroke(m_paths,m_dash,color(m_stroke),m_lineWidth);
 }
-void GpuPlot::fillRect(qreal x,qreal y,qreal w,qreal h) { polygon({m_transform.map(QPointF(x,y)),m_transform.map(QPointF(x+w,y)),m_transform.map(QPointF(x+w,y+h)),m_transform.map(QPointF(x,y+h))},color(m_fill)); }
+void GpuPlot::fillRect(qreal x,qreal y,qreal w,qreal h) { m_geometry.clip=m_clip; m_geometry.clipped=m_clipped; m_geometry.polygon({m_transform.map(QPointF(x,y)),m_transform.map(QPointF(x+w,y)),m_transform.map(QPointF(x+w,y+h)),m_transform.map(QPointF(x,y+h))},color(m_fill)); }
 void GpuPlot::strokeRect(qreal x,qreal y,qreal w,qreal h) { const auto paths=m_paths; beginPath();rect(x,y,w,h);stroke();m_paths=paths; }
 void GpuPlot::clip()
 {
@@ -196,7 +108,7 @@ void GpuPlot::clip()
 }
 void GpuPlot::translate(qreal x,qreal y) { m_transform.translate(x,y); }
 void GpuPlot::rotate(qreal radians) { m_transform.rotateRadians(radians); }
-void GpuPlot::setLineDash(const QVariantList &dash) { m_dash.clear();for (const auto &v:dash) if (v.toDouble()>0) m_dash.append(v.toDouble());if (m_dash.size()%2) m_dash+=m_dash; }
+void GpuPlot::setLineDash(const QVariantList &dash) { m_dash = PlotGeometry::dashPattern(dash); }
 void GpuPlot::fillText(const QString &text,qreal x,qreal y)
 {
     const auto point=m_transform.map(QPointF(x,y));
@@ -215,7 +127,7 @@ QSGNode *GpuPlot::updatePaintNode(QSGNode *old,UpdatePaintNodeData *)
     constexpr qsizetype chunkSize = 60000;
     auto *root = old ? old : new QSGNode;
     auto *child = root->firstChild();
-    for (qsizetype first=0; first<m_vertices.size(); first+=chunkSize) {
+    for (qsizetype first=0; first<m_geometry.vertices.size(); first+=chunkSize) {
         auto *node=static_cast<QSGGeometryNode *>(child);
         if (!node) {
             node=new QSGGeometryNode;
@@ -225,10 +137,10 @@ QSGNode *GpuPlot::updatePaintNode(QSGNode *old,UpdatePaintNodeData *)
             node->setMaterial(new QSGVertexColorMaterial);node->setFlag(QSGNode::OwnsMaterial);
             root->appendChildNode(node);
         }
-        const auto count=std::min(chunkSize,m_vertices.size()-first);
+        const auto count=std::min(chunkSize,m_geometry.vertices.size()-first);
         auto *geometry=node->geometry();geometry->allocate(count);
         auto *vertices=geometry->vertexDataAsColoredPoint2D();
-        for (qsizetype i=0;i<count;++i) { const auto &v=m_vertices[first+i];vertices[i].set(v.x,v.y,v.r,v.g,v.b,v.a); }
+        for (qsizetype i=0;i<count;++i) { const auto &v=m_geometry.vertices[first+i];vertices[i].set(v.x,v.y,v.r,v.g,v.b,v.a); }
         node->markDirty(QSGNode::DirtyGeometry);
         child=node->nextSibling();
     }

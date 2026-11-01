@@ -165,3 +165,8 @@ set_tests_properties(${meteo_tests} PROPERTIES ENVIRONMENT_MODIFICATION "QT_FORC
 qt_add_executable(test_location_tracker test_location_tracker.cpp)
 target_link_libraries(test_location_tracker PRIVATE meteo_ui Qt6::Test)
 add_test(NAME location_tracker COMMAND test_location_tracker)
+
+qt_add_executable(test_plot_geometry test_plot_geometry.cpp)
+target_link_libraries(test_plot_geometry PRIVATE meteo_ui Qt6::Test)
+add_test(NAME plot_geometry COMMAND test_plot_geometry)
+set_tests_properties(plot_geometry PROPERTIES TIMEOUT 10)

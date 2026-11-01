@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "ChartConfiguration.hpp"
+#include "DrawingPolicy.hpp"
 #include "ChartAnalysis.hpp"
 #include "ForecastFields.hpp"
 #include "ProfileFileCodec.hpp"
@@ -104,6 +105,21 @@ QVariantList defaultChartCatalog()
     return charts;
 }
 QVariantMap defaultChartAppearance() { return chartDefaults()["appearance"].toMap(); }
+QVariantMap normalizeChartAppearance(const QVariantMap &input)
+{
+    auto result=defaultChartAppearance();
+    for (const auto &theme : {QStringLiteral("light"),QStringLiteral("dark")}) {
+        auto style=result[theme].toMap();
+        const auto supplied=input.value(theme).toMap();
+        for (auto it=supplied.cbegin();it!=supplied.cend();++it) if (style.contains(it.key())) style[it.key()]=it.value();
+        QVariantList dash;
+        for (auto value : DrawingPolicy::dashPattern(style["gridDash"].toList())) dash.append(value);
+        style["gridDash"]=dash;
+        result[theme]=style;
+    }
+    return result;
+}
+
 QVariantMap defaultChartPrototype() { return chartDefaults()["newChart"].toMap(); }
 
 QVariantList builtinChartProfiles()
@@ -174,7 +190,7 @@ QVariantList normalizeChartLayout(const QVariantList &saved)
         }
         const auto prototype = defaultChartPrototype();
         QVariantMap normalized{{"key", key}, {"title", chart.value("title", standard.value("title", prototype["title"])).toString().trimmed().left(80)},
-            {"appearance", chart.value("appearance", standard.value("appearance", defaultChartAppearance()))},
+            {"appearance", normalizeChartAppearance(chart.value("appearance", standard.value("appearance", defaultChartAppearance())).toMap())},
             {"enabled", chart["enabled"].toBool()}, {"series", series}, {"fields", chartFieldKeys(series)},
             {"leftScale", chart.value("leftScale", standard.value("leftScale", prototype["leftScale"]))}, {"rightScale", chart.value("rightScale", prototype["rightScale"])}};
         for (const auto &bound : {"leftMin", "leftMax", "rightMin", "rightMax"}) {

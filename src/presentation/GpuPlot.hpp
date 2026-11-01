@@ -1,5 +1,6 @@
 #pragma once
 #include "MeteoUiExport.hpp"
+#include "PlotGeometry.hpp"
 #include <QQuickItem>
 #include <QAbstractListModel>
 #include <QColor>
@@ -82,7 +83,6 @@ protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 private:
     PlotTextModel m_textModel{this};
-    struct Vertex { float x, y; unsigned char r, g, b, a; };
     struct State {
         QColor fill, stroke;
         qreal alpha, lineWidth;
@@ -92,9 +92,6 @@ private:
         bool clipped;
         QVector<qreal> dash;
     };
-    void triangle(QPointF a, QPointF b, QPointF c, const QColor &color);
-    void polygon(const QVector<QPointF> &, const QColor &);
-    void segment(QPointF a, QPointF b, const QColor &);
     QColor color(const QColor &value) const;
     QColor m_fill = Qt::black, m_stroke = Qt::black;
     qreal m_alpha = 1, m_lineWidth = 1;
@@ -106,6 +103,6 @@ private:
     QVector<State> m_stack;
     QVector<qreal> m_dash;
     QVector<QVector<QPointF>> m_paths;
-    QVector<Vertex> m_vertices;
+    PlotGeometry m_geometry;
     QVariantList m_labels, m_previousLabels;
 };
