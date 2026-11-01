@@ -338,22 +338,10 @@ ColumnLayout {
                 onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root.renderDescription(), plot, getContext("2d"), false); gpuCursor.requestPaint(); }
                 onCursorPaintRequested: gpuCursor.requestPaint()
                 onSoftwareBackend: plot.softwareFallback = true
-                Repeater {
-                    model: gpuPlot.textModel
-                    delegate: Text {
-                        required property string labelText
-                        required property color labelColor
-                        required property real labelX
-                        required property real labelY
-                        required property string labelAlign
-                        required property string labelBaseline
-                        text: labelText
-                        color: labelColor
-                        renderType: Text.NativeRendering
-                        font: gpuPlot.labelFont
-                        x: labelX - (labelAlign === "center" ? implicitWidth / 2 : labelAlign === "right" ? implicitWidth : 0)
-                        y: labelY - (labelBaseline === "middle" ? implicitHeight / 2 : implicitHeight)
-                    }
+                PlotLabels {
+                    anchors.fill: parent
+                    labels: gpuPlot.textLabels
+                    font: gpuPlot.labelFont
                 }
                 GpuPlot {
                     id: gpuCursor
