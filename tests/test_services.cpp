@@ -675,7 +675,7 @@ private slots:
         QCOMPARE(preferences.visibleGroups(), QStringList({"temperature", "precipitation", "probability", "pressure", "wind", "cloudHeights", "clouds"}));
         const auto id = preferences.createProfile(QStringLiteral("Moje góry"));
         QVERIFY(id.startsWith("user:"));
-        preferences.moveChart(4, -4);
+        preferences.moveChart(preferences.chartLayout()[4].toMap()["key"].toString(), -4);
         preferences.setChartField("temperature", "dwptmp_point", false);
         preferences.setChartEnabled("probability", false);
         UserPreferences reopened;
@@ -971,7 +971,7 @@ private slots:
         preferences.setChartField(chart, "pcpttl_aver", true);
         preferences.setSeriesStyle(chart, "pcpttl_aver", {{"axis", "right"}, {"color", "#123456"}, {"opacity", 0.4}, {"render", "stems"}});
         preferences.setChartOptions(chart, {{"leftMin", -20}, {"leftMax", 35}, {"rightMax", 10}, {"height",190}});
-        preferences.moveChart(preferences.chartLayout().size() - 1, -(preferences.chartLayout().size() - 1));
+        preferences.moveChart(preferences.chartLayout().last().toMap()["key"].toString(), -(preferences.chartLayout().size() - 1));
         const auto original = preferences.chartLayout();
         const auto file = QUrl::fromLocalFile(config.filePath("profil ze spacjami ż.json"));
         const auto exported = preferences.exportProfiles(file);

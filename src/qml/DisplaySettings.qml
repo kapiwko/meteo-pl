@@ -405,8 +405,8 @@ ColumnLayout {
                                             checked: root.expandedChart === chartEntry.modelData.key
                                             onTriggered: root.expandedChart = checked ? chartEntry.modelData.key : ""
                                         },
-                                        Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chartEntry.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.index, -1, root.profileId) },
-                                        Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chartEntry.index < root.layout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.index, 1, root.profileId) },
+                                        Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chartEntry.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.modelData.key, -1, root.profileId) },
+                                        Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chartEntry.index < root.layout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.modelData.key, 1, root.profileId) },
                                         Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: root.withUndo(() => UserPreferences.deleteChart(chartEntry.modelData.key, root.profileId), I18n.i18n("Chart removed.")) }
                                     ]
                                 }

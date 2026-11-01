@@ -20,6 +20,23 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void movesTheNamedChartAfterAConcurrentDeletion()
+    {
+        QTemporaryDir config; QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, config.path());
+        UserPreferences first, second;
+        const auto original = first.chartLayout();
+        second.deleteChart("temperature"); // Do not process the first instance's watcher.
+        QCOMPARE(first.chartLayout(), original);
+        QVERIFY(first.moveChart("wind", -1)["ok"].toBool());
+        auto expected = second.chartLayout();
+        const auto actual = first.chartLayout();
+        int index = -1;
+        for (int i = 0; i < expected.size(); ++i) if (expected[i].toMap()["key"] == "wind") index = i;
+        QVERIFY(index > 0); expected.swapItemsAt(index, index-1);
+        QCOMPARE(actual, expected);
+        QVERIFY(!first.moveChart("temperature", 1)["ok"].toBool());
+        QCOMPARE(first.chartLayout(), actual);
+    }
     void colorThemeIsValidatedAndPersists()
     {
         QTemporaryDir config;

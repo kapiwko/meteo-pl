@@ -559,17 +559,23 @@ void UserPreferences::removeSeries(const QString &key, const QString &field, con
         saveLayout(selectedProfile, normalizeChartLayout(layout));
     });
 }
-void UserPreferences::moveChart(int index, int direction, const QString &profileId)
+QVariantMap UserPreferences::moveChart(const QString &key, int direction, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
-    change([&] {
+    QVariantMap result{{"ok", false}, {"error", Meteo::i18n("This chart no longer exists.")}};
+    const bool committed = change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
-        const auto next = index + direction;
-        if (index < 0 || index >= layout.size() || next < 0 || next >= layout.size())
+        for (qsizetype index = 0; index < layout.size(); ++index) {
+            if (layout[index].toMap()["key"] != key) continue;
+            const auto next = index + direction;
+            if (next < 0 || next >= layout.size()) { result["error"] = Meteo::i18n("The chart cannot be moved further."); return; }
+            layout.swapItemsAt(index, next);
+            saveLayout(selectedProfile, layout);
+            result = {{"ok", true}};
             return;
-        layout.swapItemsAt(index, next);
-        saveLayout(selectedProfile, layout);
+        }
     });
+    return committed ? result : QVariantMap{{"ok", false}, {"error", m_error}};
 }
 QString UserPreferences::createProfileFrom(const QString &name, const QString &sourceProfile, bool activate)
 {
