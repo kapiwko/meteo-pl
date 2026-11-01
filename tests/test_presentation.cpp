@@ -2390,6 +2390,82 @@ private slots:
         QVERIFY(!second->property("exportMode").toBool());
         QVERIFY(existing.open(QIODevice::ReadOnly)); QCOMPARE(existing.readAll(),QByteArray("original"));
     }
+    void realChartExportCancelsOnProfileOrUnitChanges_data()
+    {
+        QTest::addColumn<bool>("changeUnits");
+        QTest::newRow("profile appearance") << false;
+        QTest::newRow("wind units") << true;
+    }
+    void realChartExportCancelsOnProfileOrUnitChanges()
+    {
+        QFETCH(bool, changeUnits);
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false);
+        QVERIFY(weather.hasData());
+        QQmlEngine engine;
+        auto *preferences = engine.singletonInstance<UserPreferences *>("pl.meteo.desktop", "UserPreferences");
+        preferences->setProfile("classic");
+        preferences->resetProfile();
+        preferences->setShowLegend(false);
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import pl.meteo.desktop
+            Window {
+                id: root
+                required property WeatherModel weather
+                readonly property var definitions: {
+                    const revision = weather.dataRevision;
+                    return weather.configuredCharts(UserPreferences.chartLayout);
+                }
+                width:640; height:600; visible:true
+                Column {
+                    width:parent.width
+                    Repeater {
+                        model:["temperature", "wind"]
+                        Meteogram {
+                            required property string modelData
+                            readonly property var definition: root.definitions.find(chart => chart.key === modelData)
+                            objectName:"export-" + modelData
+                            width:640; weather:root.weather
+                            title:definition.title; groupKey:definition.key
+                            fields:definition.fields; chartConfiguration:definition
+                        }
+                    }
+                }
+            }
+        )", {});
+        QScopedPointer<QObject> window(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}}));
+        QVERIFY2(window, qPrintable(component.errorString()));
+        const auto findVisual = [](auto &&self, QQuickItem *item, const QString &name) -> QQuickItem * {
+            if (item->objectName() == name) return item;
+            for (auto *child : item->childItems()) if (auto *found = self(self, child, name)) return found;
+            return nullptr;
+        };
+        auto *content = qobject_cast<QQuickWindow *>(window.data())->contentItem();
+        QQuickItem *first = nullptr, *second = nullptr;
+        QTRY_VERIFY(first = findVisual(findVisual, content, "export-temperature"));
+        QTRY_VERIFY(second = findVisual(findVisual, content, "export-wind"));
+        QVERIFY(waitForStableLayout(first)); QVERIFY(waitForStableLayout(second));
+        QTemporaryDir directory;
+        const auto path = directory.filePath("existing.png");
+        QFile existing(path); QVERIFY(existing.open(QIODevice::WriteOnly)); existing.write("original"); existing.close();
+        ChartExporter exporter;
+        QSignalSpy failed(&exporter, &ChartExporter::failed), saved(&exporter, &ChartExporter::saved);
+        const QVariantList items{QVariant::fromValue(first), QVariant::fromValue(second)};
+        const auto height = first->height();
+        QVERIFY(exporter.savePng(QUrl::fromLocalFile(path), items, {}));
+        if (changeUnits) weather.setWindUnit("km/h");
+        else preferences->setSeriesStyle("wind", "wind10_sd_true_prev_point", {{"color", "#123456"}});
+        QTRY_COMPARE(failed.count(), 1);
+        QCOMPARE(saved.count(), 0); QVERIFY(!exporter.busy());
+        QCOMPARE(first->height(), height);
+        QVERIFY(!first->property("exportMode").toBool()); QVERIFY(!second->property("exportMode").toBool());
+        QVERIFY(existing.open(QIODevice::ReadOnly)); QCOMPARE(existing.readAll(), QByteArray("original")); existing.close();
+        // Cancellation must leave the real charts usable for a fresh export.
+        QVERIFY(exporter.savePng(QUrl::fromLocalFile(path), items, {}));
+        QTRY_COMPARE_WITH_TIMEOUT(saved.count(), 1, 5000);
+        QVERIFY(!QImage(path).isNull());
+    }
     void exportFailurePreservesFileAndCanBeRetried()
     {
         QQuickWindow window;window.resize(200,200);window.show();
