@@ -1,5 +1,4 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include "core/ForecastSampling.hpp"
 #include <QVariantMap>
 
@@ -10,7 +9,7 @@ struct SeriesCapabilities {
     QStringList renderers, fills;
     Meteo::QuantityTiming timing=Meteo::QuantityTiming::Instant;
 };
-METEO_UI_EXPORT SeriesCapabilities seriesCapabilities(const QString &key);
-METEO_UI_EXPORT QVariantList prepareChartFields(const QVariantList &fields);
-METEO_UI_EXPORT QVariantMap describeChart(const QVariantList &fields,const QVariantMap &configuration,const QString &windUnit,const QString &fallbackScale);
-METEO_UI_EXPORT QVariantMap prepareProbeSamples(const QVariantList &samples,const QVariantList &fields);
+SeriesCapabilities seriesCapabilities(const QString &key);
+QVariantList prepareChartFields(const QVariantList &fields);
+QVariantMap describeChart(const QVariantList &fields,const QVariantMap &configuration,const QString &windUnit,const QString &fallbackScale);
+QVariantMap prepareProbeSamples(const QVariantList &samples,const QVariantList &fields);

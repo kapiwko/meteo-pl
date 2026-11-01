@@ -1,5 +1,4 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QString>
 #include <QVector>
 #include <QStringList>
@@ -11,7 +10,7 @@ struct ForecastField {
     QString darkColor, axisScale;
     QStringList renderers;
 };
-METEO_UI_EXPORT const QVector<ForecastField> &forecastFields();
-METEO_UI_EXPORT QString forecastDarkColor(const QString &lightColor, const QString &fieldKey = {});
+const QVector<ForecastField> &forecastFields();
+QString forecastDarkColor(const QString &lightColor, const QString &fieldKey = {});
 struct ForecastChart { QString key, title; QStringList fields; };
-METEO_UI_EXPORT const QVector<ForecastChart> &forecastCharts();
+const QVector<ForecastChart> &forecastCharts();

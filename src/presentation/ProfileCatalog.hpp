@@ -1,5 +1,4 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QVariantMap>
 #include <QVariantList>
 
@@ -11,7 +10,7 @@ public:
     void setValue(const QString &key,const QVariant &value) { values[key]=value; }
     void remove(const QString &key) { values.remove(key); }
 };
-class METEO_UI_EXPORT ProfileCatalog {
+class ProfileCatalog {
 public:
     ProfileCatalog(QVariantMap state,QVariantList defaults):m_store{std::move(state)},m_factoryProfiles(std::move(defaults)) {}
     QString profile() const;

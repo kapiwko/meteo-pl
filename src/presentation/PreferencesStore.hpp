@@ -1,5 +1,4 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QFileSystemWatcher>
 #include <QObject>
 #include <QSettings>
@@ -8,7 +7,7 @@
 
 // Owns the existing INI schema and its cross-process change notifications.
 // UserPreferences remains the QML facade for editing profiles and places.
-class METEO_UI_EXPORT PreferencesStore : public QObject
+class PreferencesStore : public QObject
 {
     Q_OBJECT
   public:

@@ -1,6 +1,6 @@
 #pragma once
 #include "MeteoUiExport.hpp"
-#include "network/JsonRequest.hpp"
+#include "data/GeocodingClient.hpp"
 #include <QTimer>
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
@@ -25,12 +25,11 @@ public:
     Q_INVOKABLE void search();
 private:
     void schedule();
-    Meteo::JsonRequest m_request;
+    Meteo::GeocodingClient m_client;
     QTimer m_delay;
     QString m_query, m_error;
     QVariantList m_results;
     bool m_polandOnly = true, m_busy = false;
-    QUrl m_endpoint;
 signals:
     void queryChanged();
     void stateChanged();

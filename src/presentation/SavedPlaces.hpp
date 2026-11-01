@@ -1,11 +1,10 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QVariantMap>
 #include <QVariantList>
 #include <functional>
 
 // Stable identity and collection rules without settings, files or GUI objects.
-class METEO_UI_EXPORT SavedPlaces {
+class SavedPlaces {
 public:
     SavedPlaces(QVariantList places={},QVariantList recent={}):m_places(std::move(places)),m_recent(std::move(recent)) {}
     QVariantList favorites() const;

@@ -1,27 +1,88 @@
 add_library(meteo_core STATIC
-    data/JsonDocumentStore.cpp data/JsonDocumentStore.hpp
-    data/EditorialRepository.cpp data/EditorialRepository.hpp
-    data/PreferencesFile.cpp data/PreferencesFile.hpp
-    network/JsonTransport.cpp network/JsonTransport.hpp
-    data/ForecastRepository.cpp data/ForecastRepository.hpp
-    core/Forecast.cpp core/Forecast.hpp
-    core/ForecastAggregation.cpp core/ForecastAggregation.hpp
-    core/ForecastSampling.cpp core/ForecastSampling.hpp
-    core/SolarCalendar.cpp core/SolarCalendar.hpp
-    core/EditorialContent.cpp core/EditorialContent.hpp
-    core/Localization.cpp core/Localization.hpp
-    core/Locations.cpp core/Locations.hpp
+    core/Forecast.cpp
+    core/Forecast.hpp
+    core/ForecastAggregation.cpp
+    core/ForecastAggregation.hpp
+    core/ForecastSampling.cpp
+    core/ForecastSampling.hpp
+    core/SolarCalendar.cpp
+    core/SolarCalendar.hpp
+    core/EditorialContent.cpp
+    core/EditorialContent.hpp
+    core/Localization.cpp
+    core/Localization.hpp
+    core/Locations.cpp
+    core/Locations.hpp
+    core/WebLink.cpp
+    core/WebLink.hpp
     core/DocumentFile.hpp
-    core/WebLink.cpp core/WebLink.hpp
-    network/MeteoClient.cpp network/MeteoClient.hpp
-    network/JsonRequest.cpp network/JsonRequest.hpp
-    network/DiskCacheBudget.cpp network/DiskCacheBudget.hpp
-    network/CacheFiles.cpp network/CacheFiles.hpp
-    network/MeteoMapSource.cpp network/MeteoMapSource.hpp
-    network/ThematicMapSource.cpp network/ThematicMapSource.hpp
 )
 target_include_directories(meteo_core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(meteo_core PUBLIC Qt6::Core Qt6::Network KF6::I18n)
+target_link_libraries(meteo_core PUBLIC Qt6::Core KF6::I18n)
+add_library(meteo_services STATIC
+    network/MeteoClient.cpp
+    network/MeteoClient.hpp
+    network/JsonRequest.cpp
+    network/JsonRequest.hpp
+    network/JsonTransport.cpp
+    network/JsonTransport.hpp
+    network/DiskCacheBudget.cpp
+    network/DiskCacheBudget.hpp
+    network/CacheFiles.cpp
+    network/CacheFiles.hpp
+    network/MeteoMapSource.cpp
+    network/MeteoMapSource.hpp
+    network/ThematicMapSource.cpp
+    network/ThematicMapSource.hpp
+    data/ForecastRepository.cpp
+    data/ForecastRepository.hpp
+    data/JsonDocumentStore.cpp
+    data/JsonDocumentStore.hpp
+    data/EditorialRepository.cpp
+    data/EditorialRepository.hpp
+    data/GeocodingClient.cpp
+    data/GeocodingClient.hpp
+    data/PreferencesFile.cpp
+    data/PreferencesFile.hpp
+    data/ForecastLauncher.cpp
+    data/ForecastLauncher.hpp
+)
+target_link_libraries(meteo_services PUBLIC meteo_core Qt6::Network)
+add_library(meteo_charts STATIC
+    presentation/ChartMath.cpp
+    presentation/ChartMath.hpp
+    presentation/ChartConfiguration.cpp
+    presentation/ChartConfiguration.hpp
+    presentation/ForecastFields.cpp
+    presentation/ForecastFields.hpp
+    presentation/JsonSchemaValidator.cpp
+    presentation/JsonSchemaValidator.hpp
+    presentation/ProfileFileCodec.cpp
+    presentation/ProfileFileCodec.hpp
+    presentation/BuiltinProfiles.cpp
+    presentation/ChartDataBuilder.cpp
+    presentation/ChartDataBuilder.hpp
+    presentation/PreparedSeries.cpp
+    presentation/PreparedChart.cpp
+    presentation/PreparedChart.hpp
+    presentation/PlotGeometry.cpp
+    presentation/PlotGeometry.hpp
+)
+target_include_directories(meteo_charts PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
+target_link_libraries(meteo_charts PUBLIC meteo_core Qt6::Gui)
+add_library(meteo_preferences STATIC
+    presentation/ProfileCatalog.cpp
+    presentation/ProfileCatalog.hpp
+    presentation/ProfileEditor.cpp
+    presentation/ProfileEditor.hpp
+    presentation/SavedPlaces.cpp
+    presentation/SavedPlaces.hpp
+    presentation/PreferencesMigration.cpp
+    presentation/PreferencesMigration.hpp
+    presentation/PreferencesStore.cpp
+    presentation/PreferencesStore.hpp
+)
+target_link_libraries(meteo_preferences PUBLIC meteo_charts meteo_services)
 
 file(GLOB METEO_TRANSLATION_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/po/*/meteo-pl.po")
 set(METEO_TRANSLATION_ROOT "${CMAKE_CURRENT_BINARY_DIR}/locale")
@@ -62,15 +123,12 @@ qt_add_qml_module(meteo_ui
         presentation/WebLinks.hpp
         presentation/ApplicationLauncher.cpp presentation/ApplicationLauncher.hpp
         presentation/LocationRules.hpp
-        presentation/ChartMath.cpp presentation/ChartMath.hpp presentation/BuiltinProfiles.cpp presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
-        presentation/PreparedSeries.cpp presentation/PreparedChart.cpp presentation/PreparedChart.hpp presentation/ChartDataBuilder.cpp presentation/ChartDataBuilder.hpp
-        presentation/ForecastFields.cpp presentation/ForecastFields.hpp
+        presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
         presentation/ForecastFormatting.cpp presentation/ForecastFormatting.hpp
-        presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
         presentation/ChartExporter.cpp presentation/ChartExporter.hpp
         presentation/ReadingsExporter.cpp presentation/ReadingsExporter.hpp
         presentation/ExportNotifications.cpp presentation/ExportNotifications.hpp
-        presentation/PlotGeometry.cpp presentation/PlotGeometry.hpp presentation/GpuPlot.cpp presentation/GpuPlot.hpp
+        presentation/GpuPlot.cpp presentation/GpuPlot.hpp
         presentation/ResponsiveImages.cpp presentation/ResponsiveImages.hpp
         presentation/ImagePreloader.cpp presentation/ImagePreloader.hpp
         presentation/CacheStorage.cpp presentation/CacheStorage.hpp
@@ -78,12 +136,7 @@ qt_add_qml_module(meteo_ui
         presentation/ReverseGeocoder.cpp presentation/ReverseGeocoder.hpp
         presentation/LocationTracker.cpp presentation/LocationTracker.hpp
         presentation/ApplicationTheme.cpp presentation/ApplicationTheme.hpp
-        presentation/ProfileCatalog.cpp presentation/ProfileCatalog.hpp presentation/ProfileEditor.cpp presentation/ProfileEditor.hpp
-        presentation/SavedPlaces.cpp presentation/SavedPlaces.hpp presentation/PreferencesMigration.cpp presentation/PreferencesMigration.hpp
         presentation/UserPreferences.cpp presentation/UserPreferences.hpp
-        presentation/ProfileFileCodec.cpp presentation/ProfileFileCodec.hpp
-        presentation/JsonSchemaValidator.cpp presentation/JsonSchemaValidator.hpp
-        presentation/PreferencesStore.cpp presentation/PreferencesStore.hpp
         presentation/SavedPlaceController.cpp presentation/SavedPlaceController.hpp
         presentation/WeatherLayersModel.cpp presentation/WeatherLayersModel.hpp
         presentation/MapLegendModel.cpp presentation/MapLegendModel.hpp
@@ -118,7 +171,7 @@ set_source_files_properties(qml/HourlyForecastTable.qml PROPERTIES QT_RESOURCE_A
 qt_target_qml_sources(meteo_ui QML_FILES qml/HourlyForecastTable.qml)
 set_source_files_properties(qml/ProfileUpdateNotice.qml PROPERTIES QT_RESOURCE_ALIAS ProfileUpdateNotice.qml)
 qt_target_qml_sources(meteo_ui QML_FILES qml/ProfileUpdateNotice.qml)
-target_link_libraries(meteo_ui PUBLIC meteo_core Qt6::Qml Qt6::Positioning PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
+target_link_libraries(meteo_ui PUBLIC meteo_services meteo_preferences Qt6::Qml Qt6::Positioning PRIVATE Qt6::Quick Qt6::QuickControls2 KF6::Notifications)
 target_include_directories(meteo_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/presentation")
 target_compile_definitions(meteo_ui PRIVATE METEO_UI_BUILD)
 qt_add_resources(meteo_ui "application_icon" PREFIX "/icons"
@@ -127,11 +180,11 @@ qt_add_resources(meteo_ui "application_icon" PREFIX "/icons"
 qt_add_resources(meteo_ui "license" PREFIX "/meteo" BASE "${PROJECT_SOURCE_DIR}"
     FILES "${PROJECT_SOURCE_DIR}/LICENSE")
 file(GLOB METEO_PROFILE_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/resources/profiles/*.json")
-qt_add_resources(meteo_ui "chart_profiles" PREFIX "/meteo/profiles"
+qt_add_resources(meteo_charts "chart_profiles" PREFIX "/meteo/profiles"
     BASE "${PROJECT_SOURCE_DIR}/resources/profiles" FILES ${METEO_PROFILE_FILES})
 install(FILES ${METEO_PROFILE_FILES} DESTINATION "${CMAKE_INSTALL_DATADIR}/meteo-pl/profiles")
 file(GLOB METEO_CHART_FILES CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/resources/charts/*.json" "${PROJECT_SOURCE_DIR}/resources/schemas/*.json")
-qt_add_resources(meteo_ui "chart_defaults" PREFIX "/meteo"
+qt_add_resources(meteo_charts "chart_defaults" PREFIX "/meteo"
     BASE "${PROJECT_SOURCE_DIR}/resources" FILES ${METEO_CHART_FILES})
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/resources/charts" "${PROJECT_SOURCE_DIR}/resources/schemas"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/meteo-pl")
@@ -142,11 +195,11 @@ FetchContent_Declare(meteo_valijson
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     SOURCE_SUBDIR meteo-headers-only)
 FetchContent_MakeAvailable(meteo_valijson)
-target_include_directories(meteo_ui SYSTEM PRIVATE "${meteo_valijson_SOURCE_DIR}/include")
-target_compile_definitions(meteo_ui PRIVATE VALIJSON_USE_EXCEPTIONS=1)
+target_include_directories(meteo_charts SYSTEM PRIVATE "${meteo_valijson_SOURCE_DIR}/include")
+target_compile_definitions(meteo_charts PRIVATE VALIJSON_USE_EXCEPTIONS=1)
 install(FILES "${meteo_valijson_SOURCE_DIR}/LICENSE"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/meteo-pl/valijson")
-foreach(target meteo_core meteo_ui)
+foreach(target meteo_core meteo_services meteo_charts meteo_preferences meteo_ui)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /permissive-)
     else()

@@ -1,20 +1,19 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QVariantList>
 #include <QVariantMap>
 
-METEO_UI_EXPORT QVariantList chartSeriesCatalog();
-METEO_UI_EXPORT QStringList seriesFills(const QString &key);
-METEO_UI_EXPORT QStringList seriesRenderers(const QString &key);
-METEO_UI_EXPORT QVariantMap defaultSeriesStyle(const QString &key);
-METEO_UI_EXPORT QVariantMap normalizeSeriesStyle(const QVariantMap &value);
-METEO_UI_EXPORT QVariantList defaultChartCatalog();
-METEO_UI_EXPORT QVariantMap defaultChartAppearance();
-METEO_UI_EXPORT QVariantMap defaultChartPrototype();
-METEO_UI_EXPORT QVariantList builtinChartProfiles();
-METEO_UI_EXPORT QVariantList defaultChartLayout(const QString &profile);
-METEO_UI_EXPORT QVariantList normalizeChartLayout(const QVariantList &saved);
-METEO_UI_EXPORT QVariantList removeUnusedChartTemplates(const QVariantList &saved);
-METEO_UI_EXPORT QVariantList integrateWindDirection(const QVariantList &saved);
-METEO_UI_EXPORT QStringList chartFieldKeys(const QVariantList &series);
-METEO_UI_EXPORT QString seriesScale(const QString &key);
+QVariantList chartSeriesCatalog();
+QStringList seriesRenderers(const QString &key);
+QStringList seriesFills(const QString &key);
+QVariantMap defaultSeriesStyle(const QString &key);
+QVariantMap normalizeSeriesStyle(const QVariantMap &value);
+QVariantList defaultChartCatalog();
+QVariantMap defaultChartAppearance();
+QVariantMap defaultChartPrototype();
+QVariantList builtinChartProfiles();
+QVariantList defaultChartLayout(const QString &profile);
+QVariantList normalizeChartLayout(const QVariantList &saved);
+QVariantList removeUnusedChartTemplates(const QVariantList &saved);
+QVariantList integrateWindDirection(const QVariantList &saved);
+QStringList chartFieldKeys(const QVariantList &series);
+QString seriesScale(const QString &key);

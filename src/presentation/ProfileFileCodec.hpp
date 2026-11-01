@@ -1,11 +1,10 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QByteArray>
 #include <QUrl>
 #include <QVariantList>
 #include <optional>
 
-class METEO_UI_EXPORT ProfileFileCodec
+class ProfileFileCodec
 {
 public:
     static constexpr qsizetype maximumBytes = 16 * 1024 * 1024;

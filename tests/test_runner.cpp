@@ -1,6 +1,8 @@
+#include <QTimer>
 #include "MeteoRunner.hpp"
 #include "RunnerQuery.hpp"
-#include "UserPreferences.hpp"
+#include "data/PreferencesFile.hpp"
+#include <QJsonDocument>
 #include "ServiceFixture.hpp"
 #include <KRunner/AbstractRunnerTest>
 #include <KRunner/QueryMatch>
@@ -19,9 +21,9 @@ private slots:
         QVERIFY(m_files.isValid());
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, m_files.path());
         qputenv("XDG_CACHE_HOME", m_files.path().toUtf8());
-        UserPreferences preferences;
-        preferences.savePlace("Gdańsk", 54.352, 18.6466);
-        preferences.savePlace("Łódź", 51.759, 19.456);
+        const QVariantList places{QVariantMap{{"name","Gdańsk"},{"latitude",54.352},{"longitude",18.6466}},
+            QVariantMap{{"name","Łódź"},{"latitude",51.759},{"longitude",19.456}}};
+        QVERIFY(Meteo::writePreferencesFile(Meteo::preferencesFilePath(),{{"places/favorites",QJsonDocument::fromVariant(places).toJson()}},nullptr));
         initProperties();
     }
     void parsesOnlyExplicitWeatherQueries()

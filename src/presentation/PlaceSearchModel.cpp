@@ -3,18 +3,18 @@
 #include <QUrlQuery>
 
 PlaceSearchModel::PlaceSearchModel(QObject *parent, QUrl endpoint)
-    : QObject(parent), m_endpoint(std::move(endpoint))
+    : QObject(parent), m_client(nullptr,std::move(endpoint))
 {
     m_delay.setSingleShot(true);
     m_delay.setInterval(350);
     connect(&m_delay, &QTimer::timeout, this, &PlaceSearchModel::search);
-    connect(&m_request, &Meteo::JsonRequest::received, this, [this](const QJsonDocument &document) {
-        m_results = Meteo::parseLocations(document);
+    connect(&m_client, &Meteo::GeocodingClient::received, this, [this](const QVariantList &places) {
+        m_results = places;
         m_busy = false;
         m_error.clear();
         emit stateChanged();
     });
-    connect(&m_request, &Meteo::JsonRequest::failed, this, [this](const QString &message) {
+    connect(&m_client, &Meteo::GeocodingClient::failed, this, [this](const QString &message) {
         m_busy = false;
         m_error = message;
         emit stateChanged();
@@ -34,7 +34,7 @@ void PlaceSearchModel::setPolandOnly(bool value)
 }
 void PlaceSearchModel::schedule()
 {
-    m_request.cancel();
+    m_client.cancel();
     m_delay.stop();
     m_results.clear();
     m_error.clear();
@@ -47,17 +47,7 @@ void PlaceSearchModel::search()
 {
     m_delay.stop();
     if (m_query.trimmed().size() < 2) return;
-    QUrl url(m_endpoint);
-    QUrlQuery query;
-    // Photon supports incomplete names; the legacy geocoder only found full
-    // names. Keep the same autocomplete service when restricting the country.
-    query.addQueryItem(QStringLiteral("q"), m_query.trimmed());
-    query.addQueryItem(QStringLiteral("limit"), QStringLiteral("20"));
-    query.addQueryItem(QStringLiteral("osm_tag"), QStringLiteral("place"));
-    query.addQueryItem(QStringLiteral("lang"), QStringLiteral("en"));
-    if (m_polandOnly) query.addQueryItem(QStringLiteral("countrycode"), QStringLiteral("PL"));
-    url.setQuery(query);
     m_busy = true;
     emit stateChanged();
-    m_request.get(url, 24 * 3600);
+    m_client.search(m_query,m_polandOnly);
 }

@@ -1,8 +1,8 @@
 #include "MeteoRunner.hpp"
 #include "RunnerQuery.hpp"
-#include "ApplicationLauncher.hpp"
-#include "PlaceSearchModel.hpp"
-#include "PreferencesStore.hpp"
+#include "data/ForecastLauncher.hpp"
+#include "data/GeocodingClient.hpp"
+#include "data/PreferencesFile.hpp"
 #include "core/Forecast.hpp"
 #include "core/Localization.hpp"
 #include <KRunner/QueryMatch>
@@ -40,7 +40,7 @@ void MeteoRunner::match(KRunner::RunnerContext &context)
         if (context.addMatch(result)) ++count;
     };
     const auto needle = Meteo::searchablePlaceName(*term);
-    for (const auto &entry : PreferencesStore::savedPlacesSnapshot()) {
+    for (const auto &entry : Meteo::savedPlacesSnapshot()) {
         const auto place = entry.toMap();
         if (Meteo::searchablePlaceName(place.value("name").toString()).contains(needle)) addPlace(place, true);
     }
@@ -56,24 +56,24 @@ void MeteoRunner::match(KRunner::RunnerContext &context)
     if (count || term->size() < 2 || !context.isValid()) return;
     // KRunner calls match in a worker thread. Keep requests local to this query,
     // and abort them as soon as the user replaces it with another query.
-    PlaceSearchModel search(nullptr, m_endpoint);
-    search.setPolandOnly(false);
+    Meteo::GeocodingClient search(nullptr,m_endpoint);
+    QVariantList results;
     QEventLoop loop;
     QTimer deadline, cancelled;
     deadline.setSingleShot(true);
-    connect(&search, &PlaceSearchModel::stateChanged, &loop, [&] { if (!search.busy()) loop.quit(); });
+    connect(&search,&Meteo::GeocodingClient::received,&loop,[&](const QVariantList &places) { results=places; loop.quit(); });
+    connect(&search,&Meteo::GeocodingClient::failed,&loop,&QEventLoop::quit);
     connect(&deadline, &QTimer::timeout, &loop, &QEventLoop::quit);
     connect(&cancelled, &QTimer::timeout, &loop, [&] { if (!context.isValid() || context.query() != originalQuery) loop.quit(); });
-    search.setQuery(*term); search.search();
+    search.search(*term,false);
     deadline.start(2000); cancelled.start(40);
     loop.exec();
-    if (context.isValid() && context.query() == originalQuery) for (const auto &entry : search.results()) addPlace(entry.toMap(), false);
-    search.setQuery({});
+    if (context.isValid() && context.query() == originalQuery) for (const auto &entry : results) addPlace(entry.toMap(), false);
+    search.cancel();
 }
 void MeteoRunner::run(const KRunner::RunnerContext &, const KRunner::QueryMatch &match)
 {
     const auto place = match.data().toMap();
-    ApplicationLauncher launcher;
-    launcher.openForecast(place.value("name").toString(), place.value("latitude").toDouble(),
+    Meteo::launchForecast(place.value("name").toString(), place.value("latitude").toDouble(),
                           place.value("longitude").toDouble(), place.value("model").toString());
 }

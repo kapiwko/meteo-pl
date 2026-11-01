@@ -1,12 +1,11 @@
 #pragma once
-#include "MeteoUiExport.hpp"
 #include <QVariantMap>
 #include <QVariantList>
 #include <functional>
 #include "ProfileCatalog.hpp"
 
 // Pure profile catalog/editor. Persistence and transaction ownership stay outside.
-class METEO_UI_EXPORT ProfileEditor : public ProfileCatalog {
+class ProfileEditor : public ProfileCatalog {
 public:
     ProfileEditor(QVariantMap state,QVariantList defaults):ProfileCatalog(std::move(state),std::move(defaults)) {}
     static QStringList stateKeys() { return {"profile","savedProfiles","deletedProfiles","customLayout","customChartHeight","customProfileName"}; }
