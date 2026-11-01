@@ -99,6 +99,14 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "emulator" "platform-tools" "system-images;android-35;google_apis_playstore;x86_64"
           echo no | "$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager" create avd --force --name meteo-ci --path "$ANDROID_AVD_HOME/meteo-ci.avd" --package "system-images;android-35;google_apis_playstore;x86_64"
           echo "hw.keyboard=yes" >> "$ANDROID_AVD_HOME/meteo-ci.avd/config.ini"
+          install -d -m 700 "$HOME/.android"
+          if [[ ! -s "$HOME/.android/adbkey" ]]; then
+            adb keygen "$HOME/.android/adbkey"
+          fi
+          export ADB_VENDOR_KEYS="$HOME/.android/adbkey"
+          echo "ADB_VENDOR_KEYS=$ADB_VENDOR_KEYS" >> "$GITHUB_ENV"
+          adb kill-server
+          adb start-server
           mkdir -p build/android-runtime
           "$ANDROID_HOME/emulator/emulator" -avd meteo-ci -port 5554 -no-window -no-audio -no-snapshot -no-boot-anim -cores 2 -memory 4096 -gpu swiftshader -feature -Vulkan -qemu -cpu host > build/android-runtime/emulator.log 2>&1 &
           if ! timeout 120 adb wait-for-device; then
