@@ -1,6 +1,6 @@
 #include "PreferencesStore.hpp"
+#include "data/PreferencesFile.hpp"
 #include "PreferencesMigration.hpp"
-#include "ChartConfiguration.hpp"
 #include "core/Localization.hpp"
 #include "core/Locations.hpp"
 #include <QDataStream>
@@ -14,105 +14,9 @@
 #include <QStandardPaths>
 #include <QTemporaryFile>
 
-namespace
+PreferencesStore::PreferencesStore(QObject *parent) : QObject(parent), m_fileName(Meteo::preferencesFilePath())
 {
-QString settingsPath()
-{
-    return QSettings(QSettings::IniFormat, QSettings::UserScope, QStringLiteral("meteo-pl"), QStringLiteral("desktop"))
-        .fileName();
-}
-QString settingsTemporaryFileTemplate()
-{
-    // Android applications cannot write to the shared system temporary directory.
-    // Keep scratch files outside the watched settings and clearable data cache.
-    const auto directory = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
-        + QStringLiteral("/meteo-pl-preferences");
-    QDir().mkpath(directory);
-    return QDir(directory).filePath(QStringLiteral("settings-XXXXXX.ini"));
-}
-// QSettings still owns the INI encoding. A private temporary file avoids its
-// shared, process-local cache and pending writes leaking out of a failed edit.
-bool readSettings(const QString &path, QVariantMap &values, QString *error)
-{
-    QFile input(path);
-    if (!input.exists()) {
-        values.clear();
-        return true;
-    }
-    if (!input.open(QIODevice::ReadOnly)) {
-        if (error)
-            *error = input.errorString();
-        return false;
-    }
-    QTemporaryFile temporary(settingsTemporaryFileTemplate());
-    if (!temporary.open()) {
-        if (error)
-            *error = temporary.errorString();
-        return false;
-    }
-    const auto bytes = input.readAll();
-    if (input.error() != QFile::NoError || temporary.write(bytes) != bytes.size() || !temporary.flush()) {
-        if (error)
-            *error = Meteo::i18n("Could not read preferences.");
-        return false;
-    }
-    QSettings settings(temporary.fileName(), QSettings::IniFormat);
-    QVariantMap result;
-    for (const auto &key : settings.allKeys())
-        result.insert(key, settings.value(key));
-    if (settings.status() != QSettings::NoError) {
-        if (error)
-            *error = Meteo::i18n("The preferences file is invalid.");
-        return false;
-    }
-    values = std::move(result);
-    return true;
-}
-bool writeSettings(const QString &path, const QVariantMap &values, QString *error)
-{
-    QTemporaryFile temporary(settingsTemporaryFileTemplate());
-    if (!temporary.open()) {
-        if (error)
-            *error = temporary.errorString();
-        return false;
-    }
-    temporary.close();
-    {
-        QSettings settings(temporary.fileName(), QSettings::IniFormat);
-        for (auto it = values.cbegin(); it != values.cend(); ++it)
-            settings.setValue(it.key(), it.value());
-        settings.sync();
-        if (settings.status() != QSettings::NoError) {
-            if (error)
-                *error = Meteo::i18n("Could not prepare preferences for saving.");
-            return false;
-        }
-    }
-    QFile encoded(temporary.fileName());
-    if (!encoded.open(QIODevice::ReadOnly)) {
-        if (error)
-            *error = encoded.errorString();
-        return false;
-    }
-    const auto bytes = encoded.readAll();
-    if (encoded.error() != QFile::NoError) {
-        if (error)
-            *error = encoded.errorString();
-        return false;
-    }
-    QSaveFile output(path);
-    if (!output.open(QIODevice::WriteOnly) || output.write(bytes) != bytes.size() || !output.commit()) {
-        if (error)
-            *error = output.errorString();
-        return false;
-    }
-    return true;
-}
-} // namespace
-
-PreferencesStore::PreferencesStore(QObject *parent) : QObject(parent), m_fileName(settingsPath())
-{
-    readSettings(m_fileName, m_values, nullptr);
+    Meteo::readPreferencesFile(m_fileName, m_values, nullptr);
     update([this] { migratePreferences(m_pending); });
     m_places = placesSnapshot();
     m_display = displaySnapshot();
@@ -131,13 +35,7 @@ void PreferencesStore::watchFile()
     if (!m_watcher.files().contains(m_fileName) && QFile::exists(m_fileName))
         m_watcher.addPath(m_fileName);
 }
-QVariantList PreferencesStore::savedPlacesSnapshot()
-{
-    QVariantMap values;
-    if (!readSettings(settingsPath(), values, nullptr))
-        return {};
-    return QJsonDocument::fromJson(values.value("places/favorites").toByteArray()).toVariant().toList();
-}
+QVariantList PreferencesStore::savedPlacesSnapshot() { return Meteo::savedPlacesSnapshot(); }
 QVariant PreferencesStore::value(const QString &key, const QVariant &fallback) const
 {
     return (m_updating ? m_pending : m_values).value(key, fallback);
@@ -163,7 +61,7 @@ bool PreferencesStore::sync()
     if (m_updating)
         return true;
     QVariantMap values;
-    if (!readSettings(m_fileName, values, nullptr))
+    if (!Meteo::readPreferencesFile(m_fileName, values, nullptr))
         return false;
     publish(std::move(values));
     return true;
@@ -189,7 +87,7 @@ bool PreferencesStore::update(const std::function<void()> &operation, QString *e
                 *error = Meteo::i18n("Preferences are being changed by another process. Try again.");
             return false;
         }
-        if (!readSettings(m_fileName, m_pending, error))
+        if (!Meteo::readPreferencesFile(m_fileName, m_pending, error))
             return false;
         const auto original = m_pending;
         m_updating = true;
@@ -198,7 +96,7 @@ bool PreferencesStore::update(const std::function<void()> &operation, QString *e
             m_pending.clear();
         });
         operation();
-        if (m_pending != original && !writeSettings(m_fileName, m_pending, error))
+        if (m_pending != original && !Meteo::writePreferencesFile(m_fileName, m_pending, error))
             return false;
         committed = m_pending;
     }

@@ -2,6 +2,7 @@
 #include "ImageCache.hpp"
 #include "CacheFiles.hpp"
 #include "RequestPolicy.hpp"
+#include "HttpCachePolicy.hpp"
 #include <QBuffer>
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -16,28 +17,6 @@
 #include <QTimer>
 
 namespace Meteo {
-namespace {
-bool allowsReuse(const QByteArray &header)
-{
-    const auto control = header.toLower();
-    static const QRegularExpression immediatelyStale(QStringLiteral(R"((?:^|,)\s*max-age\s*=\s*"?0"?\s*(?:,|$))"));
-    return !control.contains("no-store") && !control.contains("no-cache")
-        && !immediatelyStale.match(QString::fromLatin1(control)).hasMatch();
-}
-QDateTime expirationFor(const QNetworkReply *reply, const QNetworkCacheMetaData &metadata, const QDateTime &now)
-{
-    if (metadata.expirationDate().isValid()) return metadata.expirationDate();
-    static const QRegularExpression maxAge(QStringLiteral(R"((?:^|,)\s*max-age\s*=\s*"?(\d+))"));
-    const auto match = maxAge.match(QString::fromLatin1(reply->rawHeader("Cache-Control").toLower()));
-    if (match.hasMatch()) {
-        bool ok = false;
-        const auto seconds = match.captured(1).toLongLong(&ok);
-        if (ok) return now.addSecs(std::min<qint64>(seconds, 7*86400));
-    }
-    const auto expires = QDateTime::fromString(QString::fromLatin1(reply->rawHeader("Expires")), Qt::RFC2822Date);
-    return expires.isValid() ? expires : now.addSecs(1800);
-}
-}
 ImageCache::ImageCache(const QString &directory, QObject *parent)
     : QObject(parent)
 {
@@ -182,7 +161,7 @@ void ImageCache::startJob(const QString &key, quint64 token)
     const auto stored = m_disk ? m_disk->metaData(url) : QNetworkCacheMetaData();
     bool fresh = stored.isValid() && stored.expirationDate() > QDateTime::currentDateTimeUtc();
     for (const auto &header : stored.rawHeaders())
-        if (header.first.compare("Cache-Control", Qt::CaseInsensitive) == 0 && !allowsReuse(header.second)) fresh = false;
+        if (header.first.compare("Cache-Control", Qt::CaseInsensitive) == 0 && !allowsCacheReuse(header.second)) fresh = false;
     request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
         fresh ? QNetworkRequest::PreferCache : QNetworkRequest::AlwaysNetwork);
     auto *reply = m_network.get(request);
@@ -197,11 +176,14 @@ void ImageCache::startJob(const QString &key, quint64 token)
             : reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
         const auto status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const auto now = QDateTime::currentDateTimeUtc();
-        const auto metadata = m_disk ? m_disk->metaData(reply->url()) : QNetworkCacheMetaData();
         const auto cacheControl = reply->rawHeader("Cache-Control").toLower();
-        const bool cacheable = allowsReuse(cacheControl);
+        auto expiry = cacheExpiration(reply,now,7*86400,1800);
+        if (m_disk && reply->attribute(QNetworkRequest::SourceIsFromCacheAttribute).toBool()) {
+            const auto storedExpiry=m_disk->metaData(reply->url()).expirationDate();
+            if (expiry.isValid() && storedExpiry.isValid()) expiry=std::min(expiry,storedExpiry);
+        }
+        const bool cacheable = expiry.isValid() && expiry>now;
         const bool needsExpiry = cacheable && !reply->hasRawHeader("Expires") && !cacheControl.contains("max-age");
-        const auto expiry = expirationFor(reply, metadata, now);
         QNetworkCacheMetaData fallback;
         if (needsExpiry) {
             // old.meteo.pl supplies Last-Modified but no freshness lifetime.

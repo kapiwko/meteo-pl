@@ -1,6 +1,7 @@
 #pragma once
 #include "MeteoUiExport.hpp"
-#include "network/JsonRequest.hpp"
+#include "data/EditorialRepository.hpp"
+#include "EditorialState.hpp"
 #include <QVariantList>
 #include <QMap>
 #include <QDateTime>
@@ -24,13 +25,13 @@ public:
     using Clock = std::function<QDate()>;
     explicit EditorialModel(QObject *parent = nullptr, QUrl endpoint = QUrl(QStringLiteral("https://meteo-backend.dev.meteo.pl")), Clock clock = {});
     bool commentary() const { return m_commentary; }
-    QString date() const { return m_date; }
+    QString date() const { return m_comment.date; }
     bool busy() const { return m_busy; }
     QString error() const { return m_error; }
     QString notice() const { return m_notice; }
-    QVariantList articles() const { return m_articles; }
-    QString commentHtml() const { return m_commentHtml; }
-    QString publishedDate() const { return m_publishedDate; }
+    QVariantList articles() const { return m_article.entries; }
+    QString commentHtml() const { return m_comment.html; }
+    QString publishedDate() const { return m_comment.publishedDate; }
     QString today() const { return m_today.toString(Qt::ISODate); }
     void setCommentary(bool value);
     void setDate(const QString &value);
@@ -40,20 +41,12 @@ private slots:
     void updateCalendarDay();
 private:
     void load(int page, bool force = false);
-    bool applyDocument(const QJsonDocument &document);
-    QString cachePath() const;
-    bool loadCache();
-    void saveCache(const QJsonDocument &document) const;
-    Meteo::JsonRequest m_request;
+    Meteo::EditorialRepository m_repository;
+    ArticleNavigation m_article;
+    CommentaryNavigation m_comment;
     bool m_commentary = true, m_busy = false;
-    int m_page = 0, m_requestedPage = 1;
-    QString m_date, m_error, m_notice, m_commentHtml, m_publishedDate;
-    QVariantList m_articles;
-    QMap<int, QVariantList> m_pages;
-    QUrl m_url;
-    QDateTime m_savedAt;
+    QString m_error,m_notice;
     bool m_cached = false;
-    QUrl m_endpoint;
     Clock m_clock;
     QDate m_today;
     QTimer m_calendarTimer;

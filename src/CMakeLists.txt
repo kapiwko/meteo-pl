@@ -1,4 +1,8 @@
 add_library(meteo_core STATIC
+    data/JsonDocumentStore.cpp data/JsonDocumentStore.hpp
+    data/EditorialRepository.cpp data/EditorialRepository.hpp
+    data/PreferencesFile.cpp data/PreferencesFile.hpp
+    network/JsonTransport.cpp network/JsonTransport.hpp
     data/ForecastRepository.cpp data/ForecastRepository.hpp
     core/Forecast.cpp core/Forecast.hpp
     core/ForecastAggregation.cpp core/ForecastAggregation.hpp

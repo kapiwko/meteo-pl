@@ -16,6 +16,25 @@ private slots:
         QVERIFY(m_storage.isValid());
         qputenv("XDG_CACHE_HOME",m_storage.path().toUtf8());
     }
+    void decodingADiskHitDoesNotExtendItsOriginalExpiry()
+    {
+        QTemporaryDir directory;
+        ImageServer server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        const auto url=server.url("green-expiry");
+        int received=0;
+        const auto accept=[&](const QImage &image,const QString &error) { QVERIFY(error.isEmpty()); QVERIFY(!image.isNull()); ++received; };
+        { Meteo::ImageCache cache(directory.path()); cache.request(url,accept); QTRY_COMPARE(received,1); }
+        {
+            QNetworkDiskCache disk; disk.setCacheDirectory(directory.path());
+            auto metadata=disk.metaData(url); QVERIFY(metadata.isValid());
+            metadata.setExpirationDate(QDateTime::currentDateTimeUtc().addMSecs(1500)); disk.updateMetaData(metadata);
+        }
+        Meteo::ImageCache cache(directory.path()); cache.request(url,accept); QTRY_COMPARE(received,2);
+        QCOMPARE(server.requests.size(),1);
+        QTest::qWait(1600);
+        cache.request(url,accept); QTRY_COMPARE(received,3);
+        QCOMPARE(server.requests.size(),2);
+    }
     void globalQueuePrioritizesVisibleImagesAndKeepsSharedConsumers()
     {
         QTemporaryDir directory;

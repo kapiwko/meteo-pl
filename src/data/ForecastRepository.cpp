@@ -1,4 +1,5 @@
 #include "ForecastRepository.hpp"
+#include "JsonDocumentStore.hpp"
 #include "core/Localization.hpp"
 #include "network/DiskCacheBudget.hpp"
 #include <QCryptographicHash>
@@ -91,10 +92,9 @@ std::optional<ForecastSnapshot> ForecastRepository::cached(const ForecastQuery &
 {
     if (!query.valid())
         return std::nullopt;
-    QFile file(cachePath(query));
-    if (!file.open(QIODevice::ReadOnly) || file.size() > 3 * 1024 * 1024)
-        return std::nullopt;
-    const auto envelope = QJsonDocument::fromJson(file.readAll()).object();
+    const auto cached=readJsonFile(cachePath(query),3*1024*1024);
+    if (!cached || !cached->isObject()) return std::nullopt;
+    const auto envelope=cached->object();
     const ForecastQuery stored{envelope.value("latitude").toDouble(), envelope.value("longitude").toDouble(),
                                envelope.value("model").toString(), envelope.value("requestedRun").toInteger()};
     if (!stored.valid() || stored.pointKey() != query.pointKey() || stored.requestedRun != query.requestedRun)
@@ -106,7 +106,7 @@ std::optional<ForecastSnapshot> ForecastRepository::cached(const ForecastQuery &
     const auto forecast = parseForecast(payload);
     if (!forecast)
         return std::nullopt;
-    touchCacheEntry(file.fileName());
+    touchCacheEntry(cachePath(query));
     return ForecastSnapshot{query.canonical(), *forecast, saved, true,
                             QCryptographicHash::hash(payload, QCryptographicHash::Sha256)};
 }
@@ -114,18 +114,12 @@ void ForecastRepository::save(const ForecastSnapshot &snapshot, const QByteArray
 {
     const auto &query = snapshot.query;
     const auto path = cachePath(query);
-    QDir().mkpath(QFileInfo(path).absolutePath());
-    QSaveFile file(path);
-    if (!file.open(QIODevice::WriteOnly))
-        return;
     const QJsonObject envelope{{"model", query.model},
                                {"latitude", query.latitude},
                                {"longitude", query.longitude},
                                {"requestedRun", query.requestedRun},
                                {"savedAt", snapshot.fetchedAt.toString(Qt::ISODate)},
                                {"payload", QString::fromUtf8(payload)}};
-    const auto bytes = QJsonDocument(envelope).toJson(QJsonDocument::Compact);
-    if (file.write(bytes) == bytes.size() && file.commit())
-        pruneDiskCache(QFileInfo(path).absolutePath(), {QStringLiteral("*.json")}, forecastCacheBudget, path);
+    writeJsonFile(path,QJsonDocument(envelope),forecastCacheBudget);
 }
 } // namespace Meteo
