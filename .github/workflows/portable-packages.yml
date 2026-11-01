@@ -48,6 +48,13 @@ jobs:
         env:
           METEO_CRAFT_CACHE_URL: ${{ matrix.cache_url }}
         run: python scripts/build-portable.py --target "${{ matrix.target }}" --work-dir "${{ runner.temp }}/MeteoBuild" --craft-root "${{ runner.temp }}/MeteoCraft" ${{ inputs.include_alternatives && '--include-alternatives' || '' }}
+      - name: Preserve native renderer comparisons
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: meteo-pl-renderers-${{ matrix.target }}-${{ github.sha }}
+          path: ${{ runner.temp }}/MeteoBuild/rendering-artifacts/
+          if-no-files-found: ignore
       - name: Preserve the installer and checksums
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
