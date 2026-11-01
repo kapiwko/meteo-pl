@@ -2806,3 +2806,12 @@ msgstr "Przedział porywów obejmuje północ."
 
 msgid "Precipitation type may vary within the period."
 msgstr "Rodzaj opadu może zmieniać się w tym przedziale."
+
+msgid "This chart no longer exists."
+msgstr "Ten wykres już nie istnieje."
+
+msgid "The chart cannot be moved further."
+msgstr "Nie można przesunąć wykresu dalej."
+
+msgid "Unknown profile command."
+msgstr "Nieznane polecenie profilu."
