@@ -182,7 +182,6 @@ function paintChart(root, plot, ctx, withCursor) {
                 if (field.kind === "cloudPoint" && point.value <= 0) continue;
                 ctx.beginPath(); ctx.arc(x, y, field.pointSize || (field.kind === "points" ? 2 : 3), 0, Math.PI * 2); ctx.fill();
             } else if (field.kind === "gusts") {
-                if (point.value <= 0) continue;
                 const gustY = Math.max(top, y);
                 ctx.beginPath(); ctx.moveTo(root.px(interval.from), gustY); ctx.lineTo(root.px(interval.to), gustY); ctx.stroke();
                 if (point.value > (isRight ? root.rightBounds.high : root.bounds.high)) { ctx.beginPath(); ctx.arc(x, top + 2, 2, 0, Math.PI * 2); ctx.fill(); }

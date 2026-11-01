@@ -100,7 +100,7 @@ QVariantList prepareChartFields(const QVariantList &fields)
             const auto interval=point.value("interval").toDouble();
             const bool instant=timing==Meteo::QuantityTiming::Instant;
             const auto from=point.value("intervalFrom").isNull() || !point.value("intervalFrom").isValid()
-                ? time : point["intervalFrom"].toDouble();
+                ? time-(instant && kind=="gusts"?interval/2:0) : point["intervalFrom"].toDouble();
             const auto to=point.value("intervalTo").isNull() || !point.value("intervalTo").isValid() ? from+interval : point["intervalTo"].toDouble();
             point["renderTimestamp"]=center && !instant ? (from+to)/2 : time;
             point["segmentFrom"]=from; point["segmentTo"]=to;
@@ -148,4 +148,3 @@ QVariantList prepareChartFields(const QVariantList &fields)
     }
     return result;
 }
-

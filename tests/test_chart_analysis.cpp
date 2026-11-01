@@ -63,6 +63,29 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void horizontalSegmentsKeepSignedAndMissingSamples_data()
+    {
+        QTest::addColumn<bool>("right"); QTest::addColumn<QString>("key");
+        for (bool right : {false,true}) for (const auto &key : {"airtmp_point","wind_gust_max"})
+            QTest::newRow(qPrintable(QString(key)+(right?" right":" left"))) << right << QString(key);
+    }
+    void horizontalSegmentsKeepSignedAndMissingSamples()
+    {
+        QFETCH(bool,right); QFETCH(QString,key);
+        Meteo::Forecast forecast; forecast.series[key]={"unit",1800000000,3600,{-5,0,5,std::nullopt}};
+        const auto points=buildChartSeries(forecast,{}).value(key).toList();
+        QJSEngine engine;
+        const auto drawing=recordChart(engine,{QVariantMap{{"key",key},{"kind","gusts"},{"render","gusts"},
+            {"axis",right?"right":"left"},{"points",points}}});
+        QVERIFY2(!drawing.isError(),qPrintable(drawing.toString()));
+        const auto lines=drawing.property("lines"); QCOMPARE(lines.property("length").toInt(),3);
+        for (int i=0;i<3;++i) {
+            const double start=i*100-(key=="airtmp_point"?50:0);
+            QCOMPARE(lines.property(i).property(0).property(0).toNumber(),start);
+            QCOMPARE(lines.property(i).property(1).property(0).toNumber(),start+100);
+            QCOMPARE(lines.property(i).property(0).property(1).toNumber(),100-(-5+i*5)*(right?2:1));
+        }
+    }
     void areaPaintersHaveACompletePaletteOrUseTheirSolidColor()
     {
         for (const auto &entry : chartSeriesCatalog()) {
