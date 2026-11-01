@@ -11,7 +11,8 @@ ColumnLayout {
     required property string title
     required property string groupKey
     required property var fields
-    readonly property var plotFields: ChartAnalysis.prepareFields(fields)
+    readonly property var description: chartConfiguration.prepared ? chartConfiguration : ChartAnalysis.describe(fields, chartConfiguration, weather.windUnit, groupKey)
+    readonly property var plotFields: description.fields
     property var chartConfiguration: ({})
     readonly property bool axisConflict: Boolean(chartConfiguration.axisConflict)
     property int legendOverride: -1
@@ -26,19 +27,15 @@ ColumnLayout {
     // Standalone charts (including Plasma) use the same native save workflow.
     property var exportHandler: null
     property ChartSaveDialog saveDialog: null
-    readonly property var legendFields: fields.filter(f => ["hidden", "type"].indexOf(f.kind) < 0 && (f.kind !== "flash" || !fields.some(g => g.kind === "storm")))
+    readonly property var legendFields: description.legend
     readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
     readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
     readonly property string rightScale: chartConfiguration.rightScale || (scaleKind === "clouds" ? "fraction" : scaleKind === "cloudHeights" ? "visibility" : scaleKind === "precipitation" ? "humidity" : "linked")
     property real startTime: weather.firstTimestamp
     property real endTime: weather.lastTimestamp
     property real selectedTime: 0
-    readonly property var probeSamples: {
-        const result = {};
-        if (selectedTime <= 0 || !Object.keys(weather.series).length) return result;
-        for (const sample of weather.detailsAt(selectedTime)) result[sample.key] = sample;
-        return result;
-    }
+    readonly property var probeSamples: selectedTime > 0 && Object.keys(weather.series).length
+        ? ChartAnalysis.probeSamples(weather.detailsAt(selectedTime), plotFields) : ({})
     property var nights: []
     property var hiddenKeys: []
     property int chartHeight: chartConfiguration.height || Math.round((UserPreferences.profileChartHeight || UserPreferences.chartHeight) * (directionOnly ? 64 / 174 : 1))
@@ -50,15 +47,15 @@ ColumnLayout {
     readonly property var appearance: chartConfiguration.appearance || UserPreferences.chartAppearance
     readonly property real leftMargin: compactAxes ? axisMargin(false) : 50
     readonly property real rightMargin: compactAxes ? hasRightAxis ? axisMargin(true) : 6 : 44
-    readonly property bool hasRightAxis: fields.some(f => isRightField(f)) || ["temperature", "pressure", "wind", "probability", "clouds"].indexOf(scaleKind) >= 0
+    readonly property bool hasRightAxis: description.hasRightAxis
     readonly property bool wind: scaleKind === "wind"
-    readonly property bool directionOnly: fields.length > 0 && fields.every(f => f.kind === "direction" || f.kind === "hidden")
-    readonly property real directionBandHeight: !directionOnly && fields.some(f => f.kind === "direction") ? 30 : 0
+    readonly property bool directionOnly: description.directionOnly
+    readonly property real directionBandHeight: !directionOnly && plotFields.some(f => f.kind === "direction") ? 30 : 0
     readonly property real topMargin: directionOnly ? 8 : 28
     readonly property real bottomMargin: directionOnly ? 8 : 30 + directionBandHeight
-    readonly property var bounds: calculateBounds()
-    readonly property var rightBounds: calculateBounds(true)
-    readonly property real windScale: weather.windUnit === "km/h" ? 3.6 : weather.windUnit === "kt" ? 1.943844492 : 1
+    readonly property var bounds: description.leftAxis.range
+    readonly property var rightBounds: description.rightAxis.range
+    readonly property real windScale: description.windScale
     readonly property string exportRevision: JSON.stringify({
         data: weather.dataRevision, start: startTime, end: endTime, hidden: hiddenKeys,
         legend: legendVisible, title: title, height: chartHeight, nights: nights,
@@ -74,17 +71,28 @@ ColumnLayout {
     spacing: 6
     objectName: "chart-" + groupKey
 
+    function renderDescription() {
+        return {weather: {firstTimestamp: weather.firstTimestamp},
+            axisUnit: axisUnit, backgroundColor: backgroundColor, bottomMargin: bottomMargin, bounds: bounds,
+            categoryColor: categoryColor, darkPalette: darkPalette, directionBandHeight: directionBandHeight, directionOnly: directionOnly,
+            drawGrid: drawGrid, endTime: endTime, exportMode: exportMode, fields: plotFields,
+            hasRightAxis: hasRightAxis, isRightField: isRightField, layerOrder: layerOrder, leftMargin: leftMargin,
+            nights: nights, nowTime: nowTime, plotFields: plotFields, plotStyle: plotStyle,
+            probeSamples: probeSamples, px: px, py: py, rightBounds: rightBounds,
+            rightMargin: rightMargin, rightScale: rightScale, scaleKind: scaleKind, secondaryScale: secondaryScale,
+            selectedTime: selectedTime, seriesColor: seriesColor, shown: shown, startTime: startTime,
+            textColor: textColor, tickLabel: tickLabel, ticks: ticks, timeAxisLabels: timeAxisLabels,
+            topMargin: topMargin, valid: valid, windScale: windScale
+        };
+    }
     function valid(value) { return value !== null && value !== undefined && isFinite(value); }
     function exportStyle(configuration) {
         const style = Object.assign({}, configuration);
-        delete style.points; delete style.lowerPoints; delete style.fields;
+        for (const key of ["points", "lowerPoints", "fields", "rangeSegments", "rangePairs", "events", "legend", "typeLegend", "leftAxis", "rightAxis"]) delete style[key];
         return style;
     }
     function shown(field) { return hiddenKeys.indexOf(field.key) < 0; }
-    function legendLabel(field) {
-        return field.kind === "upper" ? I18n.i18n("Min–max range") : field.kind === "feelUpper" ? I18n.i18n("Feels like min–max")
-            : field.kind === "groundHigh" ? I18n.i18n("Ground min–max") : field.kind === "storm" || field.kind === "flash" ? I18n.i18n("Storms / lightning") : field.label;
-    }
+    function legendLabel(field) { return field.legendLabel; }
     function saveChart() {
         chartContextMenu.close();
         if (exportHandler) { exportHandler(root); return; }
@@ -92,38 +100,10 @@ ColumnLayout {
         saveDialog.choose();
     }
     function seriesColor(field) { return darkPalette && field.darkColor ? field.darkColor : field.color; }
-    function categoryColor(field, name) {
-        if (field.colors && field.colors[name]) return field.colors[name][darkPalette ? "darkColor" : "color"];
-        const standard = UserPreferences.seriesCatalog.find(entry => entry.key === field.key);
-        const colors = Object.assign({}, standard ? standard.colors : {}, field.colors || {});
-        return colors[name][darkPalette ? "darkColor" : "color"];
-    }
+    function categoryColor(field, name) { return field.colors[name][darkPalette ? "darkColor" : "color"]; }
     function plotStyle(name) { return appearance[darkPalette ? "dark" : "light"][name]; }
-    function isRightField(field) { return field.axis !== undefined ? field.axis === "right" : field.kind === "right" || field.kind === "rightBars"; }
-    function configuredAxis(axis, right) {
-        const prefix = right ? "right" : "left", minimum = chartConfiguration[prefix + "Min"], maximum = chartConfiguration[prefix + "Max"];
-        const low = valid(minimum) ? Number(minimum) : axis.low, high = valid(maximum) ? Number(maximum) : axis.high;
-        return (valid(minimum) || valid(maximum)) && high > low ? ChartAnalysis.niceAxis(low, high) : axis;
-    }
-    function layerOrder(field) {
-        if (field.layer !== undefined) return field.layer;
-        // Same painter order as the ICM meteogram; independent of legend and
-        // profile order. Sparse cloud bases remain above denser cover levels.
-        const cover = ["cldhigh_aver", "cldmed_aver", "cldlow_aver", "cldvlow_aver"].indexOf(field.key);
-        if (field.kind === "cloudArea") return cover < 0 ? 0 : cover;
-        if (field.kind === "barsBack") return 0;
-        const bases = ["cldbse79", "cldbse65", "cldbse45", "cldbse25", "cldbse01"];
-        const base = bases.indexOf(field.key);
-        if (base >= 0) return base + 1;
-        if (field.key === "cldtop") return 6;
-        if (field.kind === "bars") return 10;
-        if (field.kind === "stems") return 11;
-        if (field.key === "wchill_point") return 12;
-        if (field.key === "airtmp_point") return 13;
-        if (field.key === "dwptmp_point") return 14;
-        if (field.kind === "gusts") return 16;
-        return field.kind === "rightBars" ? 20 : 15;
-    }
+    function isRightField(field) { return field.axis === "right"; }
+    function layerOrder(field) { return field.layer; }
     function drawGrid(ctx, left, right, top, bottom, first, interval) {
         ctx.save();
         ctx.strokeStyle = plotStyle("grid");
@@ -145,116 +125,35 @@ ColumnLayout {
         ctx.restore();
     }
     function toggle(key) {
-        const keys = hiddenKeys.slice();
-        const index = keys.indexOf(key);
-        if (index >= 0) keys.splice(index, 1); else keys.push(key);
-        if (key === "airtmp_max" || key === "wchill_max" || key === "grdtmp_max") {
-            const lowKey = key.replace("_max", "_min");
-            const lowIndex = keys.indexOf(lowKey);
-            if (index >= 0 && lowIndex >= 0) keys.splice(lowIndex, 1);
-            if (index < 0 && lowIndex < 0) keys.push(lowKey);
-        }
-        if (key === "storm_max" || key === "flash_max") {
-            const other = key === "storm_max" ? "flash_max" : "storm_max";
-            const otherIndex = keys.indexOf(other);
-            if (index >= 0 && otherIndex >= 0) keys.splice(otherIndex, 1);
-            if (index < 0 && otherIndex < 0) keys.push(other);
-        }
-        hiddenKeys = keys;
-    }
-    function calculateBounds(right) {
-        const kind = right ? rightScale : scaleKind;
-        if (right && kind === "linked") return configuredAxis(bounds, true);
-        if (kind === "probability") return configuredAxis(ChartAnalysis.axis(0, 100, 20), right);
-        if (kind === "cloudHeights") return configuredAxis(ChartAnalysis.axis(0, 15, 1), right);
-        if (kind === "visibility") return configuredAxis(ChartAnalysis.axis(0, 100, 25), right);
-        if (kind === "fraction" || kind === "clouds") return configuredAxis(ChartAnalysis.axis(0, 100, 25), right);
-        let low = Infinity, high = -Infinity;
-        for (const field of fields) {
-            if (["hidden", "direction", "type", "storm", "flash"].indexOf(field.kind) >= 0) continue;
-            if (isRightField(field) !== Boolean(right)) continue;
-            for (const point of field.points.concat(field.lowerPoints || [])) {
-                // Keep vertical scales tied to the complete forecast. Panning
-                // changes only the horizontal viewport, not these bounds.
-                if (!valid(point.value)) continue;
-                low = Math.min(low, point.value); high = Math.max(high, point.value);
-            }
-        }
-        if (!isFinite(low)) { low = 0; high = 1; }
-        if (kind === "humidity") return configuredAxis(ChartAnalysis.humidityAxis(low, high), right);
-        if (kind === "precipitation") return configuredAxis(ChartAnalysis.precipitationAxis(high), right);
-        if (kind === "wind") {
-            const speeds = valuesFor("wind10_sd_true_prev_point"), gusts = valuesFor("wind_gust_max");
-            const speedMax = speeds.length ? Math.max.apply(null, speeds) : 0;
-            const gustMax = gusts.length ? Math.max.apply(null, gusts) : 0;
-            const maximum = speeds.length ? Math.min(Math.max(speedMax, gustMax), speedMax * 4) : gustMax;
-            return configuredAxis(ChartAnalysis.windAxis(maximum / windScale, windScale), right);
-        }
-        if (kind === "temperature") return configuredAxis(ChartAnalysis.niceAxis(low - 1, high + 1), right);
-        if (kind === "pressure") return configuredAxis(ChartAnalysis.niceAxis(Math.round(low - Math.max(0, 15 - (high - low)) - 2), Math.round(high + 2)), right);
-        return configuredAxis(ChartAnalysis.niceAxis(Math.min(0, low), Math.max(1, high)), right);
-    }
-    function valuesFor(key) {
-        const field = fields.find(f => f.key === key);
-        return field ? field.points.filter(p => valid(p.value)).map(p => p.value) : [];
+        const field = plotFields.find(field => field.key === key);
+        const group = field ? field.toggleKeys : [key], hidden = hiddenKeys.indexOf(key) < 0;
+        hiddenKeys = hiddenKeys.filter(entry => group.indexOf(entry) < 0).concat(hidden ? group : []);
     }
     function tickLabel(value, right) {
-        const kind = right ? rightScale : scaleKind;
-        if (kind === "fraction") return (value / 100).toFixed(2);
-        if (kind === "clouds") return (value * 8 / 100).toFixed(0);
-        if (kind === "cloudHeights") return value.toFixed(1);
-        const decimals = Math.abs(value - Math.round(value)) < 0.0001 ? 0 : 1;
-        return Number(value).toLocaleString(Qt.locale(), 'f', decimals);
+        const axis = description[right ? "rightAxis" : "leftAxis"], index = axis.ticks.indexOf(value);
+        return index >= 0 ? axis.labels[index] : Number(value).toLocaleString(Qt.locale(), 'f', 1);
     }
     function px(time) { return leftMargin + (time - startTime) / Math.max(1, endTime - startTime) * (plot.width - leftMargin - rightMargin); }
     function py(value, right) {
-        const kind = right ? rightScale : scaleKind, prefix = right ? "right" : "left";
-        if ((kind === "cloudHeights" || kind === "visibility") && !valid(chartConfiguration[prefix + "Min"]) && !valid(chartConfiguration[prefix + "Max"])) {
-            const levels = kind === "visibility" ? [0,1,5,20,100] : [0,0.5,2,7,15];
+        const axis = description[right && rightScale !== "linked" ? "rightAxis" : "leftAxis"];
+        const levels = axis.levels;
+        if (levels.length) {
             let index = 0;
             while (index < levels.length - 2 && value > levels[index + 1]) index++;
-            const fraction = (index + Math.max(0, Math.min(1, (value - levels[index]) / (levels[index + 1] - levels[index])))) / 4;
+            const fraction = (index + Math.max(0, Math.min(1, (value - levels[index]) / (levels[index + 1] - levels[index])))) / (levels.length - 1);
             return plot.height - bottomMargin - fraction * (plot.height - topMargin - bottomMargin);
         }
-        const b = right ? rightBounds : bounds;
+        const b = axis.range;
         return topMargin + (b.high - value) / Math.max(0.0001, b.high - b.low) * (plot.height - topMargin - bottomMargin);
     }
-    function ticks(right) {
-        const kind = right ? rightScale : scaleKind, prefix = right ? "right" : "left";
-        if (!valid(chartConfiguration[prefix + "Min"]) && !valid(chartConfiguration[prefix + "Max"])) {
-            if (kind === "cloudHeights") return [0,0.5,2,7,15];
-            if (kind === "visibility") return [0,1,5,20,100];
-        }
-        const b = right ? rightBounds : bounds;
-        if (b.ticks) return b.ticks;
-        return ChartAnalysis.axis(b.low, b.high, b.step).ticks;
-    }
-    function secondaryScale() {
-        if (scaleKind === "temperature" || scaleKind === "probability") return 1;
-        if (scaleKind === "pressure") return 0.75;
-        return weather.windUnit === "m/s" ? 3.6 : weather.windUnit === "km/h" ? 1/3.6 : 1/1.943844492;
-    }
-    function axisUnit(right) {
-        if (directionOnly || right && !hasRightAxis) return "";
-        const kind = right ? rightScale : scaleKind;
-        if (kind === "clouds") return I18n.i18n("octas");
-        if (kind === "fraction") return I18n.i18n("fraction");
-        if (right && kind === "linked") {
-            if (scaleKind === "pressure") return "mm Hg";
-            if (wind) return weather.windUnit === "m/s" ? "km/h" : "m/s";
-            return axisUnit(false);
-        }
-        const configured = chartConfiguration[right ? "rightUnit" : "leftUnit"];
-        if (configured !== undefined) return configured;
-        const field = fields.find(f => isRightField(f) === Boolean(right));
-        return field ? field.unit : "";
-    }
+    function ticks(right) { return description[right ? "rightAxis" : "leftAxis"].ticks; }
+    function secondaryScale() { return description.rightAxis.labelFactor; }
+    function axisUnit(right) { return directionOnly || right && !hasRightAxis ? "" : description[right ? "rightAxis" : "leftAxis"].unit; }
     function axisMargin(right) {
         if (directionOnly) return 6;
+        const axis = description[right ? "rightAxis" : "leftAxis"];
         let width = axisFont.advanceWidth(axisUnit(right));
-        const linked = right && rightScale === "linked";
-        for (const value of ticks(linked ? false : right))
-            width = Math.max(width, axisFont.advanceWidth(tickLabel(linked ? value * secondaryScale() : value, right && !linked)));
+        for (const label of axis.labels) width = Math.max(width, axisFont.advanceWidth(label));
         return Math.ceil(width) + (right ? 10 : 12);
     }
     function pointAt(list, time) {
@@ -366,21 +265,17 @@ ColumnLayout {
             }
         }
         Repeater {
-            model: root.fields.some(f => f.kind === "type") ? [
-                {label: I18n.i18n("Rain"), color: root.seriesColor(root.fields.find(f => f.kind === "type"))},
-                {label: I18n.i18n("Snow"), color: root.categoryColor(root.fields.find(f => f.kind === "type"), "snow")},
-                {label: I18n.i18n("Sleet"), color: root.categoryColor(root.fields.find(f => f.kind === "type"), "sleet")}
-            ] : []
+            model: root.description.typeLegend
             delegate: RowLayout {
                 required property var modelData
                 spacing: 5
                 height: 26
-                Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; Layout.alignment: Qt.AlignVCenter; color: parent.modelData.color }
+                Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; Layout.alignment: Qt.AlignVCenter; color: root.darkPalette && parent.modelData.darkColor ? parent.modelData.darkColor : parent.modelData.color }
                 Label { Layout.alignment: Qt.AlignVCenter; text: parent.modelData.label; font.pixelSize: 11; opacity: 0.8 }
             }
         }
         RowLayout {
-            visible: root.fields.some(f => (f.kind === "stems" || f.kind === "gusts") && f.points.some(p => p.time >= root.startTime && p.time <= root.endTime && root.valid(p.value) && p.value > (root.isRightField(f) ? root.rightBounds.high : root.bounds.high)))
+            visible: root.plotFields.some(f => (f.kind === "stems" || f.kind === "gusts") && f.points.some(p => p.time >= root.startTime && p.time <= root.endTime && root.valid(p.value) && p.value > (root.isRightField(f) ? root.rightBounds.high : root.bounds.high)))
             spacing: 5
             height: 26
             Rectangle { Layout.preferredWidth: 4; Layout.preferredHeight: 4; Layout.alignment: Qt.AlignVCenter; radius: 2; color: root.plotStyle("aboveScale") }
@@ -440,7 +335,7 @@ ColumnLayout {
             GpuPlot {
                 id: gpuPlot
                 objectName: "gpu-base-" + root.groupKey
-                onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root, plot, getContext("2d"), false); gpuCursor.requestPaint(); }
+                onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root.renderDescription(), plot, getContext("2d"), false); gpuCursor.requestPaint(); }
                 onCursorPaintRequested: gpuCursor.requestPaint()
                 onSoftwareBackend: plot.softwareFallback = true
                 Repeater {
@@ -464,7 +359,7 @@ ColumnLayout {
                     id: gpuCursor
                     objectName: "gpu-cursor-" + root.groupKey
                     anchors.fill: parent
-                    onPaint: Style.paintCursor(root, plot, getContext("2d"), true)
+                    onPaint: Style.paintCursor(root.renderDescription(), plot, getContext("2d"), true)
                 }
             }
         }
@@ -474,7 +369,7 @@ ColumnLayout {
                 objectName: "cpu-base-" + root.groupKey
                 property int renderedFrames: 0
                 renderTarget: Canvas.Image
-                onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root, plot, getContext("2d")); ++renderedFrames; }
+                onPaint: if (root.renderEnabled || root.exportMode) { Style.paintChart(root.renderDescription(), plot, getContext("2d")); ++renderedFrames; }
             }
         }
 
@@ -540,7 +435,7 @@ ColumnLayout {
         onVisibleChanged: if (!visible && root.saveDialog) root.saveDialog.error = ""
     }
     Label {
-        visible: root.legendVisible && root.fields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")
+        visible: root.legendVisible && root.plotFields.some(f => f.key === "pcpttl_aver" || f.key === "pcpttl_max")
         Layout.fillWidth: true
         text: ChartAnalysis.precipitationCaption(root.fields)
         wrapMode: Text.WordWrap

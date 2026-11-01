@@ -1,6 +1,7 @@
 #include "ChartAnalysis.hpp"
 #include "ChartConfiguration.hpp"
 #include "ChartDataBuilder.hpp"
+#include "PreparedChart.hpp"
 #include <QTest>
 #include <QFile>
 #include <QJSEngine>
@@ -40,7 +41,7 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
             ctx.arc=function(x,y,r){circles.push({x:x,y:y,radius:r});};
             const root={
                 leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
-                darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,
+                windScale:1,darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,
                 plotStyle:function(name){return appearanceUnderTest[name];},
                 categoryColor:function(field,name){return namedColor(field,name,false);},
                 startTime:1800000000,endTime:1800021600,weather:{firstTimestamp:1800000000},nights:[],
@@ -62,6 +63,21 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void areaPaintersHaveACompletePaletteOrUseTheirSolidColor()
+    {
+        for (const auto &entry : chartSeriesCatalog()) {
+            auto style=entry.toMap();
+            if (!seriesRenderers(style["key"].toString()).contains("area")) continue;
+            for (const auto &fill : {"solid","pressure","wind"}) {
+                style["render"]="area"; style["fill"]=fill;
+                auto resolved=normalizeSeriesStyle(style);
+                resolved["kind"]="area";
+                resolved["points"]=QVariantList{QVariantMap{{"time",1800000000LL},{"value",2}},QVariantMap{{"time",1800003600LL},{"value",4}}};
+                QJSEngine engine; const auto drawing=recordChart(engine,{resolved});
+                QVERIFY2(!drawing.isError(),qPrintable(drawing.toString()));
+            }
+        }
+    }
     void autoAxesRejectAThirdUnitButPreserveExplicitChoices()
     {
         const QVariantList points{QVariantMap{{"time", 1800000000LL}, {"value", 2.0}, {"interval", 3600}}};
@@ -249,7 +265,8 @@ private slots:
                 engine.globalObject().setProperty("markerKey", key);
                 engine.globalObject().setProperty("markerSample", engine.toScriptValue(QVariantMap{
                     {"number", point["value"]}, {"sourceTimestamp", point["sourceTimestamp"]},
-                    {"intervalFrom", point["intervalFrom"]}, {"intervalTo", point["intervalTo"]}}));
+                    {"intervalFrom", point["intervalFrom"]}, {"intervalTo", point["intervalTo"]},
+                    {"renderTimestamp", (point["intervalFrom"].toDouble()+point["intervalTo"].toDouble())/2}}));
                 const auto marker = engine.evaluate(R"JS(
                     drawing.root.selectedTime = drawing.root.startTime;
                     drawing.root.nowTime = -1;
@@ -294,8 +311,8 @@ private slots:
                     leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
                     nowTime:-1,startTime:0,endTime:20000,selectedTime:7200,exportMode:false,
                     fields:[{key:"dwptmp_point",kind:"points"},{key:"pcpttl_aver",kind:"bars"}],
-                    probeSamples:{dwptmp_point:{number:9,sourceTimestamp:10800},
-                                  pcpttl_aver:{number:1,sourceTimestamp:0,intervalFrom:0,intervalTo:10800}},
+                    probeSamples:{dwptmp_point:{number:9,sourceTimestamp:10800,renderTimestamp:10800},
+                                  pcpttl_aver:{number:1,sourceTimestamp:0,intervalFrom:0,intervalTo:10800,renderTimestamp:5400}},
                     px:function(t){return t/100;},py:function(v){return 100-v;},
                     valid:function(v){return v!==undefined&&v!==null&&isFinite(v);},
                     shown:function(){return true;},seriesColor:function(){return "green";},isRightField:function(){return false;}

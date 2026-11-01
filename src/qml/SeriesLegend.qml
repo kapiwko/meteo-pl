@@ -33,7 +33,7 @@ Canvas {
         } else if (kind === "direction") {
             ctx.beginPath(); ctx.moveTo(4,middle); ctx.lineTo(width-5,middle); ctx.moveTo(width-10,middle-4); ctx.lineTo(width-5,middle); ctx.lineTo(width-10,middle+4); ctx.stroke();
         } else if (kind === "type") {
-            for (let i = 0; i < 3; ++i) { ctx.fillStyle = ["#00aa00","#1539c0","#b72dc1"][i]; ctx.fillRect(2+i*(width-4)/3,3,(width-4)/3,height-6); }
+            for (let i = 0; i < 3; ++i) { ctx.fillStyle = [color, style.colors.snow[darkPalette ? "darkColor" : "color"], style.colors.sleet[darkPalette ? "darkColor" : "color"]][i]; ctx.fillRect(2+i*(width-4)/3,3,(width-4)/3,height-6); }
         } else {
             ctx.setLineDash(style.lineStyle === "dotted" ? [1,3] : style.lineStyle === "dashed" ? [4,3] : []);
             ctx.beginPath(); ctx.moveTo(2,middle); ctx.lineTo(width-2,middle); ctx.stroke();

@@ -1,10 +1,9 @@
 #include "ChartAnalysis.hpp"
-#include "ChartMath.hpp"
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include "core/Localization.hpp"
-#include "ChartDataBuilder.hpp"
+#include "PreparedChart.hpp"
 #include <QLocale>
 #include <QSet>
 
@@ -43,3 +42,8 @@ QString ChartAnalysis::precipitationCaption(const QVariantList &fields) const
 }
 
 QVariantList ChartAnalysis::prepareFields(const QVariantList &fields) const { return prepareChartFields(fields); }
+
+QVariantMap ChartAnalysis::describe(const QVariantList &fields,const QVariantMap &configuration,const QString &windUnit,const QString &fallback) const
+{ return describeChart(fields,configuration,windUnit,fallback); }
+QVariantMap ChartAnalysis::probeSamples(const QVariantList &samples,const QVariantList &fields) const
+{ return prepareProbeSamples(samples,fields); }

@@ -6,6 +6,7 @@
 #include <QVector>
 #include <QtQml/qqmlregistration.h>
 
+
 class METEO_UI_EXPORT ChartAnalysis : public QObject {
     Q_OBJECT
     QML_ELEMENT
@@ -18,5 +19,7 @@ public:
     Q_INVOKABLE QVariantMap windAxis(double maximum, double scale) const;
     Q_INVOKABLE QVariantMap humidityAxis(double low, double high) const;
     Q_INVOKABLE QString precipitationCaption(const QVariantList &fields) const;
+    Q_INVOKABLE QVariantMap describe(const QVariantList &fields,const QVariantMap &configuration,const QString &windUnit,const QString &fallback) const;
+    Q_INVOKABLE QVariantMap probeSamples(const QVariantList &samples,const QVariantList &fields) const;
     Q_INVOKABLE QVariantList prepareFields(const QVariantList &fields) const;
 };

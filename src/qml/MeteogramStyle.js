@@ -69,16 +69,12 @@ function paintDirections(root, ctx, left, right, center) {
 
 function intervalBounds(point) {
     const time = Number.isFinite(point.sourceTimestamp) ? point.sourceTimestamp : point.time;
-    const from = Number.isFinite(point.intervalFrom) ? point.intervalFrom : time;
-    const duration = Number.isFinite(point.interval) && point.interval > 0 ? point.interval : 0;
-    const to = Number.isFinite(point.intervalTo) && point.intervalTo >= from ? point.intervalTo : from + duration;
+    const from = Number.isFinite(point.segmentFrom) ? point.segmentFrom : Number.isFinite(point.intervalFrom) ? point.intervalFrom : time;
+    const to = Number.isFinite(point.segmentTo) ? point.segmentTo : Number.isFinite(point.intervalTo) ? point.intervalTo : from + (point.interval || 0);
     return {from: from, to: to, center: (from + to) / 2};
 }
-
 function renderTimestamp(field, point) {
-    if (field.key === "pcpttl_aver" || field.key === "pcpttl_max" || field.kind === "gusts")
-        return intervalBounds(point).center;
-    return Number.isFinite(point.sourceTimestamp) ? point.sourceTimestamp : point.time;
+    return Number.isFinite(point.renderTimestamp) ? point.renderTimestamp : Number.isFinite(point.sourceTimestamp) ? point.sourceTimestamp : point.time;
 }
 
 function drawArea(root, ctx, field, bottom) {
@@ -126,12 +122,11 @@ function paintChart(root, plot, ctx, withCursor) {
     }
     if (root.hasRightAxis) {
         ctx.textAlign = "left";
-        const linked = root.rightScale === "linked";
         const rightField = root.fields.find(f => root.isRightField(f));
         if (rightField) ctx.fillStyle = root.rightScale === "fraction" || root.rightScale === "visibility" ? root.plotStyle("rightAxisAccent") : root.seriesColor(rightField);
         ctx.fillText(root.axisUnit(true), right + 6, top - 14);
-        for (const value of root.ticks(!linked))
-            ctx.fillText(root.tickLabel(linked ? value * root.secondaryScale() : value, !linked), right + 6, root.py(value, !linked));
+        for (const value of root.ticks(true))
+            ctx.fillText(root.tickLabel(value, true), right + 6, root.py(value, true));
     }
     const origin = root.weather.firstTimestamp;
     ctx.textAlign = "center";
@@ -283,7 +278,7 @@ function paintCursor(root, plot, ctx, reset) {
         const x = root.px(root.selectedTime);
         ctx.strokeStyle = root.textColor; ctx.globalAlpha = 0.65; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
-        for (const field of root.fields) {
+        for (const field of root.plotFields || root.fields) {
             if (!root.shown(field) || ["hidden", "direction", "type", "barsBack", "storm", "flash"].indexOf(field.kind) >= 0) continue;
             const sample = root.probeSamples[field.key];
             if (!sample || !root.valid(sample.number) || !root.valid(sample.sourceTimestamp)) continue;

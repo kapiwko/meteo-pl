@@ -59,7 +59,7 @@ qt_add_qml_module(meteo_ui
         presentation/ApplicationLauncher.cpp presentation/ApplicationLauncher.hpp
         presentation/LocationRules.hpp
         presentation/ChartMath.cpp presentation/ChartMath.hpp presentation/BuiltinProfiles.cpp presentation/ChartAnalysis.cpp presentation/ChartAnalysis.hpp
-        presentation/ChartDataBuilder.cpp presentation/ChartDataBuilder.hpp
+        presentation/PreparedSeries.cpp presentation/PreparedChart.cpp presentation/PreparedChart.hpp presentation/ChartDataBuilder.cpp presentation/ChartDataBuilder.hpp
         presentation/ForecastFields.cpp presentation/ForecastFields.hpp
         presentation/ForecastFormatting.cpp presentation/ForecastFormatting.hpp
         presentation/ChartConfiguration.cpp presentation/ChartConfiguration.hpp
