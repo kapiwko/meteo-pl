@@ -79,14 +79,20 @@ void LocationTracker::start()
         if (status == Qt::PermissionStatus::Granted) startSource();
         else fail(Meteo::i18n("Location access was denied. Allow location access for Meteo in the system settings, then try again."));
     };
-    if (m_permissionRequest) { m_permissionRequest(this, completed); return; }
-    QLocationPermission permission;
-    permission.setAccuracy(QLocationPermission::Approximate);
-    permission.setAvailability(QLocationPermission::WhenInUse);
-    const auto status = qApp->checkPermission(permission);
-    if (status == Qt::PermissionStatus::Undetermined)
-        qApp->requestPermission(permission, this, [completed](const QPermission &result) { completed(result.status()); });
-    else completed(status);
+    // Permission APIs call Android's UI thread. Accessibility callbacks can
+    // synchronously inspect QML on our thread; let that callback unwind before
+    // requesting a system dialog to avoid Qt's deadlock-protection fallback.
+    QTimer::singleShot(0,this,[this,completed] {
+        if (!m_enabled || !m_foreground) { m_permissionPending=false; return; }
+        if (m_permissionRequest) { m_permissionRequest(this,completed); return; }
+        QLocationPermission permission;
+        permission.setAccuracy(QLocationPermission::Approximate);
+        permission.setAvailability(QLocationPermission::WhenInUse);
+        const auto status=qApp->checkPermission(permission);
+        if (status==Qt::PermissionStatus::Undetermined)
+            qApp->requestPermission(permission,this,[completed](const QPermission &result) { completed(result.status()); });
+        else completed(status);
+    });
 }
 void LocationTracker::startSource()
 {

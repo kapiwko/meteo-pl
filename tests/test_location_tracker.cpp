@@ -7,6 +7,20 @@
 class LocationTrackerTest : public QObject {
     Q_OBJECT
 private slots:
+    void systemPermissionRequestsWaitUntilTheCallingCallbackReturns()
+    {
+        auto *source=new PositionFixture;
+        bool insideCallback=true;
+        LocationTracker tracker(nullptr,source,100,[&](QObject *,LocationTracker::PermissionResult completed) {
+            QVERIFY(!insideCallback);
+            completed(Qt::PermissionStatus::Granted);
+        });
+        tracker.setEnabled(true);
+        QVERIFY(tracker.busy()); QCOMPARE(source->starts,0);
+        insideCallback=false;
+        QTRY_COMPARE(source->starts,1);
+        source->send(50.86,20.63); QVERIFY(tracker.hasPosition());
+    }
     void oneShotStopsAfterItsFirstFreshFixAndDoesNotRestartOnResume()
     {
         auto *source=new PositionFixture;
@@ -40,7 +54,7 @@ private slots:
             QVERIFY(context); ++requests; complete = std::move(callback);
         });
         tracker.setEnabled(true);
-        QVERIFY(tracker.busy()); QCOMPARE(requests, 1); QCOMPARE(source->starts, 0);
+        QVERIFY(tracker.busy()); QTRY_COMPARE(requests, 1); QCOMPARE(source->starts, 0);
         tracker.setForeground(false);
         QVERIFY(!tracker.busy());
         QSignalSpy changed(&tracker, &LocationTracker::stateChanged);
@@ -72,7 +86,7 @@ private slots:
         auto *source = new PositionFixture;
         LocationTracker::PermissionResult complete;
         LocationTracker tracker(nullptr, source, 30, [&](QObject *, LocationTracker::PermissionResult callback) { complete = std::move(callback); });
-        tracker.setEnabled(true);
+        tracker.setEnabled(true); QTRY_VERIFY(bool(complete));
         if (disabled) tracker.setEnabled(false); else tracker.setForeground(false);
         complete(Qt::PermissionStatus::Granted);
         QCOMPARE(source->starts, 0); QVERIFY(!tracker.busy());
@@ -83,11 +97,11 @@ private slots:
         auto *source = new PositionFixture;
         LocationTracker::PermissionResult complete;
         LocationTracker tracker(nullptr, source, 30, [&](QObject *, LocationTracker::PermissionResult callback) { complete = std::move(callback); });
-        tracker.setEnabled(true); tracker.setForeground(false); tracker.setForeground(true);
+        tracker.setEnabled(true); QTRY_VERIFY(bool(complete)); tracker.setForeground(false); tracker.setForeground(true);
         complete(Qt::PermissionStatus::Denied);
         QVERIFY(!tracker.busy()); QVERIFY(!tracker.error().isEmpty()); QCOMPARE(source->starts, 0);
-        tracker.retry(); QVERIFY(tracker.busy()); QVERIFY(tracker.error().isEmpty());
-        complete(Qt::PermissionStatus::Granted);
+        complete={}; tracker.retry(); QVERIFY(tracker.busy()); QVERIFY(tracker.error().isEmpty());
+        QTRY_VERIFY(bool(complete)); complete(Qt::PermissionStatus::Granted);
         QCOMPARE(source->starts, 1);
         source->send(50.86, 20.63);
         QVERIFY(tracker.hasPosition()); QVERIFY(!tracker.busy()); QVERIFY(tracker.error().isEmpty());
