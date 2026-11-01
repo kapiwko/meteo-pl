@@ -23,8 +23,43 @@ PUBLISH_SPEC=importlib.util.spec_from_file_location("publish_release",release.RO
 publisher=importlib.util.module_from_spec(PUBLISH_SPEC);PUBLISH_SPEC.loader.exec_module(publisher)
 VERSION_SPEC=importlib.util.spec_from_file_location("set_version",release.ROOT/"scripts/set-version.py")
 versions=importlib.util.module_from_spec(VERSION_SPEC);VERSION_SPEC.loader.exec_module(versions)
+FDROID_SPEC=importlib.util.spec_from_file_location("prepare_fdroid",release.ROOT/"scripts/prepare-fdroid.py")
+fdroid=importlib.util.module_from_spec(FDROID_SPEC);FDROID_SPEC.loader.exec_module(fdroid)
 
 class ReleaseTest(unittest.TestCase):
+    def test_fdroid_request_uses_the_current_release_and_upstream_store_assets(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output=Path(temporary)/"submission"
+            fdroid.prepare(release.ROOT,output)
+            version=(release.ROOT/"VERSION").read_text().strip()
+            major,minor,patch=map(int,version.split("."));code=major*1000000+minor*1000+patch
+            request=(output/"request-for-packaging.md").read_text()
+            self.assertIn(f"releases/tag/v{version}",request)
+            self.assertIn(f"versionCode {code}",request)
+            self.assertIn((release.ROOT/".fdroid.yml").read_text().strip(),request)
+            self.assertNotIn("{{",request)
+            source=release.ROOT/"fastlane/metadata/android"
+            for asset in source.rglob("*"):
+                if asset.is_file():
+                    self.assertEqual(asset.read_bytes(),
+                        (output/"metadata/pl.meteo.desktop"/asset.relative_to(source)).read_bytes())
+            marker=output/"do-not-overwrite";marker.write_text("keep")
+            with self.assertRaisesRegex(ValueError,"fresh staging"):
+                fdroid.prepare(release.ROOT,output)
+            self.assertEqual(marker.read_text(),"keep")
+
+    def test_fdroid_rejects_stale_release_metadata_before_creating_a_submission(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary)/"source";root.mkdir()
+            (root/"VERSION").write_text("1.2.3\n")
+            output=Path(temporary)/"submission"
+            for metadata in ("CurrentVersion: 0.9.0\nCurrentVersionCode: 1002003\n",
+                             "CurrentVersion: 1.2.3\nCurrentVersionCode: 9000\n"):
+                (root/".fdroid.yml").write_text(metadata)
+                with self.assertRaisesRegex(ValueError,"must match VERSION"):
+                    fdroid.prepare(root,output)
+                self.assertFalse(output.exists())
+
     @unittest.skipUnless(shutil.which("gpg"), "GnuPG is required for signature verification")
     def test_arch_package_signature_verifies_and_rejects_modified_bytes(self):
         with tempfile.TemporaryDirectory() as temporary:

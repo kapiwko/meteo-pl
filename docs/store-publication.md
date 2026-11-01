@@ -91,11 +91,19 @@ python3 scripts/prepare-fdroid.py --output dist/fdroid-submission
 ```
 
 This creates `metadata/pl.meteo.desktop.yml`, localized store text, artwork and a
-request draft. It does not contact F-Droid or enable an unverified build.
-The draft is ready for the [Requests For Packaging](https://gitlab.com/fdroid/rfp)
-process. It explicitly requests help coordinating the native Qt/KDE dependency
+request draft using the current `VERSION`, Android version code and store text.
+It checks that the metadata agree and that release notes and artwork are present
+before creating the output directory. It does not contact F-Droid or enable an
+unverified build.
+The generated draft follows the [Requests For Packaging](https://gitlab.com/fdroid/rfp)
+issue template. It explicitly requests help coordinating the native Qt/KDE dependency
 recipes. Once those recipes are verified, submit the build metadata as a merge
-request to [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
+request to [fdroiddata](https://gitlab.com/fdroid/fdroiddata). A packaging request
+starts the review process; it does not publish an app in the F-Droid catalog.
+
+Store images are included directly in `fastlane/metadata/android/en-US/images/`
+so F-Droid can import them from the upstream repository. When replacing a store
+screenshot, use an actual Android capture.
 
 ### Remaining build integration
 

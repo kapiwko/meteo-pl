@@ -1,24 +1,24 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: Forecasts and articles depend on ICM UW/meteo.pl services.
 Categories:
   - Weather
 License: GPL-3.0-or-later
 AuthorName: Kamil Piwowarski
 AuthorEmail: kapiwko@gmail.com
-WebSite: https://github.com/kapiwko/meteo-pl
 SourceCode: https://github.com/kapiwko/meteo-pl
 IssueTracker: https://github.com/kapiwko/meteo-pl/issues
 Changelog: https://github.com/kapiwko/meteo-pl/releases
 
 AutoName: Meteo
+
 RepoType: git
 Repo: https://github.com/kapiwko/meteo-pl.git
 
-AntiFeatures:
-  - NonFreeNet
-
 MaintainerNotes: |
   Upstream is requesting packaging; this is metadata, not an enabled build recipe.
-  The Android application ID is pl.meteo.desktop. Version 0.9.0 has versionCode
-  9000 and the signed source tag v0.9.0.
+  The Android application ID is pl.meteo.desktop. Releases have signed v<version>
+  source tags. Version codes are major * 1000000 + minor * 1000 + patch.
 
   The app uses Qt Quick/Kirigami/C++ and Android's foreground location API.
   It does not require Google Play Services, Firebase, analytics or API keys.
@@ -34,6 +34,10 @@ MaintainerNotes: |
   packaging/craft/meteo-pl/meteo-pl.py, scripts/build-portable.py.
   Upstream source-built dependency recipes and an offline F-Droid build remain
   to be integrated and verified with fdroidserver. See docs/store-publication.md.
+
+  This is an independent application, not an official meteo.pl client. Please
+  review the existing application ID namespace before first inclusion.
+  Reproducibility against upstream-signed APKs has not been established.
 
 AutoUpdateMode: None
 UpdateCheckMode: None
