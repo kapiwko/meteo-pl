@@ -20,7 +20,9 @@ Item {
     signal frameCommitted()
     signal failed()
     onSourceChanged: {
-        if (source.toString() === displayedSource.toString()) return;
+        if (source.toString() === displayedSource.toString()) {
+            requestDelay.stop(); cancelPending(); error = ""; return;
+        }
         if (pending && pending.originalSource.toString() === source.toString()) {
             requestDelay.stop(); pending.preparing = false; complete(pending);
         } else {
@@ -56,7 +58,7 @@ Item {
         if (image.status === Image.Ready) {
             image.visible = true;
             if (image.preparing) { image.z = 0; return; }
-            if (image.originalSource.toString() !== source.toString()) return;
+            if (image.originalSource.toString() !== source.toString()) { cancelPending(); return; }
             const previous = front;
             front = image; pending = null;
             image.z = 1;

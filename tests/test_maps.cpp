@@ -724,6 +724,14 @@ private slots:
         object->setProperty("source", server.url("blue"));
         QTRY_COMPARE(server.held.size(), 1);
         QCOMPARE(window.grabWindow().pixelColor(40, 40), QColor(Qt::red));
+        object->setProperty("source", server.url("red"));
+        QTRY_VERIFY(!object->property("loading").toBool());
+        QVERIFY(!object->property("pending").value<QObject *>());
+        server.releaseOne(); QTest::qWait(100);
+        QCOMPARE(object->property("displayedSource").toUrl(), server.url("red"));
+        QVERIFY(!object->property("loading").toBool());
+        object->setProperty("source", server.url("blue-again"));
+        QTRY_COMPARE(server.held.size(), 1);
         object->setProperty("source", server.url("green"));
         QTRY_COMPARE(server.held.size(), 2);
         server.releaseOne();
