@@ -1,19 +1,10 @@
 #pragma once
 #include "MeteoUiExport.hpp"
+#include "ChartMath.hpp"
 #include <QObject>
 #include <QVariantMap>
 #include <QVector>
 #include <QtQml/qqmlregistration.h>
-
-namespace ChartMath {
-struct AxisSpec {
-    double low = 0, high = 1, step = 0.25;
-    QVector<double> ticks{0, 0.25, 0.5, 0.75, 1};
-};
-METEO_UI_EXPORT bool validRange(double low, double high);
-METEO_UI_EXPORT AxisSpec axis(double low, double high, double step);
-METEO_UI_EXPORT AxisSpec niceAxis(double low, double high);
-}
 
 class METEO_UI_EXPORT ChartAnalysis : public QObject {
     Q_OBJECT

@@ -1,9 +1,8 @@
 #include "core/Localization.hpp"
 #include "ChartConfiguration.hpp"
+#include "ChartMath.hpp"
 #include "DrawingPolicy.hpp"
-#include "ChartAnalysis.hpp"
 #include "ForecastFields.hpp"
-#include "ProfileFileCodec.hpp"
 #include "JsonSchemaValidator.hpp"
 #include <QColor>
 #include <QFile>
@@ -133,43 +132,6 @@ QVariantMap normalizeChartAppearance(const QVariantMap &input)
 
 QVariantMap defaultChartPrototype() { return chartDefaults()["newChart"].toMap(); }
 
-QVariantList builtinChartProfiles()
-{
-    static const QVariantList profiles = [] {
-        const auto files = bundledChartJson(":/meteo/profiles/index.json").array();
-        if (files.isEmpty()) qFatal("Empty bundled profile index");
-        QVariantList result;
-        QSet<QString> ids;
-        for (const auto &name : files) {
-            const auto fileName = name.toString();
-            const auto bytes = bundledChartJson(":/meteo/profiles/" + fileName).toJson();
-            QString error;
-            const auto decoded = ProfileFileCodec::decode(bytes, &error);
-            const auto id = QJsonDocument::fromJson(bytes).object()["profiles"].toArray().first().toObject()["id"].toString();
-            if (!decoded || decoded->size() != 1 || id.isEmpty() || id == "custom" || id.startsWith("user:")
-                || ids.contains(id) || fileName != id + ".json")
-                qFatal("Invalid bundled profile %s: %s", qPrintable(fileName), qPrintable(error));
-            auto profile = decoded->first().toMap();
-            profile["id"] = id;
-            const auto revision = QJsonDocument::fromJson(bytes).object()["profiles"].toArray().first().toObject()["revision"].toInt();
-            if (revision < 1) qFatal("Missing bundled profile revision: %s", qPrintable(fileName));
-            profile["revision"] = revision;
-            result.append(profile);
-            ids.insert(id);
-        }
-        return result;
-    }();
-    return profiles;
-}
-
-QVariantList defaultChartLayout(const QString &id)
-{
-    const auto profiles = builtinChartProfiles();
-    for (const auto &entry : profiles)
-        if (entry.toMap()["id"] == id) return entry.toMap()["charts"].toList();
-    return profiles.first().toMap()["charts"].toList();
-}
-
 QVariantList normalizeChartLayout(const QVariantList &saved)
 {
     const auto defaults = defaultChartCatalog();
@@ -256,4 +218,18 @@ QVariantList integrateWindDirection(const QVariantList &saved)
     direction["enabled"] = false;
     result[speedIndex] = speed; result[directionIndex] = direction;
     return result;
+}
+
+const QVector<ForecastChart> &forecastCharts()
+{
+    static const QVector<ForecastChart> charts = [] {
+        QVector<ForecastChart> result;
+        const auto values = QJsonArray::fromVariantList(chartDefaults()["charts"].toList());
+        for (const auto &value : values) {
+            const auto entry = value.toObject();
+            result.append({entry["key"].toString(), entry["title"].toString(), chartFieldKeys(entry["series"].toArray().toVariantList())});
+        }
+        return result;
+    }();
+    return charts;
 }

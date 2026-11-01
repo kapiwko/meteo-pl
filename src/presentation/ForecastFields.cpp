@@ -1,5 +1,4 @@
 #include "ForecastFields.hpp"
-#include "ChartConfiguration.hpp"
 #include "JsonSchemaValidator.hpp"
 #include <QJsonArray>
 #include <QJsonObject>
@@ -34,18 +33,4 @@ QString forecastDarkColor(const QString &lightColor, const QString &fieldKey)
 {
     for (const auto &field : forecastFields()) if (field.key == fieldKey) return field.darkColor;
     return lightColor;
-}
-
-const QVector<ForecastChart> &forecastCharts()
-{
-    static const QVector<ForecastChart> charts = [] {
-        QVector<ForecastChart> result;
-        const auto values = bundledChartJson(":/meteo/charts/catalog.json").object()["charts"].toArray();
-        for (const auto &value : values) {
-            const auto entry = value.toObject();
-            result.append({entry["key"].toString(), entry["title"].toString(), chartFieldKeys(entry["series"].toArray().toVariantList())});
-        }
-        return result;
-    }();
-    return charts;
 }
