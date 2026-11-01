@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "ImageCache.hpp"
+#include "CacheFiles.hpp"
 #include "RequestPolicy.hpp"
 #include <QBuffer>
 #include <QCoreApplication>
@@ -64,7 +65,8 @@ void ImageCache::clear()
 {
     ++m_generation;
     m_images.clear();
-    if (m_disk) m_disk->clear();
+    if (m_disk && !cachePathHasRedirects(m_disk->cacheDirectory())
+        && !cacheTreeHasRedirects(m_disk->cacheDirectory())) m_disk->clear();
 }
 void ImageCache::request(const QUrl &url, Completion completion, QObject *consumer, Priority priority)
 {

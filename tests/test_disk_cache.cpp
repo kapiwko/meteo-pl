@@ -1,4 +1,7 @@
 #include "network/DiskCacheBudget.hpp"
+#include "network/CacheFiles.hpp"
+#include <QProcess>
+#include <QScopeGuard>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -9,6 +12,35 @@
 class DiskCacheTest : public QObject {
     Q_OBJECT
 private slots:
+    void clearingNeverFollowsDirectoryRedirects_data()
+    {
+        QTest::addColumn<bool>("rootLink");
+        QTest::newRow("nested redirect") << false;
+        QTest::newRow("redirect as root") << true;
+    }
+    void clearingNeverFollowsDirectoryRedirects()
+    {
+        QFETCH(bool, rootLink);
+        QTemporaryDir cache, outside;
+        const auto keep = outside.filePath("keep.json");
+        QFile file(keep); QVERIFY(file.open(QIODevice::WriteOnly)); file.write("external data"); file.close();
+        const auto link = cache.filePath("redirect");
+#ifdef Q_OS_WIN
+        QCOMPARE(QProcess::execute("cmd.exe", {"/D", "/C", "mklink", "/J", QDir::toNativeSeparators(link), QDir::toNativeSeparators(outside.path())}), 0);
+        QVERIFY(QFileInfo(link).isJunction());
+        const auto cleanup = qScopeGuard([&] { QDir().rmdir(link); });
+#else
+        QVERIFY(QFile::link(outside.path(), link));
+        const auto cleanup = qScopeGuard([&] { QFile::remove(link); });
+#endif
+        const auto root = rootLink ? link : cache.path();
+        qint64 bytes = 0;
+        QCOMPARE(Meteo::visitCacheFiles(root, [&](const QFileInfo &entry) { bytes += entry.size(); return true; }), !rootLink);
+        QCOMPARE(bytes, 0);
+        QCOMPARE(Meteo::clearCacheFiles(root), !rootLink);
+        QVERIFY(QFile::exists(keep));
+        QVERIFY(file.open(QIODevice::ReadOnly)); QCOMPARE(file.readAll(), QByteArray("external data"));
+    }
     void retainsTheCurrentAndRecentlyUsedEntriesWithinBothLimits()
     {
         QTemporaryDir directory;

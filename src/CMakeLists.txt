@@ -12,6 +12,7 @@ add_library(meteo_core STATIC
     network/MeteoClient.cpp network/MeteoClient.hpp
     network/JsonRequest.cpp network/JsonRequest.hpp
     network/DiskCacheBudget.cpp network/DiskCacheBudget.hpp
+    network/CacheFiles.cpp network/CacheFiles.hpp
     network/MeteoMapSource.cpp network/MeteoMapSource.hpp
     network/ThematicMapSource.cpp network/ThematicMapSource.hpp
 )
