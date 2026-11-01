@@ -48,12 +48,12 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
                 ticks:function(){return [];},axisUnit:function(){return "";},
                 timeAxisLabels:function(){return {labels:[],days:[],midnights:[]};},
                 valid:function(v){return v!==null&&v!==undefined&&isFinite(v);},shown:function(){return true;},
-                layerOrder:function(){return 0;},seriesColor:function(){return "#123456";},isRightField:function(){return false;},drawGrid:function(){},
-                px:function(t){return (t-1800000000)/3600*100;},py:function(v){return 100-v;},
+                layerOrder:function(){return 0;},seriesColor:function(){return "#123456";},isRightField:function(f){return f.axis==="right";},drawGrid:function(){},
+                px:function(t){return (t-1800000000)/3600*100;},py:function(v,right){return 100-v*(right?2:1);},
                 pointAt:function(points,time){return points.find(point=>point.time===time);}
             };
             paintChart(root,{width:600,height:120},ctx,false);
-            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines};
+            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines,root:root,context:ctx};
         })()
     )JS"));
 }
@@ -207,6 +207,62 @@ private slots:
         QCOMPARE(rectangles.property("length").toInt(), 1);
         QCOMPARE(rectangles.property(0).property("x").toNumber(), 0.0);
         QCOMPARE(rectangles.property(0).property("width").toNumber(), hours * 100.0);
+    }
+    void precipitationAreaMatchesItsLineAndMarkers_data()
+    {
+        QTest::addColumn<QString>("key");
+        QTest::addColumn<int>("hours");
+        QTest::addColumn<bool>("right");
+        for (const auto &key : {QStringLiteral("pcpttl_aver"), QStringLiteral("pcpttl_max")})
+            for (int hours : {1, 3, 6}) for (bool right : {false, true})
+                QTest::newRow(qPrintable(key + QString::number(hours) + (right ? " right" : " left"))) << key << hours << right;
+    }
+    void precipitationAreaMatchesItsLineAndMarkers()
+    {
+        QFETCH(QString, key); QFETCH(int, hours); QFETCH(bool, right);
+        Meteo::Forecast forecast;
+        forecast.series.insert(key, {"mm", 1800000000, hours*3600, {2.0, 6.0, std::nullopt, 4.0, 1.0}});
+        const auto points = buildChartSeries(forecast, {}).value(key).toList();
+        const QVariantMap field{{"key", key}, {"kind", "area"}, {"render", "area"}, {"axis", right ? "right" : "left"}, {"points", points}};
+        QJSEngine engine;
+        const auto drawing = recordChart(engine, {field});
+        QVERIFY2(!drawing.isError(), qPrintable(drawing.toString()));
+        const auto polygons = drawing.property("polygons"), lines = drawing.property("lines");
+        QCOMPARE(polygons.property("length").toInt(), 2); // No polygon bridges the null sample.
+        QCOMPARE(lines.property("length").toInt(), 1);
+        const auto line = lines.property(0);
+        QCOMPARE(line.property("length").toInt(), 4);
+        for (int segment = 0; segment < 2; ++segment) {
+            const auto polygon = polygons.property(segment);
+            const int sourceIndex = segment ? 3 : 0;
+            QCOMPARE(polygon.property("length").toInt(), 4);
+            for (int vertex = 0; vertex < 2; ++vertex) {
+                const auto edge = polygon.property(vertex + 1), linePoint = line.property(segment*2 + vertex);
+                const auto point = points[sourceIndex + vertex].toMap();
+                const double x = (sourceIndex + vertex + 0.5)*hours*100;
+                const double y = 100-point["value"].toDouble()*(right ? 2 : 1);
+                QCOMPARE(edge.property(0).toNumber(), x);
+                QCOMPARE(edge.property(1).toNumber(), y);
+                QCOMPARE(linePoint.property(0).toNumber(), x);
+                QCOMPARE(linePoint.property(1).toNumber(), y);
+                engine.globalObject().setProperty("drawing", drawing);
+                engine.globalObject().setProperty("markerKey", key);
+                engine.globalObject().setProperty("markerSample", engine.toScriptValue(QVariantMap{
+                    {"number", point["value"]}, {"sourceTimestamp", point["sourceTimestamp"]},
+                    {"intervalFrom", point["intervalFrom"]}, {"intervalTo", point["intervalTo"]}}));
+                const auto marker = engine.evaluate(R"JS(
+                    drawing.root.selectedTime = drawing.root.startTime;
+                    drawing.root.nowTime = -1;
+                    drawing.root.probeSamples = {};
+                    drawing.root.probeSamples[markerKey] = markerSample;
+                    paintCursor(drawing.root, {width:600,height:120}, drawing.context, false);
+                    drawing.circles[drawing.circles.length-1];
+                )JS");
+                QVERIFY2(!marker.isError(), qPrintable(marker.toString()));
+                QCOMPARE(marker.property("x").toNumber(), x);
+                QCOMPARE(marker.property("y").toNumber(), y);
+            }
+        }
     }
     void precipitationCaptionIgnoresUnrelatedSeriesAndReportsDifferentPeriods()
     {

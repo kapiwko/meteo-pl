@@ -134,7 +134,7 @@ endif()
 add_test(NAME renderer_parity COMMAND ${METEO_GPU_TEST_WRAPPER} $<TARGET_FILE:test_renderers>)
 set_tests_properties(renderer_parity PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=${METEO_GPU_QPA};QT_QUICK_BACKEND=rhi;QSG_RHI_BACKEND=opengl;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
-    TIMEOUT 120
+    TIMEOUT 180
     LABELS "gpu;visual"
 )
 

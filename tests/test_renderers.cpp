@@ -2,6 +2,7 @@
 #include "UserPreferences.hpp"
 #include "GpuPlot.hpp"
 #include "ForecastFields.hpp"
+#include "ChartConfiguration.hpp"
 #include "Fixture.hpp"
 #include <QCryptographicHash>
 #include <QDir>
@@ -130,6 +131,7 @@ void RendererTest::initTestCase()
         cache.write(QJsonDocument(QJsonObject{{"model","um4_60"},{"latitude",52.2297},{"longitude",21.0122},
             {"savedAt",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},{"payload",QString::fromUtf8(QJsonDocument(document).toJson())}}).toJson());
         for (const auto &group:forecastCharts()) m_groups.append(group.key);
+        m_groups.append("chart:precipitation-area");
     }
 void RendererTest::appearanceMatches_data()
     {
@@ -147,6 +149,13 @@ void RendererTest::appearanceMatches()
         QVERIFY(weather.hasData());
         QVariantMap definition;
         for (const auto &value:weather.chartGroups()) if (value.toMap()["key"]==group) definition=value.toMap();
+        if (group == "chart:precipitation-area") {
+            auto mean = defaultSeriesStyle("pcpttl_aver"), maximum = defaultSeriesStyle("pcpttl_max");
+            mean["render"] = "area"; maximum["render"] = "area"; maximum["axis"] = "right";
+            mean["opacity"] = 0.5; maximum["opacity"] = 0.5;
+            definition = weather.configuredCharts({QVariantMap{{"key", group}, {"title", "Precipitation area"},
+                {"enabled", true}, {"series", QVariantList{mean, maximum}}}}).first().toMap();
+        }
         QVERIFY(!definition.isEmpty());
         QQmlEngine engine;
         auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");

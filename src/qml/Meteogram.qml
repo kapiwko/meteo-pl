@@ -105,20 +105,6 @@ ColumnLayout {
         const low = valid(minimum) ? Number(minimum) : axis.low, high = valid(maximum) ? Number(maximum) : axis.high;
         return (valid(minimum) || valid(maximum)) && high > low ? ChartAnalysis.niceAxis(low, high) : axis;
     }
-    function drawArea(ctx, field, bottom) {
-        ctx.save();
-        ctx.globalAlpha = field.opacity === undefined ? 1 : field.opacity;
-        for (let i = 1; i < field.points.length; ++i) {
-            const a = field.points[i-1], b = field.points[i];
-            if (!valid(a.value) || !valid(b.value)) continue;
-            const right = isRightField(field);
-            ctx.fillStyle = field.fill === "pressure" ? Style.pressureColor(b.value, darkPalette, field)
-                : field.fill === "wind" ? Style.windColor((a.value + b.value) / 2 / windScale, darkPalette, field) : seriesColor(field);
-            ctx.beginPath(); ctx.moveTo(px(a.time), bottom); ctx.lineTo(px(a.time), py(a.value, right));
-            ctx.lineTo(px(b.time), py(b.value, right)); ctx.lineTo(px(b.time), bottom); ctx.closePath(); ctx.fill();
-        }
-        ctx.restore();
-    }
     function layerOrder(field) {
         if (field.layer !== undefined) return field.layer;
         // Same painter order as the ICM meteogram; independent of legend and

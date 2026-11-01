@@ -67,10 +67,33 @@ function paintDirections(root, ctx, left, right, center) {
 }
 
 function intervalBounds(point) {
-    const from = Number.isFinite(point.intervalFrom) ? point.intervalFrom : point.time;
+    const time = Number.isFinite(point.sourceTimestamp) ? point.sourceTimestamp : point.time;
+    const from = Number.isFinite(point.intervalFrom) ? point.intervalFrom : time;
     const duration = Number.isFinite(point.interval) && point.interval > 0 ? point.interval : 0;
     const to = Number.isFinite(point.intervalTo) && point.intervalTo >= from ? point.intervalTo : from + duration;
     return {from: from, to: to, center: (from + to) / 2};
+}
+
+function renderTimestamp(field, point) {
+    if (field.key === "pcpttl_aver" || field.key === "pcpttl_max" || field.kind === "gusts")
+        return intervalBounds(point).center;
+    return Number.isFinite(point.sourceTimestamp) ? point.sourceTimestamp : point.time;
+}
+
+function drawArea(root, ctx, field, bottom) {
+    ctx.save();
+    ctx.globalAlpha = field.opacity === undefined ? 1 : field.opacity;
+    for (let i = 1; i < field.points.length; ++i) {
+        const a = field.points[i-1], b = field.points[i];
+        if (!root.valid(a.value) || !root.valid(b.value)) continue;
+        const right = root.isRightField(field);
+        ctx.fillStyle = field.fill === "pressure" ? pressureColor(b.value, root.darkPalette, field)
+            : field.fill === "wind" ? windColor((a.value + b.value) / 2 / root.windScale, root.darkPalette, field) : root.seriesColor(field);
+        const ax = root.px(renderTimestamp(field, a)), bx = root.px(renderTimestamp(field, b));
+        ctx.beginPath(); ctx.moveTo(ax, bottom); ctx.lineTo(ax, root.py(a.value, right));
+        ctx.lineTo(bx, root.py(b.value, right)); ctx.lineTo(bx, bottom); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
 }
 
 function paintChart(root, plot, ctx, withCursor) {
@@ -134,7 +157,7 @@ function paintChart(root, plot, ctx, withCursor) {
         .sort((a,b) => root.layerOrder(a.field) - root.layerOrder(b.field) || a.index - b.index).map(entry => entry.field);
     ctx.globalAlpha = 1;
     for (const field of ordered)
-        if (field.kind === "cloudArea" && root.shown(field)) root.drawArea(ctx, field, bottom);
+        if (field.kind === "cloudArea" && root.shown(field)) drawArea(root, ctx, field, bottom);
     for (const field of ordered) {
         if (!root.shown(field) || ["hidden", "range", "direction", "type", "storm", "flash"].indexOf(field.kind) >= 0) continue;
         if (field.kind === "cloudArea" && field.key === "cldvlow_aver") continue;
@@ -151,14 +174,14 @@ function paintChart(root, plot, ctx, withCursor) {
             ctx.stroke();
             continue;
         }
-        if (field.kind === "area" || field.key === "slpres_point" && field.render === undefined || field.key === "wind10_sd_true_prev_point" && field.render === undefined) root.drawArea(ctx, field, bottom);
+        if (field.kind === "area" || field.key === "slpres_point" && field.render === undefined || field.key === "wind10_sd_true_prev_point" && field.render === undefined) drawArea(root, ctx, field, bottom);
         ctx.beginPath(); let started = false;
         for (const point of field.points) {
             if (!root.valid(point.value)) { started = false; continue; }
             const interval = intervalBounds(point);
             const barWidth = field.kind === "rightBars" ? 3 : Math.max(2, Math.abs(root.px(interval.to) - root.px(interval.from)) * (field.kind === "barsBack" ? 0.9 : 0.8));
             const isPrecipitationBar = field.key === "pcpttl_aver" || field.key === "pcpttl_max";
-            const x = root.px(isPrecipitationBar || field.kind === "gusts" ? interval.center : point.time), y = root.py(point.value, isRight);
+            const x = root.px(renderTimestamp(field, point)), y = root.py(point.value, isRight);
             if (field.kind === "cloudPoint" || field.kind === "points") {
                 if (field.kind === "cloudPoint" && point.value <= 0) continue;
                 ctx.beginPath(); ctx.arc(x, y, field.pointSize || (field.kind === "points" ? 2 : 3), 0, Math.PI * 2); ctx.fill();
@@ -263,8 +286,7 @@ function paintCursor(root, plot, ctx, reset) {
             if (!root.shown(field) || ["hidden", "direction", "type", "barsBack", "storm", "flash"].indexOf(field.kind) >= 0) continue;
             const sample = root.probeSamples[field.key];
             if (!sample || !root.valid(sample.number) || !root.valid(sample.sourceTimestamp)) continue;
-            const centered = ["pcpttl_aver", "pcpttl_max"].indexOf(field.key) >= 0 || field.kind === "gusts";
-            const sampleTime = sample.sourceTimestamp + (centered && root.valid(sample.intervalTo) ? (sample.intervalTo - sample.intervalFrom) / 2 : 0);
+            const sampleTime = renderTimestamp(field, sample);
             ctx.fillStyle = root.seriesColor(field); ctx.strokeStyle = root.backgroundColor; ctx.lineWidth = 1.5; ctx.globalAlpha = 1;
             ctx.beginPath(); ctx.arc(root.px(sampleTime), root.py(sample.number, root.isRightField(field)), 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         }
