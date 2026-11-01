@@ -66,6 +66,27 @@ bool SavedPlaceController::includesPlace(const QStringList &keys, double latitud
             if (entry.toMap().value("id").toString() == legacy) return false;
     return true;
 }
+QStringList SavedPlaceController::setIncluded(const QStringList &keys, const QString &placeId, bool included) const
+{
+    const auto places = m_preferences ? m_preferences->favorites() : QVariantList{};
+    QStringList ids;
+    for (const auto &entry : places) ids.append(entry.toMap()["id"].toString());
+    if (!ids.contains(placeId)) return keys;
+    if (keys.contains("*") && included) return keys;
+    QStringList result;
+    for (const auto &key : keys.contains("*") ? ids : keys) {
+        auto canonical = key;
+        // Stable IDs take precedence over coordinate-shaped legacy keys.
+        if (!ids.contains(key)) for (const auto &entry : places) {
+            const auto place = entry.toMap();
+            const auto legacy = QString::number(place["latitude"].toDouble(),'f',6) + ',' + QString::number(place["longitude"].toDouble(),'f',6);
+            if (key == legacy) { canonical = place["id"].toString(); break; }
+        }
+        if (canonical != placeId && !result.contains(canonical)) result.append(canonical);
+    }
+    if (included) result.append(placeId);
+    return result;
+}
 void SavedPlaceController::setVisibleKeys(const QStringList &keys)
 {
     if (m_visibleKeys == keys) return;

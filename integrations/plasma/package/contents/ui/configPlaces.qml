@@ -44,12 +44,8 @@ KCM.SimpleKCM {
                         text: row.modelData.name
                         enabled: !root.allPlaces
                         checked: root.allPlaces || catalog.includesPlace(root.cfg_visiblePlaces, row.modelData.latitude, row.modelData.longitude)
-                        onToggled: {
-                            const legacy = row.modelData.latitude.toFixed(6) + "," + row.modelData.longitude.toFixed(6);
-                            const keys = Array.from(root.cfg_visiblePlaces).filter(key => key !== row.key && key !== legacy);
-                            if (checked) keys.push(row.key);
-                            root.cfg_visiblePlaces = keys;
-                        }
+                        objectName: "placeIncluded-" + row.modelData.id
+                        onToggled: root.cfg_visiblePlaces = catalog.setIncluded(Array.from(root.cfg_visiblePlaces), row.modelData.id, checked)
                     }
                     ToolButton {
                         icon.name: "go-up-symbolic"

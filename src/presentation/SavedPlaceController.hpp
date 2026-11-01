@@ -31,6 +31,7 @@ public:
     QVariantList places() const;
     Q_INVOKABLE QString placeKey(double latitude, double longitude) const;
     Q_INVOKABLE bool includesPlace(const QStringList &keys, double latitude, double longitude) const;
+    Q_INVOKABLE QStringList setIncluded(const QStringList &keys, const QString &placeId, bool included) const;
     void classBegin() override {}
     void componentComplete() override;
 signals:

@@ -10,6 +10,21 @@ class PlacesTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void includingAReusedCoordinateDoesNotRemoveTheMovedPlace()
+    {
+        QTemporaryDir directory; QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,directory.path());
+        QSettings old(QSettings::IniFormat,QSettings::UserScope,"meteo-pl","desktop");
+        old.setValue("places/listVersion",1);
+        old.setValue("places/favorites",QByteArray(R"([{"name":"A","latitude":50,"longitude":20}])")); old.sync();
+        UserPreferences preferences;
+        const auto a=preferences.favorites().first().toMap()["id"].toString();
+        QVERIFY(preferences.editPlace(a,"A",51,21)["ok"].toBool());
+        const auto b=preferences.editPlace({},"B",50,20)["place"].toMap()["id"].toString();
+        SavedPlaceController controller; controller.setPreferences(&preferences);
+        const auto both=controller.setIncluded({a},b,true);
+        QVERIFY(both.contains(a)); QVERIFY(both.contains(b));
+        QCOMPARE(controller.setIncluded(both,b,false),QStringList{a});
+    }
     void followingTheDeviceDoesNotSaveGpsPointsAsPlaces()
     {
         QTemporaryDir directory;

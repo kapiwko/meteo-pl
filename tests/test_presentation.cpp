@@ -73,6 +73,41 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void widgetPlaceCheckboxPreservesMovedStableIdentityAfterReopening()
+    {
+        QSettings legacy(QSettings::IniFormat,QSettings::UserScope,"meteo-pl","desktop");
+        legacy.setValue("places/listVersion",1);
+        legacy.setValue("places/favorites",QByteArray(R"([{"name":"Original","latitude":50.86,"longitude":20.63}])"));
+        legacy.sync();
+        QQmlEngine engine;
+        auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");
+        const auto id=preferences->placeAt(50.86,20.63)["id"].toString();
+        QVERIFY(preferences->editPlace(id,"Moved",51.0,21.0)["ok"].toBool());
+        preferences->savePlace("New",50.86,20.63);
+        const auto other=preferences->placeAt(50.86,20.63)["id"].toString();
+        QQmlComponent component(&engine,QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/integrations/plasma/package/contents/ui/configPlaces.qml")));
+        QScopedPointer<QObject> settings(component.createWithInitialProperties({{"cfg_visiblePlaces",QStringList{id}}}));
+        QVERIFY2(settings,qPrintable(component.errorString()));
+        // Delegates are visual children; execute the real checkbox's toggled handler.
+        const auto visual=[](auto &&self,QQuickItem *item,const QString &name) -> QQuickItem * {
+            if (item->objectName()==name) return item;
+            for (auto *child : item->childItems()) if (auto *found=self(self,child,name)) return found;
+            return nullptr;
+        };
+        const auto find=[&](QObject *root,const QString &name) { return visual(visual,qobject_cast<QQuickItem *>(root),name); };
+        auto *checkbox=find(settings.data(),"placeIncluded-"+other);
+        QVERIFY(checkbox); QVERIFY(!checkbox->property("checked").toBool());
+        checkbox->setProperty("checked",true); QVERIFY(QMetaObject::invokeMethod(checkbox,"toggled"));
+        const auto stored=settings->property("cfg_visiblePlaces");
+        const auto keys=stored.metaType()==QMetaType::fromType<QJSValue>()?stored.value<QJSValue>().toVariant().toStringList():stored.toStringList();
+        QVERIFY(keys.contains(id)); QVERIFY(keys.contains(other));
+        settings.reset(component.createWithInitialProperties({{"cfg_visiblePlaces",keys}}));
+        QVERIFY(settings);
+        for (const auto &key : {id,other}) {
+            auto *saved=find(settings.data(),"placeIncluded-"+key);
+            QVERIFY(saved); QVERIFY(saved->property("checked").toBool());
+        }
+    }
     void chartAxesStayFixedWhilePanning_data()
     {
         QTest::addColumn<QString>("leftScale");
