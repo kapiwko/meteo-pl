@@ -18,6 +18,10 @@ qt_add_executable(test_disk_cache test_disk_cache.cpp)
 target_link_libraries(test_disk_cache PRIVATE meteo_services Qt6::Test)
 add_test(NAME disk_cache COMMAND test_disk_cache)
 
+qt_add_executable(test_preferences_file test_preferences_file.cpp)
+target_link_libraries(test_preferences_file PRIVATE meteo_services Qt6::Test)
+add_test(NAME preferences_file COMMAND test_preferences_file)
+
 qt_add_executable(test_document_file test_document_file.cpp)
 target_link_libraries(test_document_file PRIVATE meteo_core Qt6::Test)
 add_test(NAME document_file COMMAND test_document_file)

@@ -196,9 +196,9 @@ def check_native_rendering(command, craft_root, work, environment):
          "-DCMAKE_BUILD_TYPE=Release", "-DBUILD_TESTING=ON", "-DMETEO_BUILD_APP=OFF", "-DMETEO_BUILD_PLASMOID=OFF",
          "-DMETEO_BUILD_KRUNNER=OFF", f"-DCMAKE_PREFIX_PATH={craft_root}"], env=environment)
     run([*prefix, "cmake", "--build", directory, "--parallel", "2", "--target",
-         "test_renderers", "test_presentation", "test_maps"], env=environment)
+         "test_renderers", "test_presentation", "test_maps", "test_preferences_file"], env=environment)
     run([*prefix, "ctest", "--test-dir", directory, "--output-on-failure", "-R",
-         "^(renderer_parity|gpu_geometry|map_animation_gpu)$"], env=environment)
+         "^(renderer_parity|gpu_geometry|map_animation_gpu|preferences_file)$"], env=environment)
 
 
 def check_filesystem_contracts(command, craft_root, work, environment):
