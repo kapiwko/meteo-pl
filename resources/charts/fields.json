@@ -319,7 +319,7 @@
       "unit": "m/s"
     },
     {
-      "axisScale": "wind",
+      "axisScale": "direction",
       "color": "#111199",
       "darkColor": "#5b9cf6",
       "decimals": 0,

@@ -63,6 +63,20 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void numericWindDirectionsHaveAnAngularAxisIndependentOfSpeedUnits()
+    {
+        const QVariantList points{QVariantMap{{"time",1800000000LL},{"value",90}},QVariantMap{{"time",1800003600LL},{"value",270}}};
+        auto style=defaultSeriesStyle("wind10_dr_deg_true_prev_point"); style["render"]="line";
+        for (const auto &unit : {"m/s","km/h","kt"}) {
+            const auto chart=buildConfiguredCharts({QVariantMap{{"key","chart:angle"},{"enabled",true},{"series",QVariantList{style}}}},
+                {{"wind10_dr_deg_true_prev_point",points}},unit).first().toMap();
+            QCOMPARE(chart["leftScale"].toString(),"direction");
+            const auto axis=chart["leftAxis"].toMap();
+            QCOMPARE(axis["unit"].toString(),QString::fromUtf8("°"));
+            QCOMPARE(axis["range"].toMap()["low"].toDouble(),0);
+            QCOMPARE(axis["range"].toMap()["high"].toDouble(),360);
+        }
+    }
     void horizontalSegmentsKeepSignedAndMissingSamples_data()
     {
         QTest::addColumn<bool>("right"); QTest::addColumn<QString>("key");

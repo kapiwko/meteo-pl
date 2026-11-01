@@ -171,7 +171,7 @@ function paintChart(root, plot, ctx, withCursor) {
             continue;
         }
         if (field.kind === "area" || field.key === "slpres_point" && field.render === undefined || field.key === "wind10_sd_true_prev_point" && field.render === undefined) drawArea(root, ctx, field, bottom);
-        ctx.beginPath(); let started = false;
+        ctx.beginPath(); let started = false, previousValue = null;
         for (const point of field.points) {
             if (!root.valid(point.value)) { started = false; continue; }
             const interval = intervalBounds(point);
@@ -208,7 +208,9 @@ function paintChart(root, plot, ctx, withCursor) {
                     ctx.fillRect(from, Math.min(y, zero), to - from, Math.abs(zero - y));
                 }
             } else {
+                if (field.unit === "°" && previousValue !== null && Math.abs(point.value - previousValue) > 180) started = false;
                 if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+                previousValue = point.value;
             }
         }
         if (["points", "cloudPoint", "gusts", "bars", "barsBack", "stems", "rightBars"].indexOf(field.kind) < 0) ctx.stroke();
