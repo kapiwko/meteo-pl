@@ -191,6 +191,8 @@ void RendererTest::appearanceMatches()
         auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");
         QVERIFY(preferences);
         preferences->setShowLegend(true); preferences->setRenderer("cpu");
+        QVERIFY2(preferences->error().isEmpty(),qPrintable(preferences->error()));
+        QCOMPARE(preferences->renderer(), QStringLiteral("cpu"));
         QQmlComponent component(&engine);
         component.setData(R"(
             import QtQuick
@@ -235,8 +237,8 @@ void RendererTest::appearanceMatches()
         auto *window=qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
         auto *chart=object->findChild<QObject *>("parityChart"); QVERIFY(chart);
         QCOMPARE(chart->property("darkPalette").toBool(),dark);
-        auto *canvas=object->findChild<QObject *>("cpu-base-"+group);
-        QVERIFY(canvas);
+        QObject *canvas=nullptr;
+        QTRY_VERIFY(canvas=object->findChild<QObject *>("cpu-base-"+group));
         QSignalSpy painted(canvas,SIGNAL(painted()));
         QVERIFY(QMetaObject::invokeMethod(canvas,"requestPaint"));
         QTRY_VERIFY(painted.count()>0);
@@ -244,6 +246,8 @@ void RendererTest::appearanceMatches()
         const auto cpu=window->grabWindow().convertToFormat(QImage::Format_RGB32);
         QVERIFY(!cpu.isNull());
         preferences->setRenderer("gpu");
+        QVERIFY2(preferences->error().isEmpty(),qPrintable(preferences->error()));
+        QCOMPARE(preferences->renderer(), QStringLiteral("gpu"));
         QTRY_VERIFY(object->findChild<GpuPlot *>("gpu-base-"+group));
         auto *gpuPlot=object->findChild<GpuPlot *>("gpu-base-"+group);
         QTRY_VERIFY(gpuPlot->frameCount()>0);
