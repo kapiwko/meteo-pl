@@ -4,8 +4,10 @@
 
 # Meteo
 
-[![Build, test and package](https://github.com/kapiwko/meteo-pl/actions/workflows/tests.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/tests.yml)
-[![Windows, macOS and Android](https://github.com/kapiwko/meteo-pl/actions/workflows/portable-packages.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/portable-packages.yml)
+[![Linux](https://github.com/kapiwko/meteo-pl/actions/workflows/tests.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/tests.yml)
+[![Android](https://github.com/kapiwko/meteo-pl/actions/workflows/android.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/android.yml)
+[![Windows](https://github.com/kapiwko/meteo-pl/actions/workflows/windows.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/windows.yml)
+[![macOS](https://github.com/kapiwko/meteo-pl/actions/workflows/macos.yml/badge.svg)](https://github.com/kapiwko/meteo-pl/actions/workflows/macos.yml)
 [![License: GPL v3 or later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 Explore ICM UW weather forecasts from [meteo.pl](https://app.meteo.pl/meteogram)
@@ -94,12 +96,12 @@ includes SHA-256 checksums and a build report.
 | Android arm64 | APK | No |
 
 Windows and macOS bundles include Qt and KDE dependencies. Android builds
-support a [persistent signing key](docs/portable-packages.md#stały-podpis-androida)
+support a [persistent signing key](docs/portable-packages.md#persistent-android-signing)
 for installable updates; unconfigured builds use a temporary development key. The Windows portable
 ZIP and unsigned Android APK are available with `--include-alternatives`, or the
 matching option when running the workflow manually. Development APKs built in different runs may require uninstalling the
 previous build. For local emulator and device testing, see the
-[Android build guide](docs/portable-packages.md#lokalne-uruchamianie-androida).
+[Android build guide](docs/portable-packages.md#android-interface-and-local-testing).
 
 ### Linux Packages
 

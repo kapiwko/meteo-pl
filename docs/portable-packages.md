@@ -68,7 +68,7 @@ session before launching the app so repeated hierarchy queries do not toggle
 Android accessibility while Qt constructs controls.
 
 This reinstalls the selected APK, resets application data and exercises setup,
-permission refusal, adding a place without network access, background/foreground,
+permission refusal and approval, adding a place without network access, background/foreground,
 system Back, rotation, update and SAF profile export/import. It refuses physical-device serials. Retained artifacts identify
 the tested APK and include logcat and the last UI hierarchy. The emulator must
 be fully booted and responsive before starting the test. When running the ARM64
@@ -233,8 +233,9 @@ search and map selection do not require this permission.
 
 ## GitHub Actions
 
-`portable-packages.yml` runs native Windows/macOS jobs and builds Android in a
-pinned SDK image. Artifacts are uploaded after the job succeeds. Craft bootstrap
+Separate **Windows**, **macOS** and **Android** workflows run native desktop
+builds and build Android in a pinned SDK image. Each platform has its own status,
+logs and manual dispatch. Artifacts are uploaded after the job succeeds. Craft bootstrap
 and blueprints are pinned by revision in the script; the external KDE binary
 cache can change. The macOS job uses GWDG's mirror to obtain a complete dependency
 index while KDE's primary cache is rebuilding. Manual dispatch offers

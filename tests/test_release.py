@@ -12,6 +12,7 @@ import json
 import io
 import shutil
 import subprocess
+from types import SimpleNamespace
 
 SPEC=importlib.util.spec_from_file_location("release",Path(__file__).resolve().parents[1]/"scripts/release.py")
 release=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(release)
@@ -67,6 +68,22 @@ class ReleaseTest(unittest.TestCase):
         publisher.validate_report(good,"1.0.0","debian")
         for changes in ({"tests":"not-run"},{"runtimeInstallationCheck":{"status":"failed"}},{"system":{"ID":"ubuntu"}}):
             with self.assertRaises(ValueError):publisher.validate_report(good|changes,"1.0.0","debian")
+
+    def test_release_requires_each_platform_workflow_for_the_same_commit(self):
+        runs = {"linux": "Linux", "android": "Android", "windows": "Windows", "macos": "macOS"}
+        args = SimpleNamespace(**{name+"_run": name for name in runs})
+        reports = {name: {"headSha": "abc", "headBranch": "main", "event": "push", "name": workflow,
+                          "status": "completed", "conclusion": "success"} for name, workflow in runs.items()}
+        def info(*arguments): return reports[arguments[2]]
+        with patch.object(publisher, "gh_json", side_effect=info):
+            publisher.ci_runs(args, "abc")
+            for name in runs:
+                original = reports[name]
+                for bad in ({"headSha": "old"}, {"conclusion": "failure"}, {"name": "Other platform"}):
+                    reports[name] = original | bad
+                    with self.subTest(platform=name, change=bad), self.assertRaises(ValueError):
+                        publisher.ci_runs(args, "abc")
+                reports[name] = original
 
     def test_release_checks_the_entire_downloaded_artifact_set(self):
         with tempfile.TemporaryDirectory() as temporary:

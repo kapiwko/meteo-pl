@@ -16,8 +16,8 @@ Android uses `major * 1000000 + minor * 1000 + patch` as its version code;
 the version script rejects values that would collide or exceed Android's limit.
 Write release notes, review and commit these changes, then push `main`.
 
-Wait for both **Build, test and package** and **Windows macOS and Android
-packages** to succeed for that exact commit. Linux packages must pass tests and
+Wait for **Linux**, **Android**, **Windows** and **macOS**
+to succeed for that exact commit. Linux packages must pass tests and
 installation in a clean runtime container. Android must use the persistent
 release keystore described in [portable packaging](portable-packages.md).
 A development-signed APK cannot become a release artifact.
@@ -39,7 +39,8 @@ Prepare and inspect a release without publishing:
 
 ```sh
 python3 scripts/publish-release.py \
-  --linux-run LINUX_RUN_ID --portable-run PORTABLE_RUN_ID \
+  --linux-run LINUX_RUN_ID --android-run ANDROID_RUN_ID \
+  --windows-run WINDOWS_RUN_ID --macos-run MACOS_RUN_ID \
   --signing-key FULL_GPG_FINGERPRINT \
   --android-certificate-sha256 ANDROID_CERTIFICATE_SHA256 \
   --notes-file docs/releases/0.9.0.md \
@@ -48,7 +49,7 @@ python3 scripts/publish-release.py \
 
 Use `--apksigner /path/to/Android/Sdk/build-tools/VERSION/apksigner` if needed.
 The script downloads artifacts from successful `push` or manually dispatched
-runs on `main`, always requiring the exact release commit in both workflows.
+runs on `main`, always requiring the exact release commit in every workflow.
 Manual runs can rebuild a signed APK after signing secrets change while keeping
 earlier development artifacts intact. The script
 checks every checksum and report, and compares source-file contents and metadata

@@ -286,7 +286,7 @@ def package_current_build(command, target, work, dist, craft_root, environment, 
 def build(args):
     expected = {"windows": "Windows", "macos": "Darwin"}.get(args.target)
     if expected and platform.system() != expected:
-        raise ValueError(f"Build {args.target} on {expected}; use the portable-packages GitHub workflow")
+        raise ValueError(f"Build {args.target} on {expected}; use its platform-specific GitHub workflow")
     if args.target == "android" and not os.environ.get("ANDROID_NDK"):
         raise ValueError("Android builds require the KDE Android SDK container")
     work, craft_root, dist = args.work_dir.resolve(), args.craft_root.resolve(), args.dist_dir.resolve()

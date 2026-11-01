@@ -1,4 +1,4 @@
-name: Build, test and package
+name: Linux
 on:
   push:
     branches: [main]
@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   linux:
-    name: ${{ matrix.distro }} · tests and package
+    name: ${{ matrix.distro }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:

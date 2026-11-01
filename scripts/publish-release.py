@@ -58,9 +58,10 @@ def verify_run(info, sha, workflow):
         raise ValueError(f"Require successful {workflow} main-branch CI for {sha}")
 
 
-def ci_runs(linux_run, portable_run, sha):
-    for number, workflow in ((linux_run, "Build, test and package"),
-                             (portable_run, "Windows macOS and Android packages")):
+def ci_runs(args, sha):
+    for number, workflow in ((args.linux_run, "Linux"),
+                             (args.android_run, "Android"), (args.windows_run, "Windows"),
+                             (args.macos_run, "macOS")):
         info = gh_json("run", "view", str(number), "--repo", REPO,
                        "--json", "headSha,headBranch,event,name,status,conclusion,url")
         verify_run(info, sha, workflow)
@@ -150,14 +151,14 @@ def sign_arch_package(destination, signing_key):
 
 
 def prepare(args, sha, version):
-    ci_runs(args.linux_run, args.portable_run, sha)
+    ci_runs(args, sha)
     destination = args.dist_dir.resolve()
     if destination.exists():
         raise ValueError(f"Use a new output directory: {destination}")
     with tempfile.TemporaryDirectory(prefix="meteo-release-") as temporary:
         inputs = Path(temporary)
         for target in (*LINUX, "android"):
-            run_id = args.portable_run if target == "android" else args.linux_run
+            run_id = args.android_run if target == "android" else args.linux_run
             artifact = f"meteo-pl-{'android-arm64' if target == 'android' else target}-{sha}"
             run("gh", "run", "download", run_id, "--repo", REPO, "--name", artifact,
                 "--dir", inputs / target)
@@ -166,7 +167,8 @@ def prepare(args, sha, version):
     verify_android(apk, args.apksigner, args.android_certificate_sha256)
     sign_arch_package(destination, args.signing_key)
     provenance = {"repository": REPO, "commit": sha, "version": version,
-                  "linuxRun": args.linux_run, "portableRun": args.portable_run,
+                  "linuxRun": args.linux_run, "androidRun": args.android_run,
+                  "windowsRun": args.windows_run, "macosRun": args.macos_run,
                   "androidCertificateSha256": args.android_certificate_sha256.lower(),
                   "gpgSigningKey": args.signing_key.upper()}
     (destination / "BUILD-PROVENANCE.json").write_text(json.dumps(provenance, indent=2) + "\n")
@@ -191,7 +193,7 @@ def prepare(args, sha, version):
 
 
 def publish(destination, tag, notes, sha, args):
-    ci_runs(args.linux_run, args.portable_run, sha)
+    ci_runs(args, sha)
     run("git", "push", "origin", f"refs/tags/{tag}", cwd=ROOT)
     run("gh", "release", "create", tag, "--repo", REPO, "--verify-tag", "--draft",
         "--title", f"Meteo {tag[1:]}", "--notes-file", notes)
@@ -210,7 +212,9 @@ def publish(destination, tag, notes, sha, args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--linux-run", required=True)
-    parser.add_argument("--portable-run", required=True)
+    parser.add_argument("--android-run", required=True)
+    parser.add_argument("--windows-run", required=True)
+    parser.add_argument("--macos-run", required=True)
     parser.add_argument("--signing-key", required=True, help="Full personal GPG fingerprint")
     parser.add_argument("--android-certificate-sha256", required=True)
     parser.add_argument("--apksigner", default="apksigner")
