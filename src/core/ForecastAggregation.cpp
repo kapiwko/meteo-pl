@@ -1,6 +1,7 @@
 #include "ForecastAggregation.hpp"
 #include <algorithm>
 #include <cmath>
+#include <QSet>
 
 namespace Meteo {
 namespace {
@@ -51,19 +52,33 @@ QVector<DailyForecast> aggregateDays(const Forecast &forecast, const QTimeZone &
             if (key != "airtmp_min") maximum(day.maximum,*value);
         });
     }
-    samples(forecast,"wind_gust_max",[&](qint64 time,int,const std::optional<double> &value) {
-        if (value) maximum(dayAt(time).day.gust,*value);
+    samples(forecast,"wind_gust_max",[&](qint64 time,int interval,const std::optional<double> &value) {
+        if (!value) return;
+        calendarParts(time,interval,zone,[&](QDate date,qint64,bool split) {
+            auto &day=days[date].day; day.date=date;
+            maximum(day.gust,*value); day.gustEstimatedAtBoundary |= split;
+        });
     });
     samples(forecast,"pcpttl_aver",[&](qint64 time,int interval,const std::optional<double> &value) {
-        const auto type = forecast.series.value("pcpttl_type_max").at(time);
         calendarParts(time,interval,zone,[&](QDate date,qint64 seconds,bool split) {
             auto &work = days[date]; work.day.date = date;
             if (!value) { work.missingRain = true; return; }
             work.day.rain = work.day.rain.value_or(0) + *value * (double(seconds)/interval);
             work.day.rainCoverageSeconds += seconds;
             work.day.rainEstimatedAtBoundary |= split;
-            if (*value > 0 && type && qRound(*type) == 2) work.day.snow = true;
-            if (*value > 0 && type && qRound(*type) == 3) work.day.mixed = true;
+            if (*value>0) {
+                const auto from=std::max(time,date.startOfDay(zone).toSecsSinceEpoch());
+                const auto to=std::min(time+interval,date.addDays(1).startOfDay(zone).toSecsSinceEpoch());
+                QSet<int> categories; qint64 covered=0;
+                samples(forecast,"pcpttl_type_max",[&](qint64 start,int duration,const std::optional<double> &type) {
+                    const auto overlap=std::min(to,start+duration)-std::max(from,start);
+                    if (overlap<=0 || !type) return;
+                    categories.insert(qRound(*type)); covered+=overlap;
+                });
+                work.day.snow |= categories.contains(2);
+                work.day.mixed |= categories.contains(3);
+                work.day.precipitationTypeUncertain |= categories.size()>1 || covered<to-from;
+            }
         });
     });
     samples(forecast,"cldtot_aver",[&](qint64 time,int interval,const std::optional<double> &value) {

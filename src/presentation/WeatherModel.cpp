@@ -60,6 +60,7 @@ WeatherModel::WeatherModel(QObject *parent, QUrl endpoint, QGeoPositionInfoSourc
     m_debounce.start();
 }
 
+
 void WeatherModel::setLatitude(double value)
 {
     if (m_latitude == value)
@@ -389,6 +390,7 @@ QVariantList WeatherModel::dailyForecast() const
             {"minimum", optional(aggregate.minimum)}, {"maximum", optional(aggregate.maximum)},
             {"rain", optional(aggregate.rain)}, {"wind", aggregate.gust ? QVariant(*aggregate.gust * displayScale("wind_gust_max",1)) : QVariant()},
             {"rainComplete", aggregate.rainComplete}, {"rainEstimated", aggregate.rainEstimatedAtBoundary},
+            {"windEstimated", aggregate.gustEstimatedAtBoundary}, {"precipitationTypeUncertain", aggregate.precipitationTypeUncertain},
             {"rainCoverageSeconds", aggregate.rainCoverageSeconds}, {"storm", aggregate.storm},
             {"snow", aggregate.snow}, {"mixed", aggregate.mixed},
             {"cloudCount", aggregate.cloudCover ? 1 : 0}, {"cloudSum", aggregate.cloudCover.value_or(0)*100}};

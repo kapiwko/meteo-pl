@@ -7,6 +7,22 @@
 class ForecastTest : public QObject {
     Q_OBJECT
 private slots:
+    void intervalGustsAndPrecipitationTypesRespectCalendarOverlap()
+    {
+        for (const auto &zone : {QTimeZone::utc(),QTimeZone("Europe/Warsaw")}) for (const auto &date : {QDate(2026,3,28),QDate(2026,10,24)}) {
+            const auto start=QDateTime(date,QTime(23,0),zone).toSecsSinceEpoch();
+            Meteo::Forecast forecast;
+            forecast.series["wind_gust_max"]={"m/s",start,10800,{30}};
+            forecast.series["pcpttl_aver"]={"mm",start,10800,{3}};
+            forecast.series["pcpttl_type_max"]={"code",start,3600,{1,2,1}};
+            const auto days=Meteo::aggregateDays(forecast,zone);
+            QCOMPARE(days.size(),2);
+            for (const auto &day : days) { QCOMPARE(day.gust.value(),30.0); QVERIFY(day.gustEstimatedAtBoundary); }
+            QVERIFY(!days[0].snow); QVERIFY(days[1].snow);
+            QVERIFY(!days[0].precipitationTypeUncertain); QVERIFY(days[1].precipitationTypeUncertain);
+            QCOMPARE(days[0].rain.value()+days[1].rain.value(),3.0);
+        }
+    }
     void samplesNativeAxesAccordingToQuantityTiming()
     {
         using namespace Meteo;

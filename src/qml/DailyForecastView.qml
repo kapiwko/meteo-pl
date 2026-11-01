@@ -52,7 +52,9 @@ ScrollView {
                             : dayCard.modelData.rainComplete ? I18n.i18n("Total precipitation for this day.") : I18n.i18n("The forecast covers part of this day. Missing intervals are excluded.")
                         HoverHandler { id: rainHover }
                     }
-                    Label { Layout.fillWidth: true; text: I18n.i18n("Gusts: ") + root.number(dayCard.modelData.wind, 0) + " " + root.weather.windUnit; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                    Label { Layout.fillWidth: true; text: (dayCard.modelData.windEstimated ? I18n.i18n("Gusts: up to %1 %2") : I18n.i18n("Gusts: %1 %2")).arg(root.number(dayCard.modelData.wind, 0)).arg(root.weather.windUnit); wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                    Label { Layout.fillWidth: true; visible: dayCard.modelData.windEstimated; text: I18n.i18n("The gust period crosses midnight."); wrapMode: Text.WordWrap; font.pixelSize: 10; opacity: 0.7 }
+                    Label { Layout.fillWidth: true; visible: dayCard.modelData.precipitationTypeUncertain; text: I18n.i18n("Precipitation type may vary within the period."); wrapMode: Text.WordWrap; font.pixelSize: 10; opacity: 0.7 }
                 }
             }
         }

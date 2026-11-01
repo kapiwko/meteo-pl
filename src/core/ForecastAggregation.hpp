@@ -9,6 +9,8 @@ struct DailyForecast {
     qint64 rainCoverageSeconds = 0;
     bool rainComplete = false;
     bool rainEstimatedAtBoundary = false;
+    bool gustEstimatedAtBoundary = false;
+    bool precipitationTypeUncertain = false;
     bool storm = false, snow = false, mixed = false;
 };
 // Totals use each source interval once. At a calendar boundary, distribute an

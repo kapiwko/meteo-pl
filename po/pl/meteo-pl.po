@@ -2794,3 +2794,15 @@ msgstr "czas lokalny systemu"
 
 #~ msgid "Selected: "
 #~ msgstr "Wybrano: "
+
+msgid "Gusts: up to %1 %2"
+msgstr "Porywy: do %1 %2"
+
+msgid "Gusts: %1 %2"
+msgstr "Porywy: %1 %2"
+
+msgid "The gust period crosses midnight."
+msgstr "Przedział porywów obejmuje północ."
+
+msgid "Precipitation type may vary within the period."
+msgstr "Rodzaj opadu może zmieniać się w tym przedziale."
