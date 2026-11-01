@@ -6,6 +6,9 @@
 #include <QVariantList>
 #include <QtQml/qqmlregistration.h>
 
+class ProfileEditor;
+class SavedPlaces;
+
 class METEO_UI_EXPORT UserPreferences : public QObject
 {
     Q_OBJECT
@@ -47,8 +50,8 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     QVariantList profiles() const;
     bool hasDeletedProfiles() const;
     QVariantList chartLayout() const;
-    Q_INVOKABLE QStringList seriesFills(const QString &key) const;
     Q_INVOKABLE QStringList seriesRenderers(const QString &key) const;
+    Q_INVOKABLE QStringList seriesFills(const QString &key) const;
     Q_INVOKABLE QVariantList chartLayoutForProfile(const QString &id) const;
     QVariantList chartCatalog() const;
     QVariantMap chartAppearance() const;
@@ -100,19 +103,16 @@ class METEO_UI_EXPORT UserPreferences : public QObject
     Q_INVOKABLE QVariantMap importProfiles(const QUrl &file, bool activate = true);
     Q_INVOKABLE QVariantMap exportProfilesByIds(const QUrl &file, const QStringList &ids) const;
     Q_INVOKABLE QVariantMap profileState(const QString &id) const;
+    QVariantMap restoreProfileState(const QVariantMap &before, const QVariantMap &after);
     Q_INVOKABLE QVariantMap profileCommand(const QVariantMap &command, const QString &profileId = {});
     Q_INVOKABLE QVariantMap undoProfileCommand(const QVariantMap &token);
-    QVariantMap restoreProfileState(const QVariantMap &before, const QVariantMap &after);
     Q_INVOKABLE void setProfileChartHeightForProfile(const QString &id, int height);
 
   private:
-    QVariantMap profileSnapshot() const;
+    bool editPlaces(const std::function<void(SavedPlaces &)> &operation);
+    QVariantMap profileValues() const;
+    bool editProfiles(const std::function<void(ProfileEditor &)> &operation);
     bool change(const std::function<void()> &operation);
-    void saveLayout(const QString &profile, const QVariantList &layout);
-    void saveProfileOptions(const QString &profile, const QVariantMap &options);
-    QVariantMap factoryProfile(const QString &id) const;
-    QString createProfileFrom(const QString &name, const QString &sourceProfile, bool activate = true);
-    QVariantList savedProfiles() const;
     QVariantList readPlaces(const QString &key) const;
     void writePlaces(const QString &key, const QVariantList &places);
     PreferencesStore m_store;

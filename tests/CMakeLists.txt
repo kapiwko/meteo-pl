@@ -170,3 +170,7 @@ qt_add_executable(test_plot_geometry test_plot_geometry.cpp)
 target_link_libraries(test_plot_geometry PRIVATE meteo_ui Qt6::Test)
 add_test(NAME plot_geometry COMMAND test_plot_geometry)
 set_tests_properties(plot_geometry PROPERTIES TIMEOUT 10)
+
+qt_add_executable(test_preferences_domain test_preferences_domain.cpp)
+target_link_libraries(test_preferences_domain PRIVATE meteo_ui Qt6::Test)
+add_test(NAME preferences_domain COMMAND test_preferences_domain)

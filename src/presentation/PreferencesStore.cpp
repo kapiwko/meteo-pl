@@ -1,4 +1,5 @@
 #include "PreferencesStore.hpp"
+#include "PreferencesMigration.hpp"
 #include "ChartConfiguration.hpp"
 #include "core/Localization.hpp"
 #include "core/Locations.hpp"
@@ -112,7 +113,7 @@ bool writeSettings(const QString &path, const QVariantMap &values, QString *erro
 PreferencesStore::PreferencesStore(QObject *parent) : QObject(parent), m_fileName(settingsPath())
 {
     readSettings(m_fileName, m_values, nullptr);
-    update([this] { migrate(); });
+    update([this] { migratePreferences(m_pending); });
     m_places = placesSnapshot();
     m_display = displaySnapshot();
     watchFile();
@@ -232,77 +233,4 @@ QByteArray PreferencesStore::displaySnapshot() const
     QDataStream stream(&snapshot, QIODevice::WriteOnly);
     stream << values;
     return snapshot;
-}
-void PreferencesStore::migrate()
-{
-    if (value("display/layoutVersion", 0).toInt() < 2) {
-        setValue("display/profile", "classic");
-        setValue("display/layoutVersion", 2);
-    }
-    if (value("display/layoutVersion", 0).toInt() < 3) {
-        if (contains("display/customLayout")) {
-            const auto old = QJsonDocument::fromJson(value("display/customLayout").toByteArray()).toVariant().toList();
-            setValue("display/customLayout",
-                     QJsonDocument::fromVariant(integrateWindDirection(old)).toJson(QJsonDocument::Compact));
-        }
-        auto saved = QJsonDocument::fromJson(value("display/savedProfiles").toByteArray()).toVariant().toList();
-        for (auto &value : saved) {
-            auto entry = value.toMap();
-            entry["charts"] = integrateWindDirection(entry["charts"].toList());
-            value = entry;
-        }
-        if (!saved.isEmpty())
-            setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-        setValue("display/layoutVersion", 3);
-    }
-    if (value("display/layoutVersion", 0).toInt() < 4) {
-        if (contains("display/customLayout")) {
-            const auto old = QJsonDocument::fromJson(value("display/customLayout").toByteArray()).toVariant().toList();
-            setValue("display/customLayout",
-                     QJsonDocument::fromVariant(removeUnusedChartTemplates(old)).toJson(QJsonDocument::Compact));
-        }
-        auto saved = QJsonDocument::fromJson(value("display/savedProfiles").toByteArray()).toVariant().toList();
-        for (auto &value : saved) {
-            auto entry = value.toMap();
-            entry["charts"] = removeUnusedChartTemplates(entry["charts"].toList());
-            value = entry;
-        }
-        if (!saved.isEmpty())
-            setValue("display/savedProfiles", QJsonDocument::fromVariant(saved).toJson(QJsonDocument::Compact));
-        setValue("display/layoutVersion", 4);
-    }
-    if (value("places/listVersion", 0).toInt() < 1) {
-        auto places = QJsonDocument::fromJson(value("places/favorites").toByteArray()).toVariant().toList();
-        const auto recent = QJsonDocument::fromJson(value("places/recent").toByteArray()).toVariant().toList();
-        for (const auto &value : recent) {
-            const auto candidate = value.toMap();
-            bool found = false;
-            for (const auto &entry : places) {
-                const auto saved = entry.toMap();
-                if (Meteo::samePlace(saved["latitude"].toDouble(), saved["longitude"].toDouble(),
-                                     candidate["latitude"].toDouble(), candidate["longitude"].toDouble())) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found && !candidate["name"].toString().isEmpty())
-                places.append(candidate);
-        }
-        setValue("places/favorites", QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
-        setValue("places/listVersion", 1);
-    }
-    if (value("places/listVersion", 0).toInt() < 2) {
-        auto places = QJsonDocument::fromJson(value("places/favorites").toByteArray()).toVariant().toList();
-        for (auto &entry : places) {
-            auto place = entry.toMap();
-            // Existing Plasma selections use these coordinate keys. Retain
-            // them as stable IDs when migrating so moving a place keeps it selected.
-            if (place.value("id").toString().isEmpty())
-                place["id"] = QString::number(place["latitude"].toDouble(), 'f', 6) + ','
-                    + QString::number(place["longitude"].toDouble(), 'f', 6);
-            entry = place;
-        }
-        setValue("places/favorites", QJsonDocument::fromVariant(places).toJson(QJsonDocument::Compact));
-        setValue("places/listVersion", 2);
-    }
 }

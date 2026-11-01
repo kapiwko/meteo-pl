@@ -27,7 +27,6 @@ class METEO_UI_EXPORT PreferencesStore : public QObject
     void displayChanged();
 
   private:
-    void migrate();
     void publish(QVariantMap values);
     void watchFile();
     QByteArray placesSnapshot() const;
