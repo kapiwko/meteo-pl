@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-11-02 09:37+0100\n"
+"POT-Creation-Date: 2026-11-02 10:11+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -125,7 +125,7 @@ msgstr "Dodaj wykres"
 msgid "Add location"
 msgstr "Dodaj lokalizację"
 
-#: src/qml/DisplaySettings.qml:473
+#: src/qml/DisplaySettings.qml:533
 msgid "Add series"
 msgstr "Dodaj serię"
 
@@ -285,6 +285,10 @@ msgstr ""
 "Zmiany zapisują się w tym profilu. Przywróć ustawienia domyślne, aby "
 "odtworzyć gotowy układ."
 
+#: src/qml/DisplaySettings.qml:414
+msgid "Chart actions: %1"
+msgstr "Akcje wykresu: %1"
+
 #: src/qml/ForecastPanel.qml:239
 msgid "Chart appearance, series visibility and legends will be preserved."
 msgstr "Zachowany zostanie wygląd wykresów, widoczność serii i legend."
@@ -293,11 +297,11 @@ msgstr "Zachowany zostanie wygląd wykresów, widoczność serii i legend."
 msgid "Chart height in this profile"
 msgstr "Wysokość wykresów w profilu"
 
-#: src/qml/DisplaySettings.qml:256 src/qml/DisplaySettings.qml:435
+#: src/qml/DisplaySettings.qml:256 src/qml/DisplaySettings.qml:495
 msgid "Chart height:"
 msgstr "Wysokość wykresów:"
 
-#: src/qml/DisplaySettings.qml:443
+#: src/qml/DisplaySettings.qml:503
 msgid "Chart height: %1 px."
 msgstr "Wysokość wykresu: %1 px."
 
@@ -305,7 +309,7 @@ msgstr "Wysokość wykresu: %1 px."
 msgid "Chart legends"
 msgstr "Legenda wykresów"
 
-#: src/qml/DisplaySettings.qml:426
+#: src/qml/DisplaySettings.qml:486
 msgid "Chart name"
 msgstr "Nazwa wykresu"
 
@@ -318,7 +322,7 @@ msgstr "Profil wykresów"
 msgid "Chart profile:"
 msgstr "Profil wykresów:"
 
-#: src/qml/DisplaySettings.qml:408
+#: src/qml/DisplaySettings.qml:466
 msgid "Chart removed."
 msgstr "Usunięto wykres."
 
@@ -383,7 +387,7 @@ msgstr ""
 "Wybierz miejscowość, aby zobaczyć prognozę. Tryb „Aktualna pozycja” możesz "
 "później włączyć w „Moich miejscach”."
 
-#: src/qml/DisplaySettings.qml:471
+#: src/qml/DisplaySettings.qml:531
 msgid "Choose a series…"
 msgstr "Wybierz serię…"
 
@@ -652,11 +656,11 @@ msgstr "Dane bieżącej prognozy"
 msgid "Current location"
 msgstr "Aktualna pozycja"
 
-#: src/qml/DisplaySettings.qml:258 src/qml/DisplaySettings.qml:436
+#: src/qml/DisplaySettings.qml:258 src/qml/DisplaySettings.qml:496
 msgid "Custom"
 msgstr "Własna"
 
-#: src/qml/DisplaySettings.qml:436
+#: src/qml/DisplaySettings.qml:496
 msgid "Custom height for this chart"
 msgstr "Własna wysokość tego wykresu"
 
@@ -1367,16 +1371,16 @@ msgstr "Umiarkowane burze"
 msgid "Month"
 msgstr "Miesiąc"
 
-#: src/qml/DisplaySettings.qml:178 src/qml/MobileForecastPage.qml:155
-#: src/qml/MobileForecastPage.qml:261
+#: src/qml/DisplaySettings.qml:178 src/qml/DisplaySettings.qml:411
+#: src/qml/MobileForecastPage.qml:155 src/qml/MobileForecastPage.qml:261
 msgid "More options"
 msgstr "Więcej opcji"
 
-#: src/qml/DisplaySettings.qml:407
+#: src/qml/DisplaySettings.qml:449
 msgid "Move chart down"
 msgstr "Przenieś wykres niżej"
 
-#: src/qml/DisplaySettings.qml:406
+#: src/qml/DisplaySettings.qml:438
 msgid "Move chart up"
 msgstr "Przenieś wykres wyżej"
 
@@ -1792,7 +1796,7 @@ msgstr "Odśwież legendę"
 msgid "Relative humidity"
 msgstr "Wilgotność względna"
 
-#: src/qml/DisplaySettings.qml:408
+#: src/qml/DisplaySettings.qml:461
 msgid "Remove chart from this profile"
 msgstr "Usuń wykres z tego profilu"
 
@@ -1962,9 +1966,13 @@ msgstr "Zapisano wybrane wykresy."
 msgid "Selected location"
 msgstr "Wybrana lokalizacja"
 
-#: src/qml/DisplaySettings.qml:399
+#: src/qml/DisplaySettings.qml:397
 msgid "Series"
 msgstr "Serie"
+
+#: src/qml/DisplaySettings.qml:403
+msgid "Series and settings: %1"
+msgstr "Serie i ustawienia: %1"
 
 #: src/qml/SeriesAppearanceDialog.qml:14 src/qml/SeriesSettings.qml:37
 msgid "Series appearance"
@@ -1974,7 +1982,7 @@ msgstr "Wygląd serii"
 msgid "Series color"
 msgstr "Kolor serii"
 
-#: src/qml/DisplaySettings.qml:459
+#: src/qml/DisplaySettings.qml:519
 msgid "Series removed."
 msgstr "Usunięto serię."
 
@@ -2537,7 +2545,7 @@ msgstr "Użyj mojej pozycji"
 msgid "Used in the forecast"
 msgstr "Używany w prognozie"
 
-#: src/qml/DisplaySettings.qml:446
+#: src/qml/DisplaySettings.qml:506
 msgid "Uses the application height: %1 px."
 msgstr "Wysokość z ustawień aplikacji: %1 px."
 
@@ -2547,7 +2555,7 @@ msgstr ""
 "Wysokość z ustawień aplikacji: %1 px. Poszczególne wykresy mogą mieć własną "
 "wysokość."
 
-#: src/qml/DisplaySettings.qml:445
+#: src/qml/DisplaySettings.qml:505
 msgid "Uses the profile height: %1 px."
 msgstr "Wysokość z ustawień profilu: %1 px."
 
@@ -2603,7 +2611,7 @@ msgstr "Warstwa pogodowa"
 msgid "Welcome to Meteo"
 msgstr "Witaj w Meteo"
 
-#: src/qml/DisplaySettings.qml:480
+#: src/qml/DisplaySettings.qml:540
 msgid ""
 "When combining different units, assign series to the left or right axis. "
 "Empty bounds use automatic scaling."

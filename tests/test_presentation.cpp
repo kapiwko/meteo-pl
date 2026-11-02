@@ -13,6 +13,7 @@
 #include "Fixture.hpp"
 #include "ServiceFixture.hpp"
 #include "PositionFixture.hpp"
+#include "core/Localization.hpp"
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -2710,6 +2711,132 @@ private slots:
         QVERIFY(!exporter.savePng(QUrl::fromLocalFile(png), {QVariant::fromValue(chart.data())}, {}));
         QVERIFY(exporter.error().contains("axis conflict"));
         QVERIFY(!QFile::exists(png));
+    }
+    void profileChartRowsKeepActionsAligned_data()
+    {
+        QTest::addColumn<int>("width"); QTest::addColumn<double>("fontScale");
+        QTest::newRow("small-phone") << 320 << 1.0;
+        QTest::newRow("phone") << 360 << 1.0;
+        QTest::newRow("large-text") << 360 << 1.4;
+        QTest::newRow("desktop") << 900 << 1.0;
+    }
+    void profileChartRowsKeepActionsAligned()
+    {
+        QFETCH(int,width); QFETCH(double,fontScale);
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|Cannot assign|Unable to assign).*")));
+        const auto originalFont=QGuiApplication::font();
+        const auto restore=qScopeGuard([&] { QGuiApplication::setFont(originalFont); });
+        auto font=originalFont;
+        if (font.pointSizeF()>0) font.setPointSizeF(font.pointSizeF()*fontScale);
+        else font.setPixelSize(qRound(font.pixelSize()*fontScale));
+        QGuiApplication::setFont(font);
+        QQmlEngine engine;
+        auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");
+        const QStringList titles{QStringLiteral("Temperatura"),QStringLiteral("Opady i wilgotność"),
+            QStringLiteral("Szansa opadu i burze"),QStringLiteral("Ciśnienie na poziomie morza"),QStringLiteral("Wiatr"),
+            QStringLiteral("Pionowy zasięg chmur i widzialność"),QStringLiteral("Zachmurzenie i mgła")};
+        auto layout=preferences->chartLayout(); QCOMPARE(layout.size(),titles.size());
+        for (int i=0;i<layout.size();++i) preferences->setChartOptions(layout[i].toMap()["key"].toString(),{{"title",titles[i]}});
+        QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop","DisplaySettings");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"mobileLayout",width<600}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *item=qobject_cast<QQuickItem *>(object.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(width,900); item->setParentItem(window.contentItem());
+        item->setWidth(width-32); item->setX(16); window.show(); QVERIFY(waitForStableLayout(item));
+        const auto find=[](auto &&self,QQuickItem *parent,const QString &name)->QQuickItem * {
+            if (parent->objectName()==name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found=self(self,child,name)) return found;
+            return nullptr;
+        };
+        auto *pane=find(find,item,"profileChartsPane"); QVERIFY(pane);
+        item->setY(16-pane->mapToItem(item,{0,0}).y());
+        QVariantList geometry;
+        double minimum=width,maximum=0,actionsCenter=-1;
+        const auto findSeries=[](auto &&self,QQuickItem *parent)->QQuickItem * {
+            if (parent->property("text").toString()==Meteo::i18n("Series") && parent->property("checkable").toBool()) return parent;
+            for (auto *child : parent->childItems()) if (auto *found=self(self,child)) return found;
+            return nullptr;
+        };
+        for (const auto &entry : layout) {
+            const auto key=entry.toMap()["key"].toString();
+            auto *row=find(find,item,"chart-settings-"+key); QVERIFY(row);
+            auto *button=findSeries(findSeries,row); QVERIFY2(button,qPrintable(key));
+            auto *actions=find(find,row,"chartActionsButton-"+key); QVERIFY(actions);
+            QVERIFY(actions->isVisible());
+            const double center=button->mapToItem(item,{button->width()/2,0}).x();
+            const double moreCenter=actions->mapToItem(item,{actions->width()/2,0}).x();
+            if (actionsCenter<0) actionsCenter=moreCenter;
+            QVERIFY(qAbs(moreCenter-actionsCenter)<1);
+            QVERIFY(button->mapToItem(row,{button->width(),0}).x()<=actions->mapToItem(row,{0,0}).x());
+            QVERIFY(actions->mapToItem(item,{actions->width(),0}).x()<=item->width());
+            minimum=std::min(minimum,center); maximum=std::max(maximum,center);
+            geometry.append(QVariantMap{{"chart",key},{"seriesCenter",center},{"buttonWidth",button->width()}});
+        }
+        if (const auto directory=qEnvironmentVariable("METEO_PROFILE_ROW_SCREENSHOTS");!directory.isEmpty()) {
+            QVERIFY(QDir().mkpath(directory)); QTest::qWait(100);
+            QVERIFY(window.grabWindow().save(directory+"/"+QTest::currentDataTag()+".png"));
+        }
+        QVERIFY2(maximum-minimum<1,qPrintable(QString::fromUtf8(QJsonDocument::fromVariant(geometry).toJson(QJsonDocument::Compact))));
+    }
+    void profileChartMenuMovesAndUndoesDeletion()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine;
+        auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");
+        const auto active=preferences->profile(),copy=preferences->duplicateProfile(active);
+        const auto original=preferences->chartLayoutForProfile(active);
+        QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop","DisplaySettings");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"mobileLayout",true},{"profileId",copy}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *item=qobject_cast<QQuickItem *>(object.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(360,900); item->setParentItem(window.contentItem()); item->setWidth(328); item->setX(16);
+        window.show(); QVERIFY(waitForStableLayout(item));
+        const auto find=[](auto &&self,QQuickItem *parent,const QString &name)->QQuickItem * {
+            if (parent->objectName()==name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found=self(self,child,name)) return found;
+            return nullptr;
+        };
+        auto *pane=find(find,item,"profileChartsPane"); QVERIFY(pane);
+        item->setY(16-pane->mapToItem(item,{0,0}).y());
+        const auto click=[&](QQuickItem *button) {
+            QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,button->mapToScene({button->width()/2,button->height()/2}).toPoint());
+        };
+        auto *toggle=find(find,item,"chartSeriesButton-temperature"); QVERIFY(toggle);
+        click(toggle); QTRY_COMPARE(object->property("expandedChart").toString(),"temperature");
+        click(toggle); QTRY_COMPARE(object->property("expandedChart").toString(),QString());
+        auto *more=find(find,item,"chartActionsButton-temperature"); QVERIFY(more);
+        auto *menu=more->findChild<QObject *>("chartActionsMenu-temperature"); QVERIFY(menu);
+        click(more); QTRY_VERIFY(menu->property("opened").toBool());
+        auto *up=menu->findChild<QObject *>("chartMoveUp-temperature");
+        auto *down=menu->findChild<QObject *>("chartMoveDown-temperature"); QVERIFY(up && down);
+        QVERIFY(!up->property("enabled").toBool()); QVERIFY(down->property("enabled").toBool());
+        QCOMPARE(object->property("expandedChart").toString(),QString());
+        QTest::keyClick(&window,Qt::Key_Back); QTRY_VERIFY(!menu->property("visible").toBool());
+        more=find(find,item,"chartActionsButton-clouds"); QVERIFY(more);
+        menu=more->findChild<QObject *>("chartActionsMenu-clouds"); QVERIFY(menu);
+        down=menu->findChild<QObject *>("chartMoveDown-clouds"); QVERIFY(down); QVERIFY(!down->property("enabled").toBool());
+        more=find(find,item,"chartActionsButton-wind"); QVERIFY(more);
+        menu=more->findChild<QObject *>("chartActionsMenu-wind"); QVERIFY(menu);
+        click(more); QTRY_VERIFY(menu->property("opened").toBool());
+        up=menu->findChild<QObject *>("chartMoveUp-wind"); QVERIFY(up);
+        QVERIFY(QMetaObject::invokeMethod(up,"triggered"));
+        QTRY_COMPARE(preferences->chartLayoutForProfile(copy)[3].toMap()["key"].toString(),"wind");
+        QVERIFY(waitForStableLayout(item));
+        more=find(find,item,"chartActionsButton-wind"); QVERIFY(more);
+        menu=more->findChild<QObject *>("chartActionsMenu-wind"); QVERIFY(menu);
+        click(more); QTRY_VERIFY(menu->property("opened").toBool());
+        auto *remove=menu->findChild<QObject *>("chartRemove-wind"); QVERIFY(remove);
+        QVERIFY(QMetaObject::invokeMethod(remove,"triggered"));
+        QTRY_COMPARE(preferences->chartLayoutForProfile(copy).size(),original.size()-1);
+        QVERIFY(QMetaObject::invokeMethod(object.data(),"undo"));
+        QTRY_COMPARE(preferences->chartLayoutForProfile(copy).size(),original.size());
+        QVERIFY(waitForStableLayout(item));
+        QCOMPARE(preferences->chartLayoutForProfile(copy)[3].toMap()["key"].toString(),"wind");
+        auto *enabled=find(find,item,"chartEnabled-temperature"); QVERIFY(enabled); click(enabled);
+        QTRY_VERIFY(!preferences->chartLayoutForProfile(copy).first().toMap()["enabled"].toBool());
+        QCOMPARE(object->property("expandedChart").toString(),QString());
+        QCOMPARE(preferences->profile(),active);
+        QCOMPARE(preferences->chartLayoutForProfile(active),original);
     }
     void settingsReleaseSpaceAfterCollapsingChartsAndSeries()
     {

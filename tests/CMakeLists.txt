@@ -74,13 +74,17 @@ endif()
 add_test(NAME presentation COMMAND test_presentation)
 set_tests_properties(presentation PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}")
 foreach(style Fusion Material)
-    add_test(NAME responsive_layout_${style} COMMAND test_presentation responsiveSettingsAndForecastControls mobileSettingsFieldsShareTheSameMargins desktopWelcomeOffersSetupBeforePositioning)
+    add_test(NAME responsive_layout_${style} COMMAND test_presentation responsiveSettingsAndForecastControls mobileSettingsFieldsShareTheSameMargins profileChartRowsKeepActionsAligned desktopWelcomeOffersSetupBeforePositioning)
     set_tests_properties(responsive_layout_${style} PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=${style};QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
         TIMEOUT 90)
 endforeach()
 add_test(NAME mobile_palette COMMAND test_presentation mobilePagesKeepTheWindowPalette applicationThemeChangesWithoutRestart)
 add_test(NAME chart_legends_Material COMMAND test_presentation chartLegendsFitAndExplainTheirColors chartContextMenuSharesLegendStateAndSaveAction)
+add_test(NAME profile_rows_Material COMMAND test_presentation profileChartRowsKeepActionsAligned profileChartMenuMovesAndUndoesDeletion settingsReleaseSpaceAfterCollapsingChartsAndSeries)
+set_tests_properties(profile_rows_Material PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 60)
 set_tests_properties(chart_legends_Material PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 90)

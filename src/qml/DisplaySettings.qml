@@ -385,28 +385,88 @@ ColumnLayout {
                             onClicked: root.expandedChart = root.expandedChart === chartEntry.modelData.key ? "" : chartEntry.modelData.key
                             contentItem: RowLayout {
                                 CheckBox {
+                                    objectName: "chartEnabled-" + chartEntry.modelData.key
                                     Accessible.name: chartEntry.modelData.title
                                     checked: chartEntry.modelData.enabled
                                     onToggled: UserPreferences.setChartEnabled(chartEntry.modelData.key, checked, root.profileId)
                                 }
-                                Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chartEntry.modelData.title; wrapMode: Text.WordWrap }
-                                Kirigami.ActionToolBar {
-                                    alignment: Qt.AlignRight
-                                    Layout.preferredWidth: maximumContentWidth
-                                    Layout.maximumWidth: Math.max(0, chartEntry.availableWidth * 0.65)
-                                    actions: [
-                                        Kirigami.Action {
-                                            text: I18n.i18n("Series")
-                                            icon.name: root.expandedChart === chartEntry.modelData.key ? "arrow-up" : "arrow-down"
-                                            checkable: true
-                                            displayHint: Kirigami.DisplayHint.KeepVisible
-                                            checked: root.expandedChart === chartEntry.modelData.key
-                                            onTriggered: root.expandedChart = checked ? chartEntry.modelData.key : ""
-                                        },
-                                        Kirigami.Action { text: I18n.i18n("Move chart up"); icon.name: "go-up"; enabled: chartEntry.index > 0; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.modelData.key, -1, root.profileId) },
-                                        Kirigami.Action { text: I18n.i18n("Move chart down"); icon.name: "go-down"; enabled: chartEntry.index < root.layout.length - 1; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: UserPreferences.moveChart(chartEntry.modelData.key, 1, root.profileId) },
-                                        Kirigami.Action { text: I18n.i18n("Remove chart from this profile"); icon.name: "edit-delete"; displayHint: Kirigami.DisplayHint.IconOnly; onTriggered: root.withUndo(({type:"deleteChart",chart:chartEntry.modelData.key}), I18n.i18n("Chart removed.")) }
-                                    ]
+                                Label { Layout.fillWidth: true; Layout.minimumWidth: 0; text: chartEntry.modelData.title; wrapMode: Text.Wrap }
+                                ToolButton {
+                                    objectName: "chartSeriesButton-" + chartEntry.modelData.key
+                                    Layout.minimumWidth: implicitWidth
+                                    text: I18n.i18n("Series")
+                                    icon.name: root.expandedChart === chartEntry.modelData.key ? "arrow-up" : "arrow-down"
+                                    display: root.mobileLayout || root.width < 600 ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
+                                    checkable: true
+                                    checked: root.expandedChart === chartEntry.modelData.key
+                                    onClicked: root.expandedChart = checked ? chartEntry.modelData.key : ""
+                                    ToolTip.text: I18n.i18n("Series and settings: %1").arg(chartEntry.modelData.title)
+                                    ToolTip.visible: hovered
+                                    Accessible.name: ToolTip.text
+                                }
+                                ToolButton {
+                                    id: chartActionsButton
+                                    objectName: "chartActionsButton-" + chartEntry.modelData.key
+                                    Layout.minimumWidth: implicitWidth
+                                    text: I18n.i18n("More options")
+                                    icon.name: "overflow-menu"
+                                    display: AbstractButton.IconOnly
+                                    ToolTip.text: I18n.i18n("Chart actions: %1").arg(chartEntry.modelData.title)
+                                    ToolTip.visible: hovered
+                                    Accessible.name: ToolTip.text
+                                    onClicked: chartActionsMenu.popup(chartActionsButton, 0, height)
+                                    Menu {
+                                        id: chartActionsMenu
+                                        objectName: "chartActionsMenu-" + chartEntry.modelData.key
+                                        width: Math.min(implicitWidth, root.width)
+                                        focus: true
+                                        onOpened: contentItem.forceActiveFocus()
+                                        Connections {
+                                            target: chartActionsMenu.contentItem.Keys
+                                            function onShortcutOverride(event) {
+                                                if (event.key === Qt.Key_Back) event.accepted = true;
+                                            }
+                                            function onPressed(event) {
+                                                if (event.key === Qt.Key_Back) {
+                                                    event.accepted = true;
+                                                    chartActionsMenu.close();
+                                                }
+                                            }
+                                        }
+                                        MenuItem {
+                                            objectName: "chartMoveUp-" + chartEntry.modelData.key
+                                            text: I18n.i18n("Move chart up")
+                                            icon.name: "go-up"
+                                            enabled: chartEntry.index > 0
+                                            onTriggered: {
+                                                const key = chartEntry.modelData.key;
+                                                chartActionsMenu.close();
+                                                UserPreferences.moveChart(key, -1, root.profileId);
+                                            }
+                                        }
+                                        MenuItem {
+                                            objectName: "chartMoveDown-" + chartEntry.modelData.key
+                                            text: I18n.i18n("Move chart down")
+                                            icon.name: "go-down"
+                                            enabled: chartEntry.index < root.layout.length - 1
+                                            onTriggered: {
+                                                const key = chartEntry.modelData.key;
+                                                chartActionsMenu.close();
+                                                UserPreferences.moveChart(key, 1, root.profileId);
+                                            }
+                                        }
+                                        MenuSeparator {}
+                                        MenuItem {
+                                            objectName: "chartRemove-" + chartEntry.modelData.key
+                                            text: I18n.i18n("Remove chart from this profile")
+                                            icon.name: "edit-delete"
+                                            onTriggered: {
+                                                const key = chartEntry.modelData.key;
+                                                chartActionsMenu.close();
+                                                root.withUndo(({type:"deleteChart",chart:key}), I18n.i18n("Chart removed."));
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

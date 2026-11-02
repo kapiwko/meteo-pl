@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-11-02 09:37+0100\n"
+"POT-Creation-Date: 2026-11-02 10:11+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -124,7 +124,7 @@ msgstr ""
 msgid "Add location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:473
+#: src/qml/DisplaySettings.qml:533
 msgid "Add series"
 msgstr ""
 
@@ -273,6 +273,10 @@ msgid ""
 "Changes are saved in this profile. Restore defaults to reset this preset."
 msgstr ""
 
+#: src/qml/DisplaySettings.qml:414
+msgid "Chart actions: %1"
+msgstr ""
+
 #: src/qml/ForecastPanel.qml:239
 msgid "Chart appearance, series visibility and legends will be preserved."
 msgstr ""
@@ -281,11 +285,11 @@ msgstr ""
 msgid "Chart height in this profile"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:256 src/qml/DisplaySettings.qml:435
+#: src/qml/DisplaySettings.qml:256 src/qml/DisplaySettings.qml:495
 msgid "Chart height:"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:443
+#: src/qml/DisplaySettings.qml:503
 msgid "Chart height: %1 px."
 msgstr ""
 
@@ -293,7 +297,7 @@ msgstr ""
 msgid "Chart legends"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:426
+#: src/qml/DisplaySettings.qml:486
 msgid "Chart name"
 msgstr ""
 
@@ -306,7 +310,7 @@ msgstr ""
 msgid "Chart profile:"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:408
+#: src/qml/DisplaySettings.qml:466
 msgid "Chart removed."
 msgstr ""
 
@@ -369,7 +373,7 @@ msgid ""
 "from My places."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:471
+#: src/qml/DisplaySettings.qml:531
 msgid "Choose a series…"
 msgstr ""
 
@@ -627,11 +631,11 @@ msgstr ""
 msgid "Current location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:258 src/qml/DisplaySettings.qml:436
+#: src/qml/DisplaySettings.qml:258 src/qml/DisplaySettings.qml:496
 msgid "Custom"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:436
+#: src/qml/DisplaySettings.qml:496
 msgid "Custom height for this chart"
 msgstr ""
 
@@ -1324,16 +1328,16 @@ msgstr ""
 msgid "Month"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:178 src/qml/MobileForecastPage.qml:155
-#: src/qml/MobileForecastPage.qml:261
+#: src/qml/DisplaySettings.qml:178 src/qml/DisplaySettings.qml:411
+#: src/qml/MobileForecastPage.qml:155 src/qml/MobileForecastPage.qml:261
 msgid "More options"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:407
+#: src/qml/DisplaySettings.qml:449
 msgid "Move chart down"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:406
+#: src/qml/DisplaySettings.qml:438
 msgid "Move chart up"
 msgstr ""
 
@@ -1744,7 +1748,7 @@ msgstr ""
 msgid "Relative humidity"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:408
+#: src/qml/DisplaySettings.qml:461
 msgid "Remove chart from this profile"
 msgstr ""
 
@@ -1912,8 +1916,12 @@ msgstr ""
 msgid "Selected location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:399
+#: src/qml/DisplaySettings.qml:397
 msgid "Series"
+msgstr ""
+
+#: src/qml/DisplaySettings.qml:403
+msgid "Series and settings: %1"
 msgstr ""
 
 #: src/qml/SeriesAppearanceDialog.qml:14 src/qml/SeriesSettings.qml:37
@@ -1924,7 +1932,7 @@ msgstr ""
 msgid "Series color"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:459
+#: src/qml/DisplaySettings.qml:519
 msgid "Series removed."
 msgstr ""
 
@@ -2470,7 +2478,7 @@ msgstr ""
 msgid "Used in the forecast"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:446
+#: src/qml/DisplaySettings.qml:506
 msgid "Uses the application height: %1 px."
 msgstr ""
 
@@ -2478,7 +2486,7 @@ msgstr ""
 msgid "Uses the application height: %1 px. Individual charts can override it."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:445
+#: src/qml/DisplaySettings.qml:505
 msgid "Uses the profile height: %1 px."
 msgstr ""
 
@@ -2534,7 +2542,7 @@ msgstr ""
 msgid "Welcome to Meteo"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:480
+#: src/qml/DisplaySettings.qml:540
 msgid ""
 "When combining different units, assign series to the left or right axis. "
 "Empty bounds use automatic scaling."
