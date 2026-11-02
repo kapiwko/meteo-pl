@@ -65,6 +65,61 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields, bool exportM
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void legendColorScalesFollowTheAssignedAxisAndWindUnits_data()
+    {
+        QTest::addColumn<QString>("key"); QTest::addColumn<QString>("unit"); QTest::addColumn<bool>("right");
+        for (const auto &key : {"slpres_point", "wind10_sd_true_prev_point"})
+            for (const auto &unit : {"m/s", "km/h", "kt"}) for (bool right : {false, true})
+                QTest::newRow(qPrintable(QString(key)+unit+(right ? "-right" : "-left"))) << QString(key) << QString(unit) << right;
+    }
+    void legendColorScalesFollowTheAssignedAxisAndWindUnits()
+    {
+        QFETCH(QString,key); QFETCH(QString,unit); QFETCH(bool,right);
+        const bool wind = key.startsWith("wind");
+        const double factor = !wind ? 1 : unit=="km/h" ? 3.6 : unit=="kt" ? 1.943844492 : 1;
+        const double low = wind ? 0 : 1000, high = low+10*factor;
+        auto style = defaultSeriesStyle(key); style["axis"] = right ? "right" : "left";
+        style["palette"] = QVariantList{QVariantList{low+2,"#112233","#445566"}, QVariantList{low+5,"#778899","#aabbcc"}};
+        style["paletteFallback"] = QVariantMap{{"color","#abcdef"},{"darkColor","#fedcba"}};
+        QVariantMap options{{"key","chart:legend"},{"enabled",true},{"series",QVariantList{style}},
+            {"leftMin",right ? low+100 : low},{"leftMax",right ? high+100 : high},
+            {"rightMin",right ? low : low+100},{"rightMax",right ? high : high+100}};
+        const QVariantList points{QVariantMap{{"time",1800000000LL},{"value",low}}};
+        const auto chart = buildConfiguredCharts({options},{{key,points}},unit).first().toMap();
+        const auto scales = chart["colorScales"].toList(); QCOMPARE(scales.size(),1);
+        const auto scale = scales.first().toMap();
+        QCOMPARE(scale["unit"].toString(),wind ? unit : QString("hPa"));
+        const auto bands = scale["bands"].toList(); QCOMPARE(bands.size(),3);
+        QCOMPARE(bands[0].toMap()["from"].toDouble(),0.0);
+        QVERIFY(qAbs(bands[0].toMap()["to"].toDouble()-0.2)<1e-9);
+        QVERIFY(qAbs(bands[1].toMap()["to"].toDouble()-0.5)<1e-9);
+        QCOMPARE(bands[2].toMap()["to"].toDouble(),1.0);
+        QCOMPARE(bands[0].toMap()["color"].toString(),"#112233");
+        QCOMPARE(bands[1].toMap()["darkColor"].toString(),"#aabbcc");
+        QCOMPARE(bands[2].toMap()["color"].toString(),"#abcdef");
+        style["fill"]="solid"; options["series"]=QVariantList{style};
+        QVERIFY(buildConfiguredCharts({options},{{key,points}},unit).first().toMap()["colorScales"].toList().isEmpty());
+    }
+    void stormLegendUsesThePaintersEventAppearance()
+    {
+        auto storm=defaultSeriesStyle("storm_max"),flash=defaultSeriesStyle("flash_max");
+        flash["colors"]=QVariantMap{{"outline",QVariantMap{{"color","#112233"},{"darkColor","#445566"}}},
+            {"low",QVariantMap{{"color","#ff0011"},{"darkColor","#ff0022"}}},
+            {"medium",QVariantMap{{"color","#00ff11"},{"darkColor","#00ff22"}}},
+            {"high",QVariantMap{{"color","#0011ff"},{"darkColor","#0022ff"}}}};
+        const auto describe=[&](const QVariantList &fields) { return describeChart(fields,{},"m/s","probability"); };
+        const auto legend=describe({storm,flash})["eventLegend"].toList();
+        QCOMPARE(legend.size(),4); QVERIFY(legend[0].toMap()["hollow"].toBool());
+        QCOMPARE(legend[0].toMap()["outline"].toMap()["color"].toString(),"#112233");
+        QCOMPARE(legend[1].toMap()["color"].toString(),"#ff0011");
+        QCOMPARE(legend[2].toMap()["darkColor"].toString(),"#00ff22");
+        QCOMPARE(legend[3].toMap()["color"].toString(),"#0011ff");
+        QCOMPARE(describe({storm})["eventLegend"].toList().size(),1);
+        QCOMPARE(describe({flash})["eventLegend"].toList().size(),3);
+        flash["eventColors"]=false; flash["color"]="#123456";
+        const auto custom=describe({storm,flash})["eventLegend"].toList();
+        QCOMPARE(custom.size(),2); QCOMPARE(custom.last().toMap()["color"].toString(),"#123456");
+    }
     void angularAreasAndOutlinesShareTheirConnections_data()
     {
         QTest::addColumn<QVariantList>("values"); QTest::addColumn<int>("connections");

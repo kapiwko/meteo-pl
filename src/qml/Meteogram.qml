@@ -88,7 +88,7 @@ ColumnLayout {
     function valid(value) { return value !== null && value !== undefined && isFinite(value); }
     function exportStyle(configuration) {
         const style = Object.assign({}, configuration);
-        for (const key of ["points", "lowerPoints", "fields", "rangeSegments", "rangePairs", "events", "legend", "typeLegend", "leftAxis", "rightAxis"]) delete style[key];
+        for (const key of ["points", "lowerPoints", "fields", "rangeSegments", "rangePairs", "events", "legend", "typeLegend", "eventLegend", "colorScales", "leftAxis", "rightAxis"]) delete style[key];
         return style;
     }
     function shown(field) { return hiddenKeys.indexOf(field.key) < 0; }
@@ -202,7 +202,7 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         visible: root.showHeading
-        Label { text: root.title; font.bold: true; Layout.maximumWidth: Math.max(0, parent.width - 40); elide: Text.ElideRight }
+        Label { text: root.title; color: root.textColor; font.bold: true; Layout.maximumWidth: Math.max(0, parent.width - 40); elide: Text.ElideRight }
         AbstractButton {
             id: legendToggle
             opacity: root.exportMode ? 0 : 1
@@ -232,55 +232,10 @@ ColumnLayout {
         }
         Item { Layout.fillWidth: true }
     }
-    Flow {
+    ChartLegend {
         visible: root.legendVisible
         Layout.fillWidth: true
-        spacing: 8
-        Repeater {
-            model: root.legendFields
-            delegate: AbstractButton {
-                id: legend
-                required property var modelData
-                objectName: "chartLegend-" + modelData.key
-                text: root.legendLabel(modelData)
-                checkable: true
-                checked: root.shown(modelData)
-                padding: 4
-                hoverEnabled: true
-                implicitWidth: implicitContentWidth + leftPadding + rightPadding
-                implicitHeight: 26
-                font.pixelSize: 11
-                onClicked: root.toggle(modelData.key)
-                background: Rectangle {
-                    radius: 4
-                    color: !root.exportMode && (legend.hovered || legend.down) ? Kirigami.Theme.alternateBackgroundColor : "transparent"
-                    border.width: !root.exportMode && legend.visualFocus ? 1 : 0
-                    border.color: Kirigami.Theme.highlightColor
-                }
-                contentItem: RowLayout {
-                    spacing: 5
-                    SeriesLegend { Layout.preferredWidth: 28; Layout.preferredHeight: 16; Layout.alignment: Qt.AlignVCenter; seriesStyle: legend.modelData; opacity: legend.checked ? 1 : 0.25 }
-                    Label { Layout.alignment: Qt.AlignVCenter; text: legend.text; opacity: legend.checked ? 0.8 : 0.35; font.pixelSize: 11 }
-                }
-            }
-        }
-        Repeater {
-            model: root.description.typeLegend
-            delegate: RowLayout {
-                required property var modelData
-                spacing: 5
-                height: 26
-                Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; Layout.alignment: Qt.AlignVCenter; color: root.darkPalette && parent.modelData.darkColor ? parent.modelData.darkColor : parent.modelData.color }
-                Label { Layout.alignment: Qt.AlignVCenter; text: parent.modelData.label; font.pixelSize: 11; opacity: 0.8 }
-            }
-        }
-        RowLayout {
-            visible: root.plotFields.some(f => (f.kind === "stems" || f.kind === "gusts") && f.points.some(p => p.time >= root.startTime && p.time <= root.endTime && root.valid(p.value) && p.value > (root.isRightField(f) ? root.rightBounds.high : root.bounds.high)))
-            spacing: 5
-            height: 26
-            Rectangle { Layout.preferredWidth: 4; Layout.preferredHeight: 4; Layout.alignment: Qt.AlignVCenter; radius: 2; color: root.plotStyle("aboveScale") }
-            Label { Layout.alignment: Qt.AlignVCenter; text: root.wind ? I18n.i18n("Gust above scale") : I18n.i18n("Maximum precipitation above scale"); font.pixelSize: 11; opacity: 0.8 }
-        }
+        chart: root
     }
     Item {
         id: plot

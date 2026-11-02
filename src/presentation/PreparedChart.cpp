@@ -1,9 +1,8 @@
 #include "PreparedChart.hpp"
+#include "PreparedLegend.hpp"
 #include "ChartConfiguration.hpp"
 #include "ChartMath.hpp"
 #include "core/Localization.hpp"
-#include <QJsonDocument>
-#include <QSet>
 #include <QLocale>
 #include <cmath>
 #include <limits>
@@ -97,32 +96,15 @@ QVariantMap describeChart(const QVariantList &input,const QVariantMap &configura
         else if (scale=="wind") { right.labelFactor=windUnit=="m/s"?3.6:windUnit=="km/h"?1/3.6:1/1.943844492; right.unit=windUnit=="m/s"?"km/h":"m/s"; }
     }
     bool hasRight=QStringList{"temperature","pressure","wind","probability","clouds"}.contains(scale),directionOnly=!fields.isEmpty();
-    QVariantList legend,typeLegend; QSet<QByteArray> colorsSeen;
-    const bool storm=std::any_of(fields.cbegin(),fields.cend(),[](const QVariant &value){return value.toMap().value("kind")=="storm";});
-    const bool types=std::any_of(fields.cbegin(),fields.cend(),[](const QVariant &value){return value.toMap().value("kind")=="type";});
     for (const auto &value : fields) {
         const auto field=value.toMap(); const auto kind=field.value("kind").toString();
         hasRight |= rightField(field); directionOnly &= kind=="direction" || kind=="hidden";
-        if (kind!="hidden" && kind!="type" && !(kind=="flash" && storm)) {
-            auto entry=field;
-            entry["legendLabel"]=(kind=="storm" || kind=="flash")?Meteo::i18n("Storms / lightning"):field["label"];
-            for (const auto &key : {"points","lowerPoints","rangeSegments","rangePairs","events"}) entry.remove(key);
-            legend.append(entry);
-        }
-        if (types && (field.value("key")=="pcpttl_aver" || field.value("key")=="pcpttl_max") && field.value("precipitationColors",true).toBool()) {
-            const auto colors=field.value("colors").toMap();
-            const QVariantMap rain{{"color",field["color"]},{"darkColor",field["darkColor"]}};
-            const QVariantList applied{rain,colors.value("snow"),colors.value("sleet")};
-            const auto identity=QJsonDocument::fromVariant(applied).toJson(QJsonDocument::Compact);
-            if (colorsSeen.contains(identity)) continue;
-            colorsSeen.insert(identity);
-            const QStringList labels{Meteo::i18n("Rain"),Meteo::i18n("Snow"),Meteo::i18n("Sleet")};
-            for (int i=0;i<3;++i) { auto color=applied[i].toMap(); color["label"]=labels[i]; color["seriesLabel"]=field["label"]; typeLegend.append(color); }
-        }
     }
-    if (colorsSeen.size()>1) for (auto &entry : typeLegend) { auto color=entry.toMap(); color["label"]=color["seriesLabel"].toString()+" · "+color["label"].toString(); entry=color; }
-    return {{"fields",fields},{"leftAxis",left.variant()},{"rightAxis",right.variant()},{"legend",legend},{"typeLegend",typeLegend},
-        {"hasRightAxis",hasRight},{"directionOnly",directionOnly},{"prepared",true},{"windScale",windScale}};
+    auto result=prepareChartLegend(fields,left.range,right.range,windScale);
+    result.insert("fields",fields); result.insert("leftAxis",left.variant()); result.insert("rightAxis",right.variant());
+    result.insert("hasRightAxis",hasRight); result.insert("directionOnly",directionOnly);
+    result.insert("prepared",true); result.insert("windScale",windScale);
+    return result;
 }
 QVariantMap prepareProbeSamples(const QVariantList &samples,const QVariantList &fields)
 {

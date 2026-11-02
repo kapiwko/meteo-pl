@@ -67,6 +67,8 @@ add_library(meteo_charts STATIC
     presentation/PreparedSeries.cpp
     presentation/PreparedChart.cpp
     presentation/PreparedChart.hpp
+    presentation/PreparedLegend.cpp
+    presentation/PreparedLegend.hpp
     presentation/PlotGeometry.cpp
     presentation/PlotGeometry.hpp
 )
@@ -103,7 +105,7 @@ endforeach()
 qt_add_resources(meteo_core "meteo_translations" PREFIX "/meteo/locale"
     BASE "${METEO_TRANSLATION_ROOT}" FILES ${METEO_CATALOGS})
 
-foreach(component WidgetForecast Meteogram ForecastPanel ForecastInspector ForecastHeader SolarEvent WeatherSymbol PlacePicker SavedPlaceSelection CompactForecast LocationEditor TileMap MapTileFrame MapWheelHandler BufferedImage MeteoSettings ForecastSettings MeteoAbout DisplaySettings ReadingSettings ApplicationSettings SeriesLegend SeriesSettings WeatherMap EditorialView ThematicMaps OriginalMeteogram)
+foreach(component WidgetForecast Meteogram ChartLegend ForecastPanel ForecastInspector ForecastHeader SolarEvent WeatherSymbol PlacePicker SavedPlaceSelection CompactForecast LocationEditor TileMap MapTileFrame MapWheelHandler BufferedImage MeteoSettings ForecastSettings MeteoAbout DisplaySettings ReadingSettings ApplicationSettings SeriesLegend SeriesSettings WeatherMap EditorialView ThematicMaps OriginalMeteogram)
     set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)
 endforeach()
 set_source_files_properties(qml/FrameTransition.js PROPERTIES QT_RESOURCE_ALIAS FrameTransition.js)
@@ -154,7 +156,7 @@ qt_add_qml_module(meteo_ui
     QML_FILES qml/WidgetForecast.qml "${CMAKE_CURRENT_BINARY_DIR}/AppInfo.js" qml/Meteogram.qml qml/ForecastPanel.qml qml/ForecastInspector.qml qml/ForecastHeader.qml qml/SolarEvent.qml qml/WeatherSymbol.qml qml/PlacePicker.qml qml/SavedPlaceSelection.qml qml/CompactForecast.qml qml/LocationEditor.qml qml/TileMap.qml qml/FrameTransition.js qml/SettingsForm.qml qml/SettingsHint.qml
         qml/MeteoSettings.qml qml/SettingsSection.qml qml/ForecastSettings.qml qml/MeteoAbout.qml qml/DisplaySettings.qml qml/ReadingSettings.qml qml/ApplicationSettings.qml qml/WeatherMap.qml qml/EditorialView.qml qml/ThematicMaps.qml
         qml/MapTileFrame.qml qml/MapWheelHandler.qml qml/BufferedImage.qml
-        qml/OriginalMeteogram.qml qml/MeteogramStyle.js qml/SeriesLegend.qml qml/SeriesSettings.qml qml/SeriesAppearanceDialog.qml
+        qml/OriginalMeteogram.qml qml/MeteogramStyle.js qml/SeriesLegend.qml qml/ChartLegend.qml qml/SeriesSettings.qml qml/SeriesAppearanceDialog.qml
 )
 foreach(component PlaceEditorDialog PlacesView PlacesDialog MobilePlacesPage ChartAxesEditor CalendarDialog DateTimeField TimeRangeDialog)
     set_source_files_properties(qml/${component}.qml PROPERTIES QT_RESOURCE_ALIAS ${component}.qml)

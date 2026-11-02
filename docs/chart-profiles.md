@@ -32,6 +32,14 @@ appearance. Wind and pressure fills include their color palettes; precipitation
 and storm symbols include their categorical colors. These values are read by
 both renderers from JSON. There is no second set of preset values in C++ or QML.
 
+The information button beside a chart title opens its interactive legend.
+Miniature curves, bands, bars and arrows show how each series is drawn; clicking
+a series toggles its visibility. Rain, snow, sleet and storm symbols have their
+own color keys. Pressure and wind fills include a color scale with values in
+the selected units, covering the assigned axis range. All samples and scales
+use the profile's colors, including custom palettes and the current light or
+dark theme, and are included when exporting a chart with its legend visible.
+
 [`resources/charts/catalog.json`](../resources/charts/catalog.json) supplies the
 templates offered by **Add chart** and defaults for older imported files.
 [`resources/charts/fields.json`](../resources/charts/fields.json) defines series

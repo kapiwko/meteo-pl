@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: meteo-pl\n"
 "Report-Msgid-Bugs-To: https://github.com/kapiwko/meteo-pl/issues\n"
-"POT-Creation-Date: 2026-11-02 08:59+0100\n"
+"POT-Creation-Date: 2026-11-02 09:37+0100\n"
 "PO-Revision-Date: 2026-10-25 23:00+0100\n"
 "Last-Translator: Kamil Piwowarski <kapiwko@gmail.com>\n"
 "Language-Team: Polish\n"
@@ -959,7 +959,7 @@ msgstr "Temperatura gruntu"
 msgid "Ground temperature min–max"
 msgstr "Temperatura gruntu min–max"
 
-#: src/qml/Meteogram.qml:282
+#: src/qml/ChartLegend.qml:109
 msgid "Gust above scale"
 msgstr "Poryw powyżej skali"
 
@@ -979,6 +979,10 @@ msgstr "Porywy: do %1 %2"
 #: src/qml/MapLegend.qml:21 src/qml/Meteogram.qml:210
 msgid "Hide legend"
 msgstr "Ukryj legendę"
+
+#: src/qml/ChartLegend.qml:41
+msgid "Hide series: %1"
+msgstr "Ukryj serię: %1"
 
 #: src/presentation/MapLegendModel.cpp:92
 msgid "High clouds"
@@ -1159,7 +1163,7 @@ msgstr "Jasny"
 msgid "Light theme:"
 msgstr "Jasny motyw:"
 
-#: src/qml/SeriesAppearanceDialog.qml:29
+#: src/presentation/PreparedLegend.cpp:111
 msgid "Lightning"
 msgstr "Wyładowania"
 
@@ -1247,7 +1251,7 @@ msgstr "Maksimum"
 msgid "Maximum feels like"
 msgstr "Odczuwalna maksymalna"
 
-#: src/qml/Meteogram.qml:282
+#: src/qml/ChartLegend.qml:109
 msgid "Maximum precipitation above scale"
 msgstr "Opad max powyżej skali"
 
@@ -1354,6 +1358,10 @@ msgid ""
 msgstr ""
 "Model: %1\n"
 "Obliczenia: %2"
+
+#: src/presentation/PreparedLegend.cpp:109
+msgid "Moderate storms"
+msgstr "Umiarkowane burze"
 
 #: src/qml/CalendarDialog.qml:51
 msgid "Month"
@@ -1625,6 +1633,10 @@ msgstr "Dzień polarny"
 msgid "Polar night"
 msgstr "Noc polarna"
 
+#: src/presentation/PreparedLegend.cpp:105
+msgid "Possible storms"
+msgstr "Możliwe burze"
+
 #: src/presentation/WeatherModel.cpp:409
 msgid "Possible thunderstorms"
 msgstr "Możliwe burze"
@@ -1735,7 +1747,7 @@ msgstr "Skrót prognozy"
 
 #: src/presentation/ForecastFormatting.cpp:27
 #: src/presentation/MapLegendModel.cpp:117
-#: src/presentation/PreparedChart.cpp:119
+#: src/presentation/PreparedLegend.cpp:80
 msgid "Rain"
 msgstr "Deszcz"
 
@@ -2030,18 +2042,22 @@ msgstr "Domyślnie pokazuj legendę"
 msgid "Show meteogram"
 msgstr "Pokaż meteogram"
 
+#: src/qml/ChartLegend.qml:41
+msgid "Show series: %1"
+msgstr "Pokaż serię: %1"
+
 #: src/qml/ReadingSettings.qml:23
 msgid "Show:"
 msgstr "Pokazuj:"
 
 #: src/presentation/ForecastFormatting.cpp:29
-#: src/presentation/PreparedChart.cpp:119 src/presentation/WeatherModel.cpp:411
+#: src/presentation/PreparedLegend.cpp:80 src/presentation/WeatherModel.cpp:411
 msgid "Sleet"
 msgstr "Deszcz ze śniegiem"
 
 #: src/presentation/ForecastFormatting.cpp:28
 #: src/presentation/MapLegendModel.cpp:120
-#: src/presentation/PreparedChart.cpp:119
+#: src/presentation/PreparedLegend.cpp:80
 msgid "Snow"
 msgstr "Śnieg"
 
@@ -2090,13 +2106,17 @@ msgstr "Intensywność burzy"
 msgid "Storms"
 msgstr "Burze"
 
-#: src/presentation/PreparedChart.cpp:108
+#: src/presentation/PreparedLegend.cpp:68
 msgid "Storms / lightning"
 msgstr "Burze / wyładowania"
 
 #: resources/charts/catalog.json
 msgid "Storms and lightning"
 msgstr "Burze i wyładowania"
+
+#: src/presentation/PreparedLegend.cpp:110
+msgid "Strong storms"
+msgstr "Silne burze"
 
 #: src/qml/CompactForecast.qml:71 src/qml/ForecastHeader.qml:72
 msgid "Sunrise"
@@ -2567,6 +2587,10 @@ msgstr "WAM · okres szczytowy fali"
 msgid "WAM · significant wave height"
 msgstr "WAM · wysokość fali znacznej"
 
+#: src/presentation/PreparedLegend.cpp:108
+msgid "Weak storms"
+msgstr "Słabe burze"
+
 #: src/qml/WelcomeWizard.qml:60
 msgid "Weather forecasts, meteograms and maps from meteo.pl."
 msgstr "Prognozy pogody, meteogramy i mapy z meteo.pl."
@@ -2652,7 +2676,7 @@ msgstr "Przybliż"
 msgid "Zoom out"
 msgstr "Oddal"
 
-#: src/presentation/PreparedChart.cpp:80
+#: src/presentation/PreparedChart.cpp:79
 msgid "fraction"
 msgstr "frakcja"
 
@@ -2680,7 +2704,7 @@ msgstr "mm wody / 6 h"
 msgid "no data"
 msgstr "brak danych"
 
-#: src/presentation/PreparedChart.cpp:79
+#: src/presentation/PreparedChart.cpp:78
 msgid "octas"
 msgstr "oktanty"
 

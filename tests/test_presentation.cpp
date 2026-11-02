@@ -2119,6 +2119,96 @@ private slots:
         QVERIFY(cards.size()>1);
         for (auto *card:cards) QVERIFY(qAbs(card->width()-cards.first()->width())<1);
     }
+    void chartLegendsFitAndExplainTheirColors_data()
+    {
+        QTest::addColumn<QString>("group"); QTest::addColumn<int>("width"); QTest::addColumn<bool>("dark");
+        for (const auto &group : {"temperature","precipitation","probability","pressure","wind","cloudHeights","clouds"})
+            for (int width : {360,900}) for (bool dark : {false,true})
+                QTest::newRow(qPrintable(QString(group)+QString::number(width)+(dark ? "-dark" : "-light")))
+                    << QString(group) << width << dark;
+    }
+    void chartLegendsFitAndExplainTheirColors()
+    {
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|Cannot assign|Unable to assign).*")));
+        QFETCH(QString,group); QFETCH(int,width); QFETCH(bool,dark);
+        WeatherModel weather; weather.setAutoRefresh(false); weather.refresh(false); QVERIFY(weather.hasData());
+        QVariantMap definition;
+        for (const auto &entry : weather.configuredCharts(defaultChartLayout("modern")))
+            if (entry.toMap()["key"]==group) definition=entry.toMap();
+        QVERIFY(!definition.isEmpty());
+        QQmlEngine engine; QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import org.kde.kirigami as Kirigami
+            import pl.meteo.desktop
+            Meteogram {
+                required property color legendBackground
+                required property color legendForeground
+                required property color legendAlternate
+                Kirigami.Theme.inherit: false
+                Kirigami.Theme.backgroundColor: legendBackground
+                Kirigami.Theme.textColor: legendForeground
+                Kirigami.Theme.alternateBackgroundColor: legendAlternate
+                legendOverride: 1
+            }
+        )",QUrl());
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather",QVariant::fromValue(&weather)},
+            {"title",definition["title"]},{"groupKey",group},{"fields",definition["fields"]},
+            {"chartConfiguration",definition},{"width",width-16},
+            {"legendBackground",QColor(dark ? "#181818" : "#eff0f1")},
+            {"legendForeground",QColor(dark ? "#eff0f1" : "#232629")},
+            {"legendAlternate",QColor(dark ? "#282828" : "#ffffff")}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *chart=qobject_cast<QQuickItem *>(object.data()); QVERIFY(chart);
+        QQuickWindow window; window.setColor(dark ? QColor("#181818") : QColor("#eff0f1"));
+        chart->setParentItem(window.contentItem()); chart->setPosition({8,8});
+        window.resize(width,600); window.show(); QVERIFY(waitForStableLayout(chart));
+        chart->setHeight(chart->implicitHeight()); window.resize(width,qCeil(chart->height())+16);
+        auto *panel=chart->findChild<QQuickItem *>("chartLegendPanel"); QVERIFY(panel); QVERIFY(panel->height()>30);
+        QList<QQuickItem *> entries, colorScales, textLabels;
+        const auto inspect=[&](auto &&self,QQuickItem *item)->void {
+            if (item->objectName().startsWith("chartLegend-")) entries.append(item);
+            if (item->objectName().startsWith("legendColorScale-")) colorScales.append(item);
+            if (item->property("text").isValid() && item->property("color").isValid()) textLabels.append(item);
+            for (auto *child : item->childItems()) self(self,child);
+        };
+        inspect(inspect,panel);
+        QCOMPARE(entries.size(),definition["legend"].toList().size());
+        QVERIFY(!textLabels.isEmpty());
+        for (auto *label : textLabels) {
+            const auto foreground=label->property("color").value<QColor>();
+            const int lightness=qGray(foreground.rgb());
+            QVERIFY2(dark ? lightness>160 : lightness<130,qPrintable(label->property("text").toString()+": "+foreground.name()));
+        }
+        for (auto *entry : entries) {
+            const auto position=entry->mapToItem(panel,{0,0});
+            QVERIFY(position.x()>=0); QVERIFY(position.y()>=0);
+            QVERIFY(position.x()+entry->width()<=panel->width()+1);
+            QVERIFY(position.y()+entry->height()<=panel->height()+1);
+            QVERIFY(entry->width()>=140); QVERIFY(entry->height()>=36);
+        }
+        for (int i=0;i<entries.size();++i) for (int j=i+1;j<entries.size();++j) {
+            auto first=entries[i]->mapRectToItem(panel,entries[i]->boundingRect()).adjusted(1,1,-1,-1);
+            auto second=entries[j]->mapRectToItem(panel,entries[j]->boundingRect()).adjusted(1,1,-1,-1);
+            QVERIFY(!first.intersects(second));
+        }
+        if (group=="pressure" || group=="wind") {
+            const auto scales=definition["colorScales"].toList(); QCOMPARE(scales.size(),1);
+            QCOMPARE(colorScales.size(),1);
+            auto *scale=colorScales.first();
+            QCOMPARE(scale->objectName(),"legendColorScale-"+scales.first().toMap()["key"].toString());
+            QVERIFY(scale->isVisible()); QVERIFY(scale->height()>20); // Color bar and value labels, without a redundant heading.
+        }
+        if (group=="probability") QCOMPARE(definition["eventLegend"].toList().size(),4);
+        if (const auto directory=qEnvironmentVariable("METEO_LEGEND_SCREENSHOTS");!directory.isEmpty()) {
+            QVERIFY(QDir().mkpath(directory)); QTest::qWait(100);
+            QVERIFY(window.grabWindow().save(directory+"/"+QTest::currentDataTag()+".png"));
+        }
+        auto *first=entries.first();
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,first->mapToScene({first->width()/2,first->height()/2}).toPoint());
+        QVERIFY(!first->property("checked").toBool());
+        object->setProperty("legendOverride",0); QTRY_VERIFY(!panel->isVisible());
+    }
     void chartContextMenuSharesLegendStateAndSaveAction_data()
     {
         QTest::addColumn<QString>("group");

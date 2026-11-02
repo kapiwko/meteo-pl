@@ -80,6 +80,10 @@ foreach(style Fusion Material)
         TIMEOUT 90)
 endforeach()
 add_test(NAME mobile_palette COMMAND test_presentation mobilePagesKeepTheWindowPalette applicationThemeChangesWithoutRestart)
+add_test(NAME chart_legends_Material COMMAND test_presentation chartLegendsFitAndExplainTheirColors chartContextMenuSharesLegendStateAndSaveAction)
+set_tests_properties(chart_legends_Material PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 90)
 set_tests_properties(mobile_palette PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 30)
