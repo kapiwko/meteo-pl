@@ -38,6 +38,7 @@ public:
     void saveProfileOptions(const QString &profile, const QVariantMap &options);
     QString createProfileFrom(const QString &name, const QString &sourceProfile, bool activate = true);
 private:
+    bool requireProfile(const QString &id);
     bool change(const std::function<void()> &operation) { operation(); return true; }
     QString m_error;
 };

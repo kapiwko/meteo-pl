@@ -2818,3 +2818,6 @@ msgstr "Nieznane polecenie profilu."
 
 msgid "Right-axis limits use the chart's data units and give it a separate range."
 msgstr "Granice prawej osi są podawane w jednostkach danych wykresu i nadają jej osobny zakres."
+
+msgid "This profile no longer exists."
+msgstr "Ten profil już nie istnieje."

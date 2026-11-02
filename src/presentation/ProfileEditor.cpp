@@ -6,8 +6,16 @@
 #include <algorithm>
 #include <cmath>
 
+bool ProfileEditor::requireProfile(const QString &id)
+{
+    if (findProfileLayout(id)) return true;
+    m_error=Meteo::i18n("This profile no longer exists.");
+    return false;
+}
+
 void ProfileEditor::setProfileChartHeightForProfile(const QString &selectedProfile, int value)
 {
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         value = value ? std::clamp(value, 64, 800) : 0;
         if (value == chartHeightForProfile(selectedProfile))
@@ -36,6 +44,7 @@ void ProfileEditor::setProfile(const QString &value)
 void ProfileEditor::setVisibleGroups(const QStringList &value, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -50,6 +59,7 @@ void ProfileEditor::setVisibleGroups(const QStringList &value, const QString &pr
 QVariantMap ProfileEditor::profileCommand(const QVariantMap &command, const QString &profileId)
 {
     const auto id = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(id)) return {{"ok",false},{"code","NotFound"},{"error",m_error}};
     QVariantMap result{{"ok",false}};
     const bool committed = change([&] {
         const auto before = profileSnapshot();
@@ -125,6 +135,7 @@ QVariantMap ProfileEditor::restoreProfileState(const QVariantMap &before, const 
 
 void ProfileEditor::saveLayout(const QString &id, const QVariantList &layout)
 {
+    if (!requireProfile(id)) return;
     const auto normalized = normalizeChartLayout(layout);
     if (normalized == chartLayoutForProfile(id))
         return;
@@ -135,6 +146,7 @@ void ProfileEditor::saveLayout(const QString &id, const QVariantList &layout)
 
 void ProfileEditor::saveProfileOptions(const QString &id, const QVariantMap &options)
 {
+    if (!requireProfile(id)) return;
     auto saved = savedProfiles();
     for (auto &value : saved) {
         auto entry = value.toMap();
@@ -155,6 +167,7 @@ void ProfileEditor::saveProfileOptions(const QString &id, const QVariantMap &opt
 void ProfileEditor::setChartEnabled(const QString &key, bool enabled, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -172,6 +185,7 @@ void ProfileEditor::setChartEnabled(const QString &key, bool enabled, const QStr
 void ProfileEditor::setChartField(const QString &key, const QString &field, bool enabled, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -205,6 +219,7 @@ void ProfileEditor::setChartField(const QString &key, const QString &field, bool
 QString ProfileEditor::createChart(const QString &title, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return {};
     QString result;
     const bool saved = change([&] {
         result = [&]() -> QString {
@@ -226,6 +241,7 @@ QString ProfileEditor::createChart(const QString &title, const QString &profileI
 void ProfileEditor::deleteChart(const QString &key, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         layout.removeIf([&key](const QVariant &value) { return value.toMap()["key"] == key; });
@@ -236,6 +252,7 @@ void ProfileEditor::deleteChart(const QString &key, const QString &profileId)
 void ProfileEditor::addChart(const QString &key, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &entry : layout) {
@@ -259,6 +276,7 @@ void ProfileEditor::addChart(const QString &key, const QString &profileId)
 bool ProfileEditor::setChartOptions(const QString &key, const QVariantMap &options, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return false;
     QString validationError;
     const bool committed = change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
@@ -294,6 +312,7 @@ bool ProfileEditor::setChartOptions(const QString &key, const QVariantMap &optio
 void ProfileEditor::setSeriesStyle(const QString &key, const QString &field, const QVariantMap &options, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &value : layout) {
@@ -324,6 +343,7 @@ void ProfileEditor::setSeriesStyle(const QString &key, const QString &field, con
 void ProfileEditor::removeSeries(const QString &key, const QString &field, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
         for (auto &value : layout) {
@@ -343,6 +363,7 @@ void ProfileEditor::removeSeries(const QString &key, const QString &field, const
 QVariantMap ProfileEditor::moveChart(const QString &key, int direction, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return {{"ok",false},{"code","NotFound"},{"error",m_error}};
     QVariantMap result{{"ok", false}, {"error", Meteo::i18n("This chart no longer exists.")}};
     const bool committed = change([&] {
         auto layout = chartLayoutForProfile(selectedProfile);
@@ -361,6 +382,7 @@ QVariantMap ProfileEditor::moveChart(const QString &key, int direction, const QS
 
 QString ProfileEditor::createProfileFrom(const QString &name, const QString &sourceProfile, bool activate)
 {
+    if (!requireProfile(sourceProfile)) return {};
     QString result;
     const bool saved = change([&] {
         result = [&]() -> QString {
@@ -383,6 +405,7 @@ QString ProfileEditor::createProfileFrom(const QString &name, const QString &sou
 QString ProfileEditor::duplicateProfile(const QString &profileId, bool activate)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return {};
     QString result;
     const bool saved = change([&] {
         result = [&]() -> QString {
@@ -407,6 +430,7 @@ QString ProfileEditor::duplicateProfile(const QString &profileId, bool activate)
 void ProfileEditor::renameProfile(const QString &name, const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         if (name.trimmed().isEmpty()) return;
         if (selectedProfile == "custom") m_store.setValue("customProfileName", name.trimmed().left(80));
@@ -417,6 +441,7 @@ void ProfileEditor::renameProfile(const QString &name, const QString &profileId)
 void ProfileEditor::deleteProfile(const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         if (profiles().size() <= 1) return;
         const bool wasSelected = profile() == selectedProfile;
@@ -439,6 +464,7 @@ void ProfileEditor::deleteProfile(const QString &profileId)
 void ProfileEditor::resetProfile(const QString &profileId)
 {
     const auto selectedProfile = profileId.isEmpty() ? profile() : profileId;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         if (factoryProfile(selectedProfile).isEmpty()) return;
         auto saved = savedProfiles();
@@ -461,6 +487,7 @@ void ProfileEditor::restoreDeletedProfiles()
 void ProfileEditor::updateProfile(const QString &id)
 {
     const auto selectedProfile = id.isEmpty() ? profile() : id;
+    if (!requireProfile(selectedProfile)) return;
     change([&] {
         const auto factory = factoryProfile(selectedProfile);
         if (factory.isEmpty()) return;

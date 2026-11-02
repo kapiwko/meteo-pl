@@ -1,6 +1,7 @@
 #pragma once
 #include <QVariantMap>
 #include <QVariantList>
+#include <optional>
 
 class ProfileValues {
 public:
@@ -19,6 +20,7 @@ public:
     bool hasDeletedProfiles() const;
     QVariantList chartLayout() const;
     QVariantList chartLayoutForProfile(const QString &id) const;
+    std::optional<QVariantList> findProfileLayout(const QString &id) const;
     int chartHeightForProfile(const QString &id) const;
     QVariantMap profileState(const QString &id) const;
     QVariantMap profileSnapshot() const;

@@ -6,6 +6,28 @@
 class PreferencesDomainTest : public QObject {
     Q_OBJECT
 private slots:
+    void missingCommandTargetsNeverUseTheDisplayFallback()
+    {
+        ProfileEditor editor({},builtinChartProfiles());
+        const auto original=editor.chartLayout(); const auto state=editor.state();
+        QCOMPARE(editor.chartLayoutForProfile("missing"),original);
+        QVERIFY(!editor.findProfileLayout("missing"));
+        QVERIFY(editor.createChart("New chart","missing").isEmpty());
+        QVERIFY(!editor.error().isEmpty());
+        QVERIFY(editor.duplicateProfile("missing").isEmpty());
+        editor.renameProfile("Missing","custom");
+        editor.setChartEnabled("temperature",false,"missing");
+        editor.setSeriesStyle("temperature","airtmp_point",{{"color","#123456"}},"missing");
+        QVERIFY(!editor.setChartOptions("temperature",{{"leftMin",0}},"missing"));
+        const auto result=editor.profileCommand({{"type","deleteChart"},{"chart","temperature"}},"missing");
+        QCOMPARE(result["ok"].toBool(),false); QCOMPARE(result["code"].toString(),"NotFound");
+        QCOMPARE(editor.state(),state);
+        const auto copy=editor.duplicateProfile("classic"); QVERIFY(!copy.isEmpty());
+        editor.deleteProfile(copy);
+        const auto deleted=editor.state();
+        QVERIFY(editor.createChart("Deleted profile",copy).isEmpty());
+        QCOMPARE(editor.state(),deleted);
+    }
     void profilesDuplicateEditAndUndoWithoutAnIniFile()
     {
         ProfileEditor editor({},builtinChartProfiles());

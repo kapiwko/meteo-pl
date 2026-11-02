@@ -108,18 +108,26 @@ QVariantList ProfileCatalog::chartLayout() const { return chartLayoutForProfile(
 
 QVariantList ProfileCatalog::chartLayoutForProfile(const QString &id) const
 {
+    if (const auto layout=findProfileLayout(id)) return *layout;
+    const auto available=profiles();
+    if (!available.isEmpty())
+        if (const auto layout=findProfileLayout(available.first().toMap()["id"].toString())) return *layout;
+    return {};
+}
+
+std::optional<QVariantList> ProfileCatalog::findProfileLayout(const QString &id) const
+{
     const auto available = profiles();
     const bool listed = std::any_of(available.cbegin(), available.cend(), [&](const QVariant &entry) { return entry.toMap()["id"] == id; });
-    if (!listed && !available.isEmpty()) return chartLayoutForProfile(available.first().toMap()["id"].toString());
+    if (!listed) return std::nullopt;
     if (id == "custom") {
-        if (m_store.contains("customLayout")) return normalizeChartLayout(m_store.value("customLayout").toList());
-        return m_factoryProfiles.first().toMap()["charts"].toList();
+        return normalizeChartLayout(m_store.value("customLayout").toList());
     }
     for (const auto &value : savedProfiles()) {
         const auto entry = value.toMap();
         if (entry["id"] == id && entry.contains("charts")) return normalizeChartLayout(entry["charts"].toList());
     }
-    return factoryProfile(id).value("charts", m_factoryProfiles.first().toMap()["charts"]).toList();
+    return factoryProfile(id).value("charts").toList();
 }
 
 QVariantMap ProfileCatalog::profileState(const QString &id) const
