@@ -21,11 +21,29 @@
 #include <QTemporaryDir>
 #include <QSignalSpy>
 #include <QTest>
+#include <QQuickAsyncImageProvider>
 
 class MapTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void imageCompletionSurvivesCancellationAndImmediateResponseDestruction()
+    {
+        ImageServer server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        QQmlEngine engine;
+        auto *images=engine.singletonInstance<MapImages *>("pl.meteo.desktop","MapImages"); QVERIFY(images);
+        auto *provider=dynamic_cast<QQuickAsyncImageProvider *>(engine.imageProvider("meteo-map")); QVERIFY(provider);
+        const auto source=images->cached(server.url("green-completion"));
+        auto *response=provider->requestImageResponse(source.path().mid(1),{});
+        QPointer<QQuickImageResponse> alive(response); int completions=0;
+        connect(response,&QQuickImageResponse::finished,this,[&,response] {
+            ++completions;
+            response->cancel(); // Queue a cancellation while Qt releases the finished response.
+            delete response;
+        });
+        QTRY_COMPARE(completions,1); QVERIFY(!alive);
+        QTest::qWait(50); QCOMPARE(completions,1);
+    }
     void initTestCase()
     {
         QVERIFY(m_cache.isValid());

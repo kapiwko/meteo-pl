@@ -7,33 +7,38 @@
 #include <QRegularExpression>
 #include <QTextDocumentFragment>
 #include <atomic>
+#include <memory>
 
 namespace {
+struct ResponseState {
+    std::atomic_bool canceled=false,finished=false;
+};
 class Response : public QQuickImageResponse {
 public:
     explicit Response(Meteo::ImageCache *cache) : m_cache(cache) {}
+    const std::shared_ptr<ResponseState> state=std::make_shared<ResponseState>();
     QImage image;
     QString failure;
     QQuickTextureFactory *textureFactory() const override { return QQuickTextureFactory::textureFactoryForImage(image); }
     QString errorString() const override { return failure; }
-    bool canceled() const { return m_canceled.load(); }
     void cancel() override {
-        m_canceled.store(true);
+        state->canceled.store(true);
         if (!m_cache) return;
-        QMetaObject::invokeMethod(m_cache, [self=QPointer<Response>(this),cache=m_cache] {
-            if (!self || !cache) return;
+        QMetaObject::invokeMethod(m_cache, [self=QPointer<Response>(this),cache=m_cache,state=state] {
+            if (state->finished.load() || !self || !cache) return;
             cache->cancelRequests(self);
-            self->complete({},{});
+            complete(self,state,{},{});
         }, Qt::QueuedConnection);
     }
-    void complete(const QImage &result, const QString &error) {
-        if (m_finished.test_and_set()) return;
-        image = result; failure = error; emit finished();
+    static void complete(const QPointer<Response> &response,const std::shared_ptr<ResponseState> &state,
+                         const QImage &result,const QString &error) {
+        // Qt may destroy the response on its image-reader thread after finished.
+        // Keep the once-only completion gate alive for already queued callbacks.
+        if (state->finished.exchange(true) || !response) return;
+        response->image=result; response->failure=error; emit response->finished();
     }
 private:
     QPointer<Meteo::ImageCache> m_cache;
-    std::atomic_bool m_canceled = false;
-    std::atomic_flag m_finished = ATOMIC_FLAG_INIT;
 };
 class Provider : public QQuickAsyncImageProvider {
 public:
@@ -42,13 +47,13 @@ public:
     {
         auto *response = new Response(m_cache);
         const auto url = QUrl::fromEncoded(QByteArray::fromBase64(id.toLatin1(), QByteArray::Base64UrlEncoding));
-        QMetaObject::invokeMethod(m_cache, [cache = m_cache, events=m_events, response = QPointer<Response>(response), url, size] {
+        QMetaObject::invokeMethod(m_cache, [cache = m_cache, events=m_events, response = QPointer<Response>(response), state=response->state, url, size] {
             if (!response) return;
-            if (response->canceled()) { response->complete({},{}); return; }
-            cache->requestDetailed(url, [response, events, url, size](const QImage &image, const QString &error,int status) {
-                if (!response) return;
+            if (state->canceled.load()) { Response::complete(response,state,{},{}); return; }
+            cache->requestDetailed(url, [response, state, events, url, size](const QImage &image, const QString &error,int status) {
+                if (state->finished.load() || !response) return;
                 if (!error.isEmpty() && events) emit events->imageFailed(url,error,status);
-                if (response) response->complete(size.isValid() ? image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation) : image, error);
+                Response::complete(response,state,size.isValid() ? image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation) : image,error);
             }, response);
         }, Qt::QueuedConnection);
         return response;
