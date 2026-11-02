@@ -241,7 +241,7 @@ class PortablePackagingTest(unittest.TestCase):
             self.assertFalse(Path(commands[0][commands[0].index("-keystore")+1]).exists())
 
     def test_persistent_android_key_is_reused_without_logging_passwords(self):
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory() as temporary, patch.object(portable,"ROOT",Path(temporary)/"source"):
             key = Path(temporary)/"release.keystore"; key.write_bytes(b"private")
             environment = {"ANDROID_SDK_ROOT": "/sdk", "ANDROID_BUILD_TOOLS_REVISION": "36.0.0",
                            "METEO_ANDROID_KEYSTORE": str(key), "METEO_ANDROID_KEY_ALIAS": "meteo",
@@ -274,7 +274,7 @@ class PortablePackagingTest(unittest.TestCase):
                 portable.android_signing_key(required=True)
 
     def test_signing_key_outside_docker_is_mounted_read_only_and_secrets_are_not_arguments(self):
-        with tempfile.TemporaryDirectory() as temporary:
+        with tempfile.TemporaryDirectory() as temporary, patch.object(portable,"ROOT",Path(temporary)/"source"):
             root=Path(temporary); key=root/"release.keystore"; key.write_bytes(b"private")
             environment={"METEO_ANDROID_KEYSTORE": str(key), "METEO_ANDROID_KEY_ALIAS": "meteo",
                          "METEO_ANDROID_STORE_PASSWORD": "secret-store-password"}
