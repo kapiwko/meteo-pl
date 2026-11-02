@@ -136,8 +136,9 @@ converts them into vertex-colored `QSGGeometryNode` triangles for Qt Quick RHI.
 `PlotGeometry` clips before dash tessellation and bounds dash steps and vertices.
 Dash elements have a half-pixel minimum; exhausted work falls back to a solid
 remainder. This also protects callers that bypass profile import.
-Labels use `Text` items and the layer has 4× MSAA. This path does not rasterize
-the plot to an image on the CPU. The alternative `Canvas.Image` is selected in
+`PlotLabels`, a separate `QQuickPaintedItem`, rasterizes annotation glyphs with
+`QPainterPath` and composites them as a texture. Series and grid remain RHI
+geometry, and the chart layer uses 4× MSAA. The alternative `Canvas.Image` is selected in
 preferences or automatically when Qt Quick uses its software backend. Renderer
 changes take effect without restarting. Cursor indicators have separate
 geometry: pointer movement does not rebuild series, grid or labels. An actual
