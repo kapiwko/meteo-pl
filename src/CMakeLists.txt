@@ -26,6 +26,8 @@ add_library(meteo_services STATIC
     network/JsonRequest.hpp
     network/JsonTransport.cpp
     network/JsonTransport.hpp
+    network/HttpCachePolicy.cpp
+    network/HttpCachePolicy.hpp
     network/DiskCacheBudget.cpp
     network/DiskCacheBudget.hpp
     network/CacheFiles.cpp

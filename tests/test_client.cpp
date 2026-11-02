@@ -1,5 +1,7 @@
 #include "network/MeteoClient.hpp"
 #include "network/JsonRequest.hpp"
+#include "network/JsonTransport.hpp"
+#include "network/HttpCachePolicy.hpp"
 #include <QElapsedTimer>
 #include "ClientFixture.hpp"
 #include <QSignalSpy>
@@ -11,6 +13,40 @@
 class ClientTest : public QObject {
     Q_OBJECT
 private slots:
+    void cacheAgeIncludesTheResponseDelay()
+    {
+        struct Reply : QNetworkReply {
+            Reply(const QByteArray &age) { setRawHeader("Cache-Control","max-age=10"); setRawHeader("Age",age); }
+            void abort() override {}
+            qint64 readData(char *,qint64) override { return -1; }
+        };
+        const auto now=QDateTime::fromSecsSinceEpoch(1800000000,QTimeZone::UTC);
+        Reply fresh("2");
+        QCOMPARE(Meteo::cacheExpiration(&fresh,now,60,std::chrono::milliseconds(1250)),now.addMSecs(6750));
+        QCOMPARE(Meteo::cacheExpiration(&fresh,now,3,std::chrono::milliseconds(1250)),now.addSecs(3));
+        QVERIFY(!Meteo::cacheExpiration(&fresh,now,60,std::chrono::milliseconds(8000)).isValid());
+        Reply expired("10"); QVERIFY(!Meteo::cacheExpiration(&expired,now,60).isValid());
+        Reply older("12"); QVERIFY(!Meteo::cacheExpiration(&older,now,60).isValid());
+    }
+    void slowResponsesConsumeTheirHttpFreshness()
+    {
+        QTcpServer server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        connect(&server,&QTcpServer::newConnection,this,[&] {
+            auto *socket=server.nextPendingConnection();
+            connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
+            connect(socket,&QTcpSocket::readyRead,socket,[socket,sent=false]() mutable {
+                socket->readAll(); if (sent) return; sent=true;
+                socket->write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nCache-Control: max-age=1\r\nAge: 0\r\nContent-Length: 2\r\n\r\n");
+                QTimer::singleShot(1200,socket,[socket]{socket->write("{}");socket->disconnectFromHost();});
+            });
+        });
+        Meteo::JsonTransport transport;
+        QSignalSpy received(&transport,&Meteo::JsonTransport::received);
+        QSignalSpy failed(&transport,&Meteo::JsonTransport::failed);
+        transport.get(QUrl(QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort())),60);
+        QTRY_COMPARE_WITH_TIMEOUT(received.size(),1,3000); QCOMPARE(failed.size(),0);
+        QVERIFY(!received.first().at(1).toDateTime().isValid());
+    }
     void tricklingResponsesCannotExtendTheTotalDeadline_data()
     {
         QTest::addColumn<bool>("json");

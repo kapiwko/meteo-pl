@@ -3,6 +3,7 @@
 #include "core/Localization.hpp"
 #include <QNetworkReply>
 #include <QJsonArray>
+#include <QElapsedTimer>
 namespace Meteo {
 void JsonTransport::cancel()
 {
@@ -20,11 +21,12 @@ void JsonTransport::get(const QUrl &url,int cacheSeconds,Validator validator)
     m_policy.configure(request);
     request.setRawHeader("User-Agent", "MeteoDesktop/0.2 (Qt desktop client)");
     request.setRawHeader("Accept", "application/json");
+    QElapsedTimer elapsed; elapsed.start();
     auto *reply = m_network.get(request);
     m_reply = reply;
     const auto generation = m_generation;
     m_policy.enforce(reply);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, generation, url, cacheSeconds, validator=std::move(validator)] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, generation, url, cacheSeconds, elapsed, validator=std::move(validator)] {
         reply->deleteLater();
         if (generation != m_generation) return;
         m_reply = nullptr;
@@ -49,7 +51,7 @@ void JsonTransport::get(const QUrl &url,int cacheSeconds,Validator validator)
             emit failed(Meteo::i18n("Invalid meteo.pl response format."));
             return;
         }
-        const auto expires=cacheExpiration(reply,QDateTime::currentDateTimeUtc(),cacheSeconds);
+        const auto expires=cacheExpiration(reply,QDateTime::currentDateTimeUtc(),cacheSeconds,std::chrono::milliseconds(elapsed.elapsed()));
         emit received(document,expires);
     });
 }

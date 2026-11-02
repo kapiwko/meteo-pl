@@ -1,5 +1,6 @@
 #include "core/Localization.hpp"
 #include "ImageCache.hpp"
+#include <QElapsedTimer>
 #include "CacheFiles.hpp"
 #include "RequestPolicy.hpp"
 #include "HttpCachePolicy.hpp"
@@ -164,10 +165,11 @@ void ImageCache::startJob(const QString &key, quint64 token)
         if (header.first.compare("Cache-Control", Qt::CaseInsensitive) == 0 && !allowsCacheReuse(header.second)) fresh = false;
     request.setAttribute(QNetworkRequest::CacheLoadControlAttribute,
         fresh ? QNetworkRequest::PreferCache : QNetworkRequest::AlwaysNetwork);
+    QElapsedTimer elapsed; elapsed.start();
     auto *reply = m_network.get(request);
     m_pending[key].reply = reply;
     policy.enforce(reply);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, key, token, generation] {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, key, token, generation, elapsed] {
         auto pending = m_pending.find(key);
         if (pending != m_pending.end() && pending->token == token) pending->reply = nullptr;
         if (generation != m_generation && m_disk) m_disk->remove(reply->url());
@@ -177,7 +179,7 @@ void ImageCache::startJob(const QString &key, quint64 token)
         const auto status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const auto now = QDateTime::currentDateTimeUtc();
         const auto cacheControl = reply->rawHeader("Cache-Control").toLower();
-        auto expiry = cacheExpiration(reply,now,7*86400,1800);
+        auto expiry = cacheExpiration(reply,now,7*86400,std::chrono::milliseconds(elapsed.elapsed()),1800);
         if (m_disk && reply->attribute(QNetworkRequest::SourceIsFromCacheAttribute).toBool()) {
             const auto storedExpiry=m_disk->metaData(reply->url()).expirationDate();
             if (expiry.isValid() && storedExpiry.isValid()) expiry=std::min(expiry,storedExpiry);
