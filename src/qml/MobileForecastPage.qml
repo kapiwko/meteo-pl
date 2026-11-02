@@ -267,6 +267,7 @@ Kirigami.Page {
         MenuItem {
             objectName: "mobileIdentificationAction"
             visible: moreSheet.chartActions
+            height: visible ? implicitHeight : 0
             text: I18n.i18n("Parameter identification mode")
             icon.name: "color-picker"
             checkable: true
@@ -276,13 +277,14 @@ Kirigami.Page {
         MenuItem {
             objectName: "mobileExportAction"
             visible: moreSheet.chartActions
+            height: visible ? implicitHeight : 0
             enabled: !forecastPanel.exportBusy
             text: I18n.i18n("Export charts")
             icon.name: "document-export"
             onTriggered: forecastPanel.chooseExport()
         }
-        MenuSeparator { visible: moreSheet.chartActions }
-        MenuItem { visible: root.destination === 0; text: I18n.i18n("My places"); icon.name: "mark-location"; onTriggered: root.chooseLocation() }
+        MenuSeparator { visible: moreSheet.chartActions; height: visible ? implicitHeight : 0 }
+        MenuItem { visible: root.destination === 0; height: visible ? implicitHeight : 0; text: I18n.i18n("My places"); icon.name: "mark-location"; onTriggered: root.chooseLocation() }
         MenuItem { text: I18n.i18n("Settings"); icon.name: "configure"; onTriggered: root.openSettings() }
         MenuItem { text: I18n.i18n("About"); icon.name: "help-about"; icon.color: "transparent"; onTriggered: about.open() }
     }

@@ -97,7 +97,7 @@ msgid ""
 msgstr ""
 
 #: src/qml/MeteoAbout.qml:12 src/qml/MeteoSettings.qml:31
-#: src/qml/MobileForecastPage.qml:287 src/qml/MobileSettingsPage.qml:56
+#: src/qml/MobileForecastPage.qml:289 src/qml/MobileSettingsPage.qml:56
 msgid "About"
 msgstr ""
 
@@ -113,7 +113,7 @@ msgstr ""
 msgid "Add a place to see its weather forecast."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:329 src/qml/DisplaySettings.qml:334
+#: src/qml/DisplaySettings.qml:331 src/qml/DisplaySettings.qml:336
 msgid "Add chart"
 msgstr ""
 
@@ -124,7 +124,7 @@ msgstr ""
 msgid "Add location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:533
+#: src/qml/DisplaySettings.qml:535
 msgid "Add series"
 msgstr ""
 
@@ -268,12 +268,12 @@ msgstr ""
 msgid "Chance"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:292
+#: src/qml/DisplaySettings.qml:294
 msgid ""
 "Changes are saved in this profile. Restore defaults to reset this preset."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:414
+#: src/qml/DisplaySettings.qml:416
 msgid "Chart actions: %1"
 msgstr ""
 
@@ -281,15 +281,15 @@ msgstr ""
 msgid "Chart appearance, series visibility and legends will be preserved."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:268
+#: src/qml/DisplaySettings.qml:270
 msgid "Chart height in this profile"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:256 src/qml/DisplaySettings.qml:495
+#: src/qml/DisplaySettings.qml:258 src/qml/DisplaySettings.qml:497
 msgid "Chart height:"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:503
+#: src/qml/DisplaySettings.qml:505
 msgid "Chart height: %1 px."
 msgstr ""
 
@@ -297,7 +297,7 @@ msgstr ""
 msgid "Chart legends"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:486
+#: src/qml/DisplaySettings.qml:488
 msgid "Chart name"
 msgstr ""
 
@@ -310,7 +310,7 @@ msgstr ""
 msgid "Chart profile:"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:466
+#: src/qml/DisplaySettings.qml:468
 msgid "Chart removed."
 msgstr ""
 
@@ -330,7 +330,7 @@ msgstr ""
 msgid "Charts exported"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:327
+#: src/qml/DisplaySettings.qml:329
 msgid "Charts in profile"
 msgstr ""
 
@@ -373,7 +373,7 @@ msgid ""
 "from My places."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:531
+#: src/qml/DisplaySettings.qml:533
 msgid "Choose a series…"
 msgstr ""
 
@@ -631,11 +631,11 @@ msgstr ""
 msgid "Current location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:258 src/qml/DisplaySettings.qml:496
+#: src/qml/DisplaySettings.qml:260 src/qml/DisplaySettings.qml:498
 msgid "Custom"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:496
+#: src/qml/DisplaySettings.qml:498
 msgid "Custom height for this chart"
 msgstr ""
 
@@ -681,7 +681,7 @@ msgstr ""
 msgid "Default height:"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:226
+#: src/qml/DisplaySettings.qml:228
 msgid "Delete profile"
 msgstr ""
 
@@ -792,7 +792,7 @@ msgid "Export cancelled."
 msgstr ""
 
 #: src/qml/ForecastPanel.qml:187 src/qml/MobileForecastPage.qml:128
-#: src/qml/MobileForecastPage.qml:280
+#: src/qml/MobileForecastPage.qml:282
 msgid "Export charts"
 msgstr ""
 
@@ -812,7 +812,7 @@ msgstr ""
 msgid "Exporting…"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:147 src/qml/DisplaySettings.qml:284
+#: src/qml/DisplaySettings.qml:147 src/qml/DisplaySettings.qml:286
 #: src/qml/ForecastPanel.qml:525
 msgid "Export…"
 msgstr ""
@@ -1015,7 +1015,7 @@ msgstr ""
 msgid "Import meteogram profiles"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:283
+#: src/qml/DisplaySettings.qml:285
 msgid "Import…"
 msgstr ""
 
@@ -1328,16 +1328,16 @@ msgstr ""
 msgid "Month"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:178 src/qml/DisplaySettings.qml:411
+#: src/qml/DisplaySettings.qml:178 src/qml/DisplaySettings.qml:413
 #: src/qml/MobileForecastPage.qml:155 src/qml/MobileForecastPage.qml:261
 msgid "More options"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:449
+#: src/qml/DisplaySettings.qml:451
 msgid "Move chart down"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:438
+#: src/qml/DisplaySettings.qml:440
 msgid "Move chart up"
 msgstr ""
 
@@ -1358,7 +1358,7 @@ msgid "My location"
 msgstr ""
 
 #: apps/meteo/Main.qml:34 src/qml/MobileForecastPage.qml:225
-#: src/qml/MobileForecastPage.qml:285 src/qml/MobilePlacesPage.qml:12
+#: src/qml/MobileForecastPage.qml:287 src/qml/MobilePlacesPage.qml:12
 #: src/qml/PlacesDialog.qml:11 src/qml/PlacesView.qml:65
 msgid "My places"
 msgstr ""
@@ -1367,7 +1367,7 @@ msgstr ""
 msgid "My places · choose a forecast"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:244 src/qml/LocationEditor.qml:229
+#: src/qml/DisplaySettings.qml:246 src/qml/LocationEditor.qml:229
 msgid "Name:"
 msgstr ""
 
@@ -1387,7 +1387,7 @@ msgstr ""
 msgid "Near-ground temperature"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:341 src/qml/DisplaySettings.qml:343
+#: src/qml/DisplaySettings.qml:343 src/qml/DisplaySettings.qml:345
 msgid "New chart"
 msgstr ""
 
@@ -1529,7 +1529,7 @@ msgid "Parameter identification and legends"
 msgstr ""
 
 #: src/qml/ForecastPanel.qml:519 src/qml/MobileForecastPage.qml:118
-#: src/qml/MobileForecastPage.qml:270
+#: src/qml/MobileForecastPage.qml:271
 msgid "Parameter identification mode"
 msgstr ""
 
@@ -1661,15 +1661,15 @@ msgstr ""
 msgid "Probability of precipitation"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:214
+#: src/qml/DisplaySettings.qml:215
 msgid "Profile defaults restored."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:274
+#: src/qml/DisplaySettings.qml:276
 msgid "Profile height: %1 px. Individual charts can override it."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:229
+#: src/qml/DisplaySettings.qml:231
 msgid "Profile removed."
 msgstr ""
 
@@ -1748,7 +1748,7 @@ msgstr ""
 msgid "Relative humidity"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:461
+#: src/qml/DisplaySettings.qml:463
 msgid "Remove chart from this profile"
 msgstr ""
 
@@ -1776,11 +1776,11 @@ msgstr ""
 msgid "Resolve the chart's axis conflict before exporting."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:212
+#: src/qml/DisplaySettings.qml:213
 msgid "Restore defaults"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:219
+#: src/qml/DisplaySettings.qml:221
 msgid "Restore deleted presets"
 msgstr ""
 
@@ -1916,11 +1916,11 @@ msgstr ""
 msgid "Selected location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:397
+#: src/qml/DisplaySettings.qml:399
 msgid "Series"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:403
+#: src/qml/DisplaySettings.qml:405
 msgid "Series and settings: %1"
 msgstr ""
 
@@ -1932,7 +1932,7 @@ msgstr ""
 msgid "Series color"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:519
+#: src/qml/DisplaySettings.qml:521
 msgid "Series removed."
 msgstr ""
 
@@ -1941,7 +1941,7 @@ msgid "Set up your forecast. You can change these options later in Settings."
 msgstr ""
 
 #: apps/meteo/Main.qml:35 src/qml/MeteoSettings.qml:18
-#: src/qml/MobileForecastPage.qml:286 src/qml/MobileSettingsPage.qml:20
+#: src/qml/MobileForecastPage.qml:288 src/qml/MobileSettingsPage.qml:20
 msgid "Settings"
 msgstr ""
 
@@ -2193,7 +2193,7 @@ msgstr ""
 msgid "The minimum must be lower than the maximum."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:293
+#: src/qml/DisplaySettings.qml:295
 msgid "The name and chart changes are saved automatically."
 msgstr ""
 
@@ -2430,7 +2430,7 @@ msgstr ""
 msgid "UM4 · visibility"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:306 src/qml/PlacesView.qml:39
+#: src/qml/DisplaySettings.qml:308 src/qml/PlacesView.qml:39
 msgid "Undo"
 msgstr ""
 
@@ -2466,7 +2466,7 @@ msgstr ""
 msgid "Update the forecast as your location changes"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:236
+#: src/qml/DisplaySettings.qml:238
 msgid "Use for forecast"
 msgstr ""
 
@@ -2474,19 +2474,19 @@ msgstr ""
 msgid "Use my location"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:236
+#: src/qml/DisplaySettings.qml:238
 msgid "Used in the forecast"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:506
+#: src/qml/DisplaySettings.qml:508
 msgid "Uses the application height: %1 px."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:275
+#: src/qml/DisplaySettings.qml:277
 msgid "Uses the application height: %1 px. Individual charts can override it."
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:505
+#: src/qml/DisplaySettings.qml:507
 msgid "Uses the profile height: %1 px."
 msgstr ""
 
@@ -2542,7 +2542,7 @@ msgstr ""
 msgid "Welcome to Meteo"
 msgstr ""
 
-#: src/qml/DisplaySettings.qml:540
+#: src/qml/DisplaySettings.qml:542
 msgid ""
 "When combining different units, assign series to the left or right axis. "
 "Empty bounds use automatic scaling."

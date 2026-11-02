@@ -208,6 +208,7 @@ ColumnLayout {
                             MenuItem {
                                 objectName: "profileRestoreButton"
                                 visible: root.currentProfile.builtin === true
+                                height: visible ? implicitHeight : 0
                                 enabled: root.currentProfile.modified === true
                                 text: I18n.i18n("Restore defaults")
                                 icon.name: "edit-undo"
@@ -216,6 +217,7 @@ ColumnLayout {
                             MenuItem {
                                 objectName: "restoreDeletedProfilesButton"
                                 visible: UserPreferences.hasDeletedProfiles
+                                height: visible ? implicitHeight : 0
                                 text: I18n.i18n("Restore deleted presets")
                                 icon.name: "edit-undo"
                                 onTriggered: UserPreferences.restoreDeletedProfiles()
@@ -342,7 +344,7 @@ ColumnLayout {
                                 icon.name: "list-add"
                                 onTriggered: root.expandedChart = UserPreferences.createChart(I18n.i18n("New chart"), root.profileId)
                             }
-                            MenuSeparator { visible: root.availableCharts.length > 0 }
+                            MenuSeparator { visible: root.availableCharts.length > 0; height: visible ? implicitHeight : 0 }
                             Instantiator {
                                 model: root.availableCharts
                                 delegate: MenuItem {

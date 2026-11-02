@@ -82,6 +82,10 @@ endforeach()
 add_test(NAME mobile_palette COMMAND test_presentation mobilePagesKeepTheWindowPalette applicationThemeChangesWithoutRestart)
 add_test(NAME chart_legends_Material COMMAND test_presentation chartLegendsFitAndExplainTheirColors chartContextMenuSharesLegendStateAndSaveAction)
 add_test(NAME profile_rows_Material COMMAND test_presentation profileChartRowsKeepActionsAligned profileChartMenuMovesAndUndoesDeletion settingsReleaseSpaceAfterCollapsingChartsAndSeries)
+add_test(NAME compact_menus_Material COMMAND test_presentation mobileMoreMenuHasNoHiddenItemGaps profileMenusOmitUnavailableActions)
+set_tests_properties(compact_menus_Material PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
+    TIMEOUT 60)
 set_tests_properties(profile_rows_Material PROPERTIES
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software;METEO_TEST_STYLE=Material;QML_IMPORT_PATH=${QT_QML_OUTPUT_DIRECTORY}"
     TIMEOUT 60)

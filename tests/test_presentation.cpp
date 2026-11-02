@@ -49,6 +49,40 @@ static bool waitForStableLayout(QQuickItem *item)
     return settled;
 }
 
+static QString menuLayoutProblem(QObject *menu, int expectedCommands)
+{
+    QQmlExpression expression(qmlContext(menu),menu,QStringLiteral(R"JS(
+        (function() {
+            const entries=[];
+            for(let i=0;i<count;++i) {
+                const item=itemAt(i);
+                entries.push({visible:item.visible,height:item.height,y:item.y,text:item.text||""});
+            }
+            return {height:height,padding:topPadding+bottomPadding,entries:entries};
+        })()
+    )JS"));
+    const auto value=expression.evaluate();
+    if (expression.hasError()) return expression.error().toString();
+    const auto geometry=value.value<QJSValue>().toVariant().toMap();
+    if (geometry.isEmpty()) return QStringLiteral("No menu geometry");
+    const auto details=QString::fromUtf8(QJsonDocument::fromVariant(geometry).toJson(QJsonDocument::Compact));
+    double visibleHeight=0; int commands=0;
+    for (const auto &entry : geometry["entries"].toList()) {
+        const auto item=entry.toMap();
+        if (!item["visible"].toBool()) {
+            if (item["height"].toDouble()>=1) return "Hidden menu item reserves space: "+details;
+            continue;
+        }
+        if (qAbs(item["y"].toDouble()-visibleHeight)>=1) return "Gap between menu items: "+details;
+        visibleHeight+=item["height"].toDouble();
+        if (!item["text"].toString().isEmpty()) ++commands;
+    }
+    if (commands!=expectedCommands) return "Unexpected command count: "+details;
+    if (qAbs(geometry["height"].toDouble()-geometry["padding"].toDouble()-visibleHeight)>=2)
+        return "Menu height includes empty space: "+details;
+    return {};
+}
+
 #if QT_VERSION < QT_VERSION_CHECK(6, 9, 0)
 static QtMessageHandler previousTeardownHandler = nullptr;
 static void filterMaterialTeardownWarning(QtMsgType type, const QMessageLogContext &context, const QString &message)
@@ -1400,6 +1434,49 @@ private slots:
         weather.currentLocation()->setEnabled(true); weather.currentLocation()->setForeground(true);
         QVERIFY(!weather.hasData()); QVERIFY(weather.currentLocation()->busy());
         QVERIFY(!empty->isVisible());
+    }
+    void mobileMoreMenuHasNoHiddenItemGaps_data()
+    {
+        QTest::addColumn<int>("width"); QTest::addColumn<int>("view"); QTest::addColumn<int>("visibleItems");
+        QTest::newRow("forecast-inline") << 640 << 0 << 3;
+        QTest::newRow("forecast-overflow") << 320 << 0 << 5;
+        QTest::newRow("hourly") << 360 << 1 << 3;
+        QTest::newRow("maps") << 360 << 3 << 2;
+        QTest::newRow("news") << 360 << 4 << 2;
+    }
+    void mobileMoreMenuHasNoHiddenItemGaps()
+    {
+        QFETCH(int,width); QFETCH(int,view); QFETCH(int,visibleItems);
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop|Cannot assign|Unable to assign).*")));
+        QQmlEngine engine;
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+        engine.setProperty("_kirigamiTheme",QStringLiteral("org.kde.desktop"));
+#endif
+        QQmlComponent component(&engine,QUrl::fromLocalFile(QStringLiteral(METEO_SOURCE_DIR "/apps/meteo/Mobile.qml")));
+        const QVariantMap startup{{"locationName","Warszawa"},{"latitude",52.2297},{"longitude",21.0122},{"model","um4_60"}};
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"smokeTest",true},{"startupForecast",startup},{"width",width},{"height",800}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        const auto cleanup=qScopeGuard([&] { destroyTestWindow(object); });
+        auto *window=qobject_cast<QQuickWindow *>(object.data()); QVERIFY(window);
+        auto *weather=object->findChild<WeatherModel *>(); QVERIFY(weather); weather->refresh(false); QVERIFY(weather->hasData());
+        const auto find=[](auto &&self,QQuickItem *parent,const QString &name)->QQuickItem * {
+            if (parent->objectName()==name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found=self(self,child,name)) return found;
+            return nullptr;
+        };
+        auto *page=find(find,window->contentItem(),"mobileForecastPage"); QVERIFY(page);
+        auto *panel=page->property("panel").value<QObject *>(); QVERIFY(panel); panel->setProperty("viewMode",view);
+        auto *more=find(find,page,"mobileMoreButton"); QVERIFY(more);
+        QVERIFY(waitForStableLayout(page));
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,more->mapToScene({more->width()/2,more->height()/2}).toPoint());
+        auto *menu=page->findChild<QObject *>("mobileMoreSheet"); QVERIFY(menu); QTRY_VERIFY(menu->property("opened").toBool());
+        if (const auto directory=qEnvironmentVariable("METEO_MORE_MENU_SCREENSHOTS");!directory.isEmpty()) {
+            QVERIFY(QDir().mkpath(directory)); QTest::qWait(100);
+            QVERIFY(window->grabWindow().save(directory+"/"+QTest::currentDataTag()+".png"));
+        }
+        const auto problem=menuLayoutProblem(menu,visibleItems);
+        QVERIFY2(problem.isEmpty(),qPrintable(problem));
+        QVERIFY(QMetaObject::invokeMethod(page,"navigateBack")); QTRY_VERIFY(!menu->property("visible").toBool());
     }
     void mobileNavigationAndSettingsUsePages()
     {
@@ -2837,6 +2914,48 @@ private slots:
         QCOMPARE(object->property("expandedChart").toString(),QString());
         QCOMPARE(preferences->profile(),active);
         QCOMPARE(preferences->chartLayoutForProfile(active),original);
+    }
+    void profileMenusOmitUnavailableActions_data()
+    {
+        QTest::addColumn<bool>("custom"); QTest::addColumn<bool>("deleted");
+        QTest::addColumn<bool>("addChart"); QTest::addColumn<int>("commands");
+        QTest::newRow("builtin") << false << false << false << 3;
+        QTest::newRow("custom") << true << false << false << 2;
+        QTest::newRow("restore-deleted-preset") << false << true << false << 4;
+        QTest::newRow("custom-with-deleted-preset") << true << true << false << 3;
+        QTest::newRow("no-remaining-templates") << true << false << true << 1;
+    }
+    void profileMenusOmitUnavailableActions()
+    {
+        QFETCH(bool,custom); QFETCH(bool,deleted); QFETCH(bool,addChart); QFETCH(int,commands);
+        QTest::failOnWarning(QRegularExpression(QStringLiteral(".*(TypeError|ReferenceError|Binding loop).*")));
+        QQmlEngine engine;
+        auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");
+        const auto id=custom ? preferences->duplicateProfile("classic") : QString("classic");
+        if (deleted) preferences->deleteProfile("modern");
+        if (addChart) for (const auto &entry : preferences->chartCatalog()) preferences->addChart(entry.toMap()["key"].toString(),id);
+        QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop","DisplaySettings");
+        QScopedPointer<QObject> object(component.createWithInitialProperties({{"mobileLayout",true},{"profileId",id}}));
+        QVERIFY2(object,qPrintable(component.errorString()));
+        auto *item=qobject_cast<QQuickItem *>(object.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(360,800); item->setParentItem(window.contentItem()); item->setWidth(328); item->setX(16);
+        window.show(); QVERIFY(waitForStableLayout(item));
+        const auto find=[](auto &&self,QQuickItem *parent,const QString &name)->QQuickItem * {
+            if (parent->objectName()==name) return parent;
+            for (auto *child : parent->childItems()) if (auto *found=self(self,child,name)) return found;
+            return nullptr;
+        };
+        auto *button=find(find,item,addChart ? "addChartButton" : "profileActionsButton"); QVERIFY(button);
+        if (addChart) {
+            auto *pane=find(find,item,"profileChartsPane"); QVERIFY(pane);
+            item->setY(16-pane->mapToItem(item,{0,0}).y());
+        }
+        auto *menu=button->findChild<QObject *>(addChart ? "addChartMenu" : "profileActionsMenu"); QVERIFY(menu);
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,button->mapToScene({button->width()/2,button->height()/2}).toPoint());
+        QTRY_VERIFY(menu->property("opened").toBool());
+        const auto problem=menuLayoutProblem(menu,commands);
+        QVERIFY2(problem.isEmpty(),qPrintable(problem));
+        QVERIFY(QMetaObject::invokeMethod(menu,"close"));
     }
     void settingsReleaseSpaceAfterCollapsingChartsAndSeries()
     {
