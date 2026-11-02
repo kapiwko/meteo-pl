@@ -14,6 +14,22 @@ class ProfileCodecTest : public QObject
 {
     Q_OBJECT
 private slots:
+    void rangePartnersMatchTheirQuantityUnitAndRole()
+    {
+        for (const auto &key : {"airtmp_max","wchill_max","grdtmp_max"}) {
+            const auto standard=defaultSeriesStyle(key);
+            QVERIFY(isRangePartner(key,standard["lowerKey"].toString()));
+        }
+        for (const auto &lower : {"slpres_point","wind10_dr_deg_true_prev_point","wchill_min","airtmp_point","airtmp_max","missing"}) {
+            auto style=defaultSeriesStyle("airtmp_max"); style["lowerKey"]=lower; style["render"]="range";
+            QVERIFY(!isRangePartner("airtmp_max",lower));
+            QCOMPARE(normalizeSeriesStyle(style)["lowerKey"].toString(),"airtmp_min");
+            auto chart=defaultChartLayout("classic").first().toMap(); chart["series"]=QVariantList{style};
+            QString error;
+            QVERIFY(!ProfileFileCodec::encode({QVariantMap{{"name","Invalid range"},{"charts",QVariantList{chart}}}},&error));
+            QVERIFY(!error.isEmpty());
+        }
+    }
     void fillsAreCompatibleWithTheirQuantityAndPalette()
     {
         for (const auto &entry : chartSeriesCatalog()) {

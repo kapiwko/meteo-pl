@@ -45,6 +45,11 @@ std::optional<QVariantList> ProfileFileCodec::decode(const QByteArray &bytes, QS
         for (qsizetype i = 0; valid && i < source.size(); ++i) {
             const QJsonValue series = source.at(i).toObject().value("series");
             valid = series.isArray() && charts[i].toMap()["series"].toList().size() == series.toArray().size();
+            for (const auto &entry : series.toArray()) {
+                const auto style=entry.toObject(); const auto lower=style["lowerKey"].toString();
+                if (!lower.isEmpty() && !isRangePartner(style["key"].toString(),lower))
+                    return fail(Meteo::i18n("The lower series must match the range's weather quantity and unit. No profiles were imported."));
+            }
         }
         if (!valid)
             return fail(Meteo::i18n("Invalid profile definition or unknown series. No profiles were imported."));

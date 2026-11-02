@@ -2821,3 +2821,6 @@ msgstr "Granice prawej osi są podawane w jednostkach danych wykresu i nadają j
 
 msgid "This profile no longer exists."
 msgstr "Ten profil już nie istnieje."
+
+msgid "The lower series must match the range's weather quantity and unit. No profiles were imported."
+msgstr "Dolna seria musi opisywać tę samą wielkość pogodową i mieć tę samą jednostkę. Nie zaimportowano żadnych profili."

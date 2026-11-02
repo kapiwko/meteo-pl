@@ -5,6 +5,7 @@
 QVariantList chartSeriesCatalog();
 QStringList seriesRenderers(const QString &key);
 QStringList seriesFills(const QString &key);
+bool isRangePartner(const QString &upperKey,const QString &lowerKey);
 QVariantMap defaultSeriesStyle(const QString &key);
 QVariantMap normalizeSeriesStyle(const QVariantMap &value);
 QVariantList defaultChartCatalog();

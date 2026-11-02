@@ -54,13 +54,21 @@ QStringList seriesFills(const QString &key)
     return result;
 }
 
+bool isRangePartner(const QString &upperKey,const QString &lowerKey)
+{
+    const auto upper=defaultSeriesStyle(upperKey),lower=defaultSeriesStyle(lowerKey);
+    // The catalog defines the quantity and lower/upper roles of each range.
+    return !lowerKey.isEmpty() && !lower.isEmpty() && upper.value("lowerKey")==lowerKey
+        && upper.value("unit")==lower.value("unit") && seriesScale(upperKey)==seriesScale(lowerKey);
+}
+
 QVariantMap normalizeSeriesStyle(const QVariantMap &value)
 {
     auto result = defaultSeriesStyle(value["key"].toString());
     if (result.isEmpty()) return {};
     const auto renderers = seriesRenderers(value.value("key").toString());
     if (value.contains("label")) result["label"] = value["label"].toString().trimmed().left(80);
-    if (value.contains("lowerKey") && (value["lowerKey"].toString().isEmpty() || !defaultSeriesStyle(value["lowerKey"].toString()).isEmpty()))
+    if (value.contains("lowerKey") && (value["lowerKey"].toString().isEmpty() || isRangePartner(value["key"].toString(),value["lowerKey"].toString())))
         result["lowerKey"] = value["lowerKey"];
     if (value.contains("enabled")) result["enabled"] = value["enabled"].toBool();
     if (value.contains("precipitationColors")) result["precipitationColors"] = value["precipitationColors"].toBool();
