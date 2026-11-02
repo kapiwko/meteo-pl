@@ -4,6 +4,7 @@
 #include <QAbstractItemModelTester>
 #include <QInputMethodEvent>
 #include "ChartConfiguration.hpp"
+#include "ChartDataBuilder.hpp"
 #include "ChartExporter.hpp"
 #include "ProfileFileCodec.hpp"
 #include "ReadingsExporter.hpp"
@@ -74,6 +75,52 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void preparedAxisLabelsUseTheSameRangeAsTheirProjection_data()
+    {
+        QTest::addColumn<QString>("key"); QTest::addColumn<QString>("unit");
+        QTest::addColumn<bool>("manual"); QTest::addColumn<bool>("independent");
+        for (const auto &key : {"airtmp_point","slpres_point","wind10_sd_true_prev_point"})
+            for (const auto &unit : {"m/s","km/h","kt"}) for (bool manual : {false,true})
+                QTest::newRow(qPrintable(QString(key)+unit+(manual?"-manual":"-linked")))
+                    << QString(key) << QString(unit) << manual << false;
+        QTest::newRow("independent-humidity") << QString("airtmp_point") << QString("m/s") << true << true;
+    }
+    void preparedAxisLabelsUseTheSameRangeAsTheirProjection()
+    {
+        QFETCH(QString,key); QFETCH(QString,unit); QFETCH(bool,manual); QFETCH(bool,independent);
+        auto style=defaultSeriesStyle(key); style["axis"]="left";
+        const QVariantList points{QVariantMap{{"time",1800000000LL},{"value",5}},QVariantMap{{"time",1800003600LL},{"value",8}}};
+        QVariantList styles{style}; QVariantMap series{{key,points}};
+        if (independent) { auto right=defaultSeriesStyle("realhum_aver"); right["axis"]="right"; styles.append(right); series["realhum_aver"]=points; }
+        QVariantMap configuration{{"key","chart:axes"},{"enabled",true},{"series",styles},
+            {"leftScale",seriesScale(key)},{"rightScale",independent?"humidity":"linked"},{"leftMin",0},{"leftMax",10}};
+        if (manual) { configuration["rightMin"]=20; configuration["rightMax"]=30; }
+        const auto prepared=buildConfiguredCharts({configuration},series,unit).first().toMap();
+        QCOMPARE(prepared["rightAxis"].toMap()["linked"].toBool(),!manual && !independent);
+        WeatherModel weather; weather.setAutoRefresh(false); weather.setWindUnit(unit);
+        QQmlEngine engine; QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop","Meteogram");
+        QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather",QVariant::fromValue(&weather)},
+            {"title","Axes"},{"groupKey","test"},{"fields",prepared["fields"]},{"chartConfiguration",prepared},
+            {"startTime",1800000000LL},{"endTime",1800003600LL},{"legendOverride",0},{"width",640}}));
+        QVERIFY2(chart,qPrintable(component.errorString()));
+        QQmlExpression expression(qmlContext(chart.data()),chart.data(),QStringLiteral(R"JS(
+            (function() {
+                const root=renderDescription(),labels=[],ctx={};
+                for (const name of ["reset","save","restore","rect","clip","setLineDash","beginPath","moveTo","lineTo","closePath","stroke","strokeRect","fill","fillRect","arc","translate","rotate"]) ctx[name]=function(){};
+                ctx.fillText=function(text,x,y) { if(x===plot.width-root.rightMargin+6 && text!==root.axisUnit(true)) labels.push({text:text,y:y}); };
+                Style.paintChart(root,plot,ctx,false);
+                return {labels:labels,top:root.topMargin,bottom:plot.height-root.bottomMargin};
+            })()
+        )JS"));
+        const auto value=expression.evaluate(); QVERIFY2(!expression.hasError(),qPrintable(expression.error().toString()));
+        const auto result=value.value<QJSValue>().toVariant().toMap();
+        const auto labels=result["labels"].toList();
+        QCOMPARE(labels.size(),prepared["rightAxis"].toMap()["ticks"].toList().size());
+        for (const auto &entry : labels) {
+            const auto y=entry.toMap()["y"].toDouble();
+            QVERIFY2(y>=result["top"].toDouble()-0.01 && y<=result["bottom"].toDouble()+0.01,qPrintable(QString::number(y)));
+        }
+    }
     void chartAxesStayFixedWhilePanning_data()
     {
         QTest::addColumn<QString>("leftScale");

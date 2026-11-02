@@ -61,4 +61,5 @@ ColumnLayout {
     }
     Kirigami.InlineMessage { Layout.fillWidth: true; visible: text.length > 0; text: root.validationError || root.saveError; type: Kirigami.MessageType.Warning }
     SettingsHint { Layout.fillWidth: true; text: I18n.i18n("Empty limits use automatic scaling. Use a dot or comma for decimals."); wrapMode: Text.WordWrap }
+    SettingsHint { Layout.fillWidth: true; text: I18n.i18n("Right-axis limits use the chart's data units and give it a separate range."); wrapMode: Text.WordWrap }
 }

@@ -29,8 +29,8 @@ ColumnLayout {
     property ChartSaveDialog saveDialog: null
     readonly property var legendFields: description.legend
     readonly property bool legendVisible: legendOverride < 0 ? UserPreferences.showLegend : Boolean(legendOverride)
-    readonly property string scaleKind: chartConfiguration.leftScale || (groupKey === "ground" ? "temperature" : groupKey)
-    readonly property string rightScale: chartConfiguration.rightScale || (scaleKind === "clouds" ? "fraction" : scaleKind === "cloudHeights" ? "visibility" : scaleKind === "precipitation" ? "humidity" : "linked")
+    readonly property string scaleKind: description.leftAxis.kind
+    readonly property string rightScale: description.rightAxis.kind
     property real startTime: weather.firstTimestamp
     property real endTime: weather.lastTimestamp
     property real selectedTime: 0
@@ -135,7 +135,7 @@ ColumnLayout {
     }
     function px(time) { return leftMargin + (time - startTime) / Math.max(1, endTime - startTime) * (plot.width - leftMargin - rightMargin); }
     function py(value, right) {
-        const axis = description[right && rightScale !== "linked" ? "rightAxis" : "leftAxis"];
+        const axis = description[right ? "rightAxis" : "leftAxis"];
         const levels = axis.levels;
         if (levels.length) {
             let index = 0;

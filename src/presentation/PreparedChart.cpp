@@ -19,6 +19,7 @@ struct PreparedAxis {
     QString kind,unit;
     QVector<double> levels;
     double labelFactor=1;
+    bool linked=false;
     QVariantMap variant() const {
         QVariantList ticks,labels,transform;
         for (double value : levels) transform.append(value);
@@ -33,7 +34,7 @@ struct PreparedAxis {
             labels.append(text);
         }
         return {{"range",ChartMath::toVariant(range)},{"kind",kind},{"unit",unit},{"levels",transform},
-                {"ticks",ticks},{"labels",labels},{"labelFactor",labelFactor}};
+                {"ticks",ticks},{"labels",labels},{"labelFactor",labelFactor},{"linked",linked}};
     }
 };
 ChartMath::AxisSpec configured(ChartMath::AxisSpec axis,const QVariantMap &configuration,const QString &prefix)
@@ -89,6 +90,9 @@ QVariantMap describeChart(const QVariantList &input,const QVariantMap &configura
     auto left=axisFor(fields,configuration,false,scale,windScale),right=axisFor(fields,configuration,true,rightScale,windScale);
     if (rightScale=="linked") {
         right=left; right.range=configured(left.range,configuration,"right");
+        // Manual limits detach the range while preserving alternate-unit labels.
+        // Every consumer uses this axis's range, ticks and unit conversion.
+        right.linked=!number(configuration.value("rightMin")) && !number(configuration.value("rightMax"));
         if (scale=="pressure") { right.labelFactor=0.75; right.unit="mm Hg"; }
         else if (scale=="wind") { right.labelFactor=windUnit=="m/s"?3.6:windUnit=="km/h"?1/3.6:1/1.943844492; right.unit=windUnit=="m/s"?"km/h":"m/s"; }
     }

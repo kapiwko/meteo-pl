@@ -1,5 +1,11 @@
 # Chart profiles
 
+The secondary axis normally shares the primary axis's range and may show
+alternate units, such as mm Hg beside hPa. Setting a right-axis limit gives the
+secondary axis its own range. Limits use the chart's data units; alternate-unit
+labels are converted afterwards. Tick positions and series coordinates always
+use the range of their assigned axis.
+
 Factory profiles live in [`resources/profiles`](../resources/profiles).
 `index.json` defines their order. Each profile uses the same
 `pl.meteo.chart-profiles` version 1 format as import and export.
