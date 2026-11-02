@@ -13,10 +13,13 @@ Its positive `revision` is the factory content version; increment it whenever
 the bundled profile's charts or appearance change. The document's `version`
 describes the file format separately.
 
-The bundled choices are **Classic ICM**, with the complete seven-chart view,
-and **Quick forecast**, with three shorter charts for temperature and feels
-like, precipitation amount and chance, and wind with gusts and direction.
-Both use the same forecast data. Other combinations can be created with
+The bundled choices are **Classic ICM**, **Quick forecast** (the Basic profile)
+and **ICM — new colors**. Both ICM variants contain the complete seven-chart
+forecast. The new variant uses refreshed light and dark colors for air,
+feels-like and ground temperatures and cloud tops. Quick forecast keeps three
+shorter charts for temperature, precipitation and wind. Colors are stored
+directly in each JSON definition; editing one profile leaves the others unchanged.
+Other combinations can be created with
 **Duplicate profile** and **Add chart**. The former All charts, Aviation and
 Outdoors presets have been retired because they duplicated the classic view.
 Edited snapshots of retired presets stay available as user profiles, including

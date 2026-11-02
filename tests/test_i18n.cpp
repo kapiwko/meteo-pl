@@ -58,6 +58,7 @@ private slots:
         const auto profiles = builtinChartProfiles();
         QCOMPARE(profiles.first().toMap()["name"].toString(), polish ? QStringLiteral("Klasyczny ICM") : QStringLiteral("Classic ICM"));
         QCOMPARE(profiles[1].toMap()["name"].toString(), polish ? QStringLiteral("Skrót prognozy") : QStringLiteral("Quick forecast"));
+        QCOMPARE(profiles[2].toMap()["name"].toString(), polish ? QStringLiteral("ICM — nowe kolory") : QStringLiteral("ICM — new colors"));
     }
     void translatesEachQmlEngine()
     {

@@ -79,7 +79,7 @@ private slots:
     void bundledPresetsUseTheImportFormatWithoutDisabledTemplates()
     {
         const auto presets = builtinChartProfiles();
-        QCOMPARE(presets.size(), 2);
+        QCOMPARE(presets.size(), 3);
         QSet<QString> ids;
         for (const auto &value : presets) {
             const auto preset = value.toMap();
@@ -115,12 +115,26 @@ private slots:
                 }
             }
         }
-        const auto quick = defaultChartLayout("basic");
-        QCOMPARE(quick.size(), 3);
-        QStringList quickKeys;
-        for (const auto &chart : quick) quickKeys.append(chart.toMap()["key"].toString());
-        QCOMPARE(quickKeys, (QStringList{"temperature", "precipitation", "wind"}));
-        QVERIFY(quick.first().toMap()["series"].toList().size() < defaultChartLayout("classic").first().toMap()["series"].toList().size());
+        const auto classic=defaultChartLayout("classic"),modern=defaultChartLayout("modern");
+        const auto basic=defaultChartLayout("basic");
+        QStringList basicCharts;
+        for (const auto &chart : basic) basicCharts.append(chart.toMap()["key"].toString());
+        QCOMPARE(basicCharts,QStringList({"temperature","precipitation","wind"}));
+        QCOMPARE(classic.size(),7); QCOMPARE(modern.size(),classic.size());
+        QCOMPARE(classic.first().toMap()["series"].toList().first().toMap()["color"].toString(),"#f44336");
+        QCOMPARE(modern.first().toMap()["series"].toList().first().toMap()["color"].toString(),"#ff1a1a");
+        auto structure=modern;
+        for (int i=0;i<structure.size();++i) {
+            auto chart=structure[i].toMap(); auto series=chart["series"].toList();
+            const auto original=classic[i].toMap()["series"].toList(); QCOMPARE(series.size(),original.size());
+            for (int j=0;j<series.size();++j) {
+                auto style=series[j].toMap();
+                style["color"]=original[j].toMap()["color"]; style["darkColor"]=original[j].toMap()["darkColor"];
+                series[j]=style;
+            }
+            chart["series"]=series; structure[i]=chart;
+        }
+        QCOMPARE(structure,classic); // Both presets offer the same full forecast, with different colors.
     }
     void templatesOutsideTheClassicPresetRemainImportable()
     {

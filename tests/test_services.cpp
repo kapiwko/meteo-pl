@@ -820,6 +820,28 @@ private slots:
         preferences.setProfile(copy);
         QCOMPARE(preferences.chartLayout().last().toMap()["height"].toInt(), 210);
     }
+    void newColorPresetPreservesExistingProfilesAndSelection()
+    {
+        const auto current = builtinChartProfiles();
+        auto previous = current;
+        previous.removeLast(); // The new color preset did not exist in the previous release.
+        UserPreferences old(nullptr, previous);
+        old.setProfile("basic");
+        old.setSeriesStyle("temperature", "airtmp_point", {{"color", "#123456"}});
+        const auto editedBasic = old.chartLayout();
+        const auto classic = old.chartLayoutForProfile("classic");
+
+        UserPreferences upgraded(nullptr, current);
+        QCOMPARE(upgraded.profiles().size(), 3);
+        QCOMPARE(upgraded.profile(), "basic");
+        QCOMPARE(upgraded.chartLayout(), editedBasic);
+        QCOMPARE(upgraded.chartLayoutForProfile("classic"), classic);
+        QCOMPARE(upgraded.chartLayoutForProfile("modern"), defaultChartLayout("modern"));
+        upgraded.setProfile("modern");
+        upgraded.setSeriesStyle("temperature", "airtmp_point", {{"color", "#abcdef"}});
+        QCOMPARE(upgraded.chartLayoutForProfile("basic"), editedBasic);
+        QCOMPARE(upgraded.chartLayoutForProfile("classic"), classic);
+    }
     void retiredPresetsKeepEditedSnapshotsAsUserProfiles()
     {
         const auto current = builtinChartProfiles();

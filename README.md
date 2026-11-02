@@ -33,6 +33,7 @@ wind speed, gusts and direction in one view.*
   enter coordinates or use the system location service.
 - Custom chart profiles with mixed series, axis ranges, colors, drawing styles,
   chart order and individual heights. Import and export profiles as JSON.
+  Choose Classic ICM, the complete ICM profile with refreshed colors or Quick forecast.
   Built-in profiles are complete [JSON configurations](docs/chart-profiles.md),
   validated with JSON Schema. Edit, delete or restore them from Settings.
 - PNG export of selected charts as one image, plus PNG and CSV export of readings.

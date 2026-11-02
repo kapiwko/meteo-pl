@@ -144,6 +144,8 @@ void RendererTest::initTestCase()
         for (const auto &group:forecastCharts()) m_groups.append(group.key);
         m_groups.append("chart:precipitation-area");
         m_groups.append("chart:minimum-dashes");
+        m_groups.append("modern:temperature");
+        m_groups.append("modern:cloudHeights");
     }
 void RendererTest::cleanupTestCase()
     {
@@ -165,6 +167,10 @@ void RendererTest::appearanceMatches()
         QVERIFY(weather.hasData());
         QVariantMap definition;
         for (const auto &value:weather.chartGroups()) if (value.toMap()["key"]==group) definition=value.toMap();
+        if (group.startsWith("modern:")) {
+            for (const auto &value : weather.configuredCharts(defaultChartLayout("modern")))
+                if (value.toMap()["key"]==group.mid(7)) { definition=value.toMap(); definition["key"]=group; break; }
+        }
         if (group == "chart:precipitation-area") {
             auto mean = defaultSeriesStyle("pcpttl_aver"), maximum = defaultSeriesStyle("pcpttl_max");
             mean["render"] = "area"; maximum["render"] = "area"; maximum["axis"] = "right";
