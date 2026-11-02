@@ -42,8 +42,10 @@ Dialog {
     function chooseColor(option) { colorDialog.option = option; colorDialog.selectedColor = seriesStyle[option]; colorDialog.open(); }
     ColorDialog {
         id: colorDialog
+        objectName: "seriesColorDialog"
         property string option: "color"
         title: I18n.i18n("Series color")
+        options: ColorDialog.ShowAlphaChannel
         onAccepted: { const options = {}; options[option] = selectedColor.toString(); root.change(options); }
     }
     contentItem: ScrollView {
@@ -119,9 +121,16 @@ Dialog {
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
                         text: root.seriesStyle[colorRow.modelData.key]
-                        maximumLength: 7
-                        validator: RegularExpressionValidator { regularExpression: /^#[0-9a-fA-F]{6}$/ }
-                        onEditingFinished: if (acceptableInput) { const patch = {}; patch[colorRow.modelData.key] = text; root.change(patch); }
+                        maximumLength: 9
+                        validator: RegularExpressionValidator { regularExpression: /^#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/ }
+                        property bool edited: false
+                        onTextEdited: edited = true
+                        onEditingFinished: {
+                            if (!edited || !acceptableInput) return;
+                            edited = false;
+                            if (text.toLowerCase() === String(root.seriesStyle[colorRow.modelData.key]).toLowerCase()) return;
+                            const patch = {}; patch[colorRow.modelData.key] = text; root.change(patch);
+                        }
                         Accessible.name: colorRow.modelData.label
                     }
                 }

@@ -5,6 +5,7 @@
 #include <QInputMethodEvent>
 #include "ChartConfiguration.hpp"
 #include "ChartExporter.hpp"
+#include "ProfileFileCodec.hpp"
 #include "ReadingsExporter.hpp"
 #include "GpuPlot.hpp"
 #include "UserPreferences.hpp"
@@ -2616,6 +2617,70 @@ private slots:
             QTRY_VERIFY(qAbs(chart->height() - closedHeight) < 2);
             QTRY_VERIFY(qAbs(item->implicitHeight() - closedTotal) < 2);
         }
+    }
+    void seriesAppearancePreservesArgbWithoutEditing_data()
+    {
+        QTest::addColumn<QString>("color");
+        for (const auto &color : {"#00112233","#80112233","#ff112233","#112233"})
+            QTest::newRow(color) << QString(color);
+    }
+    void seriesAppearancePreservesArgbWithoutEditing()
+    {
+        QFETCH(QString,color);
+        QTemporaryDir files; QVERIFY(files.isValid());
+        auto style=defaultSeriesStyle("airtmp_point");
+        style["color"]=color; style["darkColor"]="#80665544"; style["opacity"]=0.4;
+        auto chart=defaultChartCatalog().first().toMap(); chart["series"]=QVariantList{style};
+        const auto file=QUrl::fromLocalFile(files.filePath("profiles.json"));
+        QVERIFY(ProfileFileCodec::write(file,{QVariantMap{{"name","ARGB"},{"charts",QVariantList{chart}}}}));
+        QQmlEngine engine;
+        auto *preferences=engine.singletonInstance<UserPreferences *>("pl.meteo.desktop","UserPreferences");
+        QVERIFY(preferences->importProfiles(file)["ok"].toBool());
+        const auto before=preferences->chartLayout();
+        QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop","DisplaySettings");
+        QScopedPointer<QObject> object(component.create()); QVERIFY2(object,qPrintable(component.errorString()));
+        auto *item=qobject_cast<QQuickItem *>(object.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(720,900);
+        item->setParentItem(window.contentItem()); item->setWidth(680); window.show();
+        object->setProperty("expandedChart","temperature");
+        object->setProperty("expandedSeries","temperature/airtmp_point");
+        QObject *appearance=nullptr;
+        QTRY_VERIFY(appearance=object->findChild<QObject *>("seriesAppearanceDialog"));
+        QTRY_VERIFY(appearance->property("opened").toBool());
+        const auto find=[&](const QString &name) {
+            const auto walk=[&](auto &&self,QQuickItem *parent) -> QQuickItem * {
+                if (parent->objectName()==name) return parent;
+                for (auto *child : parent->childItems()) if (auto *found=self(self,child)) return found;
+                return nullptr;
+            };
+            return walk(walk,window.contentItem());
+        };
+        for (const auto &key : {"color","darkColor"}) {
+            const auto name=QStringLiteral("seriesColor-temperature-airtmp_point-")+key;
+            auto *field=find(name); QVERIFY(field);
+            field->forceActiveFocus(); QTRY_VERIFY(field->hasActiveFocus());
+            item->forceActiveFocus(); QTRY_VERIFY(!field->hasActiveFocus());
+            QCOMPARE(preferences->chartLayout(),before);
+            QCOMPARE(field->property("text").toString(),before.first().toMap()["series"].toList().first().toMap()[key].toString());
+        }
+        const auto exported=QUrl::fromLocalFile(files.filePath("exported.json"));
+        QVERIFY(preferences->exportProfiles(exported)["ok"].toBool());
+        const auto decoded=ProfileFileCodec::read(exported); QVERIFY(decoded);
+        QCOMPARE(decoded->first().toMap()["charts"],QVariant(before));
+        auto *field=find("seriesColor-temperature-airtmp_point-color"); QVERIFY(field);
+        field->forceActiveFocus(); field->setProperty("text","#40abcdef");
+        QVERIFY(QMetaObject::invokeMethod(field,"textEdited"));
+        item->forceActiveFocus(); QTRY_VERIFY(!field->hasActiveFocus());
+        const auto changed=preferences->chartLayout().first().toMap()["series"].toList().first().toMap();
+        QCOMPARE(changed["color"].toString(),"#40abcdef"); QCOMPARE(changed["opacity"].toDouble(),0.4);
+        QVERIFY(QMetaObject::invokeMethod(appearance,"chooseColor",Q_ARG(QVariant,"darkColor")));
+        auto *picker=appearance->findChild<QObject *>("seriesColorDialog"); QVERIFY(picker);
+        QCOMPARE(picker->property("selectedColor").value<QColor>(),QColor("#80665544"));
+        picker->setProperty("selectedColor",QColor("#20123456"));
+        QVERIFY(QMetaObject::invokeMethod(picker,"accepted"));
+        QVERIFY(QMetaObject::invokeMethod(picker,"close"));
+        QCOMPARE(preferences->chartLayout().first().toMap()["series"].toList().first().toMap()["darkColor"].toString(),"#20123456");
+        QVERIFY(QMetaObject::invokeMethod(appearance,"close"));
     }
     void seriesAppearanceStaysOpenWhenItsProfileChanges()
     {
