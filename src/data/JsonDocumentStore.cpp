@@ -26,14 +26,17 @@ QString JsonDocumentStore::path(const QUrl &url) const
     return QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)+"/meteo-pl/"+m_category+'/'
         +QString::fromLatin1(QCryptographicHash::hash(url.toEncoded(),QCryptographicHash::Sha256).toHex())+".json";
 }
-std::optional<CachedDocument> JsonDocumentStore::read(const QUrl &url,int lifetime) const
+std::optional<CachedDocument> JsonDocumentStore::readAny(const QUrl &url) const { return read(url,std::nullopt); }
+std::optional<CachedDocument> JsonDocumentStore::readFresh(const QUrl &url,int maximumAgeSeconds) const
+{ return maximumAgeSeconds>0 ? read(url,maximumAgeSeconds) : std::nullopt; }
+std::optional<CachedDocument> JsonDocumentStore::read(const QUrl &url,std::optional<int> maximumAgeSeconds) const
 {
     const auto document=readJsonFile(path(url)); if (!document || !document->isObject()) return {};
     const auto entry=document->object(); const auto now=QDateTime::currentDateTimeUtc();
     const auto saved=QDateTime::fromString(entry["savedAt"].toString(),Qt::ISODate);
     const auto expires=QDateTime::fromString(entry["expiresAt"].toString(),Qt::ISODate);
     if (entry["url"].toString()!=url.toString(QUrl::FullyEncoded) || !saved.isValid() || saved>now) return {};
-    if (lifetime>0 && (saved.secsTo(now)>=lifetime || (expires.isValid() && expires<=now))) return {};
+    if (maximumAgeSeconds && (saved.secsTo(now)>=*maximumAgeSeconds || (expires.isValid() && expires<=now))) return {};
     const auto value=entry["document"];
     if (!value.isObject() && !value.isArray()) return {};
     touchCacheEntry(path(url));

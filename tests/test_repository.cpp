@@ -1,5 +1,6 @@
 #include "ClientFixture.hpp"
 #include "data/ForecastRepository.hpp"
+#include "data/JsonDocumentStore.hpp"
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
@@ -9,6 +10,18 @@ class RepositoryTest : public QObject
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void documentReadsChooseOfflineOrFreshDataExplicitly()
+    {
+        Meteo::JsonDocumentStore store("read-modes",Meteo::metadataCacheBudget);
+        const QUrl url("https://example.test/offline");
+        const QJsonDocument document(QJsonObject{{"value",1}});
+        QVERIFY(store.write(url,document,QDateTime::currentDateTimeUtc().addSecs(-1)));
+        QVERIFY(store.readAny(url)); QVERIFY(!store.readFresh(url,60));
+        QVERIFY(store.write(url,document,QDateTime::currentDateTimeUtc().addSecs(60)));
+        QVERIFY(store.readAny(url)); QVERIFY(store.readFresh(url,60));
+        QVERIFY(!store.readFresh(url,0)); QVERIFY(!store.readFresh(url,-1));
+        store.invalidate(url); QVERIFY(!store.readAny(url));
+    }
     void initTestCase()
     {
         QVERIFY(m_cache.isValid());

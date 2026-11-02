@@ -15,7 +15,7 @@ void JsonRequest::get(const QUrl &url,int lifetime,bool force,Validator validato
 {
     cancel(); m_statusCode=0; m_url=url;
     if (lifetime>0 && !force) {
-        const auto cached=m_store.read(url,lifetime);
+        const auto cached=m_store.readFresh(url,lifetime);
         if (cached && (!validator || validator(cached->document))) {
             const auto generation=m_generation; const auto document=cached->document;
             QTimer::singleShot(0,this,[this,generation,document] { if (generation==m_generation) { m_statusCode=200; emit received(document); } });

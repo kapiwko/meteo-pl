@@ -22,7 +22,7 @@ void EditorialRepository::load(bool commentary,const QString &date,int page,bool
     cancel(); m_commentary=commentary; m_hadCache=false;
     const auto path=commentary?QStringLiteral("synoptic-comment/")+(date.isEmpty()?QString():date+'/')+"pl":QStringLiteral("articles/pl?page=%1").arg(page);
     m_url=m_endpoint.resolved(QUrl("/api/v1/"+path));
-    if (const auto cached=m_store.read(m_url)) {
+    if (const auto cached=m_store.readAny(m_url)) {
         auto snapshot=decode(cached->document);
         if (snapshot) {
             m_hadCache=true;
