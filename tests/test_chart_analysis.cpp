@@ -10,7 +10,7 @@
 #include <limits>
 
 namespace {
-QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
+QJSValue recordChart(QJSEngine &engine, const QVariantList &fields, bool exportMode=false)
 {
     QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");
     if (!source.open(QIODevice::ReadOnly)) return engine.newErrorObject(QJSValue::GenericError, source.errorString());
@@ -27,21 +27,23 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
     }
     engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartFields(styled)));
     engine.globalObject().setProperty("appearanceUnderTest", engine.toScriptValue(defaultChartAppearance()["light"]));
+    engine.globalObject().setProperty("exportUnderTest",exportMode);
     return engine.evaluate(QStringLiteral(R"JS(
         (function() {
-            const rectangles=[], polygons=[], circles=[], lines=[], ctx={}; let path=[];
+            const rectangles=[], polygons=[], circles=[], lines=[], strokes=[], ctx={}; let path=[],operations=[];
             for (const name of ["reset","save","restore","rect","clip","setLineDash","stroke","fillText","translate","rotate"])
                 ctx[name]=function(){};
-            ctx.beginPath=function(){path=[];};
-            ctx.moveTo=ctx.lineTo=function(x,y){path.push([x,y]);};
+            ctx.beginPath=function(){path=[];operations=[];};
+            ctx.moveTo=function(x,y){path.push([x,y]);operations.push("M");};
+            ctx.lineTo=function(x,y){path.push([x,y]);operations.push("L");};
             ctx.closePath=function(){path.closed=true;};
-            ctx.stroke=function(){if(this.strokeStyle==="#123456" && path.length) lines.push(path.slice());};
+            ctx.stroke=function(){if(this.strokeStyle==="#123456" && path.length) {lines.push(path.slice());strokes.push(operations.slice());}};
             ctx.fill=function(){if(path.closed && this.fillStyle==="#123456") polygons.push(path.slice());};
             ctx.fillRect=function(x,y,w,h){if(this.fillStyle==="#123456") rectangles.push({x:x,y:y,width:w,height:h});};
             ctx.arc=function(x,y,r){circles.push({x:x,y:y,radius:r});};
             const root={
                 leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
-                windScale:1,darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,
+                windScale:1,darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,exportMode:exportUnderTest,
                 plotStyle:function(name){return appearanceUnderTest[name];},
                 categoryColor:function(field,name){return namedColor(field,name,false);},
                 startTime:1800000000,endTime:1800021600,weather:{firstTimestamp:1800000000},nights:[],
@@ -54,7 +56,7 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
                 pointAt:function(points,time){return points.find(point=>point.time===time);}
             };
             paintChart(root,{width:600,height:120},ctx,false);
-            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines,root:root,context:ctx};
+            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines,strokes:strokes,root:root,context:ctx};
         })()
     )JS"));
 }
@@ -63,6 +65,31 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields)
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void angularAreasAndOutlinesShareTheirConnections_data()
+    {
+        QTest::addColumn<QVariantList>("values"); QTest::addColumn<int>("connections");
+        QTest::addColumn<bool>("right"); QTest::addColumn<bool>("exportMode");
+        const QList<QPair<QVariantList,int>> cases{{{359,1},0},{{1,359},0},{{40,50},1},
+            {{40,QVariant(),50},0},{{359,1,40,50,QVariant(),80,90,359,1},3}};
+        for (int i=0;i<cases.size();++i) for (bool right : {false,true}) for (bool exporting : {false,true})
+            QTest::newRow(qPrintable(QString::number(i)+(right?"-right":"-left")+(exporting?"-export":"-screen")))
+                << cases[i].first << cases[i].second << right << exporting;
+    }
+    void angularAreasAndOutlinesShareTheirConnections()
+    {
+        QFETCH(QVariantList,values); QFETCH(int,connections); QFETCH(bool,right); QFETCH(bool,exportMode);
+        QVariantList points;
+        for (int i=0;i<values.size();++i) points.append(QVariantMap{{"time",1800000000LL+i*3600},{"value",values[i]}});
+        const QVariantMap field{{"key","wind10_dr_deg_true_prev_point"},{"kind","area"},{"render","area"},
+            {"axis",right?"right":"left"},{"points",points}};
+        QJSEngine engine; const auto drawing=recordChart(engine,{field},exportMode);
+        QVERIFY2(!drawing.isError(),qPrintable(drawing.toString()));
+        QCOMPARE(drawing.property("polygons").property("length").toInt(),connections);
+        const auto strokes=drawing.property("strokes"); QCOMPARE(strokes.property("length").toInt(),1);
+        const auto operations=strokes.property(0); int lines=0;
+        for (int i=0;i<operations.property("length").toInt();++i) lines+=operations.property(i).toString()=="L";
+        QCOMPARE(lines,connections);
+    }
     void numericWindDirectionsHaveAnAngularAxisIndependentOfSpeedUnits()
     {
         const QVariantList points{QVariantMap{{"time",1800000000LL},{"value",90}},QVariantMap{{"time",1800003600LL},{"value",270}}};

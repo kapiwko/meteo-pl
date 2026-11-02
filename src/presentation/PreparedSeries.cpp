@@ -94,8 +94,16 @@ QVariantList prepareChartFields(const QVariantList &fields)
         const auto timing=capabilities.timing;
         field["renderTimePlacement"] = center && timing!=Meteo::QuantityTiming::Instant ? "center" : "source";
         QVariantList points;
+        bool connected=false;
+        double previousValue=0;
         for (const auto &value : field.value("points").toList()) {
             auto point=value.toMap();
+            const bool valid=number(point.value("value"));
+            const double current=point.value("value").toDouble();
+            point["connectPrevious"]=valid && connected
+                && !(capabilities.scale=="direction" && std::abs(current-previousValue)>180);
+            connected=valid;
+            previousValue=current;
             const auto time=point.value("sourceTimestamp",point.value("time")).toDouble();
             const auto interval=point.value("interval").toDouble();
             const bool instant=timing==Meteo::QuantityTiming::Instant;

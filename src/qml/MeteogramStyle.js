@@ -82,7 +82,7 @@ function drawArea(root, ctx, field, bottom) {
     ctx.globalAlpha = field.opacity === undefined ? 1 : field.opacity;
     for (let i = 1; i < field.points.length; ++i) {
         const a = field.points[i-1], b = field.points[i];
-        if (!root.valid(a.value) || !root.valid(b.value)) continue;
+        if (!b.connectPrevious) continue;
         const right = root.isRightField(field);
         ctx.fillStyle = field.fill === "pressure" ? pressureColor(b.value, root.darkPalette, field)
             : field.fill === "wind" ? windColor((a.value + b.value) / 2 / root.windScale, root.darkPalette, field) : root.seriesColor(field);
@@ -171,9 +171,9 @@ function paintChart(root, plot, ctx, withCursor) {
             continue;
         }
         if (field.kind === "area" || field.key === "slpres_point" && field.render === undefined || field.key === "wind10_sd_true_prev_point" && field.render === undefined) drawArea(root, ctx, field, bottom);
-        ctx.beginPath(); let started = false, previousValue = null;
+        ctx.beginPath();
         for (const point of field.points) {
-            if (!root.valid(point.value)) { started = false; continue; }
+            if (!root.valid(point.value)) continue;
             const interval = intervalBounds(point);
             const barWidth = field.kind === "rightBars" ? 3 : Math.max(2, Math.abs(root.px(interval.to) - root.px(interval.from)) * (field.kind === "barsBack" ? 0.9 : 0.8));
             const isPrecipitationBar = field.key === "pcpttl_aver" || field.key === "pcpttl_max";
@@ -208,9 +208,7 @@ function paintChart(root, plot, ctx, withCursor) {
                     ctx.fillRect(from, Math.min(y, zero), to - from, Math.abs(zero - y));
                 }
             } else {
-                if (field.unit === "°" && previousValue !== null && Math.abs(point.value - previousValue) > 180) started = false;
-                if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
-                previousValue = point.value;
+                if (point.connectPrevious) ctx.lineTo(x, y); else ctx.moveTo(x, y);
             }
         }
         if (["points", "cloudPoint", "gusts", "bars", "barsBack", "stems", "rightBars"].indexOf(field.kind) < 0) ctx.stroke();
