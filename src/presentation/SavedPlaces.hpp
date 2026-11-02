@@ -1,7 +1,6 @@
 #pragma once
 #include <QVariantMap>
 #include <QVariantList>
-#include <functional>
 
 // Stable identity and collection rules without settings, files or GUI objects.
 class SavedPlaces {
@@ -21,7 +20,5 @@ public:
 private:
     QVariantList readPlaces(const QString &key) const { return key=="places/favorites"?m_places:m_recent; }
     void writePlaces(const QString &key,const QVariantList &places) { (key=="places/favorites"?m_places:m_recent)=places; }
-    bool change(const std::function<void()> &operation) { operation(); return true; }
     QVariantList m_places,m_recent;
-    QString m_error;
 };
