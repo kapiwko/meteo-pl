@@ -20,6 +20,28 @@
 class PreferencesTest : public QObject {
     Q_OBJECT
 private slots:
+    void emptyLegacyLayoutPersistsAndCanBeUndone()
+    {
+        QTemporaryDir config; QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,config.path());
+        auto chart=defaultChartCatalog().first().toMap();
+        const QVariantList original{chart};
+        QSettings settings(QSettings::IniFormat,QSettings::UserScope,"meteo-pl","desktop");
+        settings.setValue("display/layoutVersion",3);
+        settings.setValue("display/profile","custom");
+        settings.setValue("display/customLayout",QJsonDocument::fromVariant(original).toJson());
+        settings.sync();
+        UserPreferences preferences;
+        const auto before=preferences.chartLayout(); QCOMPARE(before.size(),1);
+        const auto result=preferences.profileCommand({{"type","deleteChart"},{"chart",chart["key"]}},"custom");
+        QVERIFY(result["ok"].toBool());
+        QVERIFY(preferences.chartLayout().isEmpty());
+        { UserPreferences reopened; QCOMPARE(reopened.profile(),"custom"); QVERIFY(reopened.chartLayout().isEmpty()); }
+        QVERIFY(preferences.undoProfileCommand(result["undo"].toMap())["ok"].toBool());
+        QCOMPARE(preferences.chartLayout(),before);
+        preferences.deleteChart(chart["key"].toString(),"custom");
+        QSettings persisted(QSettings::IniFormat,QSettings::UserScope,"meteo-pl","desktop");
+        QCOMPARE(QJsonDocument::fromJson(persisted.value("display/customLayout").toByteArray()).toVariant().toList(),QVariantList{});
+    }
     void undoStartsUnderTheSameLockAsItsCommand()
     {
         QTemporaryDir config; QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,config.path());

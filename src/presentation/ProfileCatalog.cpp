@@ -112,9 +112,8 @@ QVariantList ProfileCatalog::chartLayoutForProfile(const QString &id) const
     const bool listed = std::any_of(available.cbegin(), available.cend(), [&](const QVariant &entry) { return entry.toMap()["id"] == id; });
     if (!listed && !available.isEmpty()) return chartLayoutForProfile(available.first().toMap()["id"].toString());
     if (id == "custom") {
-        const auto saved = m_store.value("customLayout").toList();
-        return saved.isEmpty() ? m_factoryProfiles.first().toMap()["charts"].toList()
-                               : normalizeChartLayout(saved);
+        if (m_store.contains("customLayout")) return normalizeChartLayout(m_store.value("customLayout").toList());
+        return m_factoryProfiles.first().toMap()["charts"].toList();
     }
     for (const auto &value : savedProfiles()) {
         const auto entry = value.toMap();
