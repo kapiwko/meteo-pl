@@ -110,6 +110,85 @@ class PresentationTest : public QObject {
     Q_OBJECT
     QTemporaryDir m_cache;
 private slots:
+    void linkedNonlinearAxesRespectManualLimits_data()
+    {
+        QTest::addColumn<QString>("scale");
+        QTest::addColumn<QString>("limits");
+        QTest::addColumn<QVariantList>("ticks");
+        for (const auto &scale : {QStringLiteral("cloudHeights"), QStringLiteral("visibility")}) {
+            const bool cloud = scale == "cloudHeights";
+            QTest::newRow(qPrintable(scale+"-inherited")) << scale << "inherited"
+                << (cloud ? QVariantList{0,0.5,2,7,15} : QVariantList{0,1,5,20,100});
+            QTest::newRow(qPrintable(scale+"-both")) << scale << "both" << QVariantList{20,25,30};
+            QTest::newRow(qPrintable(scale+"-minimum")) << scale << "minimum"
+                << (cloud ? QVariantList{5,10,15} : QVariantList{20,40,60,80,100});
+            QTest::newRow(qPrintable(scale+"-maximum")) << scale << "maximum" << QVariantList{0,10,20,30};
+        }
+    }
+    void linkedNonlinearAxesRespectManualLimits()
+    {
+        QFETCH(QString,scale); QFETCH(QString,limits); QFETCH(QVariantList,ticks);
+        QVariantMap configuration;
+        for (const auto &entry : defaultChartLayout("classic"))
+            if (entry.toMap()["key"] == "cloudHeights") configuration = entry.toMap();
+        QVERIFY(!configuration.isEmpty());
+        configuration["leftScale"] = scale; configuration["rightScale"] = "linked";
+        if (limits == "both" || limits == "minimum") configuration["rightMin"] = limits == "both" || scale == "visibility" ? 20 : 5;
+        if (limits == "both" || limits == "maximum") configuration["rightMax"] = 30;
+        QString error;
+        const auto bytes = ProfileFileCodec::encode({QVariantMap{{"name","Linked nonlinear axes"},{"charts",QVariantList{configuration}}}},&error);
+        QVERIFY2(bytes,qPrintable(error));
+        const auto imported = ProfileFileCodec::decode(*bytes,&error);
+        QVERIFY2(imported,qPrintable(error));
+        const QVariantList points{QVariantMap{{"time",1800000000LL},{"value",25}},QVariantMap{{"time",1800003600LL},{"value",30}}};
+        const auto charts = buildConfiguredCharts(imported->first().toMap()["charts"].toList(),
+            {{"cldbse01",points},{"visibl_min",points}},"m/s");
+        QCOMPARE(charts.size(),1);
+        const auto prepared = charts.first().toMap();
+        const auto right = prepared["rightAxis"].toMap(), left = prepared["leftAxis"].toMap();
+        QCOMPARE(right["ticks"].toList(),ticks);
+        QCOMPARE(right["range"].toMap()["low"].toDouble(),ticks.first().toDouble());
+        QCOMPARE(right["range"].toMap()["high"].toDouble(),ticks.last().toDouble());
+        QCOMPARE(right["linked"].toBool(),limits == "inherited");
+        QVERIFY(!left["levels"].toList().isEmpty());
+        if (limits == "inherited") QCOMPARE(right["levels"],left["levels"]);
+        else QVERIFY(right["levels"].toList().isEmpty());
+
+        WeatherModel weather; weather.setAutoRefresh(false);
+        QQmlEngine engine; QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop","Meteogram");
+        QScopedPointer<QObject> chart(component.createWithInitialProperties({{"weather",QVariant::fromValue(&weather)},
+            {"title","Linked nonlinear axes"},{"groupKey","test"},{"fields",prepared["fields"]},{"chartConfiguration",prepared},
+            {"startTime",1800000000LL},{"endTime",1800003600LL},{"legendOverride",0},{"width",640}}));
+        QVERIFY2(chart,qPrintable(component.errorString()));
+        QQmlExpression expression(qmlContext(chart.data()),chart.data(),QStringLiteral(R"JS(
+            (function() {
+                const axis=description.rightAxis, levels=axis.levels, range=axis.range;
+                const middle=levels.length ? levels[2] : (range.low+range.high)/2;
+                const root=renderDescription(),labels=[],ctx={};
+                for (const name of ["reset","save","restore","rect","clip","setLineDash","beginPath","moveTo","lineTo","closePath","stroke","strokeRect","fill","fillRect","arc","translate","rotate"]) ctx[name]=function(){};
+                ctx.fillText=function(text,x,y) { if(x===plot.width-root.rightMargin+6 && text!==root.axisUnit(true)) labels.push({text:text,y:y}); };
+                Style.paintChart(root,plot,ctx,false);
+                return {positions:[py(range.low,true),py(middle,true),py(range.high,true)], labels:labels,
+                        top:topMargin,bottom:plot.height-bottomMargin};
+            })()
+        )JS"));
+        const auto value=expression.evaluate(); QVERIFY2(!expression.hasError(),qPrintable(expression.error().toString()));
+        const auto result=value.value<QJSValue>().toVariant().toMap();
+        const auto top=result["top"].toDouble(), bottom=result["bottom"].toDouble();
+        QVERIFY(bottom>top);
+        const auto positions=result["positions"].toList();
+        QCOMPARE(positions[0].toDouble(),bottom);
+        QCOMPARE(positions[1].toDouble(),(top+bottom)/2);
+        QCOMPARE(positions[2].toDouble(),top);
+        const auto labels=result["labels"].toList(), expectedLabels=right["labels"].toList();
+        QCOMPARE(labels.size(),ticks.size());
+        for (qsizetype i=0;i<labels.size();++i) {
+            QCOMPARE(labels[i].toMap()["text"].toString(),expectedLabels[i].toString());
+            const double fraction=limits == "inherited" ? double(i)/(ticks.size()-1)
+                : (ticks[i].toDouble()-ticks.first().toDouble())/(ticks.last().toDouble()-ticks.first().toDouble());
+            QVERIFY(qAbs(labels[i].toMap()["y"].toDouble()-(bottom-fraction*(bottom-top)))<0.001);
+        }
+    }
     void preparedAxisLabelsUseTheSameRangeAsTheirProjection_data()
     {
         QTest::addColumn<QString>("key"); QTest::addColumn<QString>("unit");

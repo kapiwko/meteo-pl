@@ -36,11 +36,15 @@ struct PreparedAxis {
                 {"ticks",ticks},{"labels",labels},{"labelFactor",labelFactor},{"linked",linked}};
     }
 };
-ChartMath::AxisSpec configured(ChartMath::AxisSpec axis,const QVariantMap &configuration,const QString &prefix)
+bool applyLimits(PreparedAxis &axis,const QVariantMap &configuration,const QString &prefix)
 {
     const auto minimum=configuration.value(prefix+"Min"),maximum=configuration.value(prefix+"Max");
-    const auto low=number(minimum)?minimum.toDouble():axis.low,high=number(maximum)?maximum.toDouble():axis.high;
-    return (number(minimum)||number(maximum)) && ChartMath::validRange(low,high) ? ChartMath::niceAxis(low,high) : axis;
+    const auto low=number(minimum)?minimum.toDouble():axis.range.low,high=number(maximum)?maximum.toDouble():axis.range.high;
+    if ((!number(minimum) && !number(maximum)) || !ChartMath::validRange(low,high)) return false;
+    // Limits replace both the numeric range and its nonlinear transform.
+    axis.range=ChartMath::niceAxis(low,high);
+    axis.levels.clear();
+    return true;
 }
 PreparedAxis axisFor(const QVariantList &fields,const QVariantMap &configuration,bool right,const QString &kind,double windScale)
 {
@@ -72,8 +76,7 @@ PreparedAxis axisFor(const QVariantList &fields,const QVariantMap &configuration
     else if (kind=="temperature") result.range=ChartMath::niceAxis(low-1,high+1);
     else if (kind=="pressure") result.range=ChartMath::niceAxis(std::round(low-std::max(0.0,15-(high-low))-2),std::round(high+2));
     else result.range=ChartMath::niceAxis(std::min(0.0,low),std::max(1.0,high));
-    result.range=configured(result.range,configuration,prefix);
-    if (number(configuration.value(prefix+"Min")) || number(configuration.value(prefix+"Max"))) result.levels.clear();
+    applyLimits(result,configuration,prefix);
     if (configuration.contains(prefix+"Unit")) result.unit=configuration.value(prefix+"Unit").toString();
     if (kind=="clouds") result.unit=Meteo::i18n("octas");
     if (kind=="fraction") result.unit=Meteo::i18n("fraction");
@@ -88,10 +91,10 @@ QVariantMap describeChart(const QVariantList &input,const QVariantMap &configura
     const double windScale=windUnit=="km/h"?3.6:windUnit=="kt"?1.943844492:1;
     auto left=axisFor(fields,configuration,false,scale,windScale),right=axisFor(fields,configuration,true,rightScale,windScale);
     if (rightScale=="linked") {
-        right=left; right.range=configured(left.range,configuration,"right");
+        right=left;
         // Manual limits detach the range while preserving alternate-unit labels.
         // Every consumer uses this axis's range, ticks and unit conversion.
-        right.linked=!number(configuration.value("rightMin")) && !number(configuration.value("rightMax"));
+        right.linked=!applyLimits(right,configuration,"right");
         if (scale=="pressure") { right.labelFactor=0.75; right.unit="mm Hg"; }
         else if (scale=="wind") { right.labelFactor=windUnit=="m/s"?3.6:windUnit=="km/h"?1/3.6:1/1.943844492; right.unit=windUnit=="m/s"?"km/h":"m/s"; }
     }
