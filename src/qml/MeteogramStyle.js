@@ -176,7 +176,6 @@ function paintChart(root, plot, ctx, withCursor) {
             if (!root.valid(point.value)) continue;
             const interval = intervalBounds(point);
             const barWidth = field.kind === "rightBars" ? 3 : Math.max(2, Math.abs(root.px(interval.to) - root.px(interval.from)) * (field.kind === "barsBack" ? 0.9 : 0.8));
-            const isPrecipitationBar = field.key === "pcpttl_aver" || field.key === "pcpttl_max";
             const x = root.px(renderTimestamp(field, point)), y = root.py(point.value, isRight);
             if (field.kind === "cloudPoint" || field.kind === "points") {
                 if (field.kind === "cloudPoint" && point.value <= 0) continue;
@@ -186,9 +185,8 @@ function paintChart(root, plot, ctx, withCursor) {
                 ctx.beginPath(); ctx.moveTo(root.px(interval.from), gustY); ctx.lineTo(root.px(interval.to), gustY); ctx.stroke();
                 if (point.value > (isRight ? root.rightBounds.high : root.bounds.high)) { ctx.beginPath(); ctx.arc(x, top + 2, 2, 0, Math.PI * 2); ctx.fill(); }
             } else if (field.kind === "bars" || field.kind === "barsBack" || field.kind === "stems" || field.kind === "rightBars") {
-                if (isPrecipitationBar && field.precipitationColors !== false) {
-                    const types = root.fields.find(f => f.kind === "type");
-                    const type = types ? point.precipitationType : null;
+                if (field.usesPrecipitationColors) {
+                    const type = point.precipitationType;
                     const rainColor = root.seriesColor(field);
                     const snowColor = root.categoryColor(field, "snow");
                     const mixedColor = root.categoryColor(field, "sleet");

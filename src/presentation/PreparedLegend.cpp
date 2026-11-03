@@ -51,7 +51,6 @@ QVariantMap prepareChartLegend(const QVariantList &fields, const ChartMath::Axis
         return QVariantMap{};
     };
     const auto storm = find("storm"), flash = find("flash");
-    const bool types = !find("type").isEmpty();
     for (const auto &value : fields) {
         const auto field = value.toMap();
         const auto kind = field.value("kind").toString();
@@ -69,8 +68,7 @@ QVariantMap prepareChartLegend(const QVariantList &fields, const ChartMath::Axis
             for (const auto &key : {"points", "lowerPoints", "rangeSegments", "rangePairs", "events"}) entry.remove(key);
             legend.append(entry);
         }
-        if (types && (field["key"] == "pcpttl_aver" || field["key"] == "pcpttl_max")
-            && (kind == "bars" || kind == "stems") && field.value("precipitationColors", true).toBool()) {
+        if (field.value("usesPrecipitationColors").toBool()) {
             const auto colors = field.value("colors").toMap();
             const QVariantMap rain{{"color", field["color"]}, {"darkColor", field["darkColor"]}};
             const QVariantList applied{rain, colors.value("snow"), colors.value("sleet")};

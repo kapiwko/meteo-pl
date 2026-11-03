@@ -127,7 +127,9 @@ forecast values to choose axis policies or reconstruct range/event series.
 `ChartConfiguration` restricts special renderers to compatible quantities;
 the editor and import normalization use the same catalog. Palette fills are
 available only with a complete palette and compatible quantity. Legend category
-colors come from the actual value-series styles. `DailyForecastView`
+colors come from the actual value-series styles. Field preparation resolves
+whether precipitation categories apply to each series; the legend and painter
+consume that same decision. `DailyForecastView`
 assembles day cards, and `WeatherModel::chartExportMetadata` supplies shared PNG
 metadata.
 

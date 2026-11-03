@@ -149,10 +149,18 @@ QVariantList prepareChartFields(const QVariantList &fields)
         result.append(field);
     }
     const auto events = chartEvents(result);
+    const bool types = std::any_of(result.cbegin(),result.cend(),[](const QVariant &entry) {
+        return entry.toMap().value("kind") == "type";
+    });
     for (auto &entry : result) {
         auto field = entry.toMap();
         const auto kind = field.value("kind", field.value("render")).toString();
-        if (kind == "storm" || kind == "flash") { field["events"] = events; entry = field; }
+        // One decision shared by the legend and both drawing backends.
+        field["usesPrecipitationColors"] = types && field.value("precipitationColors",true).toBool()
+            && QStringList{"pcpttl_aver","pcpttl_max"}.contains(field.value("key").toString())
+            && QStringList{"bars","barsBack","stems","rightBars"}.contains(kind);
+        if (kind == "storm" || kind == "flash") field["events"] = events;
+        entry = field;
     }
     return result;
 }

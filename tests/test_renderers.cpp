@@ -146,6 +146,7 @@ void RendererTest::initTestCase()
         m_groups.append("chart:minimum-dashes");
         m_groups.append("modern:temperature");
         m_groups.append("modern:cloudHeights");
+        m_groups.append("chart:precipitation-narrow");
     }
 void RendererTest::cleanupTestCase()
     {
@@ -177,6 +178,18 @@ void RendererTest::appearanceMatches()
             mean["opacity"] = 0.5; maximum["opacity"] = 0.5;
             definition = weather.configuredCharts({QVariantMap{{"key", group}, {"title", "Precipitation area"},
                 {"enabled", true}, {"series", QVariantList{mean, maximum}}}}).first().toMap();
+        }
+        if (group == "chart:precipitation-narrow") {
+            for (const auto &entry : defaultChartLayout("basic")) {
+                auto chart=entry.toMap();
+                if (chart["key"] != "precipitation") continue;
+                chart["key"]=group;
+                auto styles=chart["series"].toList();
+                auto mean=styles[0].toMap(); mean["render"]="rightBars"; styles[0]=mean;
+                chart["series"]=styles;
+                definition=weather.configuredCharts({chart}).first().toMap();
+                break;
+            }
         }
         if (group == "chart:minimum-dashes") {
             auto chart=defaultChartLayout("classic").first().toMap();

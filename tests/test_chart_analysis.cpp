@@ -10,7 +10,7 @@
 #include <limits>
 
 namespace {
-QJSValue recordChart(QJSEngine &engine, const QVariantList &fields, bool exportMode=false)
+QJSValue recordChart(QJSEngine &engine, const QVariantList &fields, bool exportMode=false, bool actualColors=false, bool dark=false)
 {
     QFile source(":/qt/qml/pl/meteo/desktop/MeteogramStyle.js");
     if (!source.open(QIODevice::ReadOnly)) return engine.newErrorObject(QJSValue::GenericError, source.errorString());
@@ -28,35 +28,37 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields, bool exportM
     engine.globalObject().setProperty("fieldsUnderTest", engine.toScriptValue(prepareChartFields(styled)));
     engine.globalObject().setProperty("appearanceUnderTest", engine.toScriptValue(defaultChartAppearance()["light"]));
     engine.globalObject().setProperty("exportUnderTest",exportMode);
+    engine.globalObject().setProperty("actualColorsUnderTest",actualColors);
+    engine.globalObject().setProperty("darkUnderTest",dark);
     return engine.evaluate(QStringLiteral(R"JS(
         (function() {
-            const rectangles=[], polygons=[], circles=[], lines=[], strokes=[], ctx={}; let path=[],operations=[];
+            const rectangles=[], polygons=[], circles=[], lines=[], strokes=[], marks=[], ctx={}; let path=[],operations=[];
             for (const name of ["reset","save","restore","rect","clip","setLineDash","stroke","fillText","translate","rotate"])
                 ctx[name]=function(){};
             ctx.beginPath=function(){path=[];operations=[];};
             ctx.moveTo=function(x,y){path.push([x,y]);operations.push("M");};
             ctx.lineTo=function(x,y){path.push([x,y]);operations.push("L");};
             ctx.closePath=function(){path.closed=true;};
-            ctx.stroke=function(){if(this.strokeStyle==="#123456" && path.length) {lines.push(path.slice());strokes.push(operations.slice());}};
+            ctx.stroke=function(){if(path.length) marks.push(this.strokeStyle); if(this.strokeStyle==="#123456" && path.length) {lines.push(path.slice());strokes.push(operations.slice());}};
             ctx.fill=function(){if(path.closed && this.fillStyle==="#123456") polygons.push(path.slice());};
-            ctx.fillRect=function(x,y,w,h){if(this.fillStyle==="#123456") rectangles.push({x:x,y:y,width:w,height:h});};
+            ctx.fillRect=function(x,y,w,h){marks.push(this.fillStyle); if(this.fillStyle==="#123456") rectangles.push({x:x,y:y,width:w,height:h});};
             ctx.arc=function(x,y,r){circles.push({x:x,y:y,radius:r});};
             const root={
                 leftMargin:0,rightMargin:0,topMargin:0,bottomMargin:0,directionBandHeight:0,
-                windScale:1,darkPalette:false,scaleKind:"linear",directionOnly:false,hasRightAxis:false,exportMode:exportUnderTest,
+                windScale:1,darkPalette:darkUnderTest,scaleKind:"linear",directionOnly:false,hasRightAxis:false,exportMode:exportUnderTest,
                 plotStyle:function(name){return appearanceUnderTest[name];},
-                categoryColor:function(field,name){return namedColor(field,name,false);},
+                categoryColor:function(field,name){return namedColor(field,name,darkUnderTest);},
                 startTime:1800000000,endTime:1800021600,weather:{firstTimestamp:1800000000},nights:[],
                 fields:fieldsUnderTest,bounds:{low:0,high:10},rightBounds:{low:0,high:10},
                 ticks:function(){return [];},axisUnit:function(){return "";},
                 timeAxisLabels:function(){return {labels:[],days:[],midnights:[]};},
                 valid:function(v){return v!==null&&v!==undefined&&isFinite(v);},shown:function(){return true;},
-                layerOrder:function(){return 0;},seriesColor:function(){return "#123456";},isRightField:function(f){return f.axis==="right";},drawGrid:function(){},
+                layerOrder:function(){return 0;},seriesColor:function(f){return actualColorsUnderTest ? (darkUnderTest ? f.darkColor : f.color) : "#123456";},isRightField:function(f){return f.axis==="right";},drawGrid:function(){},
                 px:function(t){return (t-1800000000)/3600*100;},py:function(v,right){return 100-v*(right?2:1);},
                 pointAt:function(points,time){return points.find(point=>point.time===time);}
             };
             paintChart(root,{width:600,height:120},ctx,false);
-            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines,strokes:strokes,root:root,context:ctx};
+            return {rectangles:rectangles,polygons:polygons,circles:circles,lines:lines,strokes:strokes,marks:marks,root:root,context:ctx};
         })()
     )JS"));
 }
@@ -65,6 +67,53 @@ QJSValue recordChart(QJSEngine &engine, const QVariantList &fields, bool exportM
 class ChartAnalysisTest : public QObject {
     Q_OBJECT
 private slots:
+    void precipitationLegendsMatchTheSelectedRenderer_data()
+    {
+        QTest::addColumn<QString>("key"); QTest::addColumn<QString>("renderer"); QTest::addColumn<QString>("mode");
+        for (const auto &key : {QStringLiteral("pcpttl_aver"),QStringLiteral("pcpttl_max")})
+            for (const auto &renderer : seriesRenderers(key))
+                for (const auto &mode : {"colored","disabled","hidden-type","missing-type"})
+                    QTest::newRow(qPrintable(key+"-"+renderer+"-"+mode)) << key << renderer << QString(mode);
+    }
+    void precipitationLegendsMatchTheSelectedRenderer()
+    {
+        QFETCH(QString,key); QFETCH(QString,renderer); QFETCH(QString,mode);
+        QVariantMap configuration;
+        for (const auto &entry : defaultChartLayout("basic"))
+            if (entry.toMap()["key"] == "precipitation") configuration=entry.toMap();
+        QVERIFY(!configuration.isEmpty());
+        auto styles=configuration["series"].toList();
+        auto style=styles[0].toMap(); style["key"]=key; style["render"]=renderer;
+        style["precipitationColors"]=mode != "disabled"; styles[0]=style;
+        auto type=styles[1].toMap(); type["enabled"]=mode != "hidden-type"; styles[1]=type;
+        configuration["series"]=styles;
+        Meteo::Forecast forecast;
+        forecast.series.insert(key,{"mm",1800000000,3600,{2,2,2}});
+        if (mode != "missing-type") forecast.series.insert("pcpttl_type_max",{"",1800000000,3600,{1,2,3}});
+        const auto chart=buildConfiguredCharts({configuration},buildChartSeries(forecast,{}),"m/s").first().toMap();
+        const auto legend=chart["typeLegend"].toList();
+        const bool bars=QStringList{"bars","stems","rightBars"}.contains(renderer);
+        const bool colored=bars && mode == "colored";
+        QCOMPARE(legend.size(),colored ? 3 : 0);
+        const auto colors=style["colors"].toMap();
+        const QVariantList expected{QVariantMap{{"color",style["color"]},{"darkColor",style["darkColor"]}},colors["snow"],colors["sleet"]};
+        for (qsizetype i=0;i<legend.size();++i) {
+            const auto entry=legend[i].toMap();
+            QCOMPARE(entry["key"].toString(),key); QVERIFY(!entry["label"].toString().isEmpty());
+            QCOMPARE(entry["color"],expected[i].toMap()["color"]);
+            QCOMPARE(entry["darkColor"],expected[i].toMap()["darkColor"]);
+        }
+        if (bars) for (bool dark : {false,true}) for (bool exporting : {false,true}) {
+            QJSEngine engine; const auto drawing=recordChart(engine,chart["fields"].toList(),exporting,true,dark);
+            QVERIFY2(!drawing.isError(),qPrintable(drawing.toString()));
+            const auto marks=drawing.property("marks").toVariant().toList();
+            QStringList applied;
+            for (const auto &color : expected) applied.append(color.toMap()[dark ? "darkColor" : "color"].toString());
+            QStringList actual;
+            for (const auto &mark : marks) if (applied.contains(mark.toString())) actual.append(mark.toString());
+            QCOMPARE(actual,colored ? applied : QStringList({applied[0],applied[0],applied[0]}));
+        }
+    }
     void legendColorScalesFollowTheAssignedAxisAndWindUnits_data()
     {
         QTest::addColumn<QString>("key"); QTest::addColumn<QString>("unit"); QTest::addColumn<bool>("right");
