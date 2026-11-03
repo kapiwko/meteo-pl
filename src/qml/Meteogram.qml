@@ -79,7 +79,7 @@ ColumnLayout {
             hasRightAxis: hasRightAxis, isRightField: isRightField, layerOrder: layerOrder, leftMargin: leftMargin,
             nights: nights, nowTime: nowTime, plotFields: plotFields, plotStyle: plotStyle,
             probeSamples: probeSamples, px: px, py: py, rightBounds: rightBounds,
-            rightMargin: rightMargin, rightScale: rightScale, scaleKind: scaleKind, secondaryScale: secondaryScale,
+            rightMargin: rightMargin, rightScale: rightScale, scaleKind: scaleKind,
             selectedTime: selectedTime, seriesColor: seriesColor, shown: shown, startTime: startTime,
             textColor: textColor, tickLabel: tickLabel, ticks: ticks, timeAxisLabels: timeAxisLabels,
             topMargin: topMargin, valid: valid, windScale: windScale
@@ -147,7 +147,6 @@ ColumnLayout {
         return topMargin + (b.high - value) / Math.max(0.0001, b.high - b.low) * (plot.height - topMargin - bottomMargin);
     }
     function ticks(right) { return description[right ? "rightAxis" : "leftAxis"].ticks; }
-    function secondaryScale() { return description.rightAxis.labelFactor; }
     function axisUnit(right) { return directionOnly || right && !hasRightAxis ? "" : description[right ? "rightAxis" : "leftAxis"].unit; }
     function axisMargin(right) {
         if (directionOnly) return 6;
