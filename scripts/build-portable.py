@@ -20,7 +20,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 CRAFT_REVISION = "ce3702673ea4f9dde99f6f3b70b276a3e6a7e396"
 BLUEPRINTS_REVISION = "51848c5646799a62016caf9e3f344d9351a7071c"
-ANDROID_IMAGE = "invent-registry.kde.org/sysadmin/ci-images/android-qt611@sha256:11759d824824228d952a3dbb5f75aa85cd4237da1f1148b0b0d4330c3484911a"
+ANDROID_IMAGE = "invent-registry.kde.org/sysadmin/ci-images/android-qt611@sha256:d5f0683d233ac5293c9dff5b3840542421b1becfe5d64f21456fde56f7029e18"
 QML_ERRORS = re.compile(r"TypeError|ReferenceError|Binding loop|failed to load component|is not installed|is not a type|Invalid image provider", re.IGNORECASE)
 ANDROID_SIGNING_VARIABLES = ("METEO_ANDROID_KEYSTORE", "METEO_ANDROID_KEY_ALIAS",
                              "METEO_ANDROID_STORE_PASSWORD", "METEO_ANDROID_KEY_PASSWORD")
