@@ -7,6 +7,58 @@
 class ForecastTest : public QObject {
     Q_OBJECT
 private slots:
+    void ignoresStaticTerrainMetadata_data()
+    {
+        QTest::addColumn<QString>("model");
+        for (const auto &model : {"um4", "gfs"})
+            QTest::newRow(model) << QString(model);
+    }
+    void ignoresStaticTerrainMetadata()
+    {
+        QFETCH(QString, model);
+        auto object = QJsonDocument::fromJson(forecastFixture()).object();
+        auto data = object["data"].toObject();
+        if (model == "gfs") {
+            data.remove("orography_min");
+            data.remove("orography_max");
+            data["airtmp_min"] = QJsonValue::Null;
+            data["airtmp_max"] = QJsonValue::Null;
+        }
+        object["data"] = data;
+        QString error;
+        const auto parsed = Meteo::parseForecast(QJsonDocument(object).toJson(), &error);
+        QVERIFY2(parsed, qPrintable(error));
+        for (const auto &key : {"orography", "orography_min", "orography_max"}) {
+            QVERIFY(!parsed->series.contains(key));
+            data.remove(key);
+        }
+        object["data"] = data;
+        const auto reference = Meteo::parseForecast(QJsonDocument(object).toJson());
+        QVERIFY(reference);
+        QCOMPARE(parsed->firstTimestamp(), reference->firstTimestamp());
+        QCOMPARE(parsed->lastTimestamp(), reference->lastTimestamp());
+        QCOMPARE(parsed->modelRun, reference->modelRun);
+        QCOMPARE(parsed->series.keys(), reference->series.keys());
+        for (auto it = reference->series.cbegin(); it != reference->series.cend(); ++it) {
+            const auto &actual = parsed->series[it.key()];
+            QCOMPARE(actual.firstTimestamp, it->firstTimestamp);
+            QCOMPARE(actual.interval, it->interval);
+            QCOMPARE(actual.unit, it->unit);
+            QVERIFY(actual.values == it->values);
+        }
+    }
+    void rejectsZeroIntervalsInForecastSeries()
+    {
+        for (const auto &key : {"airtmp_point", "airtmp_min", "pcpttl_aver", "future_weather_quantity"}) {
+            auto object = QJsonDocument::fromJson(forecastFixture()).object();
+            auto data = object["data"].toObject();
+            auto field = data["airtmp_point"].toObject();
+            field["interval"] = 0;
+            data[key] = field;
+            object["data"] = data;
+            QVERIFY(!Meteo::parseForecast(QJsonDocument(object).toJson()));
+        }
+    }
     void intervalGustsAndPrecipitationTypesRespectCalendarOverlap()
     {
         for (const auto &zone : {QTimeZone::utc(),QTimeZone("Europe/Warsaw")}) for (const auto &date : {QDate(2026,3,28),QDate(2026,10,24)}) {

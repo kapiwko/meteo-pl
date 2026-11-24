@@ -36,5 +36,11 @@ inline QByteArray forecastFixture(qint64 first = QDateTime::currentSecsSinceEpoc
                        {"storm_max", field("1", {0, 1, 2, 0})},
                        {"flash_max", field("1/km2/h", {0, 0.2, 0.5, 0})},
                        {"cldtot_aver", field("1", {0.1, 0.4, 0.8, 0.2})}};
+    // Terrain metadata is constant at the requested grid point, not a timeline.
+    for (const auto &key : {"orography", "orography_min", "orography_max"}) {
+        auto terrain = field("m", {160.0});
+        terrain["interval"] = 0;
+        fields.insert(key, terrain);
+    }
     return QJsonDocument(QJsonObject{{"data", fields}, {"fstart", run}}).toJson(QJsonDocument::Compact);
 }

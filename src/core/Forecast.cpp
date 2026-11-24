@@ -87,6 +87,10 @@ std::optional<Forecast> parseForecast(const QByteArray &json, QString *error)
     Forecast forecast;
     forecast.modelRun = QDateTime::fromString(root.value("fstart").toString(), Qt::ISODate);
     for (auto it = data.begin(); it != data.end(); ++it) {
+        // The API also returns static terrain heights with interval == 0.
+        // They describe the grid point, not a forecast time series.
+        if (it.key() == "orography" || it.key() == "orography_min" || it.key() == "orography_max")
+            continue;
         // GFS includes null entries for parameters available only in UM.
         if (it.value().isNull()) continue;
         const auto field = it.value().toObject();
