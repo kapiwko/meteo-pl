@@ -1,5 +1,6 @@
 #include "PreparedLegend.hpp"
 #include "core/Localization.hpp"
+#include "core/NumberFormatting.hpp"
 #include <QJsonDocument>
 #include <QLocale>
 #include <QSet>
@@ -32,7 +33,7 @@ QVariantMap colorScale(const QVariantMap &field, const ChartMath::AxisSpec &rang
         append(range.high, fallback.value("color"), fallback.value("darkColor"));
     }
     const auto label = [](double value) {
-        return QLocale().toString(value, 'f', std::abs(value-std::round(value))<0.0001 ? 0 : 1);
+        return Meteo::formatNumber(value, std::abs(value-std::round(value))<0.0001 ? 0 : 1);
     };
     return {{"key", field["key"]}, {"label", field["label"]}, {"unit", field["unit"]},
             {"bands", bands}, {"minimumLabel", label(range.low)},

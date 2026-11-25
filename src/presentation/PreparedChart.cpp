@@ -3,6 +3,7 @@
 #include "ChartConfiguration.hpp"
 #include "ChartMath.hpp"
 #include "core/Localization.hpp"
+#include "core/NumberFormatting.hpp"
 #include <QLocale>
 #include <cmath>
 #include <limits>
@@ -26,10 +27,10 @@ struct PreparedAxis {
             ticks.append(value);
             value*=labelFactor;
             QString text;
-            if (kind=="fraction") text=QString::number(value/100,'f',2);
-            else if (kind=="clouds") text=QString::number(value*8/100,'f',0);
-            else if (kind=="cloudHeights") text=QString::number(value,'f',1);
-            else text=QLocale().toString(value,'f',std::abs(value-std::round(value))<0.0001?0:1);
+            if (kind=="fraction") text=Meteo::formatNumber(value/100,2,QLocale::c());
+            else if (kind=="clouds") text=Meteo::formatNumber(value*8/100,0,QLocale::c());
+            else if (kind=="cloudHeights") text=Meteo::formatNumber(value,1,QLocale::c());
+            else text=Meteo::formatNumber(value,std::abs(value-std::round(value))<0.0001?0:1);
             labels.append(text);
         }
         return {{"range",ChartMath::toVariant(range)},{"kind",kind},{"unit",unit},{"levels",transform},

@@ -15,7 +15,7 @@ ListView {
     ScrollBar.vertical: ScrollBar {}
 
     function number(value, unit) {
-        return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', unit === "mm" ? 1 : 0) + " " + unit;
+        return value === null || value === undefined ? "—" : I18n.formatNumber(Number(value), unit === "mm" ? 1 : 0) + " " + unit;
     }
     delegate: ItemDelegate {
         id: hour

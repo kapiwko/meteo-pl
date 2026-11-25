@@ -131,7 +131,7 @@ ColumnLayout {
     }
     function tickLabel(value, right) {
         const axis = description[right ? "rightAxis" : "leftAxis"], index = axis.ticks.indexOf(value);
-        return index >= 0 ? axis.labels[index] : Number(value).toLocaleString(Qt.locale(), 'f', 1);
+        return index >= 0 ? axis.labels[index] : I18n.formatNumber(Number(value), 1);
     }
     function px(time) { return leftMargin + (time - startTime) / Math.max(1, endTime - startTime) * (plot.width - leftMargin - rightMargin); }
     function py(value, right) {

@@ -1011,6 +1011,79 @@ private slots:
                                    {"payload", QString::fromUtf8(QJsonDocument(fixture).toJson())}};
         file.write(QJsonDocument(envelope).toJson());
     }
+    void temperaturesDoNotDisplayNegativeZero_data()
+    {
+        QTest::addColumn<QString>("localeName");
+        QTest::addColumn<double>("temperature");
+        QTest::addColumn<double>("whole");
+        QTest::addColumn<double>("tenths");
+        for (const auto &locale : {QStringLiteral("en_US"), QStringLiteral("pl_PL")}) {
+            QTest::newRow(qPrintable(locale + "-rounded-zero")) << locale << -0.01 << 0.0 << 0.0;
+            QTest::newRow(qPrintable(locale + "-fractional-negative")) << locale << -0.1 << 0.0 << -0.1;
+            QTest::newRow(qPrintable(locale + "-negative")) << locale << -0.6 << -1.0 << -0.6;
+            QTest::newRow(qPrintable(locale + "-negative-half")) << locale << -0.5 << -1.0 << -0.5;
+            QTest::newRow(qPrintable(locale + "-positive")) << locale << 0.6 << 1.0 << 0.6;
+        }
+    }
+    void temperaturesDoNotDisplayNegativeZero()
+    {
+        QFETCH(QString, localeName); QFETCH(double, temperature); QFETCH(double, whole); QFETCH(double, tenths);
+        const QLocale previous;
+        const auto restore = qScopeGuard([&] { QLocale::setDefault(previous); });
+        QLocale::setDefault(QLocale(localeName));
+        auto document = QJsonDocument::fromJson(forecastFixture()).object();
+        auto fields = document["data"].toObject();
+        for (const auto &key : {"airtmp_point", "airtmp_min", "airtmp_max", "wchill_point", "dwptmp_point"}) {
+            auto field = fields[key].toObject();
+            field["data"] = QJsonArray{temperature, temperature, temperature, temperature};
+            fields[key] = field;
+        }
+        document["data"] = fields;
+        const auto payload = QJsonDocument(document).toJson();
+        ServiceFixture server; QVERIFY(server.listen(QHostAddress::LocalHost));
+        server.response = [payload](const QUrl &url) {
+            return url.path().endsWith("/available") ? QByteArray(R"({"um4_60":[300]})") : payload;
+        };
+        WeatherModel weather(nullptr, server.endpoint()); weather.setAutoRefresh(false);
+        weather.setLatitude(51.234567 + temperature / 100); weather.setLongitude(20.345678); weather.refresh(true);
+        QTRY_VERIFY(!weather.busy());
+        QVERIFY2(weather.hasData(), qPrintable(weather.error()));
+        const auto integer = QLocale().toString(whole, 'f', 0);
+        const auto decimal = QLocale().toString(tenths, 'f', 1);
+        QCOMPARE(weather.temperatureText(), integer + "°C");
+        const auto cells = weather.hourlyForecast().first().toMap()["cells"].toMap();
+        for (const auto &key : {"airtmp_point", "wchill_point", "dwptmp_point"}) {
+            QCOMPARE(cells[key].toMap()["value"].toString(), decimal + " °C");
+            QCOMPARE(cells[key].toMap()["number"].toDouble(), temperature);
+        }
+        const auto details = weather.detailsAt(weather.firstTimestamp());
+        for (const auto &value : details) {
+            const auto detail = value.toMap();
+            if (detail["key"] == "airtmp_point") {
+                QCOMPARE(detail["value"].toString(), decimal + " °C");
+                QCOMPARE(detail["number"].toDouble(), temperature);
+            }
+        }
+        const auto texts = [](auto &&self, QQuickItem *item) -> QStringList {
+            QStringList result;
+            if (const auto text = item->property("text").toString(); text.contains(QChar(0x00b0))) result.append(text);
+            for (auto *child : item->childItems()) result.append(self(self, child));
+            return result;
+        };
+        QQmlEngine engine;
+        QQuickWindow window; window.resize(640, 480); window.show();
+        for (const auto &[componentName, expected] : QList<QPair<QString, QString>>{
+                 {"ForecastHeader", integer + "°C"}, {"CompactForecast", integer + "°C"},
+                 {"MobileHourlyForecast", integer + " °C"}, {"HourlyForecastTable", decimal + " °C"},
+                 {"DailyForecastView", integer + "°"}}) {
+            QQmlComponent component(&engine); component.loadFromModule("pl.meteo.desktop", componentName);
+            QScopedPointer<QObject> object(component.createWithInitialProperties({{"weather", QVariant::fromValue(&weather)}}));
+            QVERIFY2(object, qPrintable(component.errorString()));
+            auto *item = qobject_cast<QQuickItem *>(object.data()); QVERIFY(item);
+            item->setParentItem(window.contentItem()); item->setSize(window.size());
+            QTRY_VERIFY2(texts(texts, item).contains(expected), qPrintable(componentName + ": " + texts(texts, item).join("; ")));
+        }
+    }
     void loadsCachedForecastAndClearsItOnLocationChange()
     {
         WeatherModel model;

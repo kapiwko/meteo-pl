@@ -11,6 +11,7 @@ add_library(meteo_core STATIC
     core/EditorialContent.hpp
     core/Localization.cpp
     core/Localization.hpp
+    core/NumberFormatting.hpp
     core/Locations.cpp
     core/Locations.hpp
     core/WebLink.cpp

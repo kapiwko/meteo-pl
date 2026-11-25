@@ -7,7 +7,7 @@ import org.kde.kirigami as Kirigami
 ScrollView {
     id: root
     required property WeatherModel weather
-    function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
+    function number(value, decimals) { return value === null || value === undefined ? "—" : I18n.formatNumber(Number(value), decimals); }
     implicitWidth: 0
     contentWidth: availableWidth
     clip: true

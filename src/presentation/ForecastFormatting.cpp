@@ -1,6 +1,7 @@
 #include "ForecastFormatting.hpp"
 #include "core/ForecastSampling.hpp"
 #include "core/Localization.hpp"
+#include "core/NumberFormatting.hpp"
 #include <QLocale>
 #include <cmath>
 
@@ -12,7 +13,7 @@ QVariantMap formatForecastSample(const Meteo::Forecast &forecast,
   const auto value = sample ? sample->value : std::nullopt;
   const auto unit = field.unit == "m/s" ? windUnit : field.unit;
   QString text = value
-                     ? QLocale().toString(*value * scale, 'f', field.decimals) +
+                     ? Meteo::formatNumber(*value * scale, field.decimals) +
                            (unit.isEmpty() ? QString() : ' ' + unit)
                      : QStringLiteral("—");
   if (field.kind == "direction" && value) {

@@ -239,7 +239,7 @@ Item {
             Label { text: I18n.i18n("Chart appearance, series visibility and legends will be preserved."); Layout.fillWidth: true; wrapMode: Text.WordWrap; opacity: 0.7; font.pixelSize: 11 }
         }
     }
-    function number(value, decimals) { return value === null || value === undefined ? "—" : Number(value).toLocaleString(Qt.locale(), 'f', decimals); }
+    function number(value, decimals) { return value === null || value === undefined ? "—" : I18n.formatNumber(Number(value), decimals); }
     function resetRange() { viewportStart = weather.firstTimestamp; viewportEnd = weather.lastTimestamp; }
     function setRange(first, last) {
         const span = Math.min(weather.lastTimestamp - weather.firstTimestamp, Math.max(minimumViewportSpan, last - first));

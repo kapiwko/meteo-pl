@@ -1,4 +1,5 @@
 #include "core/Localization.hpp"
+#include "core/NumberFormatting.hpp"
 #include "core/Forecast.hpp"
 #include "ForecastFields.hpp"
 #include "UserPreferences.hpp"
@@ -40,6 +41,18 @@ private slots:
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 5), polish ? QStringLiteral("Wybrano 5 wykresów") : QStringLiteral("5 charts selected"));
         QCOMPARE(Meteo::i18np("%1 chart selected", "%1 charts selected", 12), polish ? QStringLiteral("Wybrano 12 wykresów") : QStringLiteral("12 charts selected"));
     }
+    void roundsDisplayNumbersWithoutNegativeZero()
+    {
+        struct Sample { double value; int decimals; double displayed; };
+        const QList<Sample> samples{{-0.0,0,0}, {-0.0,1,0}, {-0.01,0,0}, {-0.01,1,0},
+            {-0.004,2,0}, {-0.01,2,-0.01}, {-0.49,0,0}, {-0.51,0,-1},
+            {-0.1,1,-0.1}, {-0.051,1,-0.1}, {0.01,1,0}, {-1234.56,1,-1234.6}};
+        for (const auto &name : {"en_US", "pl_PL", "ar_EG"}) {
+            const QLocale locale(name);
+            for (const auto &sample : samples)
+                QCOMPARE(Meteo::formatNumber(sample.value, sample.decimals, locale), locale.toString(sample.displayed, 'f', sample.decimals));
+        }
+    }
     void weatherLabelsKeepTheirMeaningWhenFollowedByAValue()
     {
         const QList<QPair<const char *, QString>> labels{
@@ -72,6 +85,8 @@ private slots:
                     property string caption: I18n.i18n("Settings")
                     property string place: I18n.i18n("My places")
                     property string count: I18n.i18np("%1 chart selected", "%1 charts selected", 22)
+                    property string zero: I18n.formatNumber(-0.01, 1)
+                    property string negative: I18n.formatNumber(-0.1, 1)
                 }
             )", QUrl());
             QScopedPointer<QObject> object(component.create());
@@ -79,6 +94,8 @@ private slots:
             QCOMPARE(object->property("caption").toString(), polish ? QStringLiteral("Ustawienia") : QStringLiteral("Settings"));
             QCOMPARE(object->property("place").toString(), polish ? QStringLiteral("Moje miejsca") : QStringLiteral("My places"));
             QCOMPARE(object->property("count").toString(), polish ? QStringLiteral("Wybrano 22 wykresy") : QStringLiteral("22 charts selected"));
+            QCOMPARE(object->property("zero").toString(), QLocale().toString(0.0, 'f', 1));
+            QCOMPARE(object->property("negative").toString(), QLocale().toString(-0.1, 'f', 1));
         }
         QVERIFY(KLocalizedString::applicationDomain().isEmpty());
     }

@@ -1,4 +1,5 @@
 #include "core/Localization.hpp"
+#include "core/NumberFormatting.hpp"
 #include "core/Locations.hpp"
 #include "WeatherModel.hpp"
 #include "core/ForecastAggregation.hpp"
@@ -215,7 +216,7 @@ QString WeatherModel::valueText(const QString &key, const QString &suffix, doubl
     if (it == m_forecast->series.cend())
         return QStringLiteral("—");
     const auto value = Meteo::forecastValueAt(*m_forecast, key, nearestTimestamp(summaryTimestamp()));
-    return value ? QLocale().toString(*value * scale, 'f', 0) + suffix : QStringLiteral("—");
+    return value ? Meteo::formatNumber(*value * scale) + suffix : QStringLiteral("—");
 }
 
 QString WeatherModel::temperatureText() const { return valueText("airtmp_point", QStringLiteral("°C")); }

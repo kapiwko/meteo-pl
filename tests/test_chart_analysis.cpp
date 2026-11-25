@@ -5,6 +5,7 @@
 #include <QTest>
 #include <QFile>
 #include <QJSEngine>
+#include <QLocale>
 #include <QSet>
 #include <cmath>
 #include <limits>
@@ -193,6 +194,19 @@ private slots:
         const auto operations=strokes.property(0); int lines=0;
         for (int i=0;i<operations.property("length").toInt();++i) lines+=operations.property(i).toString()=="L";
         QCOMPARE(lines,connections);
+    }
+    void axisLabelsDoNotDisplayNegativeZero()
+    {
+        ChartAnalysis analysis;
+        const QVariantMap field{{"key", "airtmp_point"}, {"kind", "line"}, {"unit", "°C"},
+            {"points", QVariantList{QVariantMap{{"time",1800000000LL},{"value",-0.00001}}}}};
+        const auto chart = analysis.describe({field}, {{"leftMin",-0.00001},{"leftMax",0.00001}}, "m/s", "temperature");
+        const auto axis = chart["leftAxis"].toMap();
+        const auto ticks = axis["ticks"].toList(), labels = axis["labels"].toList();
+        QVERIFY(ticks.size() > 1);
+        QVERIFY(ticks.first().toDouble() < 0);
+        QCOMPARE(labels.size(), ticks.size());
+        for (const auto &label : labels) QCOMPARE(label.toString(), QLocale().toString(0.0, 'f', 0));
     }
     void numericWindDirectionsHaveAnAngularAxisIndependentOfSpeedUnits()
     {
