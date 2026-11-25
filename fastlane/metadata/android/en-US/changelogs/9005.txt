@@ -1,0 +1,1 @@
+AUR builds now skip compiling and running the test suite by default. Tests and their extra dependencies remain available through an explicit opt-in. Release CI still runs the full tests and verifies package installation. Source checksums and signature verification remain enabled.
