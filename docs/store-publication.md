@@ -49,9 +49,18 @@ makepkg --syncdeps
 namcap PKGBUILD *.pkg.tar.zst
 ```
 
-Before submission, build in a clean Arch chroot using `devtools`. The `check()`
-phase runs the test suite under D-Bus and Xvfb. Review optional dependencies and
-package contents as well as the build result.
+Normal AUR builds do not compile or run the test suite and do not require its
+extra dependencies. Release CI runs the full suite before publication. To
+explicitly enable tests, use the following command from the package checkout:
+
+```sh
+METEO_AUR_TESTS=1 makepkg --cleanbuild --syncdeps --check
+```
+
+This enables `BUILD_TESTING`, loads the test dependencies and runs the suite
+under D-Bus and Xvfb. `--check` alone does not enable this package's test build.
+Before submission, build in a clean Arch chroot using `devtools`. Review
+optional dependencies and package contents as well as the build result.
 
 An AUR account and an SSH public key registered to that account are required.
 Check whether the package name already exists and follow the

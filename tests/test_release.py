@@ -27,6 +27,35 @@ FDROID_SPEC=importlib.util.spec_from_file_location("prepare_fdroid",release.ROOT
 fdroid=importlib.util.module_from_spec(FDROID_SPEC);FDROID_SPEC.loader.exec_module(fdroid)
 
 class ReleaseTest(unittest.TestCase):
+    @unittest.skipUnless(sys.platform.startswith("linux") and shutil.which("bash"), "AUR recipes require Linux and Bash")
+    def test_aur_test_build_and_dependencies_are_opt_in(self):
+        template=release.ROOT/"packaging/aur/PKGBUILD.in"
+        script=r'''
+            set -eu
+            checkdepends=()
+            source "$1"
+            srcdir="$2"
+            cmake() { printf 'cmake:%s\n' "$*"; }
+            dbus-run-session() { printf 'check:%s\n' "$*"; }
+            build
+            printf 'test-dependencies:%s\n' "${checkdepends[*]}"
+            if declare -F check >/dev/null; then check; fi
+        '''
+        with tempfile.TemporaryDirectory() as temporary:
+            for enabled in (False,True):
+                with self.subTest(enabled=enabled):
+                    env=os.environ.copy()
+                    env.pop("METEO_AUR_TESTS",None)
+                    if enabled: env["METEO_AUR_TESTS"]="1"
+                    output=subprocess.check_output(["bash","-c",script,"bash",str(template),temporary],env=env,text=True)
+                    self.assertIn("-DBUILD_TESTING="+("ON" if enabled else "OFF"),output)
+                    dependencies=next(line for line in output.splitlines() if line.startswith("test-dependencies:"))
+                    self.assertEqual("xorg-server-xvfb" in dependencies,enabled)
+                    self.assertEqual("plasma-desktop" in dependencies,enabled)
+                    checks=[line for line in output.splitlines() if line.startswith("check:")]
+                    self.assertEqual(len(checks),int(enabled))
+                    if enabled: self.assertIn("ctest --test-dir build --output-on-failure",checks[0])
+
     def test_fdroid_request_uses_the_current_release_and_upstream_store_assets(self):
         with tempfile.TemporaryDirectory() as temporary:
             output=Path(temporary)/"submission"

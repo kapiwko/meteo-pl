@@ -11,8 +11,12 @@ depends=('glibc' 'libgcc' 'libstdc++' 'hicolor-icon-theme'
          'kirigami' 'ki18n' 'knotifications' 'kcolorscheme' 'kcoreaddons' 'qqc2-desktop-style'
          'breeze-icons' 'krunner')
 makedepends=('cmake' 'ninja' 'gettext' 'extra-cmake-modules' 'python')
-checkdepends=('xorg-server-xvfb' 'xorg-xauth' 'dbus' 'ttf-dejavu'
-              'plasma-workspace' 'plasma-desktop')
+_build_tests=OFF
+if [[ ${METEO_AUR_TESTS:-0} == 1 ]]; then
+    _build_tests=ON
+    checkdepends=('xorg-server-xvfb' 'xorg-xauth' 'dbus' 'ttf-dejavu'
+                  'plasma-workspace' 'plasma-desktop')
+fi
 optdepends=('plasma-desktop: Plasma widget and KRunner integration'
             'libplasma: Plasma widget runtime'
             'kcmutils: Plasma widget settings')
@@ -39,7 +43,7 @@ build() {
     cmake -S "$srcdir/meteo-pl-${pkgver}" -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=None \
         -DCMAKE_INSTALL_PREFIX=/usr \
-        -DBUILD_TESTING=ON \
+        -DBUILD_TESTING="$_build_tests" \
         -DMETEO_BUILD_PLASMOID=ON \
         -DMETEO_BUILD_KRUNNER=ON \
         -DFETCHCONTENT_SOURCE_DIR_METEO_VALIJSON="$srcdir/valijson-5eac4b66f20b2c189ae40281c29e71cf39a958ec" \
@@ -47,9 +51,11 @@ build() {
     cmake --build build
 }
 
-check() {
-    dbus-run-session -- xvfb-run --auto-servernum ctest --test-dir build --output-on-failure
-}
+if [[ $_build_tests == ON ]]; then
+    check() {
+        dbus-run-session -- xvfb-run --auto-servernum ctest --test-dir build --output-on-failure
+    }
+fi
 
 package() {
     DESTDIR="$pkgdir" cmake --install build
