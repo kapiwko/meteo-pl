@@ -1,0 +1,1 @@
+Small negative temperatures that round to zero now display as 0°C. Rounding is consistent across forecast headers, hourly and daily views, chart readings and axis labels. Original forecast values retain their precision for charts and numeric exports.
